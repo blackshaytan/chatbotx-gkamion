@@ -935,6 +935,27 @@ chatbotx whatsapp-channels list|get <id>              # Same data per channel; a
 chatbotx whatsapp-channels handover-resume-flow update <id> --handoverResumeFlowId <flowId|null>
 ```
 
+### `connections`
+
+```bash
+chatbotx connection-providers list                    # Connect catalog: strategy + configFields per provider
+chatbotx connections list
+chatbotx connections get <id>
+chatbotx connections create --provider <provider> --config <json>  # [--redirectUrl] token providers connect at once;
+                                                      #   OAuth providers return a session to poll
+chatbotx connections update <id> --displayName <name> # Rename
+chatbotx connections delete <id>                      # Disconnect
+chatbotx connections reconnect add <id>               # [--redirectUrl] new OAuth round trip for this connection
+chatbotx connections refresh add <id>                 # Force-refresh the stored auth
+chatbotx connections verify add <id>                  # Live health check
+chatbotx connections pause add <id>                   # Switch off a channel that starts paused (MAX, ZZAP, DROM)
+chatbotx connections resume add <id>                  # Switch it on: re-checks the token, subscribes the webhook
+                                                      #   (only one system may serve a bot at a time)
+chatbotx connect-sessions get <id>                    # Poll an OAuth connect session
+chatbotx connect-sessions target add <id> --targetIds <ids>  # Pick accounts of an awaiting_selection session
+chatbotx connect-sessions delete <id>                 # Cancel a session
+```
+
 ### `messenger-channels`
 
 ```bash
