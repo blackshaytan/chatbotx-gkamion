@@ -951,6 +951,11 @@ chatbotx connections verify add <id>                  # Live health check
 chatbotx connections pause add <id>                   # Switch off a channel that starts paused (MAX, ZZAP, DROM)
 chatbotx connections resume add <id>                  # Switch it on: re-checks the token, subscribes the webhook
                                                       #   (only one system may serve a bot at a time)
+                                                      #   ZZAP is polled, not webhook-driven; resume starts polling
+chatbotx connections create --provider zzap \
+  --config '{"secretText":"<api-key>","codeObject":"<code>","typeObject":"<type>"}'
+                                                      # ZZAP shop; optional testMode, pollIntervalSeconds,
+                                                      #   maxThreadsPerPoll, requestMinIntervalSeconds (>= 3)
 chatbotx connect-sessions get <id>                    # Poll an OAuth connect session
 chatbotx connect-sessions target add <id> --targetIds <ids>  # Pick accounts of an awaiting_selection session
 chatbotx connect-sessions delete <id>                 # Cancel a session
