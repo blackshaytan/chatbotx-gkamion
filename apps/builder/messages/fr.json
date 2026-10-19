@@ -924,6 +924,9 @@
       "switchedOn": "Le canal MAX est activé",
       "switchedOff": "Le canal MAX est désactivé"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "Correspondre à toutes les conditions ci-dessous"
     },
@@ -1259,6 +1262,7 @@
       "zaloUserId": "ID utilisateur Zalo",
       "telegramChatId": "ID de chat Telegram",
       "maxUserId": "ID utilisateur MAX",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "ID utilisateur TikTok",
       "threadsUsername": "Nom d’utilisateur Threads",
       "webchatGuestId": "ID visiteur Webchat",

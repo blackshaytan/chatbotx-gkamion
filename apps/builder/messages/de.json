@@ -924,6 +924,9 @@
       "switchedOn": "MAX-Kanal ist eingeschaltet",
       "switchedOff": "MAX-Kanal ist ausgeschaltet"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "Alle folgenden Bedingungen erfüllen"
     },
@@ -1259,6 +1262,7 @@
       "zaloUserId": "Zalo-Benutzer-ID",
       "telegramChatId": "Telegram-Chat-ID",
       "maxUserId": "MAX-Benutzer-ID",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "TikTok-Benutzer-ID",
       "threadsUsername": "Threads-Benutzername",
       "webchatGuestId": "Webchat-Gast-ID",

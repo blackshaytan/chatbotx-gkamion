@@ -1112,6 +1112,9 @@
       "switchedOn": "MAX kanalı yandırıldı",
       "switchedOff": "MAX kanalı söndürüldü"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "Aşağıdakı bütün şərtlərə uyğunluq"
     },
@@ -1456,6 +1459,7 @@
       "zaloUserId": "Zalo istifadəçi ID",
       "telegramChatId": "Telegram çat ID",
       "maxUserId": "MAX istifadəçi ID",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "TikTok istifadəçi ID",
       "threadsUsername": "Threads istifadəçi adı",
       "webchatGuestId": "Webchat qonaq ID",

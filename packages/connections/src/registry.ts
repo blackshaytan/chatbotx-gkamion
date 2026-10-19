@@ -163,4 +163,5 @@ export const CONNECTION_REGISTRY: StoreBoundConnectionRegistry = {
   webchat: fromIntegration(integrationWebchat, "webchat"),
   whatsapp: fromIntegration(integrationWhatsapp, "whatsapp", "whatsapp"),
   zalo: fromIntegration(integrationZalo, "zalo", "zalo"),
+  zzap: null,
 }

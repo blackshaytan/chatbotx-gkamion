@@ -30,6 +30,7 @@ const refreshTokenAdapter: Record<
   smtp: undefined,
   telegram: undefined,
   max: undefined,
+  zzap: undefined,
   api: undefined,
 }
 

@@ -35,6 +35,7 @@ export const contactProfileNameCapabilities = {
   threads: { inbound: null, onDemand: false }, // comment-only channel: no message webhook parses an IncomingContact, and the integration exposes no contact.getProfile handler
   api: { inbound: "payload", onDemand: false },
   max: { inbound: "payload", onDemand: false }, // update carries the sender name; no separate profile call
+  zzap: { inbound: "payload", onDemand: false }, // poll event carries the buyer name/phone/email
   webchat: { inbound: null, onDemand: false },
   smtp: { inbound: null, onDemand: false },
   omnichannel: { inbound: null, onDemand: false },

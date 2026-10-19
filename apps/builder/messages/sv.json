@@ -1984,6 +1984,7 @@
       "zaloUserId": "Zalo-användar-ID",
       "telegramChatId": "Telegram-chatt-ID",
       "maxUserId": "MAX-användar-ID",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "TikTok-användar-ID",
       "threadsUsername": "Threads-användarnamn",
       "webchatGuestId": "Webbchatt-gäst-ID",
@@ -3030,6 +3031,9 @@
       },
       "switchedOn": "MAX-kanalen är på",
       "switchedOff": "MAX-kanalen är av"
+    },
+    "zzap": {
+      "label": "ZZAP"
     },
     "temperature": {
       "label": "Temperatur"

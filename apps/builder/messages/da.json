@@ -924,6 +924,9 @@
       "switchedOn": "MAX-kanalen er slået til",
       "switchedOff": "MAX-kanalen er slået fra"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "Match alle den betingelser below"
     },
@@ -1259,6 +1262,7 @@
       "zaloUserId": "Zalo Bruger-ID",
       "telegramChatId": "Telegram Chat-ID",
       "maxUserId": "MAX-bruger-ID",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "TikTok Bruger-ID",
       "threadsUsername": "Threads-brugernavn",
       "webchatGuestId": "Webchat Gæste-ID",

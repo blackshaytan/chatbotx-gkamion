@@ -34,6 +34,10 @@ export const sourceIdentityConfigByChannel = {
     labelKey: "fields.channelIdentity.maxUserId",
     hideWhenSourceUserIdKeyed: false,
   },
+  [channelTypes.enum.zzap]: {
+    labelKey: "fields.channelIdentity.zzapUserKey",
+    hideWhenSourceUserIdKeyed: false,
+  },
   [channelTypes.enum.tiktok]: {
     labelKey: "fields.channelIdentity.tiktokUserId",
     hideWhenSourceUserIdKeyed: false,

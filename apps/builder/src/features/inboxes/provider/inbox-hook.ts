@@ -44,6 +44,10 @@ export const allInboxConfigs = {
     label: "MAX",
     value: "max",
   },
+  zzap: {
+    label: "ZZAP",
+    value: "zzap",
+  },
   tiktok: {
     label: "TikTok",
     value: "tiktok",

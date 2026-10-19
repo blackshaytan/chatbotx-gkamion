@@ -1112,6 +1112,9 @@
       "switchedOn": "MAX channel is on",
       "switchedOff": "MAX channel is off"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "Match all the conditions below"
     },
@@ -1456,6 +1459,7 @@
       "zaloUserId": "Zalo User ID",
       "telegramChatId": "Telegram Chat ID",
       "maxUserId": "MAX user ID",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "TikTok User ID",
       "threadsUsername": "Threads Username",
       "webchatGuestId": "Webchat Guest ID",

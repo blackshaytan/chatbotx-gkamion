@@ -22,6 +22,7 @@ import {
   type LucideIcon,
   MailIcon,
   MessageCircleIcon,
+  ShoppingCartIcon,
   WebhookIcon,
 } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -94,6 +95,11 @@ export const INBOX_ICON_CONFIG: Record<ChannelType, InboxIconConfig> = {
     Icon: MessageCircleIcon,
     iconClassName: "stroke-[#0077FF]",
     defaultLabelKey: "fields.max.label",
+  },
+  zzap: {
+    Icon: ShoppingCartIcon,
+    iconClassName: "stroke-[#E30613]",
+    defaultLabelKey: "fields.zzap.label",
   },
   tiktok: {
     Icon: SiTiktok,

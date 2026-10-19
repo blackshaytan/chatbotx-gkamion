@@ -167,6 +167,13 @@ export const INBOUND_WEBHOOK_CHANNEL_SPECS: Record<
     channelUserId: null,
     creationIdentities: [],
   },
+  // Polled channel: the buyer `user_key` is only meaningful inside ZZAP, so
+  // inbound webhooks target a fixed ZZAP inbox and never create contacts.
+  zzap: {
+    inboxIdentifiers: noInboxIdentifiers,
+    channelUserId: null,
+    creationIdentities: [],
+  },
   zalo: {
     inboxIdentifiers: [
       {

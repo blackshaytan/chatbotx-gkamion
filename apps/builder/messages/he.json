@@ -4653,6 +4653,9 @@
       "switchedOn": "ערוץ MAX הופעל",
       "switchedOff": "ערוץ MAX כובה"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "התאמה לכל התנאים שלהלן"
     },
@@ -4988,6 +4991,7 @@
       "zaloUserId": "מזהה משתמש ב-Zalo",
       "telegramChatId": "מזהה צ'אט ב-Telegram",
       "maxUserId": "מזהה משתמש MAX",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "מזהה משתמש ב-TikTok",
       "threadsUsername": "שם משתמש ב-Threads",
       "webchatGuestId": "מזהה אורח ב-Webchat",

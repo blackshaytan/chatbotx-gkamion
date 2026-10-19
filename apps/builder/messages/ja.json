@@ -924,6 +924,9 @@
       "switchedOn": "MAX チャネルをオンにしました",
       "switchedOff": "MAX チャネルをオフにしました"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "以下のすべての条件に一致"
     },
@@ -1259,6 +1262,7 @@
       "zaloUserId": "ZaloユーザーID",
       "telegramChatId": "TelegramチャットID",
       "maxUserId": "MAX ユーザー ID",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "TikTokユーザーID",
       "threadsUsername": "Threadsユーザー名",
       "webchatGuestId": "WebチャットゲストID",

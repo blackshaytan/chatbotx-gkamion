@@ -90,6 +90,9 @@
       "switchedOn": "MAX 頻道已開啟",
       "switchedOff": "MAX 頻道已關閉"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "滿足以下所有條件"
     },
@@ -406,6 +409,7 @@
       "zaloUserId": "Zalo 使用者 ID",
       "telegramChatId": "Telegram 聊天 ID",
       "maxUserId": "MAX 使用者 ID",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "TikTok 使用者 ID",
       "threadsUsername": "Threads 使用者名稱",
       "webchatGuestId": "網頁聊天訪客 ID",

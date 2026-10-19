@@ -1112,6 +1112,9 @@
       "switchedOn": "Kênh MAX đã bật",
       "switchedOff": "Kênh MAX đã tắt"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "Khớp tất cả các điều kiện bên dưới"
     },
@@ -1448,6 +1451,7 @@
       "zaloUserId": "ID người dùng Zalo",
       "telegramChatId": "Chat ID Telegram",
       "maxUserId": "ID người dùng MAX",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "ID người dùng TikTok",
       "threadsUsername": "Tên người dùng Threads",
       "webchatGuestId": "ID khách Webchat",

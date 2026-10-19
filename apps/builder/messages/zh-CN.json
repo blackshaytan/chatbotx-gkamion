@@ -1987,6 +1987,7 @@
       "zaloUserId": "Zalo 用户 ID",
       "telegramChatId": "Telegram 聊天 ID",
       "maxUserId": "MAX 用户 ID",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "TikTok 用户 ID",
       "threadsUsername": "Threads 用户名",
       "webchatGuestId": "网页聊天访客 ID",
@@ -3033,6 +3034,9 @@
       },
       "switchedOn": "MAX 渠道已开启",
       "switchedOff": "MAX 渠道已关闭"
+    },
+    "zzap": {
+      "label": "ZZAP"
     },
     "temperature": {
       "label": "温度"

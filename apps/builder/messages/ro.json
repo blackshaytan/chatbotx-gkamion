@@ -1967,6 +1967,9 @@
       "switchedOn": "Canalul MAX este pornit",
       "switchedOff": "Canalul MAX este oprit"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "Potrivește toate condițiile de mai jos"
     },
@@ -2302,6 +2305,7 @@
       "zaloUserId": "ID utilizator Zalo",
       "telegramChatId": "ID chat Telegram",
       "maxUserId": "ID utilizator MAX",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "ID utilizator TikTok",
       "threadsUsername": "Nume utilizator Threads",
       "webchatGuestId": "ID vizitator Webchat",

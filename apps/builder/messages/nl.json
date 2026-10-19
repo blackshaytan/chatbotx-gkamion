@@ -728,6 +728,9 @@
       "switchedOn": "MAX-kanaal staat aan",
       "switchedOff": "MAX-kanaal staat uit"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "Voldoe aan alle onderstaande voorwaarden"
     },
@@ -1063,6 +1066,7 @@
       "zaloUserId": "Zalo-gebruikers-ID",
       "telegramChatId": "Telegram-chat-ID",
       "maxUserId": "MAX-gebruikers-ID",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "TikTok-gebruikers-ID",
       "threadsUsername": "Threads-gebruikersnaam",
       "webchatGuestId": "Webchat-gast-ID",

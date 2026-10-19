@@ -924,6 +924,9 @@
       "switchedOn": "MAX-kanava on päällä",
       "switchedOff": "MAX-kanava on pois päältä"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "Täsmää kaikkiin alla oleviin ehtoihin"
     },
@@ -1259,6 +1262,7 @@
       "zaloUserId": "Zalo-käyttäjätunnus",
       "telegramChatId": "Telegram-keskustelutunnus",
       "maxUserId": "MAX-käyttäjätunnus",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "TikTok-käyttäjätunnus",
       "threadsUsername": "Threads-käyttäjänimi",
       "webchatGuestId": "Webchat-vierastunnus",

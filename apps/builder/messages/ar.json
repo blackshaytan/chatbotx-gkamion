@@ -1070,6 +1070,9 @@
       "switchedOn": "تم تشغيل قناة MAX",
       "switchedOff": "تم إيقاف قناة MAX"
     },
+    "zzap": {
+      "label": "ZZAP"
+    },
     "matchAll": {
       "label": "مطابقة جميع الشروط أدناه"
     },
@@ -1405,6 +1408,7 @@
       "zaloUserId": "معرّف مستخدم Zalo",
       "telegramChatId": "معرّف دردشة Telegram",
       "maxUserId": "معرّف مستخدم MAX",
+      "zzapUserKey": "ZZAP user key",
       "tiktokUserId": "معرّف مستخدم TikTok",
       "threadsUsername": "اسم مستخدم Threads",
       "webchatGuestId": "معرّف زائر Webchat",
