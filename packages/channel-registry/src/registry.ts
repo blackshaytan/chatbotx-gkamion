@@ -5,7 +5,10 @@ import {
   integrationThreadsService,
   workspaceService,
 } from "@chatbotx.io/business"
-import { isSealedAuth, openAuth } from "@chatbotx.io/business/connection"
+import {
+  isSealedAuth,
+  openAuth,
+} from "@chatbotx.io/business/connection/sealed-auth"
 import { findOrFail } from "@chatbotx.io/database/client"
 import type { IntegrationType } from "@chatbotx.io/database/partials"
 import { integrationLookupRepository } from "@chatbotx.io/database/repositories"

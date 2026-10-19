@@ -26,6 +26,7 @@
     "./coexist/history": "./src/coexist/history-window.ts",
     "./connect-session": "./src/connect-session/index.ts",
     "./connection": "./src/connection/index.ts",
+    "./connection/sealed-auth": "./src/connection/sealed-auth.ts",
     "./coupon": "./src/coupon/index.ts",
     "./dynamic-image": "./src/dynamic-image/index.ts",
     "./error-log": "./src/error-log/index.ts",

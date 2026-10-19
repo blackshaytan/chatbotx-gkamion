@@ -507,7 +507,8 @@ vi.mock("@chatbotx.io/flow-config", async (importOriginal) => {
   return { ...actual }
 })
 
-vi.mock("@chatbotx.io/encryption", () => ({
+vi.mock("@chatbotx.io/encryption", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@chatbotx.io/encryption")>()),
   parseAppointmentCancelPostback: vi.fn().mockReturnValue(null),
   verifyAppointmentCancelPostback: vi.fn(),
 }))

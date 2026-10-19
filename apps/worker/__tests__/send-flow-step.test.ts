@@ -219,7 +219,8 @@ vi.mock("@chatbotx.io/business/error-log", async (importOriginal) => {
   }
 })
 
-vi.mock("@chatbotx.io/encryption", () => ({
+vi.mock("@chatbotx.io/encryption", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@chatbotx.io/encryption")>()),
   signAppointmentWebviewToken: mockSignAppointmentWebviewToken,
 }))
 
