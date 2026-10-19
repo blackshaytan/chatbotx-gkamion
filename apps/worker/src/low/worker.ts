@@ -21,6 +21,7 @@ import { processLeaderboardJob } from "../leaderboard/process-job"
 import { ensureBootstrapped } from "../lib/bootstrap"
 import { logger } from "../lib/logger"
 import { runJobWithAuditContext } from "../lib/run-job-with-audit-context"
+import { pollChannel } from "./handlers/poll-channel"
 
 /**
  * Runs one `low` job behind the blocked-owner guard, dispatching on its type.
@@ -42,6 +43,10 @@ async function processLowJob(job: Job<LowJobData>): Promise<void> {
           }
           case LowJobAction.replayMissedComment: {
             await receiveComment(job.data.data)
+            return
+          }
+          case LowJobAction.pollChannel: {
+            await pollChannel(job.data.data)
             return
           }
           default: {

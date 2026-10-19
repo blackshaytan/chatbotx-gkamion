@@ -48,6 +48,7 @@ vi.mock("@chatbotx.io/worker-config", () => ({
     unsubscribeExpiredTrials: "unsubscribeExpiredTrials",
     googleAdsHousekeeping: "googleAdsHousekeeping",
     googleAdsSyncSetups: "googleAdsSyncSetups",
+    dispatchChannelPolls: "dispatchChannelPolls",
   },
   scheduleQueue: new FakeQueue(),
 }))
@@ -156,5 +157,11 @@ describe("registerSchedules — edition gating", () => {
     expect(upsertedRepeatOptionsFor("purgeBroadcasts")?.pattern).toBe(
       "*/5 * * * *",
     )
+  })
+
+  test("dispatchChannelPolls ticks every 15 seconds", async () => {
+    await registerSchedules()
+
+    expect(upsertedRepeatOptionsFor("dispatchChannelPolls")?.every).toBe(15_000)
   })
 })

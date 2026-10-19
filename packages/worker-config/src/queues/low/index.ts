@@ -23,6 +23,7 @@ export const LowJobAction = {
   coexistAttachmentDownload: "coexistAttachmentDownload",
   updateContactAvatar: "updateContactAvatar",
   replayMissedComment: "replayMissedComment",
+  pollChannel: "pollChannel",
 } as const
 
 export type LowJobAction = (typeof LowJobAction)[keyof typeof LowJobAction]
@@ -82,10 +83,25 @@ export type LowJobReplayMissedComment = {
   }
 }
 
+/**
+ * Poll one `connected` polling channel (`ConnectionProvider.poll`). Enqueued
+ * by the `dispatchChannelPolls` tick under `buildChannelPollJobId`, removed on
+ * completion and failure, so a connection never has two polls waiting or
+ * running at once.
+ */
+export type LowJobPollChannel = {
+  type: typeof LowJobAction.pollChannel
+  data: { connectionId: string; workspaceId: string }
+}
+
+export const buildChannelPollJobId = (connectionId: string): string =>
+  `channel-poll-${connectionId}`
+
 export type LowJobData =
   | LowJobCoexistAttachmentDownload
   | LowJobUpdateContactAvatar
   | LowJobReplayMissedComment
+  | LowJobPollChannel
 
 export const lowQueue = isNoRedisEnv()
   ? fakeQueue

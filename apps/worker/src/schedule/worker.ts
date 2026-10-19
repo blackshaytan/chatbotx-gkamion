@@ -18,6 +18,7 @@ import {
   scanDateTimeWebhooks,
 } from "../webhook/datetime-webhook-scanner"
 import { clearExpiredSupportAccess } from "./handlers/clear-expired-support-access"
+import { dispatchChannelPolls } from "./handlers/dispatch-channel-polls"
 import { dispatchProfileSnapshots } from "./handlers/dispatch-profile-snapshots"
 import { enqueueBroadcast } from "./handlers/enqueue-broadcast"
 import { enqueueRecurringBroadcasts } from "./handlers/enqueue-recurring-broadcasts"
@@ -209,6 +210,10 @@ async function startScheduleWorker() {
 
             case ScheduleJobData.dispatchProfileSnapshots:
               await dispatchProfileSnapshots()
+              return
+
+            case ScheduleJobData.dispatchChannelPolls:
+              await dispatchChannelPolls()
               return
 
             case ScheduleJobData.purgeBroadcasts:

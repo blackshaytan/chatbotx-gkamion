@@ -116,6 +116,10 @@ vi.mock("../src/integration/handlers/received-message", () => ({
   receiveComment: workerState.receiveComment,
 }))
 
+vi.mock("../src/low/handlers/poll-channel", () => ({
+  pollChannel: vi.fn(),
+}))
+
 // Importing the worker module boots it exactly once (ESM module cache).
 await import("../src/low/worker")
 await vi.waitFor(() => {

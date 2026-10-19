@@ -54,6 +54,7 @@ export const ScheduleJobData = {
   purgeExpiredCallRecordings: "purgeExpiredCallRecordings",
   sweepStaleWhatsappCalls: "sweepStaleWhatsappCalls",
   dispatchProfileSnapshots: "dispatchProfileSnapshots",
+  dispatchChannelPolls: "dispatchChannelPolls",
 } as const
 
 /**
@@ -291,6 +292,11 @@ export type ScheduleJobDispatchProfileSnapshots = {
   data: Record<string, never>
 }
 
+export type ScheduleJobDispatchChannelPolls = {
+  type: typeof ScheduleJobData.dispatchChannelPolls
+  data: Record<string, never>
+}
+
 export type ScheduleJobPurgeBroadcasts = {
   type: typeof ScheduleJobData.purgeBroadcasts
   data: Record<string, never>
@@ -383,6 +389,7 @@ export type ScheduleJobData =
   | ScheduleJobGoogleAdsHousekeeping
   | ScheduleJobGoogleAdsSyncSetups
   | ScheduleJobDispatchProfileSnapshots
+  | ScheduleJobDispatchChannelPolls
   | ScheduleJobPurgeBroadcasts
   | ScheduleJobPurgeAutomationThrottle
   | ScheduleJobPurgeErrorLogs

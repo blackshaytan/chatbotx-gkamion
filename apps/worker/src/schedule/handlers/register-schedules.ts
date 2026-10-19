@@ -48,6 +48,20 @@ export const registerSchedules = async () => {
   )
 
   await scheduleQueue.upsertJobScheduler(
+    ScheduleJobData.dispatchChannelPolls,
+    {
+      every: 15_000,
+    },
+    {
+      name: ScheduleJobData.dispatchChannelPolls,
+      data: {
+        type: ScheduleJobData.dispatchChannelPolls,
+        data: {},
+      },
+    },
+  )
+
+  await scheduleQueue.upsertJobScheduler(
     ScheduleJobData.enqueueBroadcast,
     {
       pattern: "* * * * *",
