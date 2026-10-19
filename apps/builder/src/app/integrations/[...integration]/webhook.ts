@@ -1,6 +1,8 @@
 import {
   connectionStateService,
   customDomainService,
+  inboxService,
+  maxIntegrationService,
   platformCredentialService,
   tenantService,
   workspaceMemberService,
@@ -79,6 +81,11 @@ export const handleWebhook = async (
   // Telegram uses per-bot config (not org-level settings)
   if (integrationType === "telegram") {
     return handleTelegramWebhook(req)
+  }
+
+  // MAX uses per-bot config with a sealed webhook secret
+  if (integrationType === "max") {
+    return handleMaxWebhook(req)
   }
 
   // TikTok uses per-account config (not org-level settings)
@@ -326,6 +333,46 @@ const handleTelegramWebhook = async (req: NextRequest) => {
       "Telegram handleRequest failed",
     )
     return new Response(JSON.stringify({ message }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    })
+  }
+}
+
+const handleMaxWebhook = async (req: NextRequest) => {
+  const botId = req.nextUrl.searchParams.get("botId")
+  if (!botId) {
+    return new Response(
+      JSON.stringify({ message: "Missing botId query param" }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    )
+  }
+
+  const found = await maxIntegrationService.findByBotIdWithAuth(botId)
+  if (!found) {
+    return new Response(JSON.stringify({ message: "Bot not found" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json" },
+    })
+  }
+
+  // A switched-off channel must not process a late delivery from MAX.
+  const inbox = await inboxService.find({ where: { id: found.row.inboxId } })
+  if (inbox?.status !== "connected") {
+    return new Response("ignored")
+  }
+
+  const auth = found.auth as { webhookSecret?: string }
+  try {
+    const result = await integrations.max.handleRequest({
+      config: { botId, webhookSecret: auth.webhookSecret },
+      req,
+      queue: integrationQueue,
+    })
+    return new Response(result as BodyInit)
+  } catch (e: unknown) {
+    logger.error({ err: e, integrationType: "max" }, "MAX handleRequest failed")
+    return new Response(JSON.stringify({ message: "Invalid request" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
     })
