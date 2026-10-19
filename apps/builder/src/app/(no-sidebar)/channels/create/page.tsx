@@ -35,6 +35,8 @@ type CreateChannelPageProps = {
   }>
 }
 
+const WORKSPACE_REQUIRED_CHANNELS: readonly ChannelType[] = ["max"]
+
 export default async function CreateChannelPage(props: CreateChannelPageProps) {
   const searchParams = await props.searchParams
   const workspaceId = getIdFromParams(searchParams, "workspaceId")
@@ -200,6 +202,13 @@ export default async function CreateChannelPage(props: CreateChannelPageProps) {
     .filter(([, credential]) => Boolean(credential))
     .map(([channel]) => channel)
 
+  // MAX connects into an existing workspace only; it cannot start a new one.
+  const offeredChannels = workspaceId
+    ? visibleChannels
+    : visibleChannels.filter(
+        (channel) => !WORKSPACE_REQUIRED_CHANNELS.includes(channel),
+      )
+
   const errorMessageKey = isCreateChannelErrorCode(searchParams.error)
     ? CREATE_CHANNEL_ERROR_MESSAGE_KEYS[searchParams.error]
     : undefined
@@ -208,7 +217,7 @@ export default async function CreateChannelPage(props: CreateChannelPageProps) {
     <InboxSelectCard
       configuredChannels={configuredChannels}
       errorMessageKey={errorMessageKey}
-      offeredChannels={visibleChannels}
+      offeredChannels={offeredChannels}
     />
   )
 }
