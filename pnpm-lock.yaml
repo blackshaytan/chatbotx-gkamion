@@ -197,6 +197,9 @@ importers:
       '@chatbotx.io/integration-zalo':
         specifier: workspace:*
         version: link:../../integrations/zalo
+      '@chatbotx.io/integration-zzap':
+        specifier: workspace:*
+        version: link:../../integrations/zzap
       '@chatbotx.io/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -829,6 +832,9 @@ importers:
       '@chatbotx.io/integration-zalo':
         specifier: workspace:*
         version: link:../../integrations/zalo
+      '@chatbotx.io/integration-zzap':
+        specifier: workspace:*
+        version: link:../../integrations/zzap
       '@chatbotx.io/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -2599,6 +2605,9 @@ importers:
       '@chatbotx.io/integration-zalo':
         specifier: workspace:*
         version: link:../../integrations/zalo
+      '@chatbotx.io/integration-zzap':
+        specifier: workspace:*
+        version: link:../../integrations/zzap
       '@chatbotx.io/logger':
         specifier: workspace:*
         version: link:../logger
@@ -2720,6 +2729,9 @@ importers:
       '@chatbotx.io/integration-zalo':
         specifier: workspace:*
         version: link:../../integrations/zalo
+      '@chatbotx.io/integration-zzap':
+        specifier: workspace:*
+        version: link:../../integrations/zzap
       '@chatbotx.io/logger':
         specifier: workspace:*
         version: link:../logger

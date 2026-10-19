@@ -29,6 +29,7 @@ import {
   integrationWebchatModel,
   integrationWhatsappModel,
   integrationZaloModel,
+  integrationZzapModel,
 } from "@chatbotx.io/database/schema"
 import type {
   ConnectionStoreBinding,
@@ -409,5 +410,13 @@ export const buildConnectionStoreBindings = (
     tableName: "IntegrationZalo",
     identityColumn: "oaId",
     onDisconnect: "keep_row",
+  }),
+  zzap: makeChannelBinding({
+    table: integrationZzapModel,
+    tableName: "IntegrationZzap",
+    identityColumn: "codeObject",
+    onDisconnect: "delete_row",
+    duplicateConstraint: "IntegrationZzap_codeObject_key",
+    sealAuth: true,
   }),
 })
