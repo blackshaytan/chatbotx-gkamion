@@ -131,7 +131,6 @@ export const ZzapConnect = ({
             />
             <SwitchField
               description={t("fields.zzap.testModeHint")}
-              formItemClassName="flex flex-row items-center justify-start gap-3 space-y-0"
               label={t("fields.zzap.testMode")}
               name="testMode"
             />
