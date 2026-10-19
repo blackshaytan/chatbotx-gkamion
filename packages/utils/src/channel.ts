@@ -115,6 +115,12 @@ export type ChannelCapability = {
    * calling channel fails to compile until it declares its answer here.
    */
   callable: boolean
+  /**
+   * Created switched off and only switched on by the operator
+   * (`connections.resume`). Outbound sends to a switched-off inbox of such a
+   * channel are refused.
+   */
+  pausable: boolean
 }
 
 export const CHANNEL_CAPABILITIES: Record<ChannelType, ChannelCapability> = {
@@ -124,6 +130,7 @@ export const CHANNEL_CAPABILITIES: Record<ChannelType, ChannelCapability> = {
     requiresCredential: true,
     order: 1,
     callable: true,
+    pausable: false,
   },
   messenger: {
     creatable: true,
@@ -131,6 +138,7 @@ export const CHANNEL_CAPABILITIES: Record<ChannelType, ChannelCapability> = {
     requiresCredential: true,
     order: 2,
     callable: false,
+    pausable: false,
   },
   instagram: {
     creatable: true,
@@ -138,6 +146,7 @@ export const CHANNEL_CAPABILITIES: Record<ChannelType, ChannelCapability> = {
     requiresCredential: true,
     order: 3,
     callable: false,
+    pausable: false,
   },
   threads: {
     creatable: true,
@@ -145,6 +154,7 @@ export const CHANNEL_CAPABILITIES: Record<ChannelType, ChannelCapability> = {
     requiresCredential: true,
     order: 4,
     callable: false,
+    pausable: false,
   },
   tiktok: {
     creatable: true,
@@ -152,6 +162,7 @@ export const CHANNEL_CAPABILITIES: Record<ChannelType, ChannelCapability> = {
     requiresCredential: true,
     order: 5,
     callable: false,
+    pausable: false,
   },
   telegram: {
     creatable: true,
@@ -159,6 +170,7 @@ export const CHANNEL_CAPABILITIES: Record<ChannelType, ChannelCapability> = {
     requiresCredential: false,
     order: 6,
     callable: false,
+    pausable: false,
   },
   zalo: {
     creatable: true,
@@ -166,6 +178,7 @@ export const CHANNEL_CAPABILITIES: Record<ChannelType, ChannelCapability> = {
     requiresCredential: true,
     order: 7,
     callable: false,
+    pausable: false,
   },
   webchat: {
     creatable: true,
@@ -173,6 +186,7 @@ export const CHANNEL_CAPABILITIES: Record<ChannelType, ChannelCapability> = {
     requiresCredential: false,
     order: 8,
     callable: false,
+    pausable: false,
   },
   smtp: {
     creatable: false,
@@ -180,6 +194,7 @@ export const CHANNEL_CAPABILITIES: Record<ChannelType, ChannelCapability> = {
     requiresCredential: false,
     order: 9,
     callable: false,
+    pausable: false,
   },
   api: {
     creatable: true,
@@ -187,6 +202,7 @@ export const CHANNEL_CAPABILITIES: Record<ChannelType, ChannelCapability> = {
     requiresCredential: false,
     order: 10,
     callable: false,
+    pausable: false,
   },
   // Not a real connectable channel — the fallback icon/label for unknown
   // channel strings (see `InboxIcon`'s `isChannelType` guard). Never offered
@@ -197,6 +213,7 @@ export const CHANNEL_CAPABILITIES: Record<ChannelType, ChannelCapability> = {
     requiresCredential: false,
     order: 11,
     callable: false,
+    pausable: false,
   },
 }
 

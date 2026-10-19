@@ -5,6 +5,7 @@ import { integrationModel } from "@chatbotx.io/database/schema"
 import { type AuthValue, authValueSchema, SdkException } from "@chatbotx.io/sdk"
 import type { InferInsertModel, SQL } from "drizzle-orm"
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core"
+import { isSealedAuth, openAuth, sealAuth } from "./sealed-auth"
 import { buildConnectionStoreBindings } from "./store-bindings-channels"
 
 type ConnectionStoreInsertInput =
@@ -170,8 +171,12 @@ export const makeChannelBinding = <TTable extends ChannelSatelliteTable>(opts: {
   extraWhere?: Partial<Record<Extract<keyof TTable, string>, unknown>>
   /** See `ConnectionStoreBinding.configColumns`. */
   configColumns?: readonly ConfigColumn<TTable>[]
+  /** Encrypt the whole auth at rest (see `sealed-auth.ts`). */
+  sealAuth?: boolean
 }): ConnectionStoreBinding<ConfigColumn<TTable>> => {
   const { table } = opts
+  const toStored = async (auth: AuthValue): Promise<unknown> =>
+    opts.sealAuth ? await sealAuth(auth) : auth
   // `.from()`/`.insert()` reject a generic `TTable` param (Drizzle's typing
   // resolves them against the exact table's config, which a shared factory
   // spanning 15 distinct tables cannot express) — upcast once here; column
@@ -210,7 +215,9 @@ export const makeChannelBinding = <TTable extends ChannelSatelliteTable>(opts: {
           `Unable to load auth for ${opts.tableName} inbox ${inboxId}`,
         )
       }
-      return asAuthValue(row.auth)
+      return asAuthValue(
+        isSealedAuth(row.auth) ? await openAuth(row.auth) : row.auth,
+      )
     },
     saveAuthByForeignKey: async (
       inboxId,
@@ -225,7 +232,10 @@ export const makeChannelBinding = <TTable extends ChannelSatelliteTable>(opts: {
       )
       const updated = await tx
         .update(table)
-        .set({ ...safeConfig, auth } as InferInsertModel<TTable>)
+        .set({
+          ...safeConfig,
+          auth: await toStored(auth),
+        } as InferInsertModel<TTable>)
         .where(withExtraWhere(eq(table.inboxId, inboxId), workspaceId))
         .returning({ id: table.id })
       return updated.length > 0
@@ -248,7 +258,7 @@ export const makeChannelBinding = <TTable extends ChannelSatelliteTable>(opts: {
         ...opts.extraInsertValues,
         workspaceId: input.workspaceId,
         inboxId: input.inboxId,
-        auth: input.auth,
+        auth: await toStored(input.auth),
         name: input.descriptor.displayName,
         ...identityValues,
       }

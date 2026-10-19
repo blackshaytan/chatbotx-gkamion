@@ -5,6 +5,7 @@ import {
   integrationThreadsService,
   workspaceService,
 } from "@chatbotx.io/business"
+import { isSealedAuth, openAuth } from "@chatbotx.io/business/connection"
 import { findOrFail } from "@chatbotx.io/database/client"
 import type { IntegrationType } from "@chatbotx.io/database/partials"
 import { integrationLookupRepository } from "@chatbotx.io/database/repositories"
@@ -47,6 +48,7 @@ import {
   type IntegrationDefinition,
   SdkException,
 } from "@chatbotx.io/sdk"
+import { CHANNEL_CAPABILITIES, channelTypes } from "@chatbotx.io/utils/channel"
 import { IntegrationNotFoundError } from "./errors"
 
 export { IntegrationNotFoundError } from "./errors"
@@ -107,6 +109,10 @@ export type IntegrationRow = {
   type?: string
   [key: string]: unknown
 }
+
+/** Only sealed rows are decoded; legacy plain rows keep their stored shape. */
+const readStoredAuth = async (stored: unknown): Promise<AuthValue> =>
+  isSealedAuth(stored) ? await openAuth(stored) : (stored as AuthValue)
 
 export function isInstagramViaFacebook(row: IntegrationRow): boolean {
   return row.type === "facebook"
@@ -215,7 +221,10 @@ export const integrationService = {
       throw new IntegrationNotFoundError(integrationType, integrationIdentifier)
     }
 
-    const integrationRow = row as IntegrationRow & { workspaceId: string }
+    const integrationRow = {
+      ...(row as IntegrationRow & { workspaceId: string }),
+      auth: await readStoredAuth(row.auth),
+    }
     const workspace = await workspaceService.findById({
       id: integrationRow.workspaceId,
     })
@@ -283,7 +292,7 @@ export const integrationService = {
       )
     }
 
-    return row as IntegrationRow
+    return { ...(row as IntegrationRow), auth: await readStoredAuth(row.auth) }
   },
 }
 
@@ -311,6 +320,20 @@ export async function resolveIntegrationContextFromContactInbox(args: {
 
   const integrationRow =
     await integrationService.getIntegrationFromContactInbox(args.contactInbox)
+
+  const channel = channelTypes.safeParse(args.contactInbox.channel)
+  if (channel.success && CHANNEL_CAPABILITIES[channel.data].pausable) {
+    const inbox = await inboxService.find({
+      where: { id: args.contactInbox.inboxId },
+    })
+    if (inbox?.status !== "connected") {
+      throw new ChannelError(
+        `Channel ${channel.data} is switched off`,
+        ChannelErrorCategory.PERMISSION_DENIED,
+        { code: "channel_paused" },
+      )
+    }
+  }
 
   if (
     args.contactInbox.channel === "instagram" &&

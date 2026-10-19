@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { CONNECTION_STORE_BINDINGS } from "../store-bindings"
+import { isSealedAuth } from "../sealed-auth"
+import {
+  CONNECTION_STORE_BINDINGS,
+  makeChannelBinding,
+} from "../store-bindings"
 
 const mocks = vi.hoisted(() => ({
   and: vi.fn((...conditions) => conditions),
@@ -219,6 +223,53 @@ describe("CONNECTION_STORE_BINDINGS", () => {
     expect(fixture.insertValues).not.toHaveBeenLastCalledWith(
       expect.objectContaining({ integrationId: "attacker-integration" }),
     )
+  })
+
+  it("sealAuth bindings store encrypted auth and load it back opened", async () => {
+    const binding = makeChannelBinding({
+      table: {
+        id: {},
+        auth: {},
+        name: {},
+        workspaceId: {},
+        inboxId: {},
+        botId: {},
+      } as never,
+      tableName: "IntegrationSealedTest",
+      identityColumn: "botId" as never,
+      onDisconnect: "delete_row",
+      sealAuth: true,
+    })
+    const fixture = makeTx()
+    fixture.insertValues.mockImplementationOnce(() => ({
+      returning: vi.fn().mockResolvedValue([{ id: "row-1" }]),
+    }))
+
+    await binding.insertRow(
+      {
+        kind: "channel",
+        workspaceId: "workspace-1",
+        inboxId: "inbox-1",
+        auth,
+        descriptor: { sourceId: "bot-1", displayName: "Bot" },
+      } as never,
+      fixture.tx as never,
+    )
+
+    const [[inserted]] = fixture.insertValues.mock.calls as unknown as [
+      [{ auth: unknown }],
+    ]
+    expect(isSealedAuth(inserted.auth)).toBe(true)
+    expect(JSON.stringify(inserted.auth)).not.toContain("secret")
+
+    fixture.loadLimit.mockResolvedValue([{ auth: inserted.auth }])
+    await expect(
+      binding.loadAuthByForeignKey(
+        "inbox-1",
+        "workspace-1",
+        fixture.tx as never,
+      ),
+    ).resolves.toEqual(auth)
   })
 
   it("has no duplicateConstraint for Zalo — IntegrationZalo.oaId has no unique constraint in the DB today, unlike every other channel identity column (store-bindings.ts's zalo comment, backfill-connections.ts's duplicate_source_inbox report)", () => {
