@@ -430,6 +430,22 @@ export const connectionNotRefreshableException = (provider: string) =>
     400,
   )
 
+/** `pause`/`resume` only apply to providers declaring `startsPaused`. */
+export const connectionNotPausableException = (provider: string) =>
+  new ChatbotXException(
+    `Connection provider "${provider}" cannot be paused or resumed.`,
+    "connectionNotPausable",
+    400,
+  )
+
+/** `resume` only lifts a user pause or a `needs_reauth`; system pauses (trial, tenant) stay. */
+export const connectionNotResumableException = () =>
+  new ChatbotXException(
+    "This connection was paused by the platform and cannot be resumed manually.",
+    "connectionNotResumable",
+    409,
+  )
+
 /** This provider is already connected in this workspace — a fresh `connectFromCredentials`/OAuth-connect call would collide with the unique `(workspaceId, provider, sourceId)` key. */
 export const connectionAlreadyConnectedException = () =>
   new ChatbotXException(

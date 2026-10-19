@@ -11,7 +11,9 @@ import {
   possibleErrorsOnFindingConnectSession,
   possibleErrorsOnFindingResource,
   possibleErrorsOnListingResource,
+  possibleErrorsOnPausingConnection,
   possibleErrorsOnReconnectingConnection,
+  possibleErrorsOnResumingConnection,
   possibleErrorsOnRefreshingConnection,
   possibleErrorsOnUpdatingConnection,
   possibleErrorsOnVerifyingConnection,
@@ -284,6 +286,48 @@ export const connectionsPublicRouter = {
     .handler(async ({ context, input }) => {
       await loadScopedConnection(context, input.id)
       const connection = await connectionService.verify({
+        connectionId: input.id,
+        workspaceId: context.workspace.id,
+      })
+      return toConnectionResource(connection)
+    }),
+
+  pause: workspaceTokenAuthAPI
+    .route({
+      method: "POST",
+      path: "/v1/connections/{id}/pause",
+      summary: "Pause channel connection",
+      description:
+        "Stops a channel that starts paused (MAX, ZZAP, DROM): the provider stops delivering messages and the connection moves to `paused` with `statusReason: user_paused`. Trial and tenant reactivation never switch it back on. Get connection ids from `connections.list`. 400 `connectionNotPausable` for other providers.",
+      tags: ["Connections"],
+    })
+    .input(getConnectionRequest)
+    .output(connectionResource)
+    .errors(possibleErrorsOnPausingConnection)
+    .handler(async ({ context, input }) => {
+      await loadScopedConnection(context, input.id)
+      const connection = await connectionService.pause({
+        connectionId: input.id,
+        workspaceId: context.workspace.id,
+      })
+      return toConnectionResource(connection)
+    }),
+
+  resume: workspaceTokenAuthAPI
+    .route({
+      method: "POST",
+      path: "/v1/connections/{id}/resume",
+      summary: "Resume channel connection",
+      description:
+        "Switches on a channel paused by the user (or one in `needs_reauth`): re-checks the stored credential, subscribes the provider webhook, and moves the connection to `connected`. On any failure the status does not change. Only one system may serve a channel at a time — switch the old bot off first. Get connection ids from `connections.list`. 409 `connectionNotResumable` for a platform pause (trial, tenant).",
+      tags: ["Connections"],
+    })
+    .input(getConnectionRequest)
+    .output(connectionResource)
+    .errors(possibleErrorsOnResumingConnection)
+    .handler(async ({ context, input }) => {
+      await loadScopedConnection(context, input.id)
+      const connection = await connectionService.resume({
         connectionId: input.id,
         workspaceId: context.workspace.id,
       })

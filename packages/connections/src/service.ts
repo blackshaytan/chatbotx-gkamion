@@ -7,6 +7,7 @@ import { connectTargets } from "./connect-targets"
 import { connectFromCredentials, reconnect } from "./credentials"
 import { attachIntegrationConnectionRow } from "./internal"
 import { disconnect, refresh, verify } from "./lifecycle"
+import { pause, resume } from "./pause"
 
 /**
  * Registry-aware orchestration over the `Connection` domain: provider-side
@@ -21,6 +22,7 @@ import { disconnect, refresh, verify } from "./lifecycle"
  *   `upsertConnectionRow` live in `@chatbotx.io/business/connection` and are
  *   imported directly from there by every sibling module below.
  * - `lifecycle.ts` — `disconnect`/`refresh`/`verify`.
+ * - `pause.ts` — `pause`/`resume` (operator on/off switch for `startsPaused` providers).
  * - `credentials.ts` — `connectFromCredentials`/`reconnect`.
  * - `connect-session-flow.ts` — `startSession`/`completeAuthorization`/
  *   `listAndAttachCandidates` plus the private `completeReconnect` helper.
@@ -35,6 +37,8 @@ export const connectionService = {
   disconnect,
   refresh,
   verify,
+  pause,
+  resume,
   connectFromCredentials,
   reconnect,
   startSession,

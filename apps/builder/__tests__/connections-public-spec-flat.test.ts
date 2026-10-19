@@ -109,8 +109,10 @@ describe("public API spec — connections/connect-sessions request bodies stay M
       [
         "connectSessions.connectTargets",
         "connections.create",
+        "connections.pause",
         "connections.reconnect",
         "connections.refresh",
+        "connections.resume",
         "connections.verify",
       ].sort(),
     )

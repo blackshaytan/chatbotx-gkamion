@@ -755,6 +755,36 @@ const channelHidden = {
   status: 403,
 }
 
+const connectionNotPausable = {
+  message: "This connection provider cannot be paused or resumed",
+  status: 400,
+}
+
+const connectionNotResumable = {
+  message:
+    "This connection was paused by the platform and cannot be resumed manually",
+  status: 409,
+}
+
+export const possibleErrorsOnPausingConnection = {
+  notFound,
+  businessError,
+  connectionNotConfigured,
+  connectionNotPausable,
+  ...possibleIdempotencyErrors,
+} satisfies ErrorMap
+
+export const possibleErrorsOnResumingConnection = {
+  notFound,
+  businessError,
+  connectionNotConfigured,
+  connectionNotPausable,
+  connectionNotResumable,
+  connectionCredentialsRejected,
+  connectionProviderUnavailable,
+  ...possibleIdempotencyErrors,
+} satisfies ErrorMap
+
 export const possibleErrorsOnCreatingConnection = {
   connectionProviderDedicatedOnly,
   businessError,

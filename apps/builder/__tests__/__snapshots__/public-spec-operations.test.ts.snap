@@ -799,6 +799,11 @@ exports[`public API spec — operation naming guard > operation list (operationI
   },
   {
     "method": "POST",
+    "operationId": "connections.pause",
+    "path": "/v1/connections/{id}/pause",
+  },
+  {
+    "method": "POST",
     "operationId": "connections.reconnect",
     "path": "/v1/connections/{id}/reconnect",
   },
@@ -806,6 +811,11 @@ exports[`public API spec — operation naming guard > operation list (operationI
     "method": "POST",
     "operationId": "connections.refresh",
     "path": "/v1/connections/{id}/refresh",
+  },
+  {
+    "method": "POST",
+    "operationId": "connections.resume",
+    "path": "/v1/connections/{id}/resume",
   },
   {
     "method": "PUT",
