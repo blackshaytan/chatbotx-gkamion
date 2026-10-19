@@ -57,6 +57,7 @@ const CHANNEL_WINDOW_SECONDS: Record<ChannelType, number> = {
   zalo: 0,
   smtp: 0,
   telegram: 0,
+  max: 0,
   instagram: 24 * 60 * 60,
   threads: 0,
   tiktok: 24 * 60 * 60,

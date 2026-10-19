@@ -1092,6 +1092,9 @@
         "step3": "Sau khi tạo bot, bạn sẽ nhận được API token. Sao chép token và dán vào bên dưới."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Khớp tất cả các điều kiện bên dưới"
     },
@@ -1427,6 +1430,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "ID người dùng Zalo",
       "telegramChatId": "Chat ID Telegram",
+      "maxUserId": "ID người dùng MAX",
       "tiktokUserId": "ID người dùng TikTok",
       "threadsUsername": "Tên người dùng Threads",
       "webchatGuestId": "ID khách Webchat",
@@ -1578,7 +1582,7 @@
         "placeholder": "Mô tả dữ liệu cần trích xuất"
       }
     },
-    "max": {
+    "maximum": {
       "label": "Tối đa"
     },
     "maxOutputTokens": {

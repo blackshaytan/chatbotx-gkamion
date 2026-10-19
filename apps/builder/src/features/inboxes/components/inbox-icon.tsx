@@ -21,6 +21,7 @@ import {
   GlobeIcon,
   type LucideIcon,
   MailIcon,
+  MessageCircleIcon,
   WebhookIcon,
 } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -88,6 +89,11 @@ export const INBOX_ICON_CONFIG: Record<ChannelType, InboxIconConfig> = {
     Icon: SiTelegram,
     fill: SiTelegramHex,
     defaultLabelKey: "fields.telegram.label",
+  },
+  max: {
+    Icon: MessageCircleIcon,
+    iconClassName: "stroke-[#0077FF]",
+    defaultLabelKey: "fields.max.label",
   },
   tiktok: {
     Icon: SiTiktok,

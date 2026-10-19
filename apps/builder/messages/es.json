@@ -1050,6 +1050,9 @@
         "step3": "After you created El bot, you se receive El bot API token. Copy El API token y paste it below."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Match todos El conditions below"
     },
@@ -1564,7 +1567,7 @@
         "placeholder": "Describe qué se debe extraer"
       }
     },
-    "max": {
+    "maximum": {
       "label": "Máximo"
     },
     "maxOutputTokens": {

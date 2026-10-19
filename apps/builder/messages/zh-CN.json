@@ -2545,7 +2545,7 @@
     "matchAny": {
       "label": "符合下列条件之一"
     },
-    "max": {
+    "maximum": {
       "label": "最大值"
     },
     "maxOutputTokens": {
@@ -3012,6 +3012,9 @@
         "step3": "创建机器人后，您将收到机器人API权杖。拷贝 API 权杖并将其贴到下方。"
       },
       "label": "Telegram"
+    },
+    "max": {
+      "label": "MAX"
     },
     "temperature": {
       "label": "温度"

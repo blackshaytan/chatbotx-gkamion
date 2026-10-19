@@ -2,6 +2,8 @@ import type { ChannelType } from "@chatbotx.io/database/partials"
 import type { InboxWithIntegrations } from "@chatbotx.io/database/types"
 import { encodeRef, type RefConfig } from "../referral"
 
+const LEADING_AT_PATTERN = /^@/
+
 type LinkConfig = {
   url: string
   refKey: string
@@ -33,6 +35,7 @@ export const REF_CAPABLE_CHANNELS = [
   "instagram",
   "whatsapp",
   "telegram",
+  "max",
   "webchat",
 ] as const satisfies readonly ChannelType[]
 
@@ -136,6 +139,11 @@ export function buildInboxLink(
       refKey: "start",
       refValue,
     },
+    max: {
+      url: `https://max.ru/${inbox.name.replace(LEADING_AT_PATTERN, "")}`,
+      refKey: "start",
+      refValue,
+    },
     zalo: {
       url: `https://zalo.me/${inbox.sourceId}`,
       refKey: "ref",
@@ -194,6 +202,7 @@ export function buildPostLink(channel: ChannelType, postId: string): string {
     threads: "",
     whatsapp: "",
     telegram: "",
+    max: "",
     zalo: "",
     tiktok: "",
     webchat: "",
@@ -215,6 +224,7 @@ export function buildMessageLink(
     threads: "",
     whatsapp: "",
     telegram: "",
+    max: "",
     zalo: "",
     tiktok: "",
     webchat: "",

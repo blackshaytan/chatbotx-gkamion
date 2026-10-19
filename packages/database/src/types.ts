@@ -112,6 +112,7 @@ export type WhatsappBusinessAccountModel =
   typeof schema.whatsappBusinessAccountModel.$inferSelect
 export type IntegrationZaloModel =
   typeof schema.integrationZaloModel.$inferSelect
+export type IntegrationMaxModel = typeof schema.integrationMaxModel.$inferSelect
 export type IntegrationTelegramModel =
   typeof schema.integrationTelegramModel.$inferSelect
 export type IntegrationTiktokModel =

@@ -216,6 +216,7 @@ describe("channel policy", () => {
       omnichannel: stepSupport.full,
       smtp: stepSupport.unsupported,
       telegram: stepSupport.unsupported,
+      max: stepSupport.unsupported,
       threads: stepSupport.unsupported,
       tiktok: stepSupport.unsupported,
       webchat: stepSupport.unsupported,

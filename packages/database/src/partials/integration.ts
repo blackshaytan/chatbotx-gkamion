@@ -19,6 +19,7 @@ export const integrationTypes = z.enum([
   "threads",
   "mailchimp",
   "mailerLite",
+  "max",
   "metaCatalog",
   "messenger",
   "moosend",

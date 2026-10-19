@@ -34,6 +34,7 @@ export const contactProfileNameCapabilities = {
   tiktok: { inbound: null, onDemand: false }, // webhook carries ids only, no profile API
   threads: { inbound: null, onDemand: false }, // comment-only channel: no message webhook parses an IncomingContact, and the integration exposes no contact.getProfile handler
   api: { inbound: "payload", onDemand: false },
+  max: { inbound: "payload", onDemand: false }, // update carries the sender name; no separate profile call
   webchat: { inbound: null, onDemand: false },
   smtp: { inbound: null, onDemand: false },
   omnichannel: { inbound: null, onDemand: false },

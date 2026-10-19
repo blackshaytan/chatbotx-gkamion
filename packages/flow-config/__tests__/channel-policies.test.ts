@@ -27,6 +27,7 @@ const MEDIA_SUPPORT_BY_CHANNEL = {
     "unsupported",
   ],
   telegram: ["full", "full", "full", "full", "full"],
+  max: ["full", "full", "full", "full", "full"],
   threads: [
     "unsupported",
     "unsupported",
@@ -67,6 +68,7 @@ const TEXT_LIMITS = {
   omnichannel: 1000,
   smtp: 6000,
   telegram: 4096,
+  max: 4000,
   threads: 500,
   tiktok: 6000,
   webchat: 6000,

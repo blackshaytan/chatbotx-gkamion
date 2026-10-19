@@ -30,6 +30,10 @@ export const sourceIdentityConfigByChannel = {
     labelKey: "fields.channelIdentity.telegramChatId",
     hideWhenSourceUserIdKeyed: false,
   },
+  [channelTypes.enum.max]: {
+    labelKey: "fields.channelIdentity.maxUserId",
+    hideWhenSourceUserIdKeyed: false,
+  },
   [channelTypes.enum.tiktok]: {
     labelKey: "fields.channelIdentity.tiktokUserId",
     hideWhenSourceUserIdKeyed: false,

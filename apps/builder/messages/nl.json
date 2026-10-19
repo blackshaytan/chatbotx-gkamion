@@ -708,6 +708,9 @@
         "step3": "Nadat je de bot hebt gemaakt, ontvang je het API-token van de bot. Kopieer het API-token en plak het hieronder."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Voldoe aan alle onderstaande voorwaarden"
     },
@@ -1222,7 +1225,7 @@
         "placeholder": "Beschrijf wat moet worden geëxtraheerd"
       }
     },
-    "max": {
+    "maximum": {
       "label": "Maximum"
     },
     "maxOutputTokens": {

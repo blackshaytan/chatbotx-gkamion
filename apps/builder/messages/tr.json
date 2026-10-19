@@ -1050,6 +1050,9 @@
         "step3": "Botu oluşturduktan sonra bot API jetonunu alacaksınız. API jetonunu kopyalayıp aşağıya yapıştırın."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Aşağıdaki tüm koşulları eşleştir"
     },
@@ -1564,7 +1567,7 @@
         "placeholder": "Neyin çıkarılacağını açıklayın"
       }
     },
-    "max": {
+    "maximum": {
       "label": "En Fazla"
     },
     "maxOutputTokens": {

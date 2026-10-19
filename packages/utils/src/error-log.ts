@@ -117,6 +117,7 @@ export const errorLogProviderLabels = {
   "google-sheets": "Google sheets",
   "google-calendar": "Google calendar",
   "google-ads": "Google Ads",
+  max: "MAX",
   // AI vendors — the same names the builder's provider picker shows
   // (`aiProviders.*` in `apps/builder/messages/en.json`).
   openai: "OpenAI",

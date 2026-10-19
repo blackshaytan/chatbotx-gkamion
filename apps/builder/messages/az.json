@@ -1092,6 +1092,9 @@
         "step3": "Botu yaratdıqdan sonra botun API tokenini alacaqsınız. API tokenini kopyalayıb aşağıya yapışdırın."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Aşağıdakı bütün şərtlərə uyğunluq"
     },
@@ -1435,6 +1438,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "Zalo istifadəçi ID",
       "telegramChatId": "Telegram çat ID",
+      "maxUserId": "MAX istifadəçi ID",
       "tiktokUserId": "TikTok istifadəçi ID",
       "threadsUsername": "Threads istifadəçi adı",
       "webchatGuestId": "Webchat qonaq ID",
@@ -1615,7 +1619,7 @@
         "placeholder": "Nəyin çıxarılacağını təsvir edin"
       }
     },
-    "max": {
+    "maximum": {
       "label": "Maksimum"
     },
     "maxOutputTokens": {

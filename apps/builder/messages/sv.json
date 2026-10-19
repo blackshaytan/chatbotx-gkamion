@@ -2536,7 +2536,7 @@
     "matchAny": {
       "label": "Matcha ett av villkoren nedan"
     },
-    "max": {
+    "maximum": {
       "label": "Maximalt"
     },
     "maxOutputTokens": {
@@ -3009,6 +3009,9 @@
         "step3": "När du har skapat boten får du botens API-token. Kopiera API-token och klistra in den nedan."
       },
       "label": "Telegram"
+    },
+    "max": {
+      "label": "MAX"
     },
     "temperature": {
       "label": "Temperatur"

@@ -29,6 +29,7 @@ const refreshTokenAdapter: Record<
   webchat: undefined,
   smtp: undefined,
   telegram: undefined,
+  max: undefined,
   api: undefined,
 }
 

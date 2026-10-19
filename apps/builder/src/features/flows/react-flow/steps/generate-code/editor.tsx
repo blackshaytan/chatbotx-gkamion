@@ -62,7 +62,7 @@ const GenerateCodeDialog = ({ parentName }: { parentName: string }) => {
         result.errors.max = {
           type: "manual",
           message: t("validation.maxMustBeGreaterThanMin", {
-            maxField: t("fields.max.label"),
+            maxField: t("fields.maximum.label"),
             minField: t("fields.min.label"),
           }),
         }
@@ -149,7 +149,7 @@ const GenerateCodeDialog = ({ parentName }: { parentName: string }) => {
             />
 
             <InputNumberField
-              label={t("fields.max.label")}
+              label={t("fields.maximum.label")}
               name="max"
               required
             />

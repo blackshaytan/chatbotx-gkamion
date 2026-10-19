@@ -70,6 +70,9 @@
         "step3": "建立機器人後，您將收到機器人API權杖。複製 API 權杖並將其貼到下方。"
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "滿足以下所有條件"
     },
@@ -565,7 +568,7 @@
         "placeholder": "描述要擷取的內容"
       }
     },
-    "max": {
+    "maximum": {
       "label": "最大值"
     },
     "maxOutputTokens": {

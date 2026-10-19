@@ -1092,6 +1092,9 @@
         "step3": "After you created the bot, you will receive the bot API token. Copy the API token and paste it below."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Match all the conditions below"
     },
@@ -1435,6 +1438,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "Zalo User ID",
       "telegramChatId": "Telegram Chat ID",
+      "maxUserId": "MAX user ID",
       "tiktokUserId": "TikTok User ID",
       "threadsUsername": "Threads Username",
       "webchatGuestId": "Webchat Guest ID",
@@ -1615,7 +1619,7 @@
         "placeholder": "Describe what to extract"
       }
     },
-    "max": {
+    "maximum": {
       "label": "Maximum"
     },
     "maxOutputTokens": {

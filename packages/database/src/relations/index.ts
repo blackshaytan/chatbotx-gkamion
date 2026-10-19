@@ -100,6 +100,7 @@ import { integrationInstagramRelations } from "./integration-instagram"
 import { integrationKlaviyoRelations } from "./integration-klaviyo"
 import { integrationMailchimpRelations } from "./integration-mailchimp"
 import { integrationMailerLiteRelations } from "./integration-mailer-lite"
+import { integrationMaxRelations } from "./integration-max"
 import { integrationMessengerRelations } from "./integration-messenger"
 import { integrationMoosendRelations } from "./integration-moosend"
 import { integrationOpenaiRelations } from "./integration-openai"
@@ -295,6 +296,7 @@ export const relations = {
   ...mediaLibraryFolderRelations,
   ...mediaLibraryFileRelations,
   ...savedReplyRelations,
+  ...integrationMaxRelations,
   ...integrationTelegramRelations,
   ...integrationTiktokRelations,
   ...integrationInstagramRelations,

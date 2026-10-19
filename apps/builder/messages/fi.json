@@ -904,6 +904,9 @@
         "step3": "Kun olet luonut botin, saat botin API-tunnuksen. Kopioi API-tunnus ja liitä se alle."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Täsmää kaikkiin alla oleviin ehtoihin"
     },
@@ -1418,7 +1421,7 @@
         "placeholder": "Kuvaile poimittavat tiedot"
       }
     },
-    "max": {
+    "maximum": {
       "label": "Enimmäisarvo"
     },
     "maxOutputTokens": {

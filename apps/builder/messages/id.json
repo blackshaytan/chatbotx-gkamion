@@ -904,6 +904,9 @@
         "step3": "Setelah membuat bot, Anda akan menerima token API bot. Salin token API tersebut dan tempelkan di bawah."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Cocokkan semua kondisi di bawah ini"
     },
@@ -1418,7 +1421,7 @@
         "placeholder": "Jelaskan apa yang akan diekstrak"
       }
     },
-    "max": {
+    "maximum": {
       "label": "Maksimum"
     },
     "maxOutputTokens": {

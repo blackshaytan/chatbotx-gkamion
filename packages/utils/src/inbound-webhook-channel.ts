@@ -156,6 +156,17 @@ export const INBOUND_WEBHOOK_CHANNEL_SPECS: Record<
     channelUserId: { kind: "telegramChatId", examplePath: "$.chat.id" },
     creationIdentities: ["channelUserId"],
   },
+  max: {
+    inboxIdentifiers: [
+      {
+        kind: "botId",
+        strategy: "inboxSourceId",
+        examplePath: "$.bot.id",
+      },
+    ],
+    channelUserId: null,
+    creationIdentities: [],
+  },
   zalo: {
     inboxIdentifiers: [
       {

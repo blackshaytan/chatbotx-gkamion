@@ -904,6 +904,9 @@
         "step3": "Depois de criar o bot, receberá o token da API do bot. Copie o token da API e cole-o abaixo."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Corresponder a todas as condições abaixo"
     },
@@ -1418,7 +1421,7 @@
         "placeholder": "Descreva o que deve ser extraído"
       }
     },
-    "max": {
+    "maximum": {
       "label": "Máximo"
     },
     "maxOutputTokens": {

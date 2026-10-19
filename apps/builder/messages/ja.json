@@ -904,6 +904,9 @@
         "step3": "ボットを作成すると、ボットAPIトークンが発行されます。APIトークンをコピーして以下に貼り付けてください。"
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "以下のすべての条件に一致"
     },
@@ -1418,7 +1421,7 @@
         "placeholder": "抽出する内容を説明"
       }
     },
-    "max": {
+    "maximum": {
       "label": "最大値"
     },
     "maxOutputTokens": {

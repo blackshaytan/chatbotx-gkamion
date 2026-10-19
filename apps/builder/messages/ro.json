@@ -1947,6 +1947,9 @@
         "step3": "După crearea botului, vei primi tokenul API al botului. Copiază tokenul API și lipește-l mai jos."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Potrivește toate condițiile de mai jos"
     },
@@ -2461,7 +2464,7 @@
         "placeholder": "Descrie ce trebuie extras"
       }
     },
-    "max": {
+    "maximum": {
       "label": "Maxim"
     },
     "maxOutputTokens": {

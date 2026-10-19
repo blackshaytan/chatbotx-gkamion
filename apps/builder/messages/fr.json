@@ -904,6 +904,9 @@
         "step3": "Après avoir créé le bot, vous recevrez son jeton API. Copiez-le et collez-le ci-dessous."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Correspondre à toutes les conditions ci-dessous"
     },
@@ -1418,7 +1421,7 @@
         "placeholder": "Décrivez les éléments à extraire"
       }
     },
-    "max": {
+    "maximum": {
       "label": "Maximum"
     },
     "maxOutputTokens": {

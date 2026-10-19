@@ -40,6 +40,10 @@ export const allInboxConfigs = {
     label: "Telegram",
     value: "telegram",
   },
+  max: {
+    label: "MAX",
+    value: "max",
+  },
   tiktok: {
     label: "TikTok",
     value: "tiktok",

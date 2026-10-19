@@ -43,6 +43,9 @@
         "step3": "Dopo aver creato il bot, riceverai il token API del bot. Copia il token API e incollalo qui sotto."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Soddisfa tutte le condizioni seguenti"
     },
@@ -557,7 +560,7 @@
         "placeholder": "Descrivi cosa estrarre"
       }
     },
-    "max": {
+    "maximum": {
       "label": "Massimo"
     },
     "maxOutputTokens": {

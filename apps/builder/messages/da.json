@@ -904,6 +904,9 @@
         "step3": "Efter you oprettet den bot, you vil receive den bot API token. Kopiér den API token og paste it below."
       }
     },
+    "max": {
+      "label": "MAX"
+    },
     "matchAll": {
       "label": "Match alle den betingelser below"
     },
@@ -1418,7 +1421,7 @@
         "placeholder": "Describe what til udtræk"
       }
     },
-    "max": {
+    "maximum": {
       "label": "Maksimum"
     },
     "maxOutputTokens": {
