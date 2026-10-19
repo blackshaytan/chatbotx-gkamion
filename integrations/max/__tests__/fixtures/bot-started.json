@@ -1,0 +1,9 @@
+{
+  "update_type": "bot_started",
+  "timestamp": 1760700002000,
+  "user": {
+    "user_id": 555,
+    "first_name": "Иван"
+  },
+  "payload": "ad42"
+}

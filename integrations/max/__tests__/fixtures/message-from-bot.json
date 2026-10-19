@@ -1,0 +1,24 @@
+{
+  "update_type": "message_created",
+  "timestamp": 1760700000000,
+  "message": {
+    "sender": {
+      "user_id": 555,
+      "first_name": "Иван",
+      "last_name": "Петров",
+      "username": "ivan",
+      "is_bot": true
+    },
+    "recipient": {
+      "chat_id": 9001,
+      "chat_type": "dialog",
+      "user_id": 777
+    },
+    "timestamp": 1760700000000,
+    "body": {
+      "mid": "mid.1",
+      "text": "Есть ли поршень на КамАЗ?"
+    }
+  },
+  "user_locale": "ru"
+}

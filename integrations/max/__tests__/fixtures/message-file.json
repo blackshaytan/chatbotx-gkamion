@@ -1,0 +1,33 @@
+{
+  "update_type": "message_created",
+  "timestamp": 1760700000000,
+  "message": {
+    "sender": {
+      "user_id": 555,
+      "first_name": "Иван",
+      "last_name": "Петров",
+      "username": "ivan"
+    },
+    "recipient": {
+      "chat_id": 9001,
+      "chat_type": "dialog",
+      "user_id": 777
+    },
+    "timestamp": 1760700000000,
+    "body": {
+      "mid": "mid.3",
+      "attachments": [
+        {
+          "type": "file",
+          "filename": "счёт.pdf",
+          "size": 1024,
+          "payload": {
+            "url": "https://f.max.ru/1",
+            "fileId": 5
+          }
+        }
+      ]
+    }
+  },
+  "user_locale": "ru"
+}

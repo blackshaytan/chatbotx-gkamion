@@ -1,0 +1,12 @@
+{
+  "update_type": "message_callback",
+  "timestamp": 1760700001000,
+  "callback": {
+    "callback_id": "cb.1",
+    "payload": "flow:abc:btn1",
+    "user": {
+      "user_id": 555,
+      "first_name": "Иван"
+    }
+  }
+}
