@@ -57,6 +57,12 @@ type ConnectionProviderCommon<IAuth extends AuthValue> = {
     subscribe: Handler<{ auth: IAuth }, void>
     unsubscribe: Handler<{ auth: IAuth }, void>
   }
+  /**
+   * Every connect lands in `paused` (reason `user_paused`) and skips
+   * `webhook.subscribe`; the operator switches it on via `resume`. For
+   * channels that must not start receiving until explicitly enabled.
+   */
+  startsPaused?: boolean
 }
 
 type OAuthStrategy<IAuth extends AuthValue, ICreds> = {

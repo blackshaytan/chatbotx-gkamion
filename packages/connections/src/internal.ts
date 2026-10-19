@@ -30,6 +30,7 @@ import {
 } from "@chatbotx.io/sdk"
 import { z } from "zod"
 import { logger } from "./logger"
+import { resolvePostConnectStep } from "./post-connect"
 import { CONNECTION_REGISTRY } from "./registry"
 
 /** Single source for which `ConnectionStrategy`s connect via direct credentials (vs. an OAuth round trip) — shared by `credentials.ts`'s strategy-branch check, `connect-flow.ts`'s `startConnect`, and `resolve-provider.ts`'s catalog availability check. */
@@ -382,12 +383,19 @@ export const connectAndPersist = async (input: {
       }),
   )
 
-  const final = await subscribeWebhookBestEffort({
-    adapter,
-    auth,
-    connection,
-    ownerId,
-  })
+  const final =
+    resolvePostConnectStep(provider) === "pause"
+      ? await connectionStateService.transition({
+          connectionId: connection.id,
+          event: "user.pause",
+          ownerId,
+        })
+      : await subscribeWebhookBestEffort({
+          adapter,
+          auth,
+          connection,
+          ownerId,
+        })
 
   // Restores the "connected a new channel" audit record for every provider
   // the engine connects. Also fires when reviving an inactive satellite row
