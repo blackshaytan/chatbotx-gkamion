@@ -318,3 +318,74 @@ describe("transitionConnection — FSM edges", () => {
     expect(result.quotaEdge).toBeNull()
   })
 })
+
+describe("transitionConnection — user pause/resume", () => {
+  test("user.pause from an active status pauses with user_paused and releases quota", () => {
+    for (const from of ["connected", "degraded"] as const) {
+      const result = transitionConnection({ from, event: "user.pause" })
+      expect(result.to).toBe("paused")
+      expect(result.reason).toBe("user_paused")
+      expect(result.quotaEdge).toBe("release")
+    }
+  })
+
+  test("user.pause from an inactive status is a no-op", () => {
+    for (const from of ["paused", "needs_reauth", "disconnected"] as const) {
+      const result = transitionConnection({ from, event: "user.pause" })
+      expect(result.noop).toBe(true)
+      expect(result.quotaEdge).toBeNull()
+    }
+  })
+
+  test("user.resume from a user-paused connection connects and consumes quota", () => {
+    const result = transitionConnection({
+      from: "paused",
+      fromReason: "user_paused",
+      event: "user.resume",
+    })
+    expect(result.to).toBe("connected")
+    expect(result.reason).toBeNull()
+    expect(result.quotaEdge).toBe("consume")
+  })
+
+  test("user.resume from needs_reauth connects", () => {
+    const result = transitionConnection({
+      from: "needs_reauth",
+      fromReason: "token_revoked",
+      event: "user.resume",
+    })
+    expect(result.to).toBe("connected")
+  })
+
+  test("user.resume never lifts a system pause (trial/tenant)", () => {
+    for (const fromReason of ["trial_expired", "tenant_suspended"] as const) {
+      const result = transitionConnection({
+        from: "paused",
+        fromReason,
+        event: "user.resume",
+      })
+      expect(result.noop).toBe(true)
+      expect(result.to).toBe("paused")
+    }
+  })
+
+  test("teardown.resume never lifts a user pause", () => {
+    const result = transitionConnection({
+      from: "paused",
+      fromReason: "user_paused",
+      event: "teardown.resume",
+    })
+    expect(result.noop).toBe(true)
+    expect(result.to).toBe("paused")
+  })
+
+  test("teardown.pause keeps a user pause untouched", () => {
+    const result = transitionConnection({
+      from: "paused",
+      fromReason: "user_paused",
+      event: "teardown.pause",
+    })
+    expect(result.noop).toBe(true)
+    expect(result.reason).toBeNull()
+  })
+})

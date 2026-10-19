@@ -1,0 +1,1 @@
+ALTER TABLE "Connection" DROP CONSTRAINT "Connection_statusReason_check", ADD CONSTRAINT "Connection_statusReason_check" CHECK ("statusReason" IN ('manual', 'workspace_purge', 'trial_expired', 'tenant_suspended', 'token_revoked', 'provider_revoked', 'refresh_failed', 'verify_failed', 'quota_exceeded', 'orphaned_webhook', 'user_paused'));

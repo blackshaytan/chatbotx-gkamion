@@ -43,6 +43,7 @@ export const connectionStatusReasons = z.enum([
   "verify_failed",
   "quota_exceeded",
   "orphaned_webhook",
+  "user_paused",
 ])
 export type ConnectionStatusReason = z.infer<typeof connectionStatusReasons>
 
@@ -68,7 +69,7 @@ export type InboxDisconnectReason = z.infer<typeof inboxDisconnectReasons>
  * `disconnectReason` directly, before this `Connection` layer existed) —
  * they must NOT collapse into the generic `manual` bucket. Reasons with no
  * Inbox-native equivalent (`verify_failed`, `quota_exceeded`,
- * `orphaned_webhook`) fall back to `manual`.
+ * `orphaned_webhook`, `user_paused`) fall back to `manual`.
  */
 export const CONNECTION_TO_INBOX_DISCONNECT_REASON: Record<
   ConnectionStatusReason,
@@ -84,6 +85,7 @@ export const CONNECTION_TO_INBOX_DISCONNECT_REASON: Record<
   verify_failed: "manual",
   quota_exceeded: "manual",
   orphaned_webhook: "manual",
+  user_paused: "manual",
 }
 
 /**

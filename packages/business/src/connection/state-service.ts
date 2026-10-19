@@ -354,6 +354,7 @@ class ConnectionStateService extends BaseService {
 
       const result = transitionConnection({
         from: existing.status,
+        fromReason: existing.statusReason,
         event: input.event,
         reason: input.reason,
       })

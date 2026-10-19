@@ -6,6 +6,9 @@ import {
   desc,
   eq,
   inArray,
+  isNull,
+  ne,
+  or,
   relationsFilterToSQL,
   sql,
 } from "../../client"
@@ -239,6 +242,11 @@ export const connectionRepository = {
         and(
           eq(workspaceModel.ownerId, input.ownerId),
           eq(connectionModel.status, "paused"),
+          // A user pause stays off through tenant reactivation.
+          or(
+            isNull(connectionModel.statusReason),
+            ne(connectionModel.statusReason, "user_paused"),
+          ),
         ),
       )
     return rows.map((row) => row.connection)

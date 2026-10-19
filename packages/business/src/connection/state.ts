@@ -32,10 +32,14 @@ export type ConnectionEvent =
   | "teardown.pause"
   | "teardown.resume"
   | "teardown.disconnect"
+  | "user.pause"
+  | "user.resume"
 
 type ConnectionTransitionInput = {
   /** `undefined` when no `Connection` row exists yet (first `connect.completed`). */
   from: ConnectionStatus | undefined
+  /** The stored `statusReason` of `from` — tells a user pause from a system pause. */
+  fromReason?: ConnectionStatusReason | null
   event: ConnectionEvent
   reason?: ConnectionStatusReason
 }
@@ -99,7 +103,7 @@ const result = (
 export const transitionConnection = (
   input: ConnectionTransitionInput,
 ): ConnectionTransitionResult => {
-  const { from, event, reason } = input
+  const { from, fromReason, event, reason } = input
 
   switch (event) {
     case "connect.completed": {
@@ -152,8 +156,23 @@ export const transitionConnection = (
       return result(from, "paused", reason ?? "trial_expired")
     }
     case "teardown.resume": {
-      if (from !== "paused") {
+      // A user pause is the operator's decision; trial/tenant reactivation
+      // must never switch such a channel back on.
+      if (from !== "paused" || fromReason === "user_paused") {
         return result(from, from ?? "paused", null)
+      }
+      return result(from, "connected", null)
+    }
+    case "user.pause": {
+      if (from === undefined || !isActiveConnectionStatus(from)) {
+        return result(from, from ?? "paused", null)
+      }
+      return result(from, "paused", "user_paused")
+    }
+    case "user.resume": {
+      const isUserPaused = from === "paused" && fromReason === "user_paused"
+      if (!(isUserPaused || from === "needs_reauth")) {
+        return result(from, from ?? "disconnected", null)
       }
       return result(from, "connected", null)
     }
