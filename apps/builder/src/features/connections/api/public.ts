@@ -13,8 +13,8 @@ import {
   possibleErrorsOnListingResource,
   possibleErrorsOnPausingConnection,
   possibleErrorsOnReconnectingConnection,
-  possibleErrorsOnResumingConnection,
   possibleErrorsOnRefreshingConnection,
+  possibleErrorsOnResumingConnection,
   possibleErrorsOnUpdatingConnection,
   possibleErrorsOnVerifyingConnection,
 } from "@/lib/orpc/orpc-error-helper"

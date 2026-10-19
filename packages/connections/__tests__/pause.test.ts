@@ -24,9 +24,7 @@ vi.mock("@chatbotx.io/business/errors", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("@chatbotx.io/business/errors")>()
   return {
-    connectionCredentialsRejectedException: vi.fn(
-      () => new Error("rejected"),
-    ),
+    connectionCredentialsRejectedException: vi.fn(() => new Error("rejected")),
     connectionNotConfiguredException: vi.fn(() => new Error("not configured")),
     connectionNotPausableException: vi.fn(() => new Error("not pausable")),
     connectionNotResumableException: vi.fn(() => new Error("not resumable")),
