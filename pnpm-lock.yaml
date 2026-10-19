@@ -158,6 +158,9 @@ importers:
       '@chatbotx.io/integration-mailer-lite':
         specifier: workspace:*
         version: link:../../integrations/mailer-lite
+      '@chatbotx.io/integration-max':
+        specifier: workspace:*
+        version: link:../../integrations/max
       '@chatbotx.io/integration-messenger':
         specifier: workspace:*
         version: link:../../integrations/messenger
@@ -784,6 +787,9 @@ importers:
       '@chatbotx.io/integration-mailer-lite':
         specifier: workspace:*
         version: link:../../integrations/mailer-lite
+      '@chatbotx.io/integration-max':
+        specifier: workspace:*
+        version: link:../../integrations/max
       '@chatbotx.io/integration-messenger':
         specifier: workspace:*
         version: link:../../integrations/messenger
@@ -2514,6 +2520,9 @@ importers:
       '@chatbotx.io/integration-mailer-lite':
         specifier: workspace:*
         version: link:../../integrations/mailer-lite
+      '@chatbotx.io/integration-max':
+        specifier: workspace:*
+        version: link:../../integrations/max
       '@chatbotx.io/integration-messenger':
         specifier: workspace:*
         version: link:../../integrations/messenger
@@ -2632,6 +2641,9 @@ importers:
       '@chatbotx.io/integration-mailer-lite':
         specifier: workspace:*
         version: link:../../integrations/mailer-lite
+      '@chatbotx.io/integration-max':
+        specifier: workspace:*
+        version: link:../../integrations/max
       '@chatbotx.io/integration-messenger':
         specifier: workspace:*
         version: link:../../integrations/messenger

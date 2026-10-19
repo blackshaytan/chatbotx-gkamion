@@ -1,2 +1,3 @@
 export { parseMaxUpdate } from "./handlers/parse-update"
-export type { MaxAuthValue } from "./schema"
+export { integration } from "./integration"
+export type { MaxAuthValue, MaxConfig } from "./schema"

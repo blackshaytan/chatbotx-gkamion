@@ -15,6 +15,7 @@ import {
   integrationKlaviyoModel,
   integrationMailchimpModel,
   integrationMailerLiteModel,
+  integrationMaxModel,
   integrationMessengerModel,
   integrationMoosendModel,
   integrationOpenaiCompatibleModel,
@@ -234,6 +235,14 @@ export const buildConnectionStoreBindings = (
     tableName: "IntegrationMailerLite",
     integrationType: "mailerLite",
     duplicateConstraint: "IntegrationMailerLite_workspaceId_key",
+  }),
+  max: makeChannelBinding({
+    table: integrationMaxModel,
+    tableName: "IntegrationMax",
+    identityColumn: "botId",
+    onDisconnect: "delete_row",
+    duplicateConstraint: "IntegrationMax_botId_key",
+    sealAuth: true,
   }),
   messenger: makeChannelBinding({
     table: integrationMessengerModel,

@@ -29,6 +29,7 @@ import { integration as integrationInstagramFacebook } from "@chatbotx.io/integr
 import { integration as integrationKlaviyo } from "@chatbotx.io/integration-klaviyo"
 import { integration as integrationMailchimp } from "@chatbotx.io/integration-mailchimp"
 import { integration as integrationMailerLite } from "@chatbotx.io/integration-mailer-lite"
+import { integration as integrationMax } from "@chatbotx.io/integration-max"
 import { integration as integrationMessenger } from "@chatbotx.io/integration-messenger"
 import { integration as integrationMoosend } from "@chatbotx.io/integration-moosend"
 import { integration as integrationSendGrid } from "@chatbotx.io/integration-sendgrid"
@@ -68,6 +69,7 @@ export const integrations = {
   klaviyo: integrationKlaviyo,
   mailchimp: integrationMailchimp,
   mailerLite: integrationMailerLite,
+  max: integrationMax,
   messenger: integrationMessenger,
   moosend: integrationMoosend,
   sendGrid: integrationSendGrid,
@@ -176,6 +178,11 @@ export const integrationService = {
         columnName = "botId"
         break
       }
+      case "max": {
+        modelName = "IntegrationMax"
+        columnName = "botId"
+        break
+      }
       case "messenger": {
         modelName = "IntegrationMessenger"
         columnName = "pageId"
@@ -262,6 +269,7 @@ export const integrationService = {
     const integrationTableByChannel: Partial<Record<string, string>> = {
       api: "IntegrationApi",
       instagram: "IntegrationInstagram",
+      max: "IntegrationMax",
       messenger: "IntegrationMessenger",
       smtp: "IntegrationSmtp",
       telegram: "IntegrationTelegram",

@@ -23,6 +23,7 @@ import { integration as integrationInstagramFacebook } from "@chatbotx.io/integr
 import { integration as integrationKlaviyo } from "@chatbotx.io/integration-klaviyo"
 import { integration as integrationMailchimp } from "@chatbotx.io/integration-mailchimp"
 import { integration as integrationMailerLite } from "@chatbotx.io/integration-mailer-lite"
+import { integration as integrationMax } from "@chatbotx.io/integration-max"
 import { integration as integrationMessenger } from "@chatbotx.io/integration-messenger"
 import { integration as integrationMoosend } from "@chatbotx.io/integration-moosend"
 import { integration as integrationSendGrid } from "@chatbotx.io/integration-sendgrid"
@@ -137,6 +138,7 @@ export const CONNECTION_REGISTRY: StoreBoundConnectionRegistry = {
   klaviyo: fromIntegration(integrationKlaviyo, "klaviyo"),
   mailchimp: fromIntegration(integrationMailchimp, "mailchimp"),
   mailerLite: fromIntegration(integrationMailerLite, "mailerLite"),
+  max: fromIntegration(integrationMax, "max"),
   messenger: {
     ...fromIntegration(integrationMessenger, "messenger", "messenger"),
     teardown: messengerConnectionTeardownHook,
