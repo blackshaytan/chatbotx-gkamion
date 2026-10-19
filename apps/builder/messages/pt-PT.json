@@ -905,7 +905,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Token do bot",
+      "connectInstructions": {
+        "step1": "Abra a <link>plataforma empresarial do MAX</link> e crie um bot.",
+        "step2": "Copie o token do bot em <strong>Integração → Obter token</strong>.",
+        "step3": "Cole-o abaixo. O canal é adicionado desligado — ligue-o quando estiver pronto."
+      },
+      "enabled": "Receção e envio",
+      "enabledHint": "Apenas um sistema pode servir este bot. Desligue o bot antigo antes de ligar este.",
+      "status": {
+        "connected": "Ligado",
+        "paused": "Desligado",
+        "needs_reauth": "Token recusado",
+        "degraded": "Problema",
+        "disconnected": "Desligado da conta"
+      },
+      "switchedOn": "Canal MAX ligado",
+      "switchedOff": "Canal MAX desligado"
     },
     "matchAll": {
       "label": "Corresponder a todas as condições abaixo"
@@ -1241,6 +1258,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "ID de utilizador do Zalo",
       "telegramChatId": "ID do chat do Telegram",
+      "maxUserId": "ID de utilizador do MAX",
       "tiktokUserId": "ID de utilizador do TikTok",
       "threadsUsername": "Nome de utilizador do Threads",
       "webchatGuestId": "ID de visitante do Webchat",

@@ -1051,7 +1051,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "رمز البوت",
+      "connectInstructions": {
+        "step1": "افتح <link>منصة أعمال MAX</link> وأنشئ بوتًا.",
+        "step2": "انسخ رمز البوت من <strong>التكامل ← الحصول على الرمز</strong>.",
+        "step3": "الصقه أدناه. تتم إضافة القناة وهي متوقفة — شغّلها عندما تكون جاهزًا."
+      },
+      "enabled": "الاستقبال والإرسال",
+      "enabledHint": "يمكن لنظام واحد فقط خدمة هذا البوت. أوقف البوت القديم قبل تشغيل هذا.",
+      "status": {
+        "connected": "مفعّل",
+        "paused": "متوقف",
+        "needs_reauth": "تم رفض الرمز",
+        "degraded": "مشكلة",
+        "disconnected": "غير متصل"
+      },
+      "switchedOn": "تم تشغيل قناة MAX",
+      "switchedOff": "تم إيقاف قناة MAX"
     },
     "matchAll": {
       "label": "مطابقة جميع الشروط أدناه"
@@ -1387,6 +1404,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "معرّف مستخدم Zalo",
       "telegramChatId": "معرّف دردشة Telegram",
+      "maxUserId": "معرّف مستخدم MAX",
       "tiktokUserId": "معرّف مستخدم TikTok",
       "threadsUsername": "اسم مستخدم Threads",
       "webchatGuestId": "معرّف زائر Webchat",

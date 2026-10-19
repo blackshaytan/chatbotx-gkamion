@@ -1093,7 +1093,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Bot token",
+      "connectInstructions": {
+        "step1": "Open the <link>MAX business platform</link> and create a bot.",
+        "step2": "Copy the bot token from <strong>Integration → Get token</strong>.",
+        "step3": "Paste it below. The channel is added switched off — turn it on when you are ready."
+      },
+      "enabled": "Receiving and sending",
+      "enabledHint": "Only one system may serve this bot. Switch the old bot off before turning this on.",
+      "status": {
+        "connected": "On",
+        "paused": "Off",
+        "needs_reauth": "Token rejected",
+        "degraded": "Problem",
+        "disconnected": "Disconnected"
+      },
+      "switchedOn": "MAX channel is on",
+      "switchedOff": "MAX channel is off"
     },
     "matchAll": {
       "label": "Match all the conditions below"

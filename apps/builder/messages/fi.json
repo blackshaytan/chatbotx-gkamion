@@ -905,7 +905,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Botin tunnus",
+      "connectInstructions": {
+        "step1": "Avaa <link>MAX-yritysalusta</link> ja luo botti.",
+        "step2": "Kopioi botin tunnus kohdasta <strong>Integraatio → Hae tunnus</strong>.",
+        "step3": "Liitä se alle. Kanava lisätään pois päältä — kytke se päälle, kun olet valmis."
+      },
+      "enabled": "Vastaanotto ja lähetys",
+      "enabledHint": "Vain yksi järjestelmä voi palvella tätä bottia. Kytke vanha botti pois ennen tämän kytkemistä päälle.",
+      "status": {
+        "connected": "Päällä",
+        "paused": "Pois",
+        "needs_reauth": "Tunnus hylätty",
+        "degraded": "Ongelma",
+        "disconnected": "Yhteys katkaistu"
+      },
+      "switchedOn": "MAX-kanava on päällä",
+      "switchedOff": "MAX-kanava on pois päältä"
     },
     "matchAll": {
       "label": "Täsmää kaikkiin alla oleviin ehtoihin"
@@ -1241,6 +1258,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "Zalo-käyttäjätunnus",
       "telegramChatId": "Telegram-keskustelutunnus",
+      "maxUserId": "MAX-käyttäjätunnus",
       "tiktokUserId": "TikTok-käyttäjätunnus",
       "threadsUsername": "Threads-käyttäjänimi",
       "webchatGuestId": "Webchat-vierastunnus",

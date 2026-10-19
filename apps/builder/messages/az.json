@@ -1093,7 +1093,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Bot tokeni",
+      "connectInstructions": {
+        "step1": "<link>MAX biznes platformasını</link> açın və bot yaradın.",
+        "step2": "Bot tokenini <strong>İnteqrasiya → Token al</strong> bölməsindən kopyalayın.",
+        "step3": "Onu aşağıya yapışdırın. Kanal söndürülmüş halda əlavə olunur — hazır olduqda onu yandırın."
+      },
+      "enabled": "Qəbul və göndərmə",
+      "enabledHint": "Bu botu yalnız bir sistem xidmət edə bilər. Bunu yandırmazdan əvvəl köhnə botu söndürün.",
+      "status": {
+        "connected": "Açıq",
+        "paused": "Bağlı",
+        "needs_reauth": "Token rədd edildi",
+        "degraded": "Problem",
+        "disconnected": "Ayrılıb"
+      },
+      "switchedOn": "MAX kanalı yandırıldı",
+      "switchedOff": "MAX kanalı söndürüldü"
     },
     "matchAll": {
       "label": "Aşağıdakı bütün şərtlərə uyğunluq"

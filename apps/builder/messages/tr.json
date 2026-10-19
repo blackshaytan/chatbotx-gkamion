@@ -1051,7 +1051,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Bot jetonu",
+      "connectInstructions": {
+        "step1": "<link>MAX iş platformunu</link> açın ve bir bot oluşturun.",
+        "step2": "Bot jetonunu <strong>Entegrasyon → Jeton al</strong> bölümünden kopyalayın.",
+        "step3": "Aşağıya yapıştırın. Kanal kapalı olarak eklenir — hazır olduğunuzda açın."
+      },
+      "enabled": "Alma ve gönderme",
+      "enabledHint": "Bu bota yalnızca bir sistem hizmet verebilir. Bunu açmadan önce eski botu kapatın.",
+      "status": {
+        "connected": "Açık",
+        "paused": "Kapalı",
+        "needs_reauth": "Jeton reddedildi",
+        "degraded": "Sorun",
+        "disconnected": "Bağlantı kesildi"
+      },
+      "switchedOn": "MAX kanalı açıldı",
+      "switchedOff": "MAX kanalı kapatıldı"
     },
     "matchAll": {
       "label": "Aşağıdaki tüm koşulları eşleştir"
@@ -1387,6 +1404,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "Zalo Kullanıcı Kimliği",
       "telegramChatId": "Telegram Sohbet Kimliği",
+      "maxUserId": "MAX kullanıcı kimliği",
       "tiktokUserId": "TikTok Kullanıcı Kimliği",
       "threadsUsername": "Threads Kullanıcı Adı",
       "webchatGuestId": "Webchat Ziyaretçi Kimliği",

@@ -1093,7 +1093,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Mã token bot",
+      "connectInstructions": {
+        "step1": "Mở <link>nền tảng doanh nghiệp MAX</link> và tạo bot.",
+        "step2": "Sao chép token bot từ <strong>Tích hợp → Lấy token</strong>.",
+        "step3": "Dán vào bên dưới. Kênh được thêm ở trạng thái tắt — hãy bật khi bạn sẵn sàng."
+      },
+      "enabled": "Nhận và gửi",
+      "enabledHint": "Chỉ một hệ thống được phục vụ bot này. Hãy tắt bot cũ trước khi bật.",
+      "status": {
+        "connected": "Bật",
+        "paused": "Tắt",
+        "needs_reauth": "Token bị từ chối",
+        "degraded": "Sự cố",
+        "disconnected": "Đã ngắt kết nối"
+      },
+      "switchedOn": "Kênh MAX đã bật",
+      "switchedOff": "Kênh MAX đã tắt"
     },
     "matchAll": {
       "label": "Khớp tất cả các điều kiện bên dưới"

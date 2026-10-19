@@ -905,7 +905,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Token bot",
+      "connectInstructions": {
+        "step1": "Buka <link>platform bisnis MAX</link> dan buat bot.",
+        "step2": "Salin token bot dari <strong>Integrasi → Dapatkan token</strong>.",
+        "step3": "Tempel di bawah. Kanal ditambahkan dalam keadaan mati — nyalakan saat Anda siap."
+      },
+      "enabled": "Menerima dan mengirim",
+      "enabledHint": "Hanya satu sistem yang boleh melayani bot ini. Matikan bot lama sebelum menyalakan yang ini.",
+      "status": {
+        "connected": "Aktif",
+        "paused": "Nonaktif",
+        "needs_reauth": "Token ditolak",
+        "degraded": "Masalah",
+        "disconnected": "Terputus"
+      },
+      "switchedOn": "Kanal MAX aktif",
+      "switchedOff": "Kanal MAX nonaktif"
     },
     "matchAll": {
       "label": "Cocokkan semua kondisi di bawah ini"
@@ -1241,6 +1258,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "ID Pengguna Zalo",
       "telegramChatId": "ID Chat Telegram",
+      "maxUserId": "ID pengguna MAX",
       "tiktokUserId": "ID Pengguna TikTok",
       "threadsUsername": "Nama Pengguna Threads",
       "webchatGuestId": "ID Tamu Webchat",

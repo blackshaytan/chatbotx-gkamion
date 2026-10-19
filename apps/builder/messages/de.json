@@ -905,7 +905,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Bot-Token",
+      "connectInstructions": {
+        "step1": "Öffne die <link>MAX-Business-Plattform</link> und erstelle einen Bot.",
+        "step2": "Kopiere das Bot-Token unter <strong>Integration → Token abrufen</strong>.",
+        "step3": "Füge es unten ein. Der Kanal wird ausgeschaltet hinzugefügt — schalte ihn ein, wenn du bereit bist."
+      },
+      "enabled": "Empfangen und Senden",
+      "enabledHint": "Nur ein System darf diesen Bot bedienen. Schalte den alten Bot aus, bevor du diesen einschaltest.",
+      "status": {
+        "connected": "An",
+        "paused": "Aus",
+        "needs_reauth": "Token abgelehnt",
+        "degraded": "Problem",
+        "disconnected": "Getrennt"
+      },
+      "switchedOn": "MAX-Kanal ist eingeschaltet",
+      "switchedOff": "MAX-Kanal ist ausgeschaltet"
     },
     "matchAll": {
       "label": "Alle folgenden Bedingungen erfüllen"
@@ -1241,6 +1258,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "Zalo-Benutzer-ID",
       "telegramChatId": "Telegram-Chat-ID",
+      "maxUserId": "MAX-Benutzer-ID",
       "tiktokUserId": "TikTok-Benutzer-ID",
       "threadsUsername": "Threads-Benutzername",
       "webchatGuestId": "Webchat-Gast-ID",

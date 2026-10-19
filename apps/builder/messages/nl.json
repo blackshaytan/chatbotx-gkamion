@@ -709,7 +709,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Bottoken",
+      "connectInstructions": {
+        "step1": "Open het <link>MAX-bedrijfsplatform</link> en maak een bot.",
+        "step2": "Kopieer het bottoken via <strong>Integratie → Token ophalen</strong>.",
+        "step3": "Plak het hieronder. Het kanaal wordt uitgeschakeld toegevoegd — zet het aan wanneer je klaar bent."
+      },
+      "enabled": "Ontvangen en verzenden",
+      "enabledHint": "Slechts één systeem mag deze bot bedienen. Zet de oude bot uit voordat je deze aanzet.",
+      "status": {
+        "connected": "Aan",
+        "paused": "Uit",
+        "needs_reauth": "Token geweigerd",
+        "degraded": "Probleem",
+        "disconnected": "Verbroken"
+      },
+      "switchedOn": "MAX-kanaal staat aan",
+      "switchedOff": "MAX-kanaal staat uit"
     },
     "matchAll": {
       "label": "Voldoe aan alle onderstaande voorwaarden"
@@ -1045,6 +1062,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "Zalo-gebruikers-ID",
       "telegramChatId": "Telegram-chat-ID",
+      "maxUserId": "MAX-gebruikers-ID",
       "tiktokUserId": "TikTok-gebruikers-ID",
       "threadsUsername": "Threads-gebruikersnaam",
       "webchatGuestId": "Webchat-gast-ID",

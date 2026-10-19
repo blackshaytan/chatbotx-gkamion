@@ -1986,6 +1986,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "Zalo 用户 ID",
       "telegramChatId": "Telegram 聊天 ID",
+      "maxUserId": "MAX 用户 ID",
       "tiktokUserId": "TikTok 用户 ID",
       "threadsUsername": "Threads 用户名",
       "webchatGuestId": "网页聊天访客 ID",
@@ -3014,7 +3015,24 @@
       "label": "Telegram"
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "机器人令牌",
+      "connectInstructions": {
+        "step1": "打开 <link>MAX 商业平台</link> 并创建机器人。",
+        "step2": "在 <strong>集成 → 获取令牌</strong> 中复制机器人令牌。",
+        "step3": "粘贴到下方。渠道添加后处于关闭状态——准备好后再开启。"
+      },
+      "enabled": "接收和发送",
+      "enabledHint": "此机器人只能由一个系统服务。开启前请先关闭旧机器人。",
+      "status": {
+        "connected": "开启",
+        "paused": "关闭",
+        "needs_reauth": "令牌被拒绝",
+        "degraded": "问题",
+        "disconnected": "已断开"
+      },
+      "switchedOn": "MAX 渠道已开启",
+      "switchedOff": "MAX 渠道已关闭"
     },
     "temperature": {
       "label": "温度"

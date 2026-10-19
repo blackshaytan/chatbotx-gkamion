@@ -1948,7 +1948,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Token bot",
+      "connectInstructions": {
+        "step1": "Deschide <link>platforma de business MAX</link> și creează un bot.",
+        "step2": "Copiază tokenul botului din <strong>Integrare → Obține token</strong>.",
+        "step3": "Lipește-l mai jos. Canalul este adăugat oprit — pornește-l când ești pregătit."
+      },
+      "enabled": "Primire și trimitere",
+      "enabledHint": "Un singur sistem poate deservi acest bot. Oprește botul vechi înainte de a-l porni pe acesta.",
+      "status": {
+        "connected": "Pornit",
+        "paused": "Oprit",
+        "needs_reauth": "Token respins",
+        "degraded": "Problemă",
+        "disconnected": "Deconectat"
+      },
+      "switchedOn": "Canalul MAX este pornit",
+      "switchedOff": "Canalul MAX este oprit"
     },
     "matchAll": {
       "label": "Potrivește toate condițiile de mai jos"
@@ -2284,6 +2301,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "ID utilizator Zalo",
       "telegramChatId": "ID chat Telegram",
+      "maxUserId": "ID utilizator MAX",
       "tiktokUserId": "ID utilizator TikTok",
       "threadsUsername": "Nume utilizator Threads",
       "webchatGuestId": "ID vizitator Webchat",

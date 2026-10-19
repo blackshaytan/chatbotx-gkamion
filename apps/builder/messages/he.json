@@ -4634,7 +4634,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "אסימון הבוט",
+      "connectInstructions": {
+        "step1": "פתחו את <link>פלטפורמת העסקים של MAX</link> וצרו בוט.",
+        "step2": "העתיקו את אסימון הבוט מ-<strong>אינטגרציה ← קבלת אסימון</strong>.",
+        "step3": "הדביקו אותו למטה. הערוץ נוסף כשהוא כבוי — הפעילו אותו כשתהיו מוכנים."
+      },
+      "enabled": "קבלה ושליחה",
+      "enabledHint": "רק מערכת אחת יכולה לשרת את הבוט הזה. כבו את הבוט הישן לפני הפעלת זה.",
+      "status": {
+        "connected": "פעיל",
+        "paused": "כבוי",
+        "needs_reauth": "האסימון נדחה",
+        "degraded": "בעיה",
+        "disconnected": "מנותק"
+      },
+      "switchedOn": "ערוץ MAX הופעל",
+      "switchedOff": "ערוץ MAX כובה"
     },
     "matchAll": {
       "label": "התאמה לכל התנאים שלהלן"
@@ -4970,6 +4987,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "מזהה משתמש ב-Zalo",
       "telegramChatId": "מזהה צ'אט ב-Telegram",
+      "maxUserId": "מזהה משתמש MAX",
       "tiktokUserId": "מזהה משתמש ב-TikTok",
       "threadsUsername": "שם משתמש ב-Threads",
       "webchatGuestId": "מזהה אורח ב-Webchat",

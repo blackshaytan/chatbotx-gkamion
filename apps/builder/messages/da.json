@@ -905,7 +905,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Bot-token",
+      "connectInstructions": {
+        "step1": "Åbn <link>MAX-forretningsplatformen</link> og opret en bot.",
+        "step2": "Kopiér bot-tokenet fra <strong>Integration → Hent token</strong>.",
+        "step3": "Indsæt det nedenfor. Kanalen tilføjes slået fra — slå den til, når du er klar."
+      },
+      "enabled": "Modtagelse og afsendelse",
+      "enabledHint": "Kun ét system må betjene denne bot. Slå den gamle bot fra, før du slår denne til.",
+      "status": {
+        "connected": "Til",
+        "paused": "Fra",
+        "needs_reauth": "Token afvist",
+        "degraded": "Problem",
+        "disconnected": "Afbrudt"
+      },
+      "switchedOn": "MAX-kanalen er slået til",
+      "switchedOff": "MAX-kanalen er slået fra"
     },
     "matchAll": {
       "label": "Match alle den betingelser below"
@@ -1241,6 +1258,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "Zalo Bruger-ID",
       "telegramChatId": "Telegram Chat-ID",
+      "maxUserId": "MAX-bruger-ID",
       "tiktokUserId": "TikTok Bruger-ID",
       "threadsUsername": "Threads-brugernavn",
       "webchatGuestId": "Webchat Gæste-ID",

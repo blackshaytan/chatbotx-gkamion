@@ -905,7 +905,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "ボットトークン",
+      "connectInstructions": {
+        "step1": "<link>MAX ビジネスプラットフォーム</link>を開いてボットを作成します。",
+        "step2": "<strong>連携 → トークンを取得</strong>からボットトークンをコピーします。",
+        "step3": "下に貼り付けます。チャネルはオフの状態で追加されます。準備ができたらオンにしてください。"
+      },
+      "enabled": "受信と送信",
+      "enabledHint": "このボットを扱えるシステムは 1 つだけです。オンにする前に古いボットをオフにしてください。",
+      "status": {
+        "connected": "オン",
+        "paused": "オフ",
+        "needs_reauth": "トークンが拒否されました",
+        "degraded": "問題",
+        "disconnected": "切断済み"
+      },
+      "switchedOn": "MAX チャネルをオンにしました",
+      "switchedOff": "MAX チャネルをオフにしました"
     },
     "matchAll": {
       "label": "以下のすべての条件に一致"
@@ -1241,6 +1258,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "ZaloユーザーID",
       "telegramChatId": "TelegramチャットID",
+      "maxUserId": "MAX ユーザー ID",
       "tiktokUserId": "TikTokユーザーID",
       "threadsUsername": "Threadsユーザー名",
       "webchatGuestId": "WebチャットゲストID",

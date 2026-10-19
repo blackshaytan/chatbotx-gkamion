@@ -905,7 +905,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Jeton du bot",
+      "connectInstructions": {
+        "step1": "Ouvrez la <link>plateforme professionnelle MAX</link> et créez un bot.",
+        "step2": "Copiez le jeton du bot depuis <strong>Intégration → Obtenir le jeton</strong>.",
+        "step3": "Collez-le ci-dessous. Le canal est ajouté désactivé — activez-le quand vous êtes prêt."
+      },
+      "enabled": "Réception et envoi",
+      "enabledHint": "Un seul système peut servir ce bot. Désactivez l’ancien bot avant d’activer celui-ci.",
+      "status": {
+        "connected": "Activé",
+        "paused": "Désactivé",
+        "needs_reauth": "Jeton refusé",
+        "degraded": "Problème",
+        "disconnected": "Déconnecté"
+      },
+      "switchedOn": "Le canal MAX est activé",
+      "switchedOff": "Le canal MAX est désactivé"
     },
     "matchAll": {
       "label": "Correspondre à toutes les conditions ci-dessous"
@@ -1241,6 +1258,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "ID utilisateur Zalo",
       "telegramChatId": "ID de chat Telegram",
+      "maxUserId": "ID utilisateur MAX",
       "tiktokUserId": "ID utilisateur TikTok",
       "threadsUsername": "Nom d’utilisateur Threads",
       "webchatGuestId": "ID visiteur Webchat",

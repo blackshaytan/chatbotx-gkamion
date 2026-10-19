@@ -1983,6 +1983,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "Zalo-användar-ID",
       "telegramChatId": "Telegram-chatt-ID",
+      "maxUserId": "MAX-användar-ID",
       "tiktokUserId": "TikTok-användar-ID",
       "threadsUsername": "Threads-användarnamn",
       "webchatGuestId": "Webbchatt-gäst-ID",
@@ -3011,7 +3012,24 @@
       "label": "Telegram"
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "Bottoken",
+      "connectInstructions": {
+        "step1": "Öppna <link>MAX företagsplattform</link> och skapa en bot.",
+        "step2": "Kopiera bottoken från <strong>Integration → Hämta token</strong>.",
+        "step3": "Klistra in den nedan. Kanalen läggs till avstängd — slå på den när du är redo."
+      },
+      "enabled": "Ta emot och skicka",
+      "enabledHint": "Endast ett system får betjäna den här boten. Stäng av den gamla boten innan du slår på den här.",
+      "status": {
+        "connected": "På",
+        "paused": "Av",
+        "needs_reauth": "Token avvisades",
+        "degraded": "Problem",
+        "disconnected": "Frånkopplad"
+      },
+      "switchedOn": "MAX-kanalen är på",
+      "switchedOff": "MAX-kanalen är av"
     },
     "temperature": {
       "label": "Temperatur"

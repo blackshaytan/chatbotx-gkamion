@@ -71,7 +71,24 @@
       }
     },
     "max": {
-      "label": "MAX"
+      "label": "MAX",
+      "botToken": "機器人權杖",
+      "connectInstructions": {
+        "step1": "開啟 <link>MAX 商業平台</link> 並建立機器人。",
+        "step2": "在 <strong>整合 → 取得權杖</strong> 中複製機器人權杖。",
+        "step3": "貼到下方。頻道新增後處於關閉狀態——準備好後再開啟。"
+      },
+      "enabled": "接收與傳送",
+      "enabledHint": "此機器人只能由一個系統服務。開啟前請先關閉舊機器人。",
+      "status": {
+        "connected": "開啟",
+        "paused": "關閉",
+        "needs_reauth": "權杖遭拒",
+        "degraded": "問題",
+        "disconnected": "已中斷連線"
+      },
+      "switchedOn": "MAX 頻道已開啟",
+      "switchedOff": "MAX 頻道已關閉"
     },
     "matchAll": {
       "label": "滿足以下所有條件"
@@ -388,6 +405,7 @@
       "bsuid": "BSUID",
       "zaloUserId": "Zalo 使用者 ID",
       "telegramChatId": "Telegram 聊天 ID",
+      "maxUserId": "MAX 使用者 ID",
       "tiktokUserId": "TikTok 使用者 ID",
       "threadsUsername": "Threads 使用者名稱",
       "webchatGuestId": "網頁聊天訪客 ID",
