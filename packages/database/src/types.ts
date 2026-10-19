@@ -64,6 +64,8 @@ export type UserQuotaModel = typeof schema.userQuotaModel.$inferSelect
 export type WorkspaceUsageModel = typeof schema.workspaceUsageModel.$inferSelect
 export type ContactModel = typeof schema.contactModel.$inferSelect
 export type ConnectionModel = typeof schema.connectionModel.$inferSelect
+export type ConnectionPollStateModel =
+  typeof schema.connectionPollStateModel.$inferSelect
 export type ConnectSessionModel = typeof schema.connectSessionModel.$inferSelect
 export type ConversationModel = typeof schema.conversationModel.$inferSelect
 export type CouponTopicModel = typeof schema.couponTopicModel.$inferSelect

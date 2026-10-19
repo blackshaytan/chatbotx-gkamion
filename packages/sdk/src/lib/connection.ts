@@ -43,6 +43,26 @@ export type ConnectionCandidate<IAuth extends AuthValue = AuthValue> =
     auth: IAuth
   }
 
+/** Opaque per-connection progress marker a polling provider round-trips. */
+export type PollCursor = Record<string, unknown>
+
+/** One inbound delivery, shaped exactly like the channel's webhook payload for `receiveMessage`. */
+export type PollEvent = { payload: unknown }
+
+export type PollResult = { events: PollEvent[]; cursor: PollCursor }
+
+/**
+ * Pull-based inbound delivery for channels without webhooks. The worker runs
+ * `run` for `connected` connections only, at most once per `intervalSeconds`,
+ * never two at a time for one connection, and persists `cursor` only after
+ * every event was enqueued — so `run` must tolerate re-delivering events
+ * (receivers dedupe on the message `sourceId`).
+ */
+export type ConnectionPoll<IAuth extends AuthValue> = {
+  intervalSeconds: (auth: IAuth) => number
+  run: Handler<{ auth: IAuth; cursor: PollCursor | null }, PollResult>
+}
+
 /** Provider-specific platform credential or direct connection input. */
 export type ConnectionCredential = unknown
 
@@ -63,6 +83,8 @@ type ConnectionProviderCommon<IAuth extends AuthValue> = {
    * channels that must not start receiving until explicitly enabled.
    */
   startsPaused?: boolean
+  /** Present for channels that receive by polling instead of a webhook. */
+  poll?: ConnectionPoll<IAuth>
 }
 
 type OAuthStrategy<IAuth extends AuthValue, ICreds> = {

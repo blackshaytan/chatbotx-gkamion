@@ -38,6 +38,7 @@ import { commentAutomationMissRelations } from "./comment-automation-miss"
 import { commentAutomationReplyRelations } from "./comment-automation-reply"
 import { connectSessionRelations } from "./connect-session"
 import { connectionRelations } from "./connection"
+import { connectionPollStateRelations } from "./connection-poll-state"
 import { contactRelations } from "./contact"
 import { contactCustomFieldRelations } from "./contact-custom-field"
 import { contactInboxRelations } from "./contact-inbox"
@@ -170,6 +171,7 @@ import { workspaceMemberRelations } from "./workspace-member"
 export const relations = {
   ...integrationApiRelations,
   ...connectionRelations,
+  ...connectionPollStateRelations,
   ...connectSessionRelations,
   ...adsConversionEventRelations,
   ...metaCapiEventRelations,
