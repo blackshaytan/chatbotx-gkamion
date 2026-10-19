@@ -1968,7 +1968,29 @@
       "switchedOff": "Canalul MAX este oprit"
     },
     "zzap": {
-      "label": "ZZAP"
+      "label": "ZZAP",
+      "apiKey": "API key",
+      "codeObject": "Object code (code_object)",
+      "typeObject": "Object type (type_object)",
+      "testMode": "Test mode",
+      "testModeHint": "Replies are sent with test=true and are not delivered to buyers.",
+      "connectInstructions": {
+        "step1": "In the ZZAP seller account open B52 API settings and copy the API key.",
+        "step2": "Enter the object code and type of your shop. The channel is created switched off."
+      },
+      "enabled": "Receiving and sending",
+      "enabledHint": "While switched off ChatbotX does not poll ZZAP, so another system can serve this shop.",
+      "status": {
+        "connected": "On",
+        "paused": "Off",
+        "needs_reauth": "Key rejected",
+        "degraded": "Problem",
+        "disconnected": "Disconnected"
+      },
+      "switchedOn": "ZZAP channel is on",
+      "switchedOff": "ZZAP channel is off",
+      "lastPolledAt": "Last poll",
+      "lastError": "Last error"
     },
     "matchAll": {
       "label": "Potrivește toate condițiile de mai jos"

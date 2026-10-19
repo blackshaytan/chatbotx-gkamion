@@ -13,6 +13,7 @@ import { SimpleCreateWebchat } from "@/features/integration-webchat/simple-creat
 import WhatsappCreate from "@/features/integration-whatsapp/components/whatsapp-create"
 import { WHATSAPP_OAUTH_CALLBACK_PATH } from "@/features/integration-whatsapp/libs/embedded-signup"
 import { generateZaloRedirectUri } from "@/features/integration-zalo/libs/zalo"
+import { ZzapConnect } from "@/features/integration-zzap/components/zzap-connect"
 import { requireWorkspacePermission } from "@/lib/auth/require-workspace-permission"
 import { getCurrentUserId } from "@/lib/auth/utils"
 import { resolvePlatformOwnerId } from "@/lib/platform-credential-owner"
@@ -35,7 +36,7 @@ type CreateChannelPageProps = {
   }>
 }
 
-const WORKSPACE_REQUIRED_CHANNELS: readonly ChannelType[] = ["max"]
+const WORKSPACE_REQUIRED_CHANNELS: readonly ChannelType[] = ["max", "zzap"]
 
 export default async function CreateChannelPage(props: CreateChannelPageProps) {
   const searchParams = await props.searchParams
@@ -77,6 +78,10 @@ export default async function CreateChannelPage(props: CreateChannelPageProps) {
 
   if (selectedChannel === "max" && isVisible("max") && workspaceId) {
     return <MaxConnect autoOpen={true} workspaceId={workspaceId} />
+  }
+
+  if (selectedChannel === "zzap" && isVisible("zzap") && workspaceId) {
+    return <ZzapConnect autoOpen={true} workspaceId={workspaceId} />
   }
 
   if (selectedChannel === "webchat" && isVisible("webchat")) {
