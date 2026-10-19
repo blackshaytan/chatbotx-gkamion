@@ -2,8 +2,8 @@
 
 import { workspaceIdrequestParams } from "@/features/common/schema"
 import { workspaceActionClient } from "@/lib/safe-action"
+import { setMaxEnabled } from "../lib/max-connection"
 import { setMaxEnabledRequest } from "../schema/request"
-import { setMaxEnabled } from "./handlers"
 
 export const setMaxEnabledAction = workspaceActionClient
   .bindArgsSchemas(workspaceIdrequestParams)

@@ -31,7 +31,7 @@ vi.mock("@chatbotx.io/business/audit", () => ({
 }))
 
 const { connectMax, disconnectMax, setMaxEnabled } = await import(
-  "@/features/integration-max/actions/handlers"
+  "@/features/integration-max/lib/max-connection"
 )
 
 const actor = { workspaceId: "ws-1", userId: "user-1" }

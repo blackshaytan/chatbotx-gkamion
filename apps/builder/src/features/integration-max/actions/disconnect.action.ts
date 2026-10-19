@@ -2,7 +2,7 @@
 
 import { workspaceIdAndIdRequestParams } from "@/features/common/schema"
 import { workspaceActionClientAllowExpired } from "@/lib/safe-action"
-import { disconnectMax } from "./handlers"
+import { disconnectMax } from "../lib/max-connection"
 
 export const disconnectMaxAction = workspaceActionClientAllowExpired
   .bindArgsSchemas(workspaceIdAndIdRequestParams)
