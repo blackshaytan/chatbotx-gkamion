@@ -10,6 +10,7 @@
     "https": "dotenv -e .env -e ../../.env -- next dev -p 3123 --experimental-https",
     "i18n:check": "i18n-check --source en --locales messages",
     "i18n:ru": "tsx scripts/i18n/ru.ts",
+    "i18n:hardcoded": "tsx scripts/i18n/find-hardcoded.ts",
     "lint": "pnpm i18n:check",
     "start": "next start",
     "test": "vitest run --passWithNoTests",
