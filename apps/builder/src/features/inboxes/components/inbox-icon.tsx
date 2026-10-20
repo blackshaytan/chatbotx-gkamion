@@ -18,6 +18,7 @@ import {
 } from "@icons-pack/react-simple-icons"
 import {
   AppWindowIcon,
+  CarIcon,
   GlobeIcon,
   type LucideIcon,
   MailIcon,
@@ -100,6 +101,11 @@ export const INBOX_ICON_CONFIG: Record<ChannelType, InboxIconConfig> = {
     Icon: ShoppingCartIcon,
     iconClassName: "stroke-[#E30613]",
     defaultLabelKey: "fields.zzap.label",
+  },
+  drom: {
+    Icon: CarIcon,
+    iconClassName: "stroke-[#DB2828]",
+    defaultLabelKey: "fields.drom.label",
   },
   tiktok: {
     Icon: SiTiktok,

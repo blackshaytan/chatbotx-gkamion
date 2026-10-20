@@ -949,6 +949,9 @@
       "lastPolledAt": "Last poll",
       "lastError": "Last error"
     },
+    "drom": {
+      "label": "DROM"
+    },
     "matchAll": {
       "label": "以下のすべての条件に一致"
     },
@@ -1285,6 +1288,7 @@
       "telegramChatId": "TelegramチャットID",
       "maxUserId": "MAX ユーザー ID",
       "zzapUserKey": "ZZAP user key",
+      "dromDialogId": "DROM dialog id",
       "tiktokUserId": "TikTokユーザーID",
       "threadsUsername": "Threadsユーザー名",
       "webchatGuestId": "WebチャットゲストID",

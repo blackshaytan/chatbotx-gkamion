@@ -1992,6 +1992,9 @@
       "lastPolledAt": "Last poll",
       "lastError": "Last error"
     },
+    "drom": {
+      "label": "DROM"
+    },
     "matchAll": {
       "label": "Potrivește toate condițiile de mai jos"
     },
@@ -2328,6 +2331,7 @@
       "telegramChatId": "ID chat Telegram",
       "maxUserId": "ID utilizator MAX",
       "zzapUserKey": "ZZAP user key",
+      "dromDialogId": "DROM dialog id",
       "tiktokUserId": "ID utilizator TikTok",
       "threadsUsername": "Nume utilizator Threads",
       "webchatGuestId": "ID vizitator Webchat",

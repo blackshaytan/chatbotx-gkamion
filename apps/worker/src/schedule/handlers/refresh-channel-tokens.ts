@@ -31,6 +31,7 @@ const refreshTokenAdapter: Record<
   telegram: undefined,
   max: undefined,
   zzap: undefined,
+  drom: undefined,
   api: undefined,
 }
 

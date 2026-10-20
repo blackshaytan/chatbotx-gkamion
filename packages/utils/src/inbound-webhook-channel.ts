@@ -174,6 +174,12 @@ export const INBOUND_WEBHOOK_CHANNEL_SPECS: Record<
     channelUserId: null,
     creationIdentities: [],
   },
+  // Polled channel: a DROM dialog id is only meaningful inside DROM.
+  drom: {
+    inboxIdentifiers: noInboxIdentifiers,
+    channelUserId: null,
+    creationIdentities: [],
+  },
   zalo: {
     inboxIdentifiers: [
       {

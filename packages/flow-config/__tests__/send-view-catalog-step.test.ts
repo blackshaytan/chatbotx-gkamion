@@ -218,6 +218,7 @@ describe("channel policy", () => {
       telegram: stepSupport.unsupported,
       max: stepSupport.unsupported,
       zzap: stepSupport.unsupported,
+      drom: stepSupport.unsupported,
       threads: stepSupport.unsupported,
       tiktok: stepSupport.unsupported,
       webchat: stepSupport.unsupported,

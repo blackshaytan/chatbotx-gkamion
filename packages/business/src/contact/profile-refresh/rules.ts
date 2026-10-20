@@ -36,6 +36,7 @@ export const contactProfileNameCapabilities = {
   api: { inbound: "payload", onDemand: false },
   max: { inbound: "payload", onDemand: false }, // update carries the sender name; no separate profile call
   zzap: { inbound: "payload", onDemand: false }, // poll event carries the buyer name/phone/email
+  drom: { inbound: "payload", onDemand: false }, // deal page carries the buyer name/phone/email
   webchat: { inbound: null, onDemand: false },
   smtp: { inbound: null, onDemand: false },
   omnichannel: { inbound: null, onDemand: false },

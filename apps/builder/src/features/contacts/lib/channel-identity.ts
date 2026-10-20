@@ -38,6 +38,10 @@ export const sourceIdentityConfigByChannel = {
     labelKey: "fields.channelIdentity.zzapUserKey",
     hideWhenSourceUserIdKeyed: false,
   },
+  [channelTypes.enum.drom]: {
+    labelKey: "fields.channelIdentity.dromDialogId",
+    hideWhenSourceUserIdKeyed: false,
+  },
   [channelTypes.enum.tiktok]: {
     labelKey: "fields.channelIdentity.tiktokUserId",
     hideWhenSourceUserIdKeyed: false,

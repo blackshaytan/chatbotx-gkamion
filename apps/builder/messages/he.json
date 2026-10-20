@@ -4678,6 +4678,9 @@
       "lastPolledAt": "Last poll",
       "lastError": "Last error"
     },
+    "drom": {
+      "label": "DROM"
+    },
     "matchAll": {
       "label": "התאמה לכל התנאים שלהלן"
     },
@@ -5014,6 +5017,7 @@
       "telegramChatId": "מזהה צ'אט ב-Telegram",
       "maxUserId": "מזהה משתמש MAX",
       "zzapUserKey": "ZZAP user key",
+      "dromDialogId": "DROM dialog id",
       "tiktokUserId": "מזהה משתמש ב-TikTok",
       "threadsUsername": "שם משתמש ב-Threads",
       "webchatGuestId": "מזהה אורח ב-Webchat",

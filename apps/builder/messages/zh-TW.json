@@ -115,6 +115,9 @@
       "lastPolledAt": "Last poll",
       "lastError": "Last error"
     },
+    "drom": {
+      "label": "DROM"
+    },
     "matchAll": {
       "label": "滿足以下所有條件"
     },
@@ -432,6 +435,7 @@
       "telegramChatId": "Telegram 聊天 ID",
       "maxUserId": "MAX 使用者 ID",
       "zzapUserKey": "ZZAP user key",
+      "dromDialogId": "DROM dialog id",
       "tiktokUserId": "TikTok 使用者 ID",
       "threadsUsername": "Threads 使用者名稱",
       "webchatGuestId": "網頁聊天訪客 ID",

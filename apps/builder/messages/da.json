@@ -949,6 +949,9 @@
       "lastPolledAt": "Last poll",
       "lastError": "Last error"
     },
+    "drom": {
+      "label": "DROM"
+    },
     "matchAll": {
       "label": "Match alle den betingelser below"
     },
@@ -1285,6 +1288,7 @@
       "telegramChatId": "Telegram Chat-ID",
       "maxUserId": "MAX-bruger-ID",
       "zzapUserKey": "ZZAP user key",
+      "dromDialogId": "DROM dialog id",
       "tiktokUserId": "TikTok Bruger-ID",
       "threadsUsername": "Threads-brugernavn",
       "webchatGuestId": "Webchat Gæste-ID",

@@ -165,4 +165,5 @@ export const CONNECTION_REGISTRY: StoreBoundConnectionRegistry = {
   whatsapp: fromIntegration(integrationWhatsapp, "whatsapp", "whatsapp"),
   zalo: fromIntegration(integrationZalo, "zalo", "zalo"),
   zzap: fromIntegration(integrationZzap, "zzap"),
+  drom: null,
 }

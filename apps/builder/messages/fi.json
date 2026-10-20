@@ -949,6 +949,9 @@
       "lastPolledAt": "Last poll",
       "lastError": "Last error"
     },
+    "drom": {
+      "label": "DROM"
+    },
     "matchAll": {
       "label": "Täsmää kaikkiin alla oleviin ehtoihin"
     },
@@ -1285,6 +1288,7 @@
       "telegramChatId": "Telegram-keskustelutunnus",
       "maxUserId": "MAX-käyttäjätunnus",
       "zzapUserKey": "ZZAP user key",
+      "dromDialogId": "DROM dialog id",
       "tiktokUserId": "TikTok-käyttäjätunnus",
       "threadsUsername": "Threads-käyttäjänimi",
       "webchatGuestId": "Webchat-vierastunnus",

@@ -1095,6 +1095,9 @@
       "lastPolledAt": "Last poll",
       "lastError": "Last error"
     },
+    "drom": {
+      "label": "DROM"
+    },
     "matchAll": {
       "label": "مطابقة جميع الشروط أدناه"
     },
@@ -1431,6 +1434,7 @@
       "telegramChatId": "معرّف دردشة Telegram",
       "maxUserId": "معرّف مستخدم MAX",
       "zzapUserKey": "ZZAP user key",
+      "dromDialogId": "DROM dialog id",
       "tiktokUserId": "معرّف مستخدم TikTok",
       "threadsUsername": "اسم مستخدم Threads",
       "webchatGuestId": "معرّف زائر Webchat",

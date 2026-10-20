@@ -1985,6 +1985,7 @@
       "telegramChatId": "Telegram-chatt-ID",
       "maxUserId": "MAX-användar-ID",
       "zzapUserKey": "ZZAP user key",
+      "dromDialogId": "DROM dialog id",
       "tiktokUserId": "TikTok-användar-ID",
       "threadsUsername": "Threads-användarnamn",
       "webchatGuestId": "Webbchatt-gäst-ID",
@@ -3056,6 +3057,9 @@
       "switchedOff": "ZZAP channel is off",
       "lastPolledAt": "Last poll",
       "lastError": "Last error"
+    },
+    "drom": {
+      "label": "DROM"
     },
     "temperature": {
       "label": "Temperatur"

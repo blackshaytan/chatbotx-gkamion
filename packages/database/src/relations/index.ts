@@ -91,6 +91,7 @@ import { integrationApiRelations } from "./integration-api"
 import { integrationClaudeRelations } from "./integration-claude"
 import { integrationDeepseekRelations } from "./integration-deepseek"
 import { integrationDripRelations } from "./integration-drip"
+import { integrationDromRelations } from "./integration-drom"
 import { integrationFacebookAdsRelations } from "./integration-facebook-ads"
 import { integrationGeminiRelations } from "./integration-gemini"
 import { integrationGetResponseRelations } from "./integration-get-response"
@@ -311,6 +312,7 @@ export const relations = {
   ...integrationMailerLiteRelations,
   ...integrationMoosendRelations,
   ...integrationDripRelations,
+  ...integrationDromRelations,
   ...integrationGetResponseRelations,
   ...integrationSendGridRelations,
   ...flowAnalyticsSessionRelations,

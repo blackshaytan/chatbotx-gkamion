@@ -29,6 +29,7 @@ const MEDIA_SUPPORT_BY_CHANNEL = {
   telegram: ["full", "full", "full", "full", "full"],
   max: ["full", "full", "full", "full", "full"],
   zzap: ["full", "unsupported", "unsupported", "full", "unsupported"],
+  drom: ["full", "unsupported", "unsupported", "full", "unsupported"],
   threads: [
     "unsupported",
     "unsupported",
@@ -71,6 +72,7 @@ const TEXT_LIMITS = {
   telegram: 4096,
   max: 4000,
   zzap: 4000,
+  drom: 4000,
   threads: 500,
   tiktok: 6000,
   webchat: 6000,

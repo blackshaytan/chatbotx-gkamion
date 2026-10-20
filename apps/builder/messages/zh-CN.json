@@ -1988,6 +1988,7 @@
       "telegramChatId": "Telegram 聊天 ID",
       "maxUserId": "MAX 用户 ID",
       "zzapUserKey": "ZZAP user key",
+      "dromDialogId": "DROM dialog id",
       "tiktokUserId": "TikTok 用户 ID",
       "threadsUsername": "Threads 用户名",
       "webchatGuestId": "网页聊天访客 ID",
@@ -3059,6 +3060,9 @@
       "switchedOff": "ZZAP channel is off",
       "lastPolledAt": "Last poll",
       "lastError": "Last error"
+    },
+    "drom": {
+      "label": "DROM"
     },
     "temperature": {
       "label": "温度"

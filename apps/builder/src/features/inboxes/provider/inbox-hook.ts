@@ -48,6 +48,10 @@ export const allInboxConfigs = {
     label: "ZZAP",
     value: "zzap",
   },
+  drom: {
+    label: "DROM",
+    value: "drom",
+  },
   tiktok: {
     label: "TikTok",
     value: "tiktok",

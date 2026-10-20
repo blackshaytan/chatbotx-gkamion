@@ -119,6 +119,7 @@ export const errorLogProviderLabels = {
   "google-ads": "Google Ads",
   max: "MAX",
   zzap: "ZZAP",
+  drom: "DROM",
   // AI vendors — the same names the builder's provider picker shows
   // (`aiProviders.*` in `apps/builder/messages/en.json`).
   openai: "OpenAI",

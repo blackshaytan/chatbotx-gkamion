@@ -1,6 +1,7 @@
 import { channelTypes } from "@chatbotx.io/utils/channel"
 import { apiFlowPolicy } from "./api"
 import type { ChannelFlowPolicy, ChannelFlowPolicyMap } from "./define"
+import { dromFlowPolicy } from "./drom"
 import { instagramFlowPolicy } from "./instagram"
 import { maxFlowPolicy } from "./max"
 import { messengerFlowPolicy } from "./messenger"
@@ -28,6 +29,7 @@ export const CHANNEL_FLOW_POLICIES: ChannelFlowPolicyMap = {
   [channelTypes.enum.whatsapp]: whatsappFlowPolicy,
   [channelTypes.enum.zalo]: zaloFlowPolicy,
   [channelTypes.enum.zzap]: zzapFlowPolicy,
+  [channelTypes.enum.drom]: dromFlowPolicy,
 }
 
 export const getChannelFlowPolicy = (

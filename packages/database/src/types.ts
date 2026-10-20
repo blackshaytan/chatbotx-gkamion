@@ -100,6 +100,8 @@ export type IntegrationMoosendModel =
   typeof schema.integrationMoosendModel.$inferSelect
 export type IntegrationDripModel =
   typeof schema.integrationDripModel.$inferSelect
+export type IntegrationDromModel =
+  typeof schema.integrationDromModel.$inferSelect
 export type IntegrationSendGridModel =
   typeof schema.integrationSendGridModel.$inferSelect
 export type IntegrationMessengerModel =
