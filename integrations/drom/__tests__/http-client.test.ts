@@ -140,11 +140,12 @@ describe("DROM http client", () => {
 
   test("postMultipart sends the file under the given field", async () => {
     let seen: Request | undefined
-    let file: FormDataEntryValue | null = null
+    let fileName = ""
     server.use(
       http.post(`${DROM_BASE}/upload-image-jquery`, async ({ request }) => {
         seen = request.clone()
-        file = (await request.formData()).get("up[]")
+        const file = (await request.formData()).get("up[]")
+        fileName = file instanceof File ? file.name : ""
         return HttpResponse.json({ items: [{ id: 7 }] })
       }),
     )
@@ -156,7 +157,7 @@ describe("DROM http client", () => {
       }),
     ).resolves.toEqual({ items: [{ id: 7 }] })
     expect(seen?.headers.get("content-type")).toMatch(MULTIPART)
-    expect((file as unknown as File).name).toBe("photo.jpg")
+    expect(fileName).toBe("photo.jpg")
   })
 
   test("getBinary returns bytes and mime, and rejects big files", async () => {
