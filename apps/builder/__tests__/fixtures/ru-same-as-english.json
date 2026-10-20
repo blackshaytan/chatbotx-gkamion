@@ -1,1 +1,9 @@
-[]
+[
+  "actions.ok",
+  "extensionsMe.fields.email",
+  "folders.showMore",
+  "helpItems.fields.url",
+  "helpItems.fields.urlPlaceholder",
+  "manageSidebar.saasGroup",
+  "messages.historyDepth"
+]
