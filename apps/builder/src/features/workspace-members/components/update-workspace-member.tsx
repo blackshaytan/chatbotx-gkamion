@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useEffect } from "react"
 import { toast } from "sonner"
-import { isCommunity } from "@/env"
+import { canRestrictMemberPermissions } from "@/env"
 import { useInvalidateUsers } from "@/features/users/provider/user-hook"
 import { updateWorkspaceMemberAction } from "../actions/update-workspace-member.action"
 import { getSuperAdminPermissions } from "../helpers"
@@ -158,7 +158,7 @@ export function UpdateWorkspaceMemberForm({
           <Label>{t("fields.permissions.label")}</Label>
           <div className="flex flex-col gap-4">
             <SwitchField
-              disabled={isCommunity()}
+              disabled={!canRestrictMemberPermissions()}
               formItemClassName="flex flex-row-reverse items-center justify-end gap-2"
               label={t("fields.permissions.superAdmin")}
               name="permissions.superAdmin"

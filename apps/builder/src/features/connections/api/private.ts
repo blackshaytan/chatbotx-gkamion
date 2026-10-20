@@ -2,7 +2,12 @@ import { connectionStateService } from "@chatbotx.io/business"
 import { connectSessionService } from "@chatbotx.io/business/connect-session"
 import { notFoundException } from "@chatbotx.io/business/errors"
 import { connectionService } from "@chatbotx.io/connections"
+import { ORPCError } from "@orpc/server"
 import { withWorkspaceIdSchema } from "@/features/workspaces/schema/resource"
+import {
+  hasWorkspacePermission,
+  type PermissionsInput,
+} from "@/lib/auth/permission-routes"
 import {
   possibleErrorsOnCancelingConnectSession,
   possibleErrorsOnConnectingSessionTargets,
@@ -53,6 +58,13 @@ import {
   connectSessionResource,
   connectSessionTargetsResource,
 } from "../schema/resource"
+
+/** Connecting, re-authorizing and removing channels is a settings action, so it needs the same `superAdmin` flag as the settings pages. */
+const assertCanManageConnections = (permissions: PermissionsInput) => {
+  if (!hasWorkspacePermission(permissions, "superAdmin")) {
+    throw new ORPCError("FORBIDDEN")
+  }
+}
 
 const listConnectionsAPI = authorizedAPI
   .route({
@@ -111,6 +123,7 @@ const createConnectionAPI = authorizedAPI
   .errors(possibleErrorsOnCreatingConnection)
   .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
   .handler(async ({ context, input }) => {
+    assertCanManageConnections(context.workspaceMember.permissions)
     assertGenericProviderAllowed(input.provider)
     const ownerId = await resolvePlatformOwnerId({
       userId: context.user.id,
@@ -139,6 +152,7 @@ const reconnectConnectionAPI = authorizedAPI
   .errors(possibleErrorsOnReconnectingConnection)
   .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
   .handler(async ({ context, input }) => {
+    assertCanManageConnections(context.workspaceMember.permissions)
     const connection = await connectionStateService.getForWorkspace({
       id: input.id,
       workspaceId: input.workspaceId,
@@ -172,7 +186,8 @@ const updateConnectionAPI = authorizedAPI
   .output(connectionResource)
   .errors(possibleErrorsOnUpdatingConnection)
   .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
-  .handler(async ({ input }) => {
+  .handler(async ({ context, input }) => {
+    assertCanManageConnections(context.workspaceMember.permissions)
     await assertConnectionProviderAllowed({
       connectionId: input.id,
       workspaceId: input.workspaceId,
@@ -199,7 +214,8 @@ const disconnectConnectionAPI = authorizedAPI
   .output(connectionResource)
   .errors(possibleErrorsOnDisconnectingConnection)
   .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
-  .handler(async ({ input }) => {
+  .handler(async ({ context, input }) => {
+    assertCanManageConnections(context.workspaceMember.permissions)
     await assertConnectionProviderAllowed({
       connectionId: input.id,
       workspaceId: input.workspaceId,
@@ -222,7 +238,8 @@ const refreshConnectionAPI = authorizedAPI
   .output(connectionResource)
   .errors(possibleErrorsOnRefreshingConnection)
   .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
-  .handler(async ({ input }) => {
+  .handler(async ({ context, input }) => {
+    assertCanManageConnections(context.workspaceMember.permissions)
     await assertConnectionProviderAllowed({
       connectionId: input.id,
       workspaceId: input.workspaceId,
@@ -306,6 +323,7 @@ const connectSessionTargetsAPI = authorizedAPI
   .errors(possibleErrorsOnConnectingSessionTargets)
   .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
   .handler(async ({ context, input }) => {
+    assertCanManageConnections(context.workspaceMember.permissions)
     await assertSessionProviderAllowed({
       sessionId: input.id,
       workspaceId: input.workspaceId,
@@ -330,7 +348,8 @@ const cancelConnectSessionAPI = authorizedAPI
   .output(connectSessionResource)
   .errors(possibleErrorsOnCancelingConnectSession)
   .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
-  .handler(async ({ input }) => {
+  .handler(async ({ context, input }) => {
+    assertCanManageConnections(context.workspaceMember.permissions)
     await assertSessionProviderAllowed({
       sessionId: input.id,
       workspaceId: input.workspaceId,

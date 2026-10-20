@@ -45,6 +45,7 @@ vi.mock("@/lib/safe-action", () => {
 
 vi.mock("@/env", () => ({
   isCommunity: mockIsCommunity,
+  canRestrictMemberPermissions: () => !mockIsCommunity(),
 }))
 
 vi.mock("@/lib/auth/utils", () => ({
@@ -340,6 +341,26 @@ describe("updateWorkspaceMemberAction", () => {
       id: MEMBER_ID,
       workspaceId: WORKSPACE_ID,
       data: { ...updateInput, permissions: normalizedGranularPermissions },
+    })
+  })
+
+  test("keeps the workspace owner at full permissions when restrictions are enabled", async () => {
+    mockFindByIdOrFail.mockResolvedValue({
+      id: MEMBER_ID,
+      userId: MEMBER_USER_ID,
+      workspaceId: WORKSPACE_ID,
+      role: "owner",
+      permissions: fullPermissions,
+    })
+
+    await (updateWorkspaceMemberAction as (props: unknown) => Promise<unknown>)(
+      updateActionCtx(),
+    )
+
+    expect(mockUpdateMember).toHaveBeenCalledWith({
+      id: MEMBER_ID,
+      workspaceId: WORKSPACE_ID,
+      data: { ...updateInput, permissions: fullPermissions },
     })
   })
 

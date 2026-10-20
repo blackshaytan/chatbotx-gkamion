@@ -21,6 +21,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The VPS cannot run the builder's `tsc` (it needs ~8 GB) and `next build`
+  # ignores type errors, so the type check runs here, next to the images.
+  check-types:
+    name: Types
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6.1.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm turbo run check-types --concurrency=4
+
   build:
     name: Build ${{ matrix.service }}
     runs-on: ubuntu-latest

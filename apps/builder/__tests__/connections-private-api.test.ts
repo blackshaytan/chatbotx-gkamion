@@ -200,7 +200,14 @@ const { connectionsAPI, connectSessionsAPI } = await import(
 const createPath = "/workspaces/{workspaceId}/connections"
 
 const baseInput = { workspaceId: "ws-1", provider: "claude", config: {} }
-const context = { user: { id: "user-1" } }
+const context = {
+  user: { id: "user-1" },
+  workspaceMember: { permissions: { superAdmin: true } },
+}
+const restrictedContext = {
+  user: { id: "user-2" },
+  workspaceMember: { permissions: { superAdmin: false, contacts: true } },
+}
 
 const getHandler = (method: string, path: string) => {
   const state = mocks.endpoints.get(`${method} ${path}`)
@@ -769,4 +776,50 @@ describe("generic connections API rejects the dedicated-only googleAds provider"
       )({ context, input: { workspaceId: "ws-1", id: "session-1" } }),
     ).resolves.toEqual({ id: "session-1", sessionResource: true })
   })
+})
+
+describe("private connections API permission gate", () => {
+  const mutatingEndpoints = [
+    ["POST", createPath, baseInput],
+    [
+      "POST",
+      "/workspaces/{workspaceId}/connections/{id}/reconnect",
+      { workspaceId: "ws-1", id: "conn-1" },
+    ],
+    [
+      "PUT",
+      "/workspaces/{workspaceId}/connections/{id}",
+      { workspaceId: "ws-1", id: "conn-1", displayName: "x" },
+    ],
+    [
+      "DELETE",
+      "/workspaces/{workspaceId}/connections/{id}",
+      { workspaceId: "ws-1", id: "conn-1" },
+    ],
+    [
+      "POST",
+      "/workspaces/{workspaceId}/connections/{id}/refresh",
+      { workspaceId: "ws-1", id: "conn-1" },
+    ],
+    [
+      "POST",
+      "/workspaces/{workspaceId}/connect-sessions/{id}/targets",
+      { workspaceId: "ws-1", id: "session-1", targetIds: ["t-1"] },
+    ],
+    [
+      "DELETE",
+      "/workspaces/{workspaceId}/connect-sessions/{id}",
+      { workspaceId: "ws-1", id: "session-1" },
+    ],
+  ] as const
+
+  test.each(mutatingEndpoints)(
+    "%s %s rejects a member without superAdmin before any connection work",
+    async (method, path, input) => {
+      await expect(
+        getHandler(method, path)({ context: restrictedContext, input }),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" })
+      expect(mocks.connectFromCredentials).not.toHaveBeenCalled()
+    },
+  )
 })

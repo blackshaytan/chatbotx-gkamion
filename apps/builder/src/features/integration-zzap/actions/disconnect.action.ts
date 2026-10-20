@@ -1,12 +1,19 @@
 "use server"
 
 import { workspaceIdAndIdRequestParams } from "@/features/common/schema"
+import { assertWorkspaceSuperAdmin } from "@/lib/auth/assert-workspace-super-admin"
 import { workspaceActionClientAllowExpired } from "@/lib/safe-action"
 import { disconnectZzap } from "../lib/zzap-connection"
 
 export const disconnectZzapAction = workspaceActionClientAllowExpired
   .bindArgsSchemas(workspaceIdAndIdRequestParams)
   .action(
-    async ({ bindArgsParsedInputs: [workspaceId, connectionId], ctx }) =>
-      await disconnectZzap({ workspaceId, userId: ctx.user.id, connectionId }),
+    async ({ bindArgsParsedInputs: [workspaceId, connectionId], ctx }) => {
+      await assertWorkspaceSuperAdmin(workspaceId)
+      return await disconnectZzap({
+        workspaceId,
+        userId: ctx.user.id,
+        connectionId,
+      })
+    },
   )

@@ -73,6 +73,7 @@ vi.mock("@chatbotx.io/utils", async (importOriginal) => {
 const isCommunity = vi.fn(() => false)
 vi.mock("@/env", () => ({
   isCommunity: () => isCommunity(),
+  canRestrictMemberPermissions: () => !isCommunity(),
 }))
 
 const getSuperAdminPermissions = vi.fn(() => ({ superAdmin: true }))

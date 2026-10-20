@@ -7,7 +7,7 @@ import {
 } from "@chatbotx.io/business"
 import { auditService } from "@chatbotx.io/business/audit"
 import { ChatbotXException } from "@chatbotx.io/business/errors"
-import { isCommunity } from "@/env"
+import { canRestrictMemberPermissions } from "@/env"
 import { workspaceIdrequestParams } from "@/features/common/schema"
 import { hasWorkspacePermission } from "@/lib/auth/permission-routes"
 import { getCurrentUserAndTargetWorkspace } from "@/lib/auth/utils"
@@ -51,9 +51,9 @@ export const inviteWorkspaceMemberAction = workspaceActionClient
       )
     }
 
-    const permissions = isCommunity()
-      ? getSuperAdminPermissions()
-      : normalizeContactsPermissions(parsedInput.permissions)
+    const permissions = canRestrictMemberPermissions()
+      ? normalizeContactsPermissions(parsedInput.permissions)
+      : getSuperAdminPermissions()
 
     const invitation = await invitationService.create({
       workspaceId,

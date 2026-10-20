@@ -39,6 +39,9 @@ export const env = createEnv({
       .default("http://localhost:9000/chatbotx/"),
     NEXT_PUBLIC_STORAGE_URL: z.url().optional(),
     NEXT_PUBLIC_PANCAKE_CHAT_PAGE_ID: z.string().optional(),
+    NEXT_PUBLIC_RESTRICTED_MEMBER_PERMISSIONS: z
+      .enum(["true", "false"])
+      .optional(),
     NEXT_PUBLIC_ALLOWED_DEV_ORIGINS: z
       .string()
       .optional()
@@ -61,6 +64,9 @@ export const env = createEnv({
     NEXT_PUBLIC_PANCAKE_CHAT_PAGE_ID: clientEnv(
       "NEXT_PUBLIC_PANCAKE_CHAT_PAGE_ID",
     ),
+    NEXT_PUBLIC_RESTRICTED_MEMBER_PERMISSIONS: clientEnv(
+      "NEXT_PUBLIC_RESTRICTED_MEMBER_PERMISSIONS",
+    ),
     NEXT_PUBLIC_ALLOWED_DEV_ORIGINS: clientEnv(
       "NEXT_PUBLIC_ALLOWED_DEV_ORIGINS",
     ),
@@ -72,3 +78,6 @@ export const env = createEnv({
 export const isEnterprise = () => env.NEXT_PUBLIC_EDITION === "enterprise"
 export const isCloud = () => env.NEXT_PUBLIC_EDITION === "cloud"
 export const isCommunity = () => env.NEXT_PUBLIC_EDITION === "community"
+/** Community forces every member to full permissions unless the self-hosted opt-in is set. */
+export const canRestrictMemberPermissions = () =>
+  !isCommunity() || env.NEXT_PUBLIC_RESTRICTED_MEMBER_PERMISSIONS === "true"
