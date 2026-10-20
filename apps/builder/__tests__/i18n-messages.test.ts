@@ -10,6 +10,7 @@ import {
 } from "@/i18n/config"
 import { getDirection } from "@/i18n/direction"
 import { messagesByLocale } from "@/i18n/messages"
+import ruSameAsEnglish from "./fixtures/ru-same-as-english.json"
 
 type FlatMessages = Record<string, unknown>
 
@@ -365,5 +366,28 @@ describe("locale resolution", () => {
 
   test("Hebrew uses right-to-left direction", () => {
     expect(getDirection("he" satisfies Locale)).toBe("rtl")
+  })
+})
+
+describe("Russian catalog completeness", () => {
+  const russianMessages = flattenMessages(messagesByLocale.ru)
+  const allowedSameAsEnglish = new Set<string>(ruSameAsEnglish)
+
+  test("every string is translated or explicitly allowed", () => {
+    const untranslated = Object.keys(englishMessages).filter(
+      (key) =>
+        russianMessages[key] === englishMessages[key] &&
+        !allowedSameAsEnglish.has(key),
+    )
+    expect(untranslated).toEqual([])
+  })
+
+  test("allowlist contains only existing keys that still equal English", () => {
+    const stale = [...allowedSameAsEnglish].filter(
+      (key) =>
+        englishMessages[key] === undefined ||
+        russianMessages[key] !== englishMessages[key],
+    )
+    expect(stale).toEqual([])
   })
 })
