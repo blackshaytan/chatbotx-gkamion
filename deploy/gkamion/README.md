@@ -11,8 +11,8 @@ rustfs, mailhog).
 | File | Purpose |
 |------|---------|
 | `docker-compose.prod.yml` | builder, worker, realtime, javascript-executor (host network, memory limits) |
-| `build.sh` | builds the images in a BuildKit container capped at 6 GB / 5 CPUs |
-| `up.sh` | starts or restarts the containers (no build, no migrations) |
+| `build.sh` | local fallback build in a capped BuildKit container (the builder image does NOT fit: `next build` needs ~14–16 GB) |
+| `up.sh` | pulls the GHCR images and starts or restarts the containers (no migrations) |
 | `nginx/chatbotx.gkamion.ru.conf` | site config; `/ws/` goes to realtime |
 | `enable-nginx.sh` | checks DNS, gets the certificate, installs the site with `nginx -t` + rollback |
 | `verify-email.sh` | marks a sign-up email verified (no real SMTP yet) |
@@ -21,14 +21,17 @@ rustfs, mailhog).
 ## First launch
 
 1. DNS (Selectel): A record `chatbotx` → `78.17.117.235`.
-2. `deploy/gkamion/build.sh` at a quiet hour (10–20 minutes of load).
-3. `deploy/gkamion/up.sh`
+2. Build on GitHub (repo `blackshaytan/chatbotx-gkamion`, workflow
+   `.github/workflows/gkamion-images.yml`, manual):
+   `gh workflow run gkamion-images.yml -R blackshaytan/chatbotx-gkamion`.
+   Images: `ghcr.io/blackshaytan/chatbotx-gkamion-<service>:latest` (private packages).
+3. `deploy/gkamion/up.sh` (the VPS `gh` token has `read:packages`; `up.sh` logs in to GHCR with it)
 4. `sudo deploy/gkamion/enable-nginx.sh`
 5. Sign up at `https://chatbotx.gkamion.ru`, then `deploy/gkamion/verify-email.sh <email>`.
 
 ## Updating
 
-`build.sh` → apply migrations explicitly if the release has any
+push the branch to `gkamion` → run the workflow → apply migrations explicitly if the release has any
 (`pnpm --filter @chatbotx.io/database db:migrate`) → `up.sh`.
 
 The production builder takes port 3123, so stop it
