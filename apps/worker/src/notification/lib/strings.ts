@@ -1,3 +1,13 @@
+const russianPluralRules = new Intl.PluralRules("ru")
+const russianAttachmentWords: Record<Intl.LDMLPluralRule, string> = {
+  zero: "вложений",
+  one: "вложение",
+  two: "вложения",
+  few: "вложения",
+  many: "вложений",
+  other: "вложения",
+}
+
 const strings = {
   en: {
     newMessage: "New message",
@@ -127,6 +137,15 @@ const strings = {
     sentAttachment: "A trimis un atașament",
     sentAttachments: (count: number) => `A trimis ${count} atașamente`,
     assignedConversation: "Ți-a fost atribuită o conversație",
+  },
+  ru: {
+    newMessage: "Новое сообщение",
+    sharedLocation: "Отправлено местоположение",
+    sentLink: "Отправлена ссылка",
+    sentAttachment: "Отправлено вложение",
+    sentAttachments: (count: number) =>
+      `Отправлено ${count} ${russianAttachmentWords[russianPluralRules.select(count)]}`,
+    assignedConversation: "Вам назначен диалог",
   },
   sv: {
     newMessage: "Nytt meddelande",

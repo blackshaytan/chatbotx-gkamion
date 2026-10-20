@@ -1,0 +1,63 @@
+name: GKamion checks
+
+# Tests and type checks run here instead of on the VPS, which shares its
+# memory with production services.
+on:
+  push:
+    branches: [feature/ru-channels-max-zzap-drom]
+  workflow_dispatch:
+
+concurrency:
+  group: gkamion-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  i18n:
+    name: i18n and notification tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6.1.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter builder i18n:check
+
+      - run: pnpm --filter builder i18n:ru status
+
+      - working-directory: apps/builder
+        run: >-
+          pnpm exec vitest run
+          __tests__/i18n-messages.test.ts
+          __tests__/i18n-accept-language.test.ts
+          __tests__/i18n-ru-tooling.test.ts
+          __tests__/i18n-request-config.test.ts
+          __tests__/lang-selector.test.tsx
+
+      - working-directory: apps/worker
+        run: pnpm exec vitest run __tests__/notification
+
+  check-types:
+    name: Types
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6.1.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm turbo run check-types --concurrency=4

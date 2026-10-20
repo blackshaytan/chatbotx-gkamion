@@ -116,3 +116,37 @@ describe("buildNotificationContent", () => {
     expect(result.body).toBe("Shared a location")
   })
 })
+
+describe("Russian notification content", () => {
+  test("uses Russian generic title", () => {
+    const result = buildNotificationContent({
+      job: incomingMessageJob({ messageText: "Привет" }),
+      contactFullName: null,
+      workspaceLanguage: "ru",
+    })
+    expect(result.title).toBe("Новое сообщение")
+  })
+
+  test("uses Russian singular attachment copy", () => {
+    const result = buildNotificationContent({
+      job: incomingMessageJob({ attachmentCount: 1 }),
+      contactFullName: "Иван",
+      workspaceLanguage: "ru",
+    })
+    expect(result.body).toBe("Отправлено вложение")
+  })
+
+  test.each([
+    [2, "Отправлено 2 вложения"],
+    [5, "Отправлено 5 вложений"],
+    [21, "Отправлено 21 вложение"],
+    [22, "Отправлено 22 вложения"],
+  ])("declines attachment count %i", (count, expected) => {
+    const result = buildNotificationContent({
+      job: incomingMessageJob({ attachmentCount: count }),
+      contactFullName: "Иван",
+      workspaceLanguage: "ru",
+    })
+    expect(result.body).toBe(expected)
+  })
+})
