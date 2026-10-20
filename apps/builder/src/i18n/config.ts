@@ -15,6 +15,7 @@ export const locales = [
   "pt-BR",
   "pt-PT",
   "ro",
+  "ru",
   "sv",
   "tr",
   "vi",
@@ -45,6 +46,7 @@ export const localeMeta: Record<
   "pt-BR": { nativeLabel: "Português (Brasil)", dir: "ltr" },
   "pt-PT": { nativeLabel: "Português (Portugal)", dir: "ltr" },
   ro: { nativeLabel: "Română", dir: "ltr" },
+  ru: { nativeLabel: "Русский", dir: "ltr" },
   sv: { nativeLabel: "Svenska", dir: "ltr" },
   tr: { nativeLabel: "Türkçe", dir: "ltr" },
   vi: { nativeLabel: "Tiếng Việt", dir: "ltr" },
@@ -102,4 +104,32 @@ export function resolveLocale(value: string | undefined): Locale {
     locales.find((locale) => locale.toLowerCase().split("-")[0] === language) ??
     defaultLocale
   )
+}
+
+const parseAcceptLanguage = (header: string) =>
+  header
+    .split(",")
+    .map((part) => {
+      const [tag = "", ...params] = part.trim().split(";")
+      const qualityParam = params.find((param) => param.trim().startsWith("q="))
+      const quality = qualityParam ? Number(qualityParam.trim().slice(2)) : 1
+      return { tag: tag.trim(), quality: Number.isNaN(quality) ? 0 : quality }
+    })
+    .filter(({ tag, quality }) => tag !== "" && tag !== "*" && quality > 0)
+    .sort((left, right) => right.quality - left.quality)
+
+const isEnglishTag = (tag: string) => tag.toLowerCase().split("-")[0] === "en"
+
+export const pickAcceptLanguageLocale = (
+  header: string | null | undefined,
+): Locale | undefined => {
+  if (!header) {
+    return
+  }
+  for (const { tag } of parseAcceptLanguage(header)) {
+    const locale = resolveLocale(tag)
+    if (locale !== defaultLocale || isEnglishTag(tag)) {
+      return locale
+    }
+  }
 }

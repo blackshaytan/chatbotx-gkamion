@@ -37,7 +37,8 @@ const icuHeaderPattern =
   /\{([A-Za-z][\w.-]*),\s*(plural|select|selectordinal)\s*,/g
 const icuCategoryPattern = /^\s*(=?[\w-]+)\s*\{/
 const zeroWidthPattern = /\u200b|\u200c|\u200d|\ufeff/
-const completeCatalogLocales = ["az", "en", "vi"] as const
+const completeCatalogLocales = ["az", "en", "ru", "vi"] as const
+const strictPluralLocales: readonly Locale[] = ["ru"]
 const cjkCatalogLocales = ["zh-TW", "zh-CN"].filter((locale) =>
   isLocale(locale),
 )
@@ -99,6 +100,79 @@ const getIcuStructures = (message: string): IcuStructure[] => {
 
   return structures
 }
+
+const findStrictPluralCategoryErrors = (props: {
+  locale: Locale
+  english: readonly string[]
+  translated: readonly string[]
+}) => {
+  const exact = props.english.filter((category) => category.startsWith("="))
+  const required = new Set([
+    ...new Intl.PluralRules(props.locale).resolvedOptions().pluralCategories,
+    ...exact,
+  ])
+  const allowed = new Set([...required, ...props.english])
+  return [
+    ...[...required]
+      .filter((category) => !props.translated.includes(category))
+      .map((category) => `missing ${category}`),
+    ...props.translated
+      .filter((category) => !allowed.has(category))
+      .map((category) => `unexpected ${category}`),
+  ]
+}
+
+const expectIcuStructuresMatch = (props: {
+  locale: Locale
+  key: string
+  english: IcuStructure[]
+  translated: IcuStructure[]
+  isUntranslated: boolean
+}) => {
+  if (!strictPluralLocales.includes(props.locale) || props.isUntranslated) {
+    expect(props.translated, props.key).toEqual(props.english)
+    return
+  }
+  const shape = (structures: IcuStructure[]) =>
+    structures.map(({ argument, keyword }) => ({ argument, keyword }))
+  expect(shape(props.translated), props.key).toEqual(shape(props.english))
+  props.english.forEach((englishStructure, index) => {
+    const translatedCategories = props.translated[index]?.categories ?? []
+    if (englishStructure.keyword !== "plural") {
+      expect(translatedCategories, props.key).toEqual(
+        englishStructure.categories,
+      )
+      return
+    }
+    expect(
+      findStrictPluralCategoryErrors({
+        locale: props.locale,
+        english: englishStructure.categories,
+        translated: translatedCategories,
+      }),
+      props.key,
+    ).toEqual([])
+  })
+}
+
+describe("strict plural categories", () => {
+  test("Russian plurals need one, few, many and other", () => {
+    expect(
+      findStrictPluralCategoryErrors({
+        locale: "ru",
+        english: ["=0", "one", "other"],
+        translated: ["=0", "one", "few", "many", "other"],
+      }),
+    ).toEqual([])
+    expect(
+      findStrictPluralCategoryErrors({
+        locale: "ru",
+        english: ["=0", "one", "other"],
+        translated: ["one", "other", "two"],
+      }),
+    ).toEqual(["missing few", "missing many", "missing =0", "unexpected two"])
+  })
+})
 
 describe("builder message catalogs", () => {
   test.each(
@@ -174,7 +248,13 @@ describe("builder message catalogs", () => {
 
       const translatedValue = translatedMessages[key]
       expect(typeof translatedValue, key).toBe("string")
-      expect(getIcuStructures(translatedValue as string), key).toEqual(expected)
+      expectIcuStructuresMatch({
+        locale,
+        key,
+        english: expected,
+        translated: getIcuStructures(translatedValue as string),
+        isUntranslated: translatedValue === englishValue,
+      })
     }
   })
 
