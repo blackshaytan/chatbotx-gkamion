@@ -339,20 +339,20 @@
   },
   "autoAssignConversation": {
     "rule": {
-      "allTime": "Equal conversation distribution (All time)",
-      "label": "Assignment Rule",
-      "last24Hours": "Equal conversation distribution (Last 24 hours)",
-      "last8Hours": "Equal conversation distribution (Last 8 hours)",
-      "lastHour": "Equal conversation distribution (Last Hour)"
+      "allTime": "Равномерное распределение диалогов (за все время)",
+      "label": "Правило назначения",
+      "last24Hours": "Равномерное распределение диалогов (за последние 24 часа)",
+      "last8Hours": "Равномерное распределение диалогов (за последние 8 часов)",
+      "lastHour": "Равномерное распределение диалогов (за последний час)"
     },
     "users": {
-      "label": "Users"
+      "label": "Пользователи"
     }
   },
   "automatedResponse": {
     "setting": {
-      "description": "Automated responses description",
-      "label": "Automated Responses"
+      "description": "Описание автоответов",
+      "label": "Автоответы"
     }
   },
   "billing": {
@@ -903,94 +903,94 @@
     }
   },
   "channels": {
-    "title": "Channels",
+    "title": "Каналы",
     "duplicated": {
-      "generic": "This account is already connected to another workspace.",
-      "instagram": "This Instagram account is already connected to another workspace.",
-      "messenger": "This Facebook Page is already connected to another workspace.",
-      "telegram": "This Telegram bot is already connected to another workspace.",
-      "threads": "This Threads account is already connected to another workspace.",
-      "tiktok": "This TikTok account is already connected to another workspace.",
-      "whatsapp": "This WhatsApp number is already connected to another workspace.",
-      "zalo": "This Zalo OA is already connected to another workspace."
+      "generic": "Этот аккаунт уже подключен к другому пространству.",
+      "instagram": "Этот аккаунт Instagram уже подключен к другому пространству.",
+      "messenger": "Эта страница Facebook уже подключена к другому пространству.",
+      "telegram": "Этот бот Telegram уже подключен к другому пространству.",
+      "threads": "Этот аккаунт Threads уже подключен к другому пространству.",
+      "tiktok": "Этот аккаунт TikTok уже подключен к другому пространству.",
+      "whatsapp": "Этот номер WhatsApp уже подключен к другому пространству.",
+      "zalo": "Этот Zalo OA уже подключен к другому пространству."
     },
     "missingScopes": {
-      "generic": "Connection cancelled: some permissions were not granted. Please connect again and accept every requested permission.",
-      "tiktok": "TikTok connection cancelled: some permissions were not granted. Please connect again and accept every requested permission."
+      "generic": "Подключение отменено: не все разрешения предоставлены. Подключитесь снова и примите все запрошенные разрешения.",
+      "tiktok": "Подключение TikTok отменено: не все разрешения предоставлены. Подключитесь снова и примите все запрошенные разрешения."
     },
     "reconnect": {
-      "success": "Channel reconnected successfully.",
+      "success": "Канал переподключен.",
       "errors": {
-        "notFound": "The channel to reconnect was not found.",
-        "pageNotFound": "The authorized Facebook account does not have access to this Page. Log in with the correct account and grant all requested permissions.",
-        "accountNotFound": "The authorized account does not match the connected account. Log in with the correct account.",
-        "cancelled": "Reconnect was cancelled. Please try again and grant the requested permissions.",
-        "failed": "Reconnect failed. Please try again."
+        "notFound": "Канал для переподключения не найден.",
+        "pageNotFound": "У авторизованного аккаунта Facebook нет доступа к этой странице. Войдите в нужный аккаунт и предоставьте все запрошенные разрешения.",
+        "accountNotFound": "Авторизованный аккаунт не совпадает с подключенным. Войдите в нужный аккаунт.",
+        "cancelled": "Переподключение отменено. Попробуйте еще раз и предоставьте запрошенные разрешения.",
+        "failed": "Не удалось переподключить. Попробуйте еще раз."
       }
     },
     "tokenRefreshErrorDialog": {
-      "title": "Urgent",
-      "description": "The channels below failed to automatically refresh their access token. Reconnect them to keep sending and receiving messages.",
-      "cta": "Reconnect"
+      "title": "Срочно",
+      "description": "Не удалось автоматически обновить токен доступа для каналов ниже. Переподключите их, чтобы продолжить отправлять и получать сообщения.",
+      "cta": "Переподключить"
     },
     "refreshAllTokens": {
-      "button": "Refresh All Permissions",
-      "resultSuccess": "Refreshed {refreshed} channel(s).",
-      "resultWithFailures": "Refreshed {refreshed} channel(s), {failed} failed."
+      "button": "Обновить все разрешения",
+      "resultSuccess": "Обновлено каналов: {refreshed}.",
+      "resultWithFailures": "Обновлено каналов: {refreshed}, с ошибкой: {failed}."
     },
     "connectMany": {
       "coexist": {
-        "running": "Starting history sync…",
-        "done": "History sync started",
-        "failed": "History sync failed"
+        "running": "Запуск синхронизации истории…",
+        "done": "Синхронизация истории запущена",
+        "failed": "Не удалось синхронизировать историю"
       },
-      "selectAll": "Select all",
-      "selected": "{count}/{max} selected",
-      "dialogTitleRunning": "Connecting {count} {feature}…",
-      "dialogTitleDone": "Connected {connected} of {total}",
+      "selectAll": "Выбрать все",
+      "selected": "Выбрано {count}/{max}",
+      "dialogTitleRunning": "Подключение — {feature}: {count}…",
+      "dialogTitleDone": "Подключено {connected} из {total}",
       "progress": "{done}/{total}",
-      "progressAnnouncement": "{done} of {total} finished",
+      "progressAnnouncement": "Готово {done} из {total}",
       "status": {
-        "waiting": "Waiting",
-        "connecting": "Connecting…",
-        "connected": "Connected",
-        "duplicated": "Already connected",
-        "limitReached": "Limit reached",
-        "failed": "Failed",
-        "timedOut": "Timed out",
-        "cancelled": "Cancelled"
+        "waiting": "Ожидание",
+        "connecting": "Подключение…",
+        "connected": "Подключен",
+        "duplicated": "Уже подключен",
+        "limitReached": "Достигнут лимит",
+        "failed": "Ошибка",
+        "timedOut": "Время истекло",
+        "cancelled": "Отменено"
       },
       "reason": {
-        "notSelectable": "This item can't be selected.",
-        "channelLimit": "Channel limit reached.",
-        "workspaceLimit": "Workspace limit reached.",
-        "providerRejected": "The provider rejected this request.",
-        "inProgress": "Connection already in progress.",
-        "unknown": "Something went wrong.",
-        "followUpFailed": "Setup incomplete — finish from the channel settings.",
-        "webhookSubscribeFailed": "Connected, but the webhook subscription failed — retry from the connection settings."
+        "notSelectable": "Этот элемент нельзя выбрать.",
+        "channelLimit": "Достигнут лимит каналов.",
+        "workspaceLimit": "Достигнут лимит пространства.",
+        "providerRejected": "Провайдер отклонил запрос.",
+        "inProgress": "Подключение уже выполняется.",
+        "unknown": "Что-то пошло не так.",
+        "followUpFailed": "Настройка не завершена — завершите ее в настройках канала.",
+        "webhookSubscribeFailed": "Подключено, но не удалось подписаться на вебхук — повторите в настройках подключения."
       },
       "sessionError": {
-        "sessionExpired": "Your session expired. Please reconnect.",
-        "notMember": "You are no longer a member of this workspace.",
-        "trialExpired": "Your trial has expired.",
-        "macLimitReached": "You've reached your account limit.",
-        "credentialMissing": "Missing credentials. Please reconnect."
+        "sessionExpired": "Сессия истекла. Переподключитесь.",
+        "notMember": "Вы больше не участник этого пространства.",
+        "trialExpired": "Пробный период закончился.",
+        "macLimitReached": "Достигнут лимит аккаунта.",
+        "credentialMissing": "Нет учетных данных. Переподключитесь."
       },
-      "cancelRemaining": "Cancel remaining",
-      "retryFailed": "Retry failed ({count})",
-      "retry": "Retry",
-      "goToChannels": "Go to channels",
-      "close": "Close",
-      "leaveNotice": "You can leave; connected accounts are kept",
-      "stepConnecting": "Connecting",
-      "stepCoexist": "Sync history",
+      "cancelRemaining": "Отменить оставшиеся",
+      "retryFailed": "Повторить неудачные ({count})",
+      "retry": "Повторить",
+      "goToChannels": "Перейти к каналам",
+      "close": "Закрыть",
+      "leaveNotice": "Можно закрыть окно — подключенные аккаунты сохранятся",
+      "stepConnecting": "Подключение",
+      "stepCoexist": "Синхронизация истории",
       "validation": {
-        "min": "Select at least 1",
-        "max": "You can select up to {max}",
-        "duplicate": "Duplicate selection"
+        "min": "Выберите хотя бы 1",
+        "max": "Можно выбрать не больше {max}",
+        "duplicate": "Повторный выбор"
       },
-      "progressLabel": "Progress"
+      "progressLabel": "Прогресс"
     }
   },
   "workspace": {
@@ -1043,19 +1043,19 @@
     }
   },
   "workspaceToken": {
-    "title": "Workspace token"
+    "title": "Токен пространства"
   },
   "dialog": {
     "deleteConfirmation": "Вы уверены?\nЭто действие нельзя отменить.\nОбъект «{feature}» будет безвозвратно удален с наших серверов."
   },
   "fields": {
-    "optionalHint": "(optional)",
+    "optionalHint": "(необязательно)",
     "marketingMessagesConfigId": {
-      "label": "Marketing Messages Config ID",
-      "description": "Facebook Login for Business configuration ID used to request the marketing_messages_messenger permission."
+      "label": "ID конфигурации маркетинговых сообщений",
+      "description": "ID конфигурации Facebook Login for Business, через которую запрашивается разрешение marketing_messages_messenger."
     },
     "omnichannel": {
-      "label": "Omnichannel"
+      "label": "Омниканальность"
     },
     "smtp": {
       "label": "SMTP"
@@ -1064,18 +1064,18 @@
       "label": "Messenger"
     },
     "image": {
-      "label": "Image"
+      "label": "Изображение"
     },
     "instagram": {
       "label": "Instagram",
-      "loginTitle": "Login with Instagram",
-      "loginDescription": "Connect your Instagram Business account directly via Instagram OAuth.",
-      "facebookLoginTitle": "Login with Facebook",
-      "facebookLoginDescription": "Connect an Instagram account linked to your Facebook Page via Facebook OAuth.",
-      "connectViaFacebook": "Connect Instagram via Facebook",
-      "viaFacebookTitle": "Instagram via Facebook",
-      "cloneFromMessenger": "Clone from Messenger",
-      "clonedFromMessenger": "Cloned from Messenger"
+      "loginTitle": "Войти через Instagram",
+      "loginDescription": "Подключите бизнес-аккаунт Instagram напрямую через Instagram OAuth.",
+      "facebookLoginTitle": "Войти через Facebook",
+      "facebookLoginDescription": "Подключите аккаунт Instagram, привязанный к вашей странице Facebook, через Facebook OAuth.",
+      "connectViaFacebook": "Подключить Instagram через Facebook",
+      "viaFacebookTitle": "Instagram через Facebook",
+      "cloneFromMessenger": "Скопировать из Messenger",
+      "clonedFromMessenger": "Скопировано из Messenger"
     },
     "threads": {
       "label": "Threads"
@@ -1085,463 +1085,463 @@
     },
     "telegram": {
       "label": "Telegram",
-      "botToken": "Bot Token",
+      "botToken": "Токен бота",
       "connectInstructions": {
-        "step1": "Open <link>@BotFather</link> in Telegram.",
-        "step2": "Send <strong>/newbot</strong> and follow the instructions.",
-        "step3": "After you created the bot, you will receive the bot API token. Copy the API token and paste it below."
+        "step1": "Откройте <link>@BotFather</link> в Telegram.",
+        "step2": "Отправьте <strong>/newbot</strong> и следуйте инструкциям.",
+        "step3": "После создания бота вы получите API-токен. Скопируйте его и вставьте ниже."
       }
     },
     "max": {
       "label": "MAX",
-      "botToken": "Bot token",
+      "botToken": "Токен бота",
       "connectInstructions": {
-        "step1": "Open the <link>MAX business platform</link> and create a bot.",
-        "step2": "Copy the bot token from <strong>Integration → Get token</strong>.",
-        "step3": "Paste it below. The channel is added switched off — turn it on when you are ready."
+        "step1": "Откройте <link>платформу MAX для бизнеса</link> и создайте бота.",
+        "step2": "Скопируйте токен бота в разделе <strong>Интеграция → Получить токен</strong>.",
+        "step3": "Вставьте его ниже. Канал добавляется выключенным — включите его, когда будете готовы."
       },
-      "enabled": "Receiving and sending",
-      "enabledHint": "Only one system may serve this bot. Switch the old bot off before turning this on.",
+      "enabled": "Прием и отправка",
+      "enabledHint": "Этого бота может обслуживать только одна система. Выключите старого бота, прежде чем включать этот канал.",
       "status": {
-        "connected": "On",
-        "paused": "Off",
-        "needs_reauth": "Token rejected",
-        "degraded": "Problem",
-        "disconnected": "Disconnected"
+        "connected": "Включен",
+        "paused": "Выключен",
+        "needs_reauth": "Токен отклонен",
+        "degraded": "Проблема",
+        "disconnected": "Отключен"
       },
-      "switchedOn": "MAX channel is on",
-      "switchedOff": "MAX channel is off"
+      "switchedOn": "Канал MAX включен",
+      "switchedOff": "Канал MAX выключен"
     },
     "zzap": {
       "label": "ZZAP",
-      "apiKey": "API key",
-      "codeObject": "Object code (code_object)",
-      "typeObject": "Object type (type_object)",
-      "testMode": "Test mode",
-      "testModeHint": "Replies are sent with test=true and are not delivered to buyers.",
+      "apiKey": "API-ключ",
+      "codeObject": "Код объекта (code_object)",
+      "typeObject": "Тип объекта (type_object)",
+      "testMode": "Тестовый режим",
+      "testModeHint": "Ответы отправляются с test=true и не доходят до покупателей.",
       "connectInstructions": {
-        "step1": "In the ZZAP seller account open B52 API settings and copy the API key.",
-        "step2": "Enter the object code and type of your shop. The channel is created switched off."
+        "step1": "В кабинете продавца ZZAP откройте настройки B52 API и скопируйте API-ключ.",
+        "step2": "Введите код и тип объекта вашего магазина. Канал создается выключенным."
       },
-      "enabled": "Receiving and sending",
-      "enabledHint": "While switched off ChatbotX does not poll ZZAP, so another system can serve this shop.",
+      "enabled": "Прием и отправка",
+      "enabledHint": "Пока канал выключен, ChatbotX не опрашивает ZZAP, и этот магазин может обслуживать другая система.",
       "status": {
-        "connected": "On",
-        "paused": "Off",
-        "needs_reauth": "Key rejected",
-        "degraded": "Problem",
-        "disconnected": "Disconnected"
+        "connected": "Включен",
+        "paused": "Выключен",
+        "needs_reauth": "Ключ отклонен",
+        "degraded": "Проблема",
+        "disconnected": "Отключен"
       },
-      "switchedOn": "ZZAP channel is on",
-      "switchedOff": "ZZAP channel is off",
-      "lastPolledAt": "Last poll",
-      "lastError": "Last error"
+      "switchedOn": "Канал ZZAP включен",
+      "switchedOff": "Канал ZZAP выключен",
+      "lastPolledAt": "Последний опрос",
+      "lastError": "Последняя ошибка"
     },
     "drom": {
       "label": "DROM",
-      "sellerLogin": "Seller login",
+      "sellerLogin": "Логин продавца",
       "cookies": "Cookies",
-      "cookiesHint": "Paste the cookies exported with Cookie-Editor (JSON) or a Cookie header.",
+      "cookiesHint": "Вставьте cookies, экспортированные через Cookie-Editor (JSON), или заголовок Cookie.",
       "connectInstructions": {
-        "step1": "Sign in to baza.drom.ru as the seller in your browser.",
-        "step2": "Export the cookies of drom.ru with the Cookie-Editor extension (Export → JSON).",
-        "step3": "Paste them below together with your seller login. The channel is created switched off."
+        "step1": "Войдите в браузере на baza.drom.ru как продавец.",
+        "step2": "Экспортируйте cookies drom.ru расширением Cookie-Editor (Export → JSON).",
+        "step3": "Вставьте их ниже вместе с логином продавца. Канал создается выключенным."
       },
-      "updateCookies": "Update cookies",
-      "enabled": "Receiving and sending",
-      "enabledHint": "While switched off ChatbotX does not poll DROM, so another system can serve this seller.",
+      "updateCookies": "Обновить cookies",
+      "enabled": "Прием и отправка",
+      "enabledHint": "Пока канал выключен, ChatbotX не опрашивает DROM, и этого продавца может обслуживать другая система.",
       "status": {
-        "connected": "On",
-        "paused": "Off",
-        "needs_reauth": "Cookies expired",
-        "degraded": "Problem",
-        "disconnected": "Disconnected"
+        "connected": "Включен",
+        "paused": "Выключен",
+        "needs_reauth": "Cookies устарели",
+        "degraded": "Проблема",
+        "disconnected": "Отключен"
       },
-      "switchedOn": "DROM channel is on",
-      "switchedOff": "DROM channel is off",
-      "lastPolledAt": "Last poll",
-      "lastError": "Last error"
+      "switchedOn": "Канал DROM включен",
+      "switchedOff": "Канал DROM выключен",
+      "lastPolledAt": "Последний опрос",
+      "lastError": "Последняя ошибка"
     },
     "matchAll": {
-      "label": "Match all the conditions below"
+      "label": "Соответствует всем условиям ниже"
     },
     "matchAny": {
-      "label": "Match one of the conditions below"
+      "label": "Соответствует одному из условий ниже"
     },
     "condition": {
-      "label": "Condition"
+      "label": "Условие"
     },
     "actions": {
-      "label": "Actions"
+      "label": "Действия"
     },
     "tags": {
-      "label": "Tags"
+      "label": "Теги"
     },
     "customFields": {
-      "label": "Custom Fields"
+      "label": "Пользовательские поля"
     },
     "pipelines": {
-      "label": "Pipelines"
+      "label": "Воронки"
     },
     "sequences": {
-      "label": "Sequences"
+      "label": "Цепочки"
     },
     "ecommerce": {
-      "label": "Ecommerce"
+      "label": "Электронная коммерция"
     },
     "entryPointLink": {
-      "label": "Entry Point Link"
+      "label": "Ссылка на точку входа"
     },
     "assignedId": {
-      "label": "Assign To"
+      "label": "Назначить"
     },
     "operator": {
-      "label": "Operator",
-      "is": "Is",
-      "isNot": "Is not",
-      "in": "In",
-      "notIn": "Not in",
-      "isEmpty": "Has no value",
-      "isNotEmpty": "Has any value",
-      "gt": "Greater than",
-      "lt": "Less than",
-      "gte": "Greater than or Equal to",
-      "lte": "Less than or Equal to",
-      "contains": "Contains",
-      "notContains": "Doesn't contain",
-      "startsWith": "Starts with",
-      "endsWith": "Ends with",
-      "isBetween": "Interval",
-      "notBetween": "Not interval",
-      "used": "Used"
+      "label": "Оператор",
+      "is": "Равно",
+      "isNot": "Не равно",
+      "in": "Входит в",
+      "notIn": "Не входит в",
+      "isEmpty": "Не заполнено",
+      "isNotEmpty": "Заполнено",
+      "gt": "Больше",
+      "lt": "Меньше",
+      "gte": "Больше или равно",
+      "lte": "Меньше или равно",
+      "contains": "Содержит",
+      "notContains": "Не содержит",
+      "startsWith": "Начинается с",
+      "endsWith": "Заканчивается на",
+      "isBetween": "В интервале",
+      "notBetween": "Вне интервала",
+      "used": "Использовано"
     },
     "contactFilter": {
-      "allConditions": "All of the following conditions",
-      "anyConditions": "Any of the below conditions.",
-      "label": "Contact filter",
-      "onlyContactsMatch": "Only contacts, that match to",
-      "moreOptions": "More Options"
+      "allConditions": "Все следующие условия",
+      "anyConditions": "Любое из условий ниже.",
+      "label": "Фильтр контактов",
+      "onlyContactsMatch": "Только контакты, соответствующие",
+      "moreOptions": "Дополнительно"
     },
     "contactNote": {
-      "label": "Contact Note"
+      "label": "Заметка о контакте"
     },
     "chooseTime": {
-      "label": "Choose time"
+      "label": "Выберите время"
     },
     "notificationType": {
-      "label": "Notification Type",
-      "notifyAdmin": "Notify Admin",
-      "newMessageToHuman": "New Message to Human",
-      "newOrder": "New Order"
+      "label": "Тип уведомления",
+      "notifyAdmin": "Уведомить администратора",
+      "newMessageToHuman": "Новое сообщение оператору",
+      "newOrder": "Новый заказ"
     },
     "notificationChannel": {
-      "label": "Notification Channel",
+      "label": "Канал уведомлений",
       "messenger": "Messenger",
       "email": "Email",
       "telegram": "Telegram",
-      "browser": "Browser"
+      "browser": "Браузер"
     },
     "accessToken": {
-      "label": "Access Token"
+      "label": "Токен доступа"
     },
     "botField": {
-      "label": "Bot Field"
+      "label": "Поле бота"
     },
     "agent": {
-      "label": "Agent"
+      "label": "Оператор"
     },
     "aiAgent": {
-      "label": "AI Agent",
-      "loadError": "Failed to load AI agents. Please try again."
+      "label": "ИИ-агент",
+      "loadError": "Не удалось загрузить ИИ-агентов. Попробуйте еще раз."
     },
     "aiQueuedMessages": {
-      "label": "AI Queued Messages"
+      "label": "Сообщения в очереди ИИ"
     },
     "aiFile": {
-      "label": "AI File"
+      "label": "Файл ИИ"
     },
     "aiFunction": {
-      "label": "AI Function"
+      "label": "Функция ИИ"
     },
     "alphanumericLength": {
-      "label": "Alphanumeric Length"
+      "label": "Длина (буквы и цифры)"
     },
     "analytics": {
-      "label": "Analytics"
+      "label": "Аналитика"
     },
     "apiKey": {
-      "label": "API Key"
+      "label": "API-ключ"
     },
     "auth": {
-      "label": "Auth"
+      "label": "Авторизация"
     },
     "authorizedDomain": {
-      "description": "The domains or subdomains that are authorized to access your webchat.",
-      "label": "Authorized Domain{plural, select, 1 {s} other {}}"
+      "description": "Домены или поддомены, которым разрешен доступ к вашему веб-чату.",
+      "label": "{plural, select, 1 {Разрешенные домены} other {Разрешенный домен}}"
     },
     "webSearchAuthorizedDomains": {
-      "label": "Authorized websites for Web Search tool",
+      "label": "Разрешенные сайты для веб-поиска",
       "placeholder": "example.com",
-      "tooltip": "List of domains that the AI agent can access. Leave empty to allow all domains."
+      "tooltip": "Домены, к которым ИИ-агент может обращаться. Оставьте пустым, чтобы разрешить все домены."
     },
     "authToken": {
-      "label": "Token"
+      "label": "Токен"
     },
     "authType": {
-      "headers": "Custom Header",
-      "token": "Token"
+      "headers": "Свой заголовок",
+      "token": "Токен"
     },
     "automatedResponse": {
-      "label": "Automated Response"
+      "label": "Автоответ"
     },
     "avatar": {
-      "label": "Profile Image"
+      "label": "Фото профиля"
     },
     "reflink": {
-      "label": "Entry Point Link"
+      "label": "Ссылка на точку входа"
     },
     "qrCode": {
-      "label": "QR Code"
+      "label": "QR-код"
     },
     "dynamicImage": {
-      "label": "Dynamic Image"
+      "label": "Динамическое изображение"
     },
     "minigame": {
-      "label": "Minigame"
+      "label": "Мини-игра"
     },
     "savePayloadToCustomField": {
-      "label": "Save payload to custom field"
+      "label": "Сохранить payload в пользовательское поле"
     },
     "bot": {
-      "label": "Bot"
+      "label": "Бот"
     },
     "botResponse": {
-      "label": "Bot Response"
+      "label": "Ответ бота"
     },
     "brandColor": {
-      "description": "This color is used on buttons to match your branding on the landing page, emails and webchat.",
-      "label": "Brand Color"
+      "description": "Этот цвет используется на кнопках, чтобы они соответствовали вашему бренду на лендинге, в письмах и веб-чате.",
+      "label": "Цвет бренда"
     },
     "broadcast": {
-      "label": "Broadcast"
+      "label": "Рассылка"
     },
     "trigger": {
-      "label": "Trigger"
+      "label": "Триггер"
     },
     "webhook": {
-      "label": "Webhook"
+      "label": "Вебхук"
     },
     "button": {
-      "label": "Button",
-      "whenPressed": "When this button is pressed"
+      "label": "Кнопка",
+      "whenPressed": "При нажатии на эту кнопку"
     },
     "buttonLabel": {
-      "label": "Button Label"
+      "label": "Текст кнопки"
     },
     "category": {
-      "label": "Category"
+      "label": "Категория"
     },
     "completed": {
-      "label": "Completed"
+      "label": "Завершено"
     },
     "workspace": {
-      "label": "Workspace"
+      "label": "Пространство"
     },
     "workspaceId": {
-      "description": "Unique identifier for your workspace.",
-      "label": "Workspace ID"
+      "description": "Уникальный идентификатор вашего пространства.",
+      "label": "ID пространства"
     },
     "workspaceName": {
-      "label": "Account Name"
+      "label": "Название аккаунта"
     },
     "contact": {
-      "label": "Contact"
+      "label": "Контакт"
     },
     "contacts": {
-      "label": "Contacts"
+      "label": "Контакты"
     },
     "conversation": {
-      "label": "Conversation"
+      "label": "Диалог"
     },
     "conversationStarter": {
-      "description": "The conversation starters are used to start a conversation with a user.",
-      "label": "Conversation Starter{plural, select, 1 {s} other {}}",
+      "description": "Стартовые сообщения используются, чтобы начать диалог с пользователем.",
+      "label": "{plural, select, 1 {Стартовые сообщения} other {Стартовое сообщение}}",
       "type": {
-        "openWebsite": "Open Website",
-        "sendFlow": "Send Flow",
-        "sendText": "Send Text"
+        "openWebsite": "Открыть сайт",
+        "sendFlow": "Отправить сценарий",
+        "sendText": "Отправить текст"
       }
     },
     "createdAt": {
-      "label": "Created At"
+      "label": "Создано"
     },
     "currentTime": {
-      "label": "Current Time"
+      "label": "Текущее время"
     },
     "bookingCalendar": {
-      "label": "Booking Calendar"
+      "label": "Календарь записи"
     },
     "bookingDate": {
-      "label": "Booking Date"
+      "label": "Дата записи"
     },
     "bookingLink": {
-      "label": "Booking Link"
+      "label": "Ссылка на запись"
     },
     "customRange": {
-      "label": "Custom range"
+      "label": "Свой период"
     },
     "customCss": {
-      "label": "Custom CSS"
+      "label": "Свой CSS"
     },
     "theme": {
-      "label": "Theme",
-      "placeholder": "Select a theme"
+      "label": "Тема",
+      "placeholder": "Выберите тему"
     },
     "customJS": {
-      "label": "Custom JS",
-      "placeholder": "Enter custom JavaScript"
+      "label": "Свой JS",
+      "placeholder": "Введите свой JavaScript"
     },
     "customCSS": {
-      "label": "Custom CSS",
-      "placeholder": "Enter custom CSS"
+      "label": "Свой CSS",
+      "placeholder": "Введите свой CSS"
     },
     "customField": {
-      "label": "Custom Field",
-      "savePayloadTo": "Save response to Custom Field",
-      "set_value": "Set value",
-      "append": "Append to the end",
-      "prepend": "Prepend to the beginning",
-      "increase": "Increase by",
-      "decrease": "Decrease by",
-      "groupSystemFields": "System Fields",
-      "groupCustomFields": "Custom Fields",
-      "groupAccountFields": "Bot Fields"
+      "label": "Пользовательское поле",
+      "savePayloadTo": "Сохранить ответ в пользовательское поле",
+      "set_value": "Задать значение",
+      "append": "Добавить в конец",
+      "prepend": "Добавить в начало",
+      "increase": "Увеличить на",
+      "decrease": "Уменьшить на",
+      "groupSystemFields": "Системные поля",
+      "groupCustomFields": "Пользовательские поля",
+      "groupAccountFields": "Поля бота"
     },
     "dataCollect": {
-      "label": "Data Collect"
+      "label": "Сбор данных"
     },
     "defaultReply": {
-      "description": "It is the default response that your workspace will send to users when the workspace doesn't know how to respond to the user message.",
-      "label": "Default Reply"
+      "description": "Ответ по умолчанию, который пространство отправляет пользователям, когда не знает, как ответить на их сообщение.",
+      "label": "Ответ по умолчанию"
     },
     "defaultReplyFrequency": {
-      "description": "Controls how often the Default Reply flow may fire for the same contact on a channel.",
-      "label": "Default Reply activation frequency",
+      "description": "Определяет, как часто сценарий ответа по умолчанию может срабатывать для одного контакта в канале.",
+      "label": "Частота срабатывания ответа по умолчанию",
       "options": {
-        "allTime": "All time",
-        "oncePerHour": "Once per 1h",
-        "oncePerDay": "Once per 24h"
+        "allTime": "Всегда",
+        "oncePerHour": "Раз в 1 ч",
+        "oncePerDay": "Раз в 24 ч"
       }
     },
     "smartResponseDelaySeconds": {
-      "description": "Set how long the bot waits before replying after the user’s last message. If the user sends another message, the timer resets and messages are queued into a single response.",
-      "label": "Bot reply delay",
-      "minutes": "{count, plural, one {# minute} other {# minutes}}",
-      "seconds": "{count, plural, one {# second} other {# seconds}}"
+      "description": "Сколько бот ждет после последнего сообщения пользователя, прежде чем ответить. Если пользователь пишет снова, таймер сбрасывается, и сообщения объединяются в один ответ.",
+      "label": "Задержка ответа бота",
+      "minutes": "{count, plural, one {# минута} few {# минуты} many {# минут} other {# минуты}}",
+      "seconds": "{count, plural, one {# секунда} few {# секунды} many {# секунд} other {# секунды}}"
     },
     "delayType": {
-      "label": "Delay Type",
-      "placeholder": "Delay Type"
+      "label": "Тип задержки",
+      "placeholder": "Тип задержки"
     },
     "delayUnit": {
-      "days": "Days",
-      "hours": "Hours",
-      "minutes": "Minutes",
-      "seconds": "Seconds"
+      "days": "Дни",
+      "hours": "Часы",
+      "minutes": "Минуты",
+      "seconds": "Секунды"
     },
     "description": {
-      "label": "Description",
-      "placeholder": "Enter description"
+      "label": "Описание",
+      "placeholder": "Введите описание"
     },
     "developmentMode": {
-      "description": "Your bot will work only for bot admins. Enable this option if you are building your bot and don't want non admins to use the bot.",
-      "label": "Development Mode"
+      "description": "Бот будет работать только для администраторов бота. Включите, если вы еще настраиваете бота и не хотите, чтобы им пользовались остальные.",
+      "label": "Режим разработки"
     },
     "email": {
       "label": "Email",
-      "placeholder": "Enter email"
+      "placeholder": "Введите email"
     },
     "embedCode": {
-      "description": "Copy and paste this code into your website to embed the chat widget.",
-      "label": "Embed Code",
-      "securityNote": "Security Note",
-      "securityNoteDescription": "This widget will only work on domains that are authorized in your webchat configuration. Make sure to add your domain to the authorized domains list."
+      "description": "Скопируйте этот код и вставьте его на свой сайт, чтобы встроить виджет чата.",
+      "label": "Код для встраивания",
+      "securityNote": "Безопасность",
+      "securityNoteDescription": "Виджет работает только на доменах, разрешенных в настройках веб-чата. Добавьте свой домен в список разрешенных."
     },
     "processingStatus": {
-      "label": "Processing Status"
+      "label": "Статус обработки"
     },
     "enable": {
-      "label": "Enable"
+      "label": "Включить"
     },
     "file": {
-      "label": "File"
+      "label": "Файл"
     },
     "link": {
-      "label": "Link"
+      "label": "Ссылка"
     },
     "message": {
-      "label": "Message"
+      "label": "Сообщение"
     },
     "filter": {
-      "label": "Filter"
+      "label": "Фильтр"
     },
     "finalMessage": {
-      "label": "Final Message"
+      "label": "Итоговое сообщение"
     },
     "firstName": {
-      "label": "First name",
-      "placeholder": "Enter first name"
+      "label": "Имя",
+      "placeholder": "Введите имя"
     },
     "countryCode": {
-      "label": "Country Code"
+      "label": "Код страны"
     },
     "contactId": {
-      "label": "Contact ID"
+      "label": "ID контакта"
     },
     "channelIdentity": {
       "psid": "PSID",
       "igsid": "IGSID",
       "whatsappId": "WhatsApp ID",
       "bsuid": "BSUID",
-      "zaloUserId": "Zalo User ID",
-      "telegramChatId": "Telegram Chat ID",
-      "maxUserId": "MAX user ID",
-      "zzapUserKey": "ZZAP user key",
-      "dromDialogId": "DROM dialog id",
-      "tiktokUserId": "TikTok User ID",
-      "threadsUsername": "Threads Username",
-      "webchatGuestId": "Webchat Guest ID",
-      "externalId": "External ID",
-      "channelId": "Channel ID"
+      "zaloUserId": "ID пользователя Zalo",
+      "telegramChatId": "ID чата Telegram",
+      "maxUserId": "ID пользователя MAX",
+      "zzapUserKey": "Ключ пользователя ZZAP",
+      "dromDialogId": "ID диалога DROM",
+      "tiktokUserId": "ID пользователя TikTok",
+      "threadsUsername": "Имя пользователя Threads",
+      "webchatGuestId": "ID гостя веб-чата",
+      "externalId": "Внешний ID",
+      "channelId": "ID канала"
     },
     "flow": {
-      "label": "Flow"
+      "label": "Сценарий"
     },
     "flowId": {
-      "label": "Flow ID"
+      "label": "ID сценария"
     },
     "flows": {
-      "aiGenerateText": "{aiName}: Generate Text",
-      "aiGenerateImage": "{aiName}: Generate Image",
-      "aiEditImage": "{aiName}: Edit Image",
-      "aiAnalyzeImage": "{aiName}: Analyze Image",
-      "aiExtractData": "{aiName}: Extract Data",
-      "aiSpeechToText": "{aiName}: Speech to Text",
-      "aiTextToSpeech": "{aiName}: Text to Speech",
-      "label": "Flows",
-      "placeholder": "Select flow",
-      "aiGenerateTextAgent": "{aiName}: Generate Text Agent",
-      "aiDeleteMessageHistory": "{aiName}: Delete Message History"
+      "aiGenerateText": "{aiName}: генерация текста",
+      "aiGenerateImage": "{aiName}: генерация изображения",
+      "aiEditImage": "{aiName}: редактирование изображения",
+      "aiAnalyzeImage": "{aiName}: анализ изображения",
+      "aiExtractData": "{aiName}: извлечение данных",
+      "aiSpeechToText": "{aiName}: речь в текст",
+      "aiTextToSpeech": "{aiName}: текст в речь",
+      "label": "Сценарии",
+      "placeholder": "Выберите сценарий",
+      "aiGenerateTextAgent": "{aiName}: генерация текста агентом",
+      "aiDeleteMessageHistory": "{aiName}: удаление истории сообщений"
     },
     "steps": {
-      "label": "Node",
-      "placeholder": "Select node"
+      "label": "Блок",
+      "placeholder": "Выберите блок"
     },
     "folder": {
-      "label": "Folder"
+      "label": "Папка"
     },
     "format": {
-      "label": "Format"
+      "label": "Формат"
     },
     "framework": {
       "angular": "Angular",
@@ -1551,19 +1551,19 @@
       "vue": "Vue"
     },
     "function": {
-      "label": "Function"
+      "label": "Функция"
     },
     "gemini": {
       "label": "Gemini"
     },
     "geminiModel": {
-      "label": "Gemini Model"
+      "label": "Модель Gemini"
     },
     "gender": {
-      "female": "Female",
-      "label": "Gender",
-      "male": "Male",
-      "unknown": "Unknown"
+      "female": "Женский",
+      "label": "Пол",
+      "male": "Мужской",
+      "unknown": "Не указан"
     },
     "googleSheets": {
       "label": "Google Sheets"
@@ -1587,469 +1587,469 @@
       "label": "Moosend"
     },
     "host": {
-      "label": "Host",
+      "label": "Хост",
       "placeholder": "smtp.example.com"
     },
     "hideHeader": {
-      "label": "Hide Header"
+      "label": "Скрыть заголовок"
     },
     "hideMessageInput": {
-      "label": "Hide Message Input"
+      "label": "Скрыть поле ввода"
     },
     "inbox": {
-      "label": "Inbox",
-      "placeholder": "Select an inbox"
+      "label": "Ящик входящих",
+      "placeholder": "Выберите ящик входящих"
     },
     "inboxTeam": {
-      "label": "Inbox Team"
+      "label": "Команда ящика"
     },
     "teamMembers": {
-      "label": "Team Members"
+      "label": "Участники команды"
     },
     "inboxTeamMember": {
-      "label": "Inbox Team Member"
+      "label": "Участник команды ящика"
     },
     "inputCustomField": {
-      "label": "Input Custom Field"
+      "label": "Пользовательское поле для ввода"
     },
     "insertLink": {
-      "label": "Insert Link"
+      "label": "Вставить ссылку"
     },
     "instructions": {
-      "label": "System Message (Prompt)"
+      "label": "Системное сообщение (промпт)"
     },
     "isDefault": {
-      "label": "Mark as default"
+      "label": "Сделать по умолчанию"
     },
     "isRichResponse": {
-      "description": "Return structured JSON with messages and actions instead of plain text streaming.",
-      "label": "Rich Response"
+      "description": "Возвращать структурированный JSON с сообщениями и действиями вместо потокового текста.",
+      "label": "Расширенный ответ"
     },
     "language": {
-      "description": "Contacts are assigned the default language when the contact language is unknown.",
-      "label": "Language",
-      "placeholder": "Select language"
+      "description": "Если язык контакта неизвестен, ему назначается язык по умолчанию.",
+      "label": "Язык",
+      "placeholder": "Выберите язык"
     },
     "lastName": {
-      "label": "Last name",
-      "placeholder": "Enter last name"
+      "label": "Фамилия",
+      "placeholder": "Введите фамилию"
     },
     "last30days": {
-      "label": "Last 30 days"
+      "label": "Последние 30 дней"
     },
     "last7days": {
-      "label": "Last 7 days"
+      "label": "Последние 7 дней"
     },
     "lastInput": {
-      "label": "Last Input"
+      "label": "Последний ввод"
     },
     "lastUserInputTypes": {
-      "text": "Text",
-      "location": "Location",
-      "refLink": "Ref link",
-      "image": "Image",
-      "video": "Video",
-      "audio": "Audio",
+      "text": "Текст",
+      "location": "Геолокация",
+      "refLink": "Реф-ссылка",
+      "image": "Изображение",
+      "video": "Видео",
+      "audio": "Аудио",
       "gif": "GIF",
-      "file": "File",
-      "storyMention": "Story mention"
+      "file": "Файл",
+      "storyMention": "Упоминание в истории"
     },
     "lastMonth": {
-      "label": "Last month"
+      "label": "Прошлый месяц"
     },
     "lifeTime": {
-      "label": "Lifetime"
+      "label": "За все время"
     },
     "locale": {
-      "label": "Locale"
+      "label": "Локаль"
     },
     "errorLog": {
-      "label": "Error Log"
+      "label": "Журнал ошибок"
     },
     "inputType": {
-      "label": "Input Type",
+      "label": "Тип ввода",
       "options": {
-        "text": "Text",
-        "image": "Image",
-        "file": "File"
+        "text": "Текст",
+        "image": "Изображение",
+        "file": "Файл"
       }
     },
     "extractFields": {
-      "label": "Fields to Extract",
+      "label": "Поля для извлечения",
       "key": {
-        "label": "JSON Key",
-        "placeholder": "e.g. email, phone, address"
+        "label": "Ключ JSON",
+        "placeholder": "например, email, phone, address"
       },
       "customFieldId": {
-        "label": "Save to Custom Field"
+        "label": "Сохранить в пользовательское поле"
       },
       "description": {
-        "label": "Description (Optional)",
-        "placeholder": "Describe what to extract"
+        "label": "Описание (необязательно)",
+        "placeholder": "Опишите, что нужно извлечь"
       }
     },
     "maximum": {
-      "label": "Maximum"
+      "label": "Максимум"
     },
     "maxOutputTokens": {
-      "label": "Max Tokens"
+      "label": "Макс. токенов"
     },
     "mcpServer": {
-      "label": "MCP Server"
+      "label": "MCP-сервер"
     },
     "template": {
-      "label": "Template"
+      "label": "Шаблон"
     },
     "systemFunction": {
-      "label": "System Function",
+      "label": "Системная функция",
       "names": {
-        "connectUserToHuman": "Connect user to Human",
-        "documentReader": "Document Reader",
-        "imageReader": "Image Reader",
-        "urlContext": "Url Reader",
-        "webSearch": "Web search"
+        "connectUserToHuman": "Передать пользователя оператору",
+        "documentReader": "Чтение документов",
+        "imageReader": "Чтение изображений",
+        "urlContext": "Чтение URL",
+        "webSearch": "Веб-поиск"
       }
     },
     "min": {
-      "label": "Minimum"
+      "label": "Минимум"
     },
     "model": {
-      "label": "Model"
+      "label": "Модель"
     },
     "name": {
-      "label": "Name",
-      "placeholder": "Enter name",
-      "searchPlaceholder": "Search name..."
+      "label": "Название",
+      "placeholder": "Введите название",
+      "searchPlaceholder": "Поиск по названию..."
     },
     "selectUsers": {
-      "label": "Select users"
+      "label": "Выберите пользователей"
     },
     "node": {
-      "label": "Node"
+      "label": "Блок"
     },
     "noResults": {
-      "label": "No results found"
+      "label": "Ничего не найдено"
     },
     "notes": {
-      "label": "Notes"
+      "label": "Заметки"
     },
     "numericLength": {
-      "label": "Numeric Length"
+      "label": "Длина (цифры)"
     },
     "numericValue": {
-      "label": "Numeric Value"
+      "label": "Числовое значение"
     },
     "openai": {
       "label": "OpenAI"
     },
     "operation": {
-      "label": "Operation"
+      "label": "Операция"
     },
     "outputCustomField": {
-      "label": "Output Custom Field",
-      "javascriptOptional": "Optional. Stores the entire return value. Use the JSON path mapping above to write individual fields.",
-      "javascriptDumpLabel": "Full JSON output (optional)"
+      "label": "Пользовательское поле для результата",
+      "javascriptOptional": "Необязательно. Сохраняет все возвращаемое значение. Чтобы записать отдельные поля, используйте сопоставление JSON-путей выше.",
+      "javascriptDumpLabel": "Полный JSON-результат (необязательно)"
     },
     "javascriptCode": {
-      "label": "JavaScript code",
+      "label": "Код JavaScript",
       "placeholder": "return (input.first_name || 'there').toUpperCase()",
-      "description": "Use pure JavaScript and return a value. Network, files, APIs, and external libraries are unavailable. Contact and system data is available on the `input` object.",
-      "objectMapping": "Map any JSON path from the returned value onto any custom field, the same way External API Request does. You choose the paths and the fields."
+      "description": "Используйте чистый JavaScript и верните значение. Сеть, файлы, API и внешние библиотеки недоступны. Данные контакта и системы доступны в объекте `input`.",
+      "objectMapping": "Сопоставьте любой JSON-путь из возвращаемого значения с любым пользовательским полем — так же, как во внешнем API-запросе. Пути и поля выбираете вы."
     },
     "httpMethod": {
-      "label": "Method"
+      "label": "Метод"
     },
     "requestUrl": {
       "label": "URL",
       "placeholder": "https://api.example.com/endpoint"
     },
     "requestHeaders": {
-      "label": "Headers",
-      "keyPlaceholder": "Header",
-      "valuePlaceholder": "Value"
+      "label": "Заголовки",
+      "keyPlaceholder": "Заголовок",
+      "valuePlaceholder": "Значение"
     },
     "requestBody": {
-      "label": "Body",
-      "keyPlaceholder": "Field",
-      "valuePlaceholder": "Value"
+      "label": "Тело",
+      "keyPlaceholder": "Поле",
+      "valuePlaceholder": "Значение"
     },
     "bodyType": {
-      "label": "Body Type",
+      "label": "Тип тела",
       "options": {
-        "allContactData": "All Contact Data",
+        "allContactData": "Все данные контакта",
         "json": "JSON",
         "formEncoded": "Form Encoded"
       }
     },
     "statusCode": {
-      "label": "Status Code"
+      "label": "Код ответа"
     },
     "outputMessage": {
-      "label": "Output Message",
-      "placeholder": "What is the output message?"
+      "label": "Выходное сообщение",
+      "placeholder": "Какое сообщение вывести?"
     },
     "paymentHistory": {
-      "label": "Payment History"
+      "label": "История платежей"
     },
     "paymentMethods": {
-      "label": "Payment Methods"
+      "label": "Способы оплаты"
     },
     "persistentMenu": {
-      "description": "The persistent menus are used to start a conversation with a user.",
-      "label": "Persistent Menu{plural, select, 1 {s} other {}}",
+      "description": "Постоянное меню используется, чтобы начать диалог с пользователем.",
+      "label": "{plural, select, 1 {Постоянные меню} other {Постоянное меню}}",
       "type": {
-        "openWebsite": "Open Website",
-        "sendFlow": "Send Flow"
+        "openWebsite": "Открыть сайт",
+        "sendFlow": "Отправить сценарий"
       }
     },
     "userPersistentMenu": {
-      "pageDefault": "Default",
-      "label": "User Persistent Menu"
+      "pageDefault": "По умолчанию",
+      "label": "Постоянное меню пользователя"
     },
     "phoneNumber": {
-      "label": "Phone number"
+      "label": "Номер телефона"
     },
     "phoneNumberId": {
-      "label": "Phone number",
-      "noPhoneNumbersFound": "No phone numbers found for this account"
+      "label": "Номер телефона",
+      "noPhoneNumbersFound": "Для этого аккаунта не найдено номеров телефона"
     },
     "port": {
-      "label": "Port",
+      "label": "Порт",
       "placeholder": "587"
     },
     "provider": {
-      "label": "Provider",
-      "placeholder": "Select provider"
+      "label": "Провайдер",
+      "placeholder": "Выберите провайдера"
     },
     "prompt": {
-      "label": "Prompt",
-      "placeholder": "Enter prompt"
+      "label": "Промпт",
+      "placeholder": "Введите промпт"
     },
     "userMessage": {
-      "label": "User message"
+      "label": "Сообщение пользователя"
     },
     "pageUserName": {
-      "label": "Page User Name"
+      "label": "Имя пользователя страницы"
     },
     "waUserId": {
-      "label": "WhatsApp User ID"
+      "label": "ID пользователя WhatsApp"
     },
     "waUserName": {
-      "label": "WhatsApp Username"
+      "label": "Имя пользователя WhatsApp"
     },
     "purpose": {
-      "label": "Purpose",
-      "placeholder": "What does this Function do?"
+      "label": "Назначение",
+      "placeholder": "Что делает эта функция?"
     },
     "question": {
-      "label": "Question",
-      "placeholder": "Are you open today?"
+      "label": "Вопрос",
+      "placeholder": "Вы сегодня работаете?"
     },
     "imageProfileUrl": {
-      "label": "Image Profile URL"
+      "label": "URL фото профиля"
     },
     "persona": {
-      "label": "Persona",
-      "pageDefault": "Default persona"
+      "label": "Персона",
+      "pageDefault": "Персона по умолчанию"
     },
     "quickReply": {
-      "label": "Quick Reply"
+      "label": "Быстрый ответ"
     },
     "search": {
-      "placeholder": "Search..."
+      "placeholder": "Поиск..."
     },
     "logo": {
-      "label": "Logo"
+      "label": "Логотип"
     },
     "logoLight": {
-      "label": "Logo (Light)"
+      "label": "Логотип (светлый)"
     },
     "logoDark": {
-      "label": "Logo (Dark)"
+      "label": "Логотип (темный)"
     },
     "favicon": {
-      "label": "Favicon"
+      "label": "Фавикон"
     },
     "brandName": {
-      "label": "Brand Name",
-      "placeholder": "Enter brand name"
+      "label": "Название бренда",
+      "placeholder": "Введите название бренда"
     },
     "policyUrl": {
-      "label": "Privacy Policy URL"
+      "label": "URL политики конфиденциальности"
     },
     "termsOfServiceUrl": {
-      "label": "Terms of Service URL"
+      "label": "URL условий использования"
     },
     "showLogo": {
-      "label": "Show Personal Logo"
+      "label": "Показывать свой логотип"
     },
     "quality": {
-      "label": "Quality",
+      "label": "Качество",
       "options": {
-        "auto": "Auto",
+        "auto": "Авто",
         "hd": "HD",
-        "md": "Medium",
-        "ld": "Low"
+        "md": "Среднее",
+        "ld": "Низкое"
       }
     },
     "size": {
-      "label": "Size",
+      "label": "Размер",
       "options": {
-        "auto": "Auto",
-        "square1024": "Square - 1024×1024",
-        "landscape1536x1024": "Landscape - 1536×1024",
-        "portrait1024x1536": "Portrait - 1024×1536",
+        "auto": "Авто",
+        "square1024": "Квадрат — 1024×1024",
+        "landscape1536x1024": "Альбомная — 1536×1024",
+        "portrait1024x1536": "Портретная — 1024×1536",
         "dalle2_256": "256×256",
         "dalle2_512": "512×512",
         "dalle3_1792x1024": "1792×1024"
       }
     },
     "status": {
-      "label": "Status",
-      "pending": "Pending",
-      "processing": "Processing",
-      "installing": "Installing",
-      "completed": "Completed",
-      "partial": "Partial",
-      "failed": "Failed",
-      "success": "Success",
-      "error": "Error"
+      "label": "Статус",
+      "pending": "Ожидает",
+      "processing": "Обрабатывается",
+      "installing": "Устанавливается",
+      "completed": "Завершено",
+      "partial": "Частично",
+      "failed": "Ошибка",
+      "success": "Успешно",
+      "error": "Ошибка"
     },
     "subtitle": {
-      "placeholder": "Enter subtitle"
+      "placeholder": "Введите подзаголовок"
     },
     "syncToMessenger": {
-      "label": "Sync to Messenger"
+      "label": "Синхронизировать с Messenger"
     },
     "tag": {
-      "label": "Tag"
+      "label": "Тег"
     },
     "emailTopic": {
-      "label": "Email Topic"
+      "label": "Тема рассылки"
     },
     "emailTopics": {
-      "label": "Email Topics"
+      "label": "Темы рассылок"
     },
     "emailTopicSent": {
-      "label": "Sent"
+      "label": "Отправлено"
     },
     "emailTopicDelivered": {
-      "label": "Delivered(%)"
+      "label": "Доставлено (%)"
     },
     "emailTopicSeen": {
-      "label": "Seen(%)"
+      "label": "Просмотрено (%)"
     },
     "emailTopicClicked": {
-      "label": "Clicked(%)"
+      "label": "Переходы (%)"
     },
     "targetCountry": {
-      "description": "The country where most of your contacts live.",
-      "label": "Target Country"
+      "description": "Страна, в которой живет большинство ваших контактов.",
+      "label": "Целевая страна"
     },
     "team": {
-      "label": "Team"
+      "label": "Команда"
     },
     "rememberConversation": {
-      "label": "Remember conversation"
+      "label": "Запоминать диалог"
     },
     "temperature": {
-      "label": "Temperature"
+      "label": "Температура"
     },
     "templateMessages": {
-      "label": "Template Messages"
+      "label": "Шаблонные сообщения"
     },
     "text": {
-      "label": "Text",
-      "placeholder": "Enter text"
+      "label": "Текст",
+      "placeholder": "Введите текст"
     },
     "thisMonth": {
-      "label": "This month"
+      "label": "Этот месяц"
     },
     "timezone": {
-      "description": "Contacts are assigned this timezone when the contact timezone is unknown.",
-      "label": "Timezone"
+      "description": "Если часовой пояс контакта неизвестен, ему назначается этот часовой пояс.",
+      "label": "Часовой пояс"
     },
     "title": {
-      "placeholder": "Enter title"
+      "placeholder": "Введите заголовок"
     },
     "today": {
-      "label": "Today"
+      "label": "Сегодня"
     },
     "tools": {
-      "label": "Tools",
-      "placeholder": "Select tools"
+      "label": "Инструменты",
+      "placeholder": "Выберите инструменты"
     },
     "triggerFlowId": {
-      "label": "Trigger Flow ID",
-      "placeholder": "What flow is triggered?"
+      "label": "ID запускаемого сценария",
+      "placeholder": "Какой сценарий запускается?"
     },
     "type": {
-      "label": "Type",
-      "placeholder": "Select type"
+      "label": "Тип",
+      "placeholder": "Выберите тип"
     },
     "lastRead": {
-      "label": "Last Read"
+      "label": "Последнее прочтение"
     },
     "assignee": {
-      "label": "Assignee"
+      "label": "Ответственный"
     },
     "modified": {
-      "label": "Modified"
+      "label": "Изменено"
     },
     "estimatedContacts": {
-      "label": "Estimated Contacts"
+      "label": "Примерно контактов"
     },
     "scheduledAt": {
-      "label": "Scheduled At"
+      "label": "Запланировано на"
     },
     "channel": {
-      "label": "Channel"
+      "label": "Канал"
     },
     "comment": {
-      "label": "Comment"
+      "label": "Комментарий"
     },
     "directMessage": {
-      "label": "Direct Message"
+      "label": "Личное сообщение"
     },
     "updatedAt": {
-      "label": "Updated At"
+      "label": "Обновлено"
     },
     "url": {
       "label": "URL",
-      "placeholder": "Enter URL"
+      "placeholder": "Введите URL"
     },
     "userId": {
-      "label": "User ID",
+      "label": "ID пользователя",
       "placeholders": {
-        "instagram": "Instagram user ID",
-        "messenger": "Messenger PSID",
-        "telegram": "Telegram chat ID",
-        "tiktok": "TikTok user ID",
-        "zalo": "Zalo user ID"
+        "instagram": "ID пользователя Instagram",
+        "messenger": "PSID в Messenger",
+        "telegram": "ID чата Telegram",
+        "tiktok": "ID пользователя TikTok",
+        "zalo": "ID пользователя Zalo"
       }
     },
     "userTags": {
-      "label": "User Applied Tags"
+      "label": "Теги пользователя"
     },
     "username": {
-      "label": "Username",
+      "label": "Имя пользователя",
       "placeholder": "user@example.com"
     },
     "keywords": {
-      "label": "Keywords"
+      "label": "Ключевые слова"
     },
     "value": {
-      "label": "Value"
+      "label": "Значение"
     },
     "wabaId": {
       "label": "WABA ID"
     },
     "webchat": {
-      "label": "Webchat"
+      "label": "Веб-чат"
     },
     "welcomeFlowId": {
-      "description": "The welcome message is automatically sent when the user opens your webchat.",
-      "label": "Welcome Flow"
+      "description": "Приветственное сообщение отправляется автоматически, когда пользователь открывает веб-чат.",
+      "label": "Приветственный сценарий"
     },
     "whatsapp": {
       "label": "WhatsApp"
@@ -2064,303 +2064,303 @@
       "label": "Viber BM"
     },
     "voice": {
-      "label": "Voice"
+      "label": "Голос"
     },
     "googleBm": {
       "label": "Google BM"
     },
     "landingPage": {
-      "label": "Landing Page"
+      "label": "Лендинг"
     },
     "whatsappFlow": {
       "label": "WhatsApp Flow"
     },
     "shortText": {
-      "label": "Short Text",
-      "placeholder": "Enter text"
+      "label": "Короткий текст",
+      "placeholder": "Введите текст"
     },
     "number": {
-      "label": "Number",
-      "placeholder": "Enter number"
+      "label": "Число",
+      "placeholder": "Введите число"
     },
     "date": {
-      "label": "Date"
+      "label": "Дата"
     },
     "datetime": {
-      "label": "Datetime"
+      "label": "Дата и время"
     },
     "boolean": {
-      "label": "Boolean",
-      "placeholder": "Select true or false",
-      "true": "True",
-      "false": "False"
+      "label": "Логическое",
+      "placeholder": "Выберите «Да» или «Нет»",
+      "true": "Да",
+      "false": "Нет"
     },
     "longText": {
-      "label": "Long Text"
+      "label": "Длинный текст"
     },
     "replyFormat": {
-      "label": "Reply Format",
-      "number": "Number",
-      "text": "Text",
+      "label": "Формат ответа",
+      "number": "Число",
+      "text": "Текст",
       "email": "Email",
-      "phone": "Phone",
-      "image": "Image",
-      "file": "File",
-      "link": "Link",
-      "date": "Date",
-      "datetime": "Datetime",
-      "location": "Location",
-      "anyInput": "Any Input",
-      "locationDescription": "On WhatsApp this sends Meta's native Send location button and waits for the pin. Other channels send the prompt as text; a shared pin or typed lat,lng still completes the step."
+      "phone": "Телефон",
+      "image": "Изображение",
+      "file": "Файл",
+      "link": "Ссылка",
+      "date": "Дата",
+      "datetime": "Дата и время",
+      "location": "Геолокация",
+      "anyInput": "Любой ввод",
+      "locationDescription": "В WhatsApp отправляется встроенная кнопка Meta «Отправить геолокацию», и бот ждет метку. В других каналах запрос отправляется текстом; шаг также завершится, если прислать метку или ввести координаты lat,lng."
     },
     "workspaceMember": {
-      "label": "Workspace Member"
+      "label": "Участник пространства"
     },
     "yesterday": {
-      "label": "Yesterday"
+      "label": "Вчера"
     },
     "permissions": {
-      "label": "Permissions",
-      "superAdmin": "Super Admin",
-      "analytics": "Analytics",
-      "flows": "Flows",
-      "contacts": "Contacts / Inbox",
-      "onlyAssignedContacts": "Only Assigned Contacts",
-      "emailAndPhone": "Email and Phone",
-      "broadcast": "Broadcast",
-      "ecommerce": "Ecommerce"
+      "label": "Права",
+      "superAdmin": "Суперадминистратор",
+      "analytics": "Аналитика",
+      "flows": "Сценарии",
+      "contacts": "Контакты / Входящие",
+      "onlyAssignedContacts": "Только назначенные контакты",
+      "emailAndPhone": "Email и телефон",
+      "broadcast": "Рассылки",
+      "ecommerce": "Электронная коммерция"
     },
     "member": {
-      "label": "Member"
+      "label": "Участник"
     },
     "schedule": {
-      "label": "Schedule",
-      "now": "Now",
-      "scheduled": "Schedule for later",
-      "recurring": "Repeat"
+      "label": "Расписание",
+      "now": "Сейчас",
+      "scheduled": "Запланировать",
+      "recurring": "Повторять"
     },
     "inputFieldId": {
-      "label": "Input Custom Field"
+      "label": "Пользовательское поле для ввода"
     },
     "aiEditImage": {
       "inputFieldId": {
-        "label": "Image"
+        "label": "Изображение"
       }
     },
     "inputText": {
-      "label": "Input Text"
+      "label": "Входной текст"
     },
     "outputFieldId": {
-      "label": "Save result to a custom field"
+      "label": "Сохранить результат в пользовательское поле"
     },
     "audio": {
-      "label": "Audio Field"
+      "label": "Поле аудио"
     },
     "voiceType": {
-      "label": "Voice Type",
-      "placeholder": "Select a voice type"
+      "label": "Тип голоса",
+      "placeholder": "Выберите тип голоса"
     },
     "voiceTone": {
-      "label": "Voice tone (Optional)",
-      "placeholder": "Speak in a cheerful tone."
+      "label": "Тон голоса (необязательно)",
+      "placeholder": "Говори бодрым тоном."
     },
     "jsonPath": {
-      "placeholder": "Enter JSON path",
-      "targetThisRow": "Fill this row from JSON"
+      "placeholder": "Введите JSON-путь",
+      "targetThisRow": "Заполнить эту строку из JSON"
     },
     "jsonSource": {
-      "title": "Pick JSON path",
+      "title": "Выбор JSON-пути",
       "tabs": {
-        "testResponse": "Test response",
-        "pasteSample": "Paste sample"
+        "testResponse": "Тестовый ответ",
+        "pasteSample": "Вставить пример"
       },
-      "pastePlaceholder": "Paste a sample JSON response",
-      "invalidJson": "Invalid JSON",
-      "noTestResponse": "Run Test Now to browse a live response",
-      "activeTarget": "Filling row {row}",
-      "showMore": "Show more",
-      "showMoreCount": "Show {count} more"
+      "pastePlaceholder": "Вставьте пример JSON-ответа",
+      "invalidJson": "Некорректный JSON",
+      "noTestResponse": "Нажмите «Протестировать», чтобы просмотреть реальный ответ",
+      "activeTarget": "Заполняется строка {row}",
+      "showMore": "Показать еще",
+      "showMoreCount": "Показать еще {count}"
     },
     "spreadsheets": {
-      "label": "Spreadsheets"
+      "label": "Таблицы"
     },
     "retryMessage": {
-      "label": "Retry Message"
+      "label": "Сообщение при повторе"
     },
     "skipButtonLabel": {
-      "label": "Skip Button Label"
+      "label": "Текст кнопки «Пропустить»"
     },
     "autoSkipTime": {
-      "label": "Auto Skip Time"
+      "label": "Время до автопропуска"
     },
     "autoSkipFailAttempts": {
-      "label": "Auto Skip Fail Attempts"
+      "label": "Неудачных попыток до автопропуска"
     },
     "showHint": {
-      "label": "Show Hint",
-      "description": "Suggest the contact's phone number or email as a quick reply. Works on Messenger and Instagram only."
+      "label": "Показывать подсказку",
+      "description": "Предлагать телефон или email контакта как быстрый ответ. Работает только в Messenger и Instagram."
     },
     "autoSkip": {
-      "label": "Auto Skip"
+      "label": "Автопропуск"
     },
     "spreadsheet": {
-      "label": "Spreadsheet"
+      "label": "Таблица"
     },
     "worksheet": {
-      "label": "Worksheet"
+      "label": "Лист"
     },
     "source": {
-      "label": "Source",
-      "placeholder": "Select a source"
+      "label": "Источник",
+      "placeholder": "Выберите источник"
     },
     "password": {
-      "label": "Password",
+      "label": "Пароль",
       "placeholder": "••••••••"
     },
     "passwordConfirmation": {
-      "label": "Re-enter password"
+      "label": "Повторите пароль"
     },
     "newPassword": {
-      "label": "New Password"
+      "label": "Новый пароль"
     },
     "currentPassword": {
-      "label": "Current Password"
+      "label": "Текущий пароль"
     },
     "developerAccessToken": {
-      "label": "API Access Token"
+      "label": "Токен доступа к API"
     },
     "fullName": {
-      "label": "Full Name"
+      "label": "Полное имя"
     },
     "botFields": {
-      "label": "Bot Fields"
+      "label": "Поля бота"
     },
     "keyword": {
-      "label": "Keyword",
-      "searchPlaceholder": "Search keyword..."
+      "label": "Ключевое слово",
+      "searchPlaceholder": "Поиск ключевого слова..."
     },
     "templateId": {
-      "label": "WhatsApp Template",
-      "placeholder": "Select a template"
+      "label": "Шаблон WhatsApp",
+      "placeholder": "Выберите шаблон"
     },
     "messengerTemplateId": {
-      "label": "Messenger Template"
+      "label": "Шаблон Messenger"
     },
     "whatsappChannel": {
-      "label": "WhatsApp Channel"
+      "label": "Канал WhatsApp"
     },
     "messengerChannel": {
-      "label": "Messenger Channel"
+      "label": "Канал Messenger"
     },
     "whatsappChannels": {
-      "label": "WhatsApp Channels"
+      "label": "Каналы WhatsApp"
     },
     "messengerChannels": {
-      "label": "Messenger Pages"
+      "label": "Страницы Messenger"
     },
     "messages": {
-      "label": "Messages"
+      "label": "Сообщения"
     },
     "shortcut": {
-      "label": "Shortcut"
+      "label": "Сокращение"
     },
     "savedReplies": {
-      "label": "Saved Replies"
+      "label": "Сохраненные ответы"
     },
     "role": {
-      "label": "Role"
+      "label": "Роль"
     },
     "plan": {
-      "label": "Plan"
+      "label": "Тариф"
     },
     "price": {
-      "label": "Price"
+      "label": "Цена"
     },
     "annualPrice": {
-      "label": "Annual Price"
+      "label": "Цена за год"
     },
     "limitContacts": {
-      "label": "Maximum of Contacts"
+      "label": "Максимум контактов"
     },
     "marketingFeatures": {
-      "label": "Marketing feature list",
-      "description": "A list of product features that will be visible to customers. Displayed in pricing tables."
+      "label": "Список возможностей для маркетинга",
+      "description": "Список возможностей продукта, который увидят клиенты. Показывается в таблицах тарифов."
     },
     "currency": {
-      "label": "Currency"
+      "label": "Валюта"
     },
     "clientId": {
       "label": "Client ID"
     },
     "clientSecret": {
       "label": "Client Secret",
-      "keepHint": "Leave blank to keep the stored client secret.",
-      "isSet": "A client secret is set.",
-      "isNotSet": "No client secret set."
+      "keepHint": "Оставьте пустым, чтобы сохранить текущий client secret.",
+      "isSet": "Client secret задан.",
+      "isNotSet": "Client secret не задан."
     },
     "verifyToken": {
-      "label": "Webhook Verify Token"
+      "label": "Токен проверки вебхука"
     },
     "apiVersion": {
-      "label": "API Version"
+      "label": "Версия API"
     },
     "configId": {
-      "label": "App Config ID"
+      "label": "ID конфигурации приложения"
     },
     "systemUserId": {
-      "label": "System User ID"
+      "label": "ID системного пользователя"
     },
     "systemUserToken": {
-      "label": "System User Token"
+      "label": "Токен системного пользователя"
     },
     "businessId": {
       "label": "Business ID"
     },
     "businessName": {
-      "label": "Business Name"
+      "label": "Название компании"
     },
     "publishableKey": {
-      "label": "Publishable Key"
+      "label": "Публикуемый ключ"
     },
     "secretKey": {
-      "label": "Secret Key"
+      "label": "Секретный ключ"
     },
     "freeTrial": {
-      "label": "Free Trial",
-      "suffix": "days"
+      "label": "Пробный период",
+      "suffix": "дн."
     },
     "pricing": {
-      "label": "Pricing"
+      "label": "Цены"
     },
     "sequence": {
-      "label": "Sequence"
+      "label": "Цепочка"
     },
     "from": {
-      "label": "From"
+      "label": "От"
     },
     "fromAddress": {
-      "label": "From Address",
+      "label": "Адрес отправителя",
       "placeholder": "noreply@example.com"
     },
     "messageTemplate": {
-      "label": "Message Template"
+      "label": "Шаблон сообщения"
     },
     "preheader": {
-      "label": "Preheader"
+      "label": "Прехедер"
     },
     "subject": {
-      "label": "Subject"
+      "label": "Тема"
     },
     "to": {
-      "label": "To"
+      "label": "Кому"
     },
     "smtpChannel": {
-      "label": "SMTP Channel"
+      "label": "Канал SMTP"
     },
     "magicLink": {
-      "label": "Magic Link",
-      "nameHint": "Appended after /r/{workspaceId}/ in the public tracking URL. Use letters, numbers, underscore, and hyphen only.",
-      "urlHint": "Use double braces in the URL, e.g. https://example.com/page?utm_campaign='{{campaign}}'. Values come from the tracking link query string."
+      "label": "Магическая ссылка",
+      "nameHint": "Добавляется после /r/{workspaceId}/ в публичном URL отслеживания. Только латинские буквы, цифры, подчеркивание и дефис.",
+      "urlHint": "Используйте двойные фигурные скобки в URL, например https://example.com/page?utm_campaign='{{campaign}}'. Значения берутся из параметров запроса ссылки отслеживания."
     },
     "appId": {
       "label": "App ID"
@@ -2369,86 +2369,86 @@
       "label": "App Secret"
     },
     "version": {
-      "label": "Version"
+      "label": "Версия"
     },
     "webhookVerifyToken": {
-      "label": "Webhook Verify Token"
+      "label": "Токен проверки вебхука"
     },
     "heading": {
-      "label": "Heading",
-      "placeholder": "Enter heading"
+      "label": "Заголовок",
+      "placeholder": "Введите заголовок"
     },
     "import": {
-      "label": "Import",
-      "uploading": "Uploading…",
-      "fileTooLarge": "The file exceeds the {size} MB limit.",
-      "unsupportedFileType": "This file type is not supported.",
-      "unableToReadHeaders": "Unable to read the import headers.",
-      "uploadError": "The file could not be uploaded.",
+      "label": "Импорт",
+      "uploading": "Загрузка…",
+      "fileTooLarge": "Файл превышает лимит {size} МБ.",
+      "unsupportedFileType": "Этот тип файла не поддерживается.",
+      "unableToReadHeaders": "Не удалось прочитать заголовки импорта.",
+      "uploadError": "Не удалось загрузить файл.",
       "histories": {
-        "title": "Import history",
-        "recent": "Recent imports",
-        "progress": "Progress",
-        "success": "Success",
-        "failed": "Failed",
-        "completedAt": "Completed at",
-        "errorDetails": "Import errors",
-        "row": "Row {row}",
-        "unsupportedChannelStep": "The {channel} channel does not support {block}.",
-        "channelStepConstraintExceeded": "{block} exceeds the {channel} limit: {actual} {unit}, maximum {allowed}.",
-        "channelStepConstraintExceededGeneric": "The {channel} channel does not support the current {block} configuration."
+        "title": "История импорта",
+        "recent": "Недавние импорты",
+        "progress": "Прогресс",
+        "success": "Успешно",
+        "failed": "Ошибки",
+        "completedAt": "Завершен",
+        "errorDetails": "Ошибки импорта",
+        "row": "Строка {row}",
+        "unsupportedChannelStep": "Канал {channel} не поддерживает {block}.",
+        "channelStepConstraintExceeded": "{block} превышает лимит {channel}: {actual} {unit}, максимум {allowed}.",
+        "channelStepConstraintExceededGeneric": "Канал {channel} не поддерживает текущую настройку {block}."
       }
     },
     "line": {
-      "label": "Line"
+      "label": "Линия"
     },
     "spacing": {
-      "label": "Spacing"
+      "label": "Отступ"
     },
     "code": {
-      "label": "Code",
-      "placeholder": "Enter code"
+      "label": "Код",
+      "placeholder": "Введите код"
     },
     "authCallbackUrl": {
-      "label": "Auth Callback URL",
-      "hint": "Register this exact URL as the OAuth redirect URI in your provider app. With your own app and an active custom domain, it's on your custom domain; otherwise it's on the platform host."
+      "label": "Callback URL авторизации",
+      "hint": "Укажите именно этот URL как OAuth redirect URI в приложении провайдера. Если у вас свое приложение и активный собственный домен, URL будет на вашем домене, иначе — на домене платформы."
     },
     "signInCallbackUrl": {
-      "label": "Sign-in Callback URL",
-      "hint": "Add this to your Google app's authorized redirect URIs to enable Google sign-in."
+      "label": "Callback URL входа",
+      "hint": "Добавьте этот URL в разрешенные redirect URI вашего приложения Google, чтобы включить вход через Google."
     },
     "adsDeveloperToken": {
-      "label": "Google Ads developer token",
-      "hint": "Optional: Google no longer requires a developer token. Leave blank to keep the stored token.",
-      "isSet": "A developer token is set.",
-      "isNotSet": "No developer token is set.",
-      "clear": "Clear",
-      "cleared": "Developer token cleared."
+      "label": "Токен разработчика Google Ads",
+      "hint": "Необязательно: Google больше не требует токен разработчика. Оставьте пустым, чтобы сохранить текущий токен.",
+      "isSet": "Токен разработчика задан.",
+      "isNotSet": "Токен разработчика не задан.",
+      "clear": "Очистить",
+      "cleared": "Токен разработчика удален."
     },
     "googleAdsCallbackUrl": {
-      "hint": "Use a dedicated Google OAuth app for Google Ads, separate from your Google app, with the adwords and datamanager scopes enabled. It needs its own Google OAuth verification."
+      "hint": "Используйте для Google Ads отдельное приложение Google OAuth (не то, что для входа) с включенными scope adwords и datamanager. Для него нужна отдельная проверка Google OAuth."
     },
     "webhookUrl": {
-      "label": "Webhook URL",
-      "hint": "Register this exact Webhook URL in your provider app. With your own app and an active custom domain, it's on your custom domain; otherwise it's on the platform host."
+      "label": "URL вебхука",
+      "hint": "Укажите именно этот URL вебхука в приложении провайдера. Если у вас свое приложение и активный собственный домен, URL будет на вашем домене, иначе — на домене платформы."
     },
     "tiktok": {
       "label": "TikTok",
-      "accessToken": "Access Token",
+      "accessToken": "Токен доступа",
       "openId": "Open ID",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
-      "displayName": "Display Name",
-      "needsReauthorizationForComments": "This connection was authorized before comment automation. Reconnect it to start receiving comment events.",
+      "displayName": "Отображаемое имя",
+      "needsReauthorizationForComments": "Это подключение авторизовано до появления автоответов на комментарии. Переподключите его, чтобы получать события комментариев.",
       "connectInstructions": {
-        "step1": "Create a TikTok app at <link>developers.tiktok.com</link>.",
-        "step2": "Authorize your account and copy the <strong>access token</strong>, <strong>open ID</strong>, and <strong>client secret</strong>.",
-        "step3": "Paste the credentials below to connect."
+        "step1": "Создайте приложение TikTok на <link>developers.tiktok.com</link>.",
+        "step2": "Авторизуйте аккаунт и скопируйте <strong>access token</strong>, <strong>open ID</strong> и <strong>client secret</strong>.",
+        "step3": "Вставьте данные ниже, чтобы подключить аккаунт."
       },
       "commentToMessage": "Comment-to-Message",
-      "commentToMessageDescription": "Lets this account answer high-intent comments with a direct message. Required for TikTok comment automations that use a private reply.",
-      "commentToMessageEligibility": "Only available to Business Accounts registered in Vietnam, Indonesia or Thailand, owned by someone over 18, that are registered businesses or have run Messaging Ads, with messaging permissions set to \"Requests\".",
-      "commentToMessageUnknown": "Not checked with TikTok yet — refresh to read the current setting."
+      "commentToMessageDescription": "Позволяет аккаунту отвечать личным сообщением на комментарии с высоким интересом. Нужно для автоответов на комментарии TikTok с приватным ответом.",
+      "commentToMessageEligibility": "Доступно только бизнес-аккаунтам, зарегистрированным во Вьетнаме, Индонезии или Таиланде, владельцу которых больше 18 лет, которые являются зарегистрированными компаниями или запускали рекламу в сообщениях, и у которых в настройках сообщений выбрано «Запросы».",
+      "commentToMessageUnknown": "Еще не проверено в TikTok — обновите, чтобы получить текущую настройку."
     },
     "drip": {
       "label": "Drip"
@@ -2456,177 +2456,177 @@
     "sendGrid": {
       "label": "SendGrid"
     },
-    "currentVersion": "Current",
+    "currentVersion": "Текущая",
     "consecutiveFailedReply": {
-      "label": "Consecutive Failed Replies"
+      "label": "Неудачных ответов подряд"
     },
     "currentStep": {
-      "label": "Current Step"
+      "label": "Текущий шаг"
     },
     "fbChatLink": {
-      "label": "Facebook Inbox Link"
+      "label": "Ссылка на входящие Facebook"
     },
     "inboxLink": {
-      "label": "Inbox Link"
+      "label": "Ссылка на входящие"
     },
     "instagramBusinessFollowsUser": {
-      "label": "Instagram Business Follows User"
+      "label": "Бизнес-аккаунт Instagram подписан на пользователя"
     },
     "instagramFollowers": {
-      "label": "Instagram Followers"
+      "label": "Подписчики Instagram"
     },
     "instagramFollowsBusiness": {
-      "label": "Instagram Follows Business"
+      "label": "Подписан на бизнес-аккаунт Instagram"
     },
     "instagramUsername": {
-      "label": "Instagram Username"
+      "label": "Имя пользователя Instagram"
     },
     "instagramVerified": {
-      "label": "Instagram Verified"
+      "label": "Подтвержден в Instagram"
     },
     "lastAd": {
-      "label": "Last Ad"
+      "label": "Последнее объявление"
     },
     "lastAdSourcePlatform": {
-      "label": "Last Ad Source Platform"
+      "label": "Платформа последнего объявления"
     },
     "lastAdSourceUrl": {
-      "label": "Last Ad Source URL"
+      "label": "URL последнего объявления"
     },
     "lastButtonTitle": {
-      "label": "Last Button Title"
+      "label": "Последняя нажатая кнопка"
     },
     "lastCommentId": {
-      "label": "Last Comment ID"
+      "label": "ID последнего комментария"
     },
     "lastCommentedPostText": {
-      "label": "Last Commented Post Text"
+      "label": "Текст последнего прокомментированного поста"
     },
     "lastCtwa": {
-      "label": "Last CTWA"
+      "label": "Последний CTWA"
     },
     "lastFbComment": {
-      "label": "Last FB comment"
+      "label": "Последний комментарий в FB"
     },
     "lastInputFailure": {
-      "label": "Last Input Failure"
+      "label": "Последний неудачный ввод"
     },
     "lastInteraction": {
-      "label": "Last Interaction"
+      "label": "Последнее взаимодействие"
     },
     "lastLatitude": {
-      "label": "Last Latitude"
+      "label": "Последняя широта"
     },
     "lastLongitude": {
-      "label": "Last Longitude"
+      "label": "Последняя долгота"
     },
     "lastOutboundMessageAt": {
-      "label": "Last Outbound Message At"
+      "label": "Последнее исходящее сообщение"
     },
     "lastPostId": {
-      "label": "Last Post ID"
+      "label": "ID последнего поста"
     },
     "lastSeen": {
-      "label": "Last Seen"
+      "label": "Был в сети"
     },
     "lastStep": {
-      "label": "Last Step"
+      "label": "Последний шаг"
     },
     "me": {
-      "label": "My Data Link"
+      "label": "Ссылка «Мои данные»"
     },
     "phone": {
-      "label": "Phone"
+      "label": "Телефон"
     },
     "phoneAndEmail": {
-      "label": "Phone and email"
+      "label": "Телефон и email"
     },
     "timezoneName": {
-      "label": "Timezone Name"
+      "label": "Название часового пояса"
     },
     "totalNewTagged": {
-      "label": "Total New Tagged"
+      "label": "Всего новых с тегом"
     },
     "totalTagged": {
-      "label": "Total Tagged"
+      "label": "Всего с тегом"
     },
     "userChannel": {
-      "label": "User Channel"
+      "label": "Канал пользователя"
     },
     "userExternalId": {
-      "label": "User External ID"
+      "label": "Внешний ID пользователя"
     },
     "userHash": {
-      "label": "User Hash"
+      "label": "Хеш пользователя"
     },
     "userSource": {
-      "label": "User Source"
+      "label": "Источник пользователя"
     },
     "webchatParentUrl": {
-      "label": "Webchat Parent URL"
+      "label": "URL страницы веб-чата"
     },
     "make": {
-      "inviteUrl": "Invite Link",
-      "inviteUrlHint": "The invite link for your published Make custom app (e.g. https://eu2.make.com/app/invite/...)."
+      "inviteUrl": "Ссылка-приглашение",
+      "inviteUrlHint": "Ссылка-приглашение для вашего опубликованного приложения Make (например, https://eu2.make.com/app/invite/...)."
     },
     "makeEvents": {
-      "label": "Events",
-      "placeholder": "Type an event name and press Enter",
-      "description": "Add one or more event names. When Make attaches a webhook for one of these events, data is sent to it when this step runs."
+      "label": "События",
+      "placeholder": "Введите название события и нажмите Enter",
+      "description": "Добавьте одно или несколько названий событий. Когда Make подключит вебхук для одного из них, данные будут отправляться в него при выполнении этого шага."
     },
     "n8nEvents": {
-      "label": "Events",
-      "placeholder": "Type an event name and press Enter",
-      "description": "Add one or more event names. When n8n attaches a webhook for one of these events, data is sent to it when this step runs."
+      "label": "События",
+      "placeholder": "Введите название события и нажмите Enter",
+      "description": "Добавьте одно или несколько названий событий. Когда n8n подключит вебхук для одного из них, данные будут отправляться в него при выполнении этого шага."
     },
     "enabled": {
-      "label": "Enabled"
+      "label": "Включено"
     },
     "api": {
       "label": "API",
-      "description": "Connect any HTTP-capable application as a channel. Your app sends inbound messages to our REST API and we deliver replies to your callback URL.",
+      "description": "Подключите как канал любое приложение, которое умеет работать с HTTP. Приложение отправляет входящие сообщения в наш REST API, а мы доставляем ответы на ваш callback URL.",
       "callbackUrl": {
         "label": "Callback URL",
-        "description": "We POST outbound replies here, signed with your per-inbox secret.",
-        "notSet": "Not set"
+        "description": "Сюда мы отправляем POST-запросы с исходящими ответами, подписанные секретом ящика входящих.",
+        "notSet": "Не задан"
       },
-      "token": "Token",
-      "rotateToken": "Rotate token",
+      "token": "Токен",
+      "rotateToken": "Перевыпустить токен",
       "status": {
-        "enabled": "Enabled",
-        "disabled": "Disabled"
+        "enabled": "Включен",
+        "disabled": "Выключен"
       },
       "tokenReveal": {
-        "title": "Copy your API token",
-        "description": "This token is shown only once. Store it securely — you will not be able to view it again.",
-        "done": "Done"
+        "title": "Скопируйте API-токен",
+        "description": "Токен показывается только один раз. Сохраните его в надежном месте — посмотреть его снова не получится.",
+        "done": "Готово"
       }
     },
     "tokenPermission": {
-      "label": "Permission",
-      "full": "Full access",
-      "readOnly": "Read only"
+      "label": "Доступ",
+      "full": "Полный доступ",
+      "readOnly": "Только чтение"
     },
     "tokenScopes": {
-      "label": "Scopes",
-      "contacts": "Contacts",
-      "inbox": "Inbox",
-      "automation": "Automation",
-      "broadcasts": "Broadcasts",
-      "analytics": "Analytics",
-      "ecommerce": "Ecommerce",
-      "channels": "Channels",
-      "integrations": "Integrations",
-      "minigames": "Minigames",
-      "appointments": "Appointments",
-      "media": "Media",
-      "ads": "Ads",
-      "settings": "Settings",
-      "miniApps": "Mini Apps",
-      "leaderboards": "Leaderboards"
+      "label": "Области доступа",
+      "contacts": "Контакты",
+      "inbox": "Входящие",
+      "automation": "Автоматизация",
+      "broadcasts": "Рассылки",
+      "analytics": "Аналитика",
+      "ecommerce": "Электронная коммерция",
+      "channels": "Каналы",
+      "integrations": "Интеграции",
+      "minigames": "Мини-игры",
+      "appointments": "Записи",
+      "media": "Медиа",
+      "ads": "Реклама",
+      "settings": "Настройки",
+      "miniApps": "Мини-приложения",
+      "leaderboards": "Рейтинги"
     },
     "adReferral": {
-      "label": "Ads",
+      "label": "Реклама",
       "ctwa": "CTWA",
       "ctm": "CTM",
       "ctid": "CTID",
@@ -2635,45 +2635,45 @@
       "googleAdsMessenger": "GA CCTM"
     },
     "adSource": {
-      "label": "Ad source"
+      "label": "Источник рекламы"
     },
     "manualAppSecret": {
-      "label": "Meta App Secret (optional)",
-      "description": "Enables webhook signature verification for this manual connection. Find it in your Meta App's dashboard under Settings > Basic."
+      "label": "Meta App Secret (необязательно)",
+      "description": "Включает проверку подписи вебхуков для этого ручного подключения. Его можно найти в дашборде приложения Meta в разделе Settings > Basic."
     },
     "lastCallRecorded": {
-      "label": "Last Call Recording"
+      "label": "Запись последнего звонка"
     },
     "lastCallTranscript": {
-      "label": "Last Call Transcript"
+      "label": "Расшифровка последнего звонка"
     },
     "sendRatePerMinute": {
-      "label": "Messages per minute"
+      "label": "Сообщений в минуту"
     },
     "adsUploadMethod": {
-      "label": "Upload method",
-      "hint": "Data Manager is recommended. The legacy upload API only works for Google Cloud projects Google still allows and does not use the Data Manager permission. A change applies to new connections only: reconnect existing workspaces.",
-      "dataManager": "Data Manager API (recommended)",
-      "legacy": "Legacy upload API"
+      "label": "Способ загрузки",
+      "hint": "Рекомендуется Data Manager. Устаревший API загрузки работает только для проектов Google Cloud, которые Google еще допускает, и не использует разрешение Data Manager. Изменение применяется только к новым подключениям: переподключите существующие пространства.",
+      "dataManager": "Data Manager API (рекомендуется)",
+      "legacy": "Устаревший API загрузки"
     },
     "referralName": {
-      "label": "Referrer name"
+      "label": "Имя реферера"
     },
     "capiConfigId": {
-      "label": "Conversions API Config ID",
-      "description": "Embedded Signup configuration ID used to request the whatsapp_business_manage_events permission when connecting the Conversions API."
+      "label": "ID конфигурации Conversions API",
+      "description": "ID конфигурации Embedded Signup, через которую запрашивается разрешение whatsapp_business_manage_events при подключении Conversions API."
     },
     "outboundAutomatedResponse": {
-      "label": "Page Keyword"
+      "label": "Ключевое слово страницы"
     },
     "fbComment": {
-      "label": "Facebook Comment Automation"
+      "label": "Автоответы на комментарии Facebook"
     },
     "igComment": {
-      "label": "Instagram Comment Automation"
+      "label": "Автоответы на комментарии Instagram"
     },
     "igStory": {
-      "label": "Instagram Story Automation"
+      "label": "Автоответы на истории Instagram"
     }
   },
   "metaConversions": {
@@ -4214,128 +4214,128 @@
     }
   },
   "integrations": {
-    "title": "Integrations"
+    "title": "Интеграции"
   },
   "aiHandover": {
     "title": "Meta Business AI",
-    "description": "Control what happens around Meta's AI assistant answering your Messenger customers.",
-    "info": "When enabled, conversations are taken over here after the AI assistant hands them back, and the settings below apply.",
+    "description": "Управляйте тем, что происходит, когда ИИ-ассистент Meta отвечает вашим клиентам в Messenger.",
+    "info": "Если включено, диалоги переходят сюда после того, как ИИ-ассистент их возвращает, и применяются настройки ниже.",
     "enabled": {
-      "label": "Enable"
+      "label": "Включить"
     },
     "schedule": {
-      "label": "Run time",
-      "description": "Only apply it during these hours of the workspace time zone.",
-      "from": "From hour",
-      "to": "To hour",
-      "add": "Add time range",
-      "remove": "Remove time range"
+      "label": "Время работы",
+      "description": "Применять только в эти часы по часовому поясу пространства.",
+      "from": "С часа",
+      "to": "До часа",
+      "add": "Добавить интервал",
+      "remove": "Удалить интервал"
     },
     "gotoFlow": {
-      "label": "Go to flow",
-      "description": "Flow started when the AI assistant hands the conversation back. Takes priority over the return message.",
-      "placeholder": "Select a flow",
-      "clear": "Clear flow"
+      "label": "Перейти к сценарию",
+      "description": "Сценарий, который запускается, когда ИИ-ассистент возвращает диалог. Имеет приоритет над сообщением о возврате.",
+      "placeholder": "Выберите сценарий",
+      "clear": "Убрать сценарий"
     },
     "returnMessage": {
-      "label": "Return message",
-      "description": "Sent instead when no flow is set or the flow is no longer active.",
-      "placeholder": "Message sent when the AI hands the conversation back"
+      "label": "Сообщение о возврате",
+      "description": "Отправляется, если сценарий не выбран или больше не активен.",
+      "placeholder": "Сообщение, когда ИИ возвращает диалог"
     },
     "pauseBot": {
-      "label": "Transfer Conversation to Human",
-      "description": "Stops the bot for this contact after the hand-back, until a team member takes over or it resumes."
+      "label": "Передать диалог оператору",
+      "description": "Останавливает бота для этого контакта после возврата, пока диалог не возьмет участник команды или бот не возобновится."
     },
-    "readOnly": "You can view these settings but not change them.",
+    "readOnly": "Вы можете просматривать эти настройки, но не менять их.",
     "errors": {
-      "supportSession": "Settings cannot be changed from a support session.",
-      "flowNotFound": "The selected flow was not found or is not active.",
-      "timeRanges": "Enter valid time ranges: whole hours from 0 to 24, with different start and end."
+      "supportSession": "В сеансе поддержки настройки менять нельзя.",
+      "flowNotFound": "Выбранный сценарий не найден или не активен.",
+      "timeRanges": "Укажите корректные интервалы: целые часы от 0 до 24, начало и конец не должны совпадать."
     },
     "bulk": {
-      "title": "Apply to all customers",
-      "description": "Hand every eligible Messenger conversation to Meta's AI assistant, or take back the ones it holds right now. It runs in the background and you can follow it here.",
-      "started": "Started. You can follow the progress here.",
-      "progress": "Progress",
-      "processedOfTotal": "{done} of {total} conversations",
-      "counters": "{processed} done, {skipped} skipped, {failed} failed",
+      "title": "Применить ко всем клиентам",
+      "description": "Передать все подходящие диалоги Messenger ИИ-ассистенту Meta или забрать те, что сейчас у него. Выполняется в фоне, за ходом можно следить здесь.",
+      "started": "Запущено. За ходом можно следить здесь.",
+      "progress": "Прогресс",
+      "processedOfTotal": "{done} из {total} диалогов",
+      "counters": "Готово: {processed}, пропущено: {skipped}, ошибок: {failed}",
       "action": {
-        "enable": "Enable for all",
-        "disable": "Disable for all"
+        "enable": "Включить для всех",
+        "disable": "Выключить для всех"
       },
       "status": {
-        "pending": "Waiting to start",
-        "running": "Running",
-        "cancelling": "Cancelling",
-        "completed": "Completed",
-        "failed": "Failed",
-        "cancelled": "Cancelled"
+        "pending": "Ожидает запуска",
+        "running": "Выполняется",
+        "cancelling": "Отмена",
+        "completed": "Завершено",
+        "failed": "Ошибка",
+        "cancelled": "Отменено"
       },
       "enable": {
-        "dialogDescription": "Every Messenger conversation whose customer wrote in the last 30 days and that no other app holds is handed to Meta's AI assistant. Conversations are taken back according to the settings above.",
-        "confirm": "Enable for all",
-        "blocked": "Save the automation above and switch it on (inside its run time) to enable it for all customers."
+        "dialogDescription": "Все диалоги Messenger, где клиент писал за последние 30 дней и которые не заняты другим приложением, передаются ИИ-ассистенту Meta. Диалоги возвращаются по настройкам выше.",
+        "confirm": "Включить для всех",
+        "blocked": "Сохраните автоматизацию выше и включите ее (в пределах времени работы), чтобы включить для всех клиентов."
       },
       "disable": {
-        "dialogDescription": "Only conversations Meta's AI assistant holds right now are taken back, and only customers who wrote in the last 7 days can be reached. Each of them receives the message below, sent with Meta's Human Agent tag, so write it as a person replying. The Page needs the Human Agent permission.",
-        "messageLabel": "Message to customers",
-        "messageDescription": "Up to {max} characters.",
-        "messagePlaceholder": "Hi, a team member is taking over this conversation.",
-        "confirm": "Disable for all",
-        "policyWarning": "Meta allows the Human Agent tag only for a person replying to the customer. Using it for promotions or automated messages can get the Page's messaging restricted."
+        "dialogDescription": "Возвращаются только диалоги, которые сейчас у ИИ-ассистента Meta, и написать можно только клиентам, писавшим за последние 7 дней. Каждый получит сообщение ниже с тегом Meta Human Agent, поэтому пишите его от лица живого человека. Странице нужно разрешение Human Agent.",
+        "messageLabel": "Сообщение клиентам",
+        "messageDescription": "До {max} символов.",
+        "messagePlaceholder": "Здравствуйте, этот диалог продолжит наш сотрудник.",
+        "confirm": "Выключить для всех",
+        "policyWarning": "Meta разрешает тег Human Agent, только когда клиенту отвечает человек. Если использовать его для рекламы или автоматических сообщений, отправка сообщений со страницы может быть ограничена."
       },
       "errors": {
-        "automationNotActive": "Save the automation and switch it on (inside its run time) before enabling it for all customers.",
-        "messageRequired": "Enter the message to send to customers.",
-        "messageTooLong": "The message is too long.",
-        "pageNotConnected": "This Page is not connected.",
-        "nothingToRetry": "There is nothing to retry."
+        "automationNotActive": "Сохраните автоматизацию и включите ее (в пределах времени работы), прежде чем включать для всех клиентов.",
+        "messageRequired": "Введите сообщение для клиентов.",
+        "messageTooLong": "Сообщение слишком длинное.",
+        "pageNotConnected": "Эта страница не подключена.",
+        "nothingToRetry": "Нечего повторять."
       },
       "runErrors": {
-        "automationStopped": "Stopped because the automation was switched off.",
-        "tokenInvalid": "The Page's access was revoked. Reconnect the Page and try again.",
-        "channelUnsupported": "This channel does not support the bulk action.",
-        "maxAttempts": "Gave up after repeated failures.",
-        "channelUnavailable": "Stopped because Meta could not be reached several times in a row.",
-        "batchFailed": "Some conversations could not be confirmed and were counted as failed.",
-        "pageDisconnected": "Stopped because the Page was disconnected.",
-        "pageRefused": "Meta refused the hand-over for this Page: it may not be set up for Meta's AI assistant, or it lacks the permission.",
-        "integrationUnavailable": "The Page's connection could not be loaded. Reconnect the Page and try again."
+        "automationStopped": "Остановлено, потому что автоматизация выключена.",
+        "tokenInvalid": "Доступ к странице отозван. Переподключите страницу и попробуйте еще раз.",
+        "channelUnsupported": "Этот канал не поддерживает массовое действие.",
+        "maxAttempts": "Остановлено после нескольких неудачных попыток.",
+        "channelUnavailable": "Остановлено: Meta несколько раз подряд не ответила.",
+        "batchFailed": "Часть диалогов не удалось подтвердить, они засчитаны как ошибки.",
+        "pageDisconnected": "Остановлено, потому что страница отключена.",
+        "pageRefused": "Meta отклонила передачу для этой страницы: возможно, она не настроена для ИИ-ассистента Meta или у нее нет разрешения.",
+        "integrationUnavailable": "Не удалось загрузить подключение страницы. Переподключите страницу и попробуйте еще раз."
       },
-      "pausedUntil": "Paused until {at} to stay within Meta's rate limits for this Page. It resumes on its own.",
-      "preparing": "Preparing…",
+      "pausedUntil": "Приостановлено до {at}, чтобы не превысить лимиты Meta для этой страницы. Возобновится автоматически.",
+      "preparing": "Подготовка…",
       "live": {
-        "enable": "Enabling for customers: {done} / {total}",
-        "disable": "Disabling for customers: {done} / {total}",
-        "enableCounting": "Enabling for customers: counting…",
-        "disableCounting": "Disabling for customers: counting…"
+        "enable": "Включение для клиентов: {done} / {total}",
+        "disable": "Выключение для клиентов: {done} / {total}",
+        "enableCounting": "Включение для клиентов: подсчет…",
+        "disableCounting": "Выключение для клиентов: подсчет…"
       },
       "done": {
-        "enable": "Enabled for {processed} of {total} customers.",
-        "disable": "Disabled for {processed} of {total} customers."
+        "enable": "Включено для {processed} из {total} клиентов.",
+        "disable": "Выключено для {processed} из {total} клиентов."
       },
       "stopped": {
-        "enable": "Enabling for all customers was stopped.",
-        "disable": "Disabling for all customers was stopped."
+        "enable": "Включение для всех клиентов остановлено.",
+        "disable": "Выключение для всех клиентов остановлено."
       },
-      "retry": "Retry"
+      "retry": "Повторить"
     },
     "history": {
-      "link": "History",
-      "title": "Bulk run history",
-      "empty": "No runs yet.",
+      "link": "История",
+      "title": "История массовых запусков",
+      "empty": "Запусков пока нет.",
       "columns": {
-        "action": "Action",
-        "requestedAt": "Started",
-        "progress": "Processed / total",
-        "finishedAt": "Finished",
-        "message": "Message",
-        "requestedBy": "Requested by"
+        "action": "Действие",
+        "requestedAt": "Запущено",
+        "progress": "Обработано / всего",
+        "finishedAt": "Завершено",
+        "message": "Сообщение",
+        "requestedBy": "Кем запущено"
       },
-      "description": "Every time \"Apply to all customers\" was switched on or off for this Page, newest first.",
-      "error": "Could not load the history.",
-      "previousPage": "Previous page",
-      "nextPage": "Next page"
+      "description": "Все случаи включения и выключения «Применить ко всем клиентам» для этой страницы, сначала новые.",
+      "error": "Не удалось загрузить историю.",
+      "previousPage": "Предыдущая страница",
+      "nextPage": "Следующая страница"
     }
   },
   "platformSettings": {
@@ -4553,133 +4553,133 @@
     }
   },
   "instagram": {
-    "description": "This integration lets you create Instagram bots.",
-    "selectInstagramAccount": "Select Instagram Account",
-    "iceBreakers": "Ice Breakers",
-    "iceBreakersDescription": "Ice breakers provide a way for users to start a conversation with your bot by showing a list of frequently asked questions.",
-    "reconnect": "Reconnect",
+    "description": "Эта интеграция позволяет создавать ботов для Instagram.",
+    "selectInstagramAccount": "Выберите аккаунт Instagram",
+    "iceBreakers": "Стартовые вопросы",
+    "iceBreakersDescription": "Стартовые вопросы помогают пользователям начать диалог с ботом: им показывается список частых вопросов.",
+    "reconnect": "Переподключить",
     "title": "Instagram",
     "tabs": {
-      "generalSettings": "General Settings",
-      "conversionsApi": "Ads Optimization"
+      "generalSettings": "Основные настройки",
+      "conversionsApi": "Оптимизация рекламы"
     },
     "selectPage": {
-      "noAccountsTitle": "No Instagram accounts found",
-      "noAccountsDescription": "No Instagram Business accounts were found on the Facebook Pages you manage. Reconnect Instagram and grant all requested permissions.",
-      "alreadyConnectedNote": "This account is already connected",
-      "tryAgain": "Try reconnecting"
+      "noAccountsTitle": "Аккаунты Instagram не найдены",
+      "noAccountsDescription": "На страницах Facebook, которыми вы управляете, не найдено бизнес-аккаунтов Instagram. Переподключите Instagram и предоставьте все запрошенные разрешения.",
+      "alreadyConnectedNote": "Этот аккаунт уже подключен",
+      "tryAgain": "Переподключить"
     }
   },
   "coexist": {
-    "title": "Sync existing contacts and chat history?",
-    "descriptionWhatsapp": "When enabled, contacts and up to 6 months of chat history will be imported from this WhatsApp number.",
-    "descriptionMessenger": "When enabled, existing Messenger contacts and up to 3 months of conversation history will be imported from this Page.",
-    "descriptionInstagram": "When enabled, existing Instagram contacts and up to 3 months of conversation history will be imported from this Instagram account.",
-    "enable": "Enable sync",
-    "decline": "Don't sync",
-    "billingNote": "Large pages may take several hours to complete.",
-    "toggleLabel": "Sync existing contacts and chat history",
-    "toggleHelper": "Re-enabling only works if Meta has buffered data (within 24 hours of onboarding). Otherwise disconnect and reconnect.",
-    "toggleHelperMessenger": "Re-enabling only works if Meta has buffered data (within 24 hours of onboarding). Otherwise disconnect and reconnect the Messenger page.",
-    "toggleHelperWhatsapp": "Re-enabling only works if Meta has buffered data (within 24 hours of onboarding). Otherwise disconnect and reconnect the WhatsApp number.",
-    "aiReadsSyncedHistoryLabel": "AI reads synced history",
-    "aiReadsSyncedHistoryHelper": "When off, AI only sees new messages.",
+    "title": "Синхронизировать контакты и историю переписки?",
+    "descriptionWhatsapp": "Если включить, из этого номера WhatsApp будут импортированы контакты и история переписки за последние 6 месяцев.",
+    "descriptionMessenger": "Если включить, с этой страницы будут импортированы контакты Messenger и история диалогов за последние 3 месяца.",
+    "descriptionInstagram": "Если включить, из этого аккаунта Instagram будут импортированы контакты и история диалогов за последние 3 месяца.",
+    "enable": "Включить синхронизацию",
+    "decline": "Не синхронизировать",
+    "billingNote": "Для крупных страниц это может занять несколько часов.",
+    "toggleLabel": "Синхронизировать контакты и историю переписки",
+    "toggleHelper": "Повторное включение сработает, только если у Meta есть сохраненные данные (в течение 24 часов после подключения). Иначе отключите и снова подключите канал.",
+    "toggleHelperMessenger": "Повторное включение сработает, только если у Meta есть сохраненные данные (в течение 24 часов после подключения). Иначе отключите и снова подключите страницу Messenger.",
+    "toggleHelperWhatsapp": "Повторное включение сработает, только если у Meta есть сохраненные данные (в течение 24 часов после подключения). Иначе отключите и снова подключите номер WhatsApp.",
+    "aiReadsSyncedHistoryLabel": "ИИ читает синхронизированную историю",
+    "aiReadsSyncedHistoryHelper": "Если выключено, ИИ видит только новые сообщения.",
     "success": {
-      "enabled": "Sync started. Historical contacts and messages will appear shortly.",
-      "disabled": "Sync disabled."
+      "enabled": "Синхронизация запущена. Старые контакты и сообщения скоро появятся.",
+      "disabled": "Синхронизация выключена."
     },
     "errors": {
-      "alreadyTriggered": "Sync was already triggered for this number. Please wait for Meta to deliver the historical data.",
-      "windowExpired": "The 24-hour sync window has expired. Please disconnect and reconnect this number to sync again.",
-      "notEligible": "This number is not eligible for historical sync.",
-      "triggerFailed": "Could not start the sync. Please try again later.",
-      "unknown": "Could not enable sync. Please try again later."
+      "alreadyTriggered": "Синхронизация для этого номера уже запущена. Дождитесь, пока Meta передаст исторические данные.",
+      "windowExpired": "24-часовое окно синхронизации истекло. Отключите и снова подключите номер, чтобы синхронизировать еще раз.",
+      "notEligible": "Для этого номера синхронизация истории недоступна.",
+      "triggerFailed": "Не удалось запустить синхронизацию. Попробуйте позже.",
+      "unknown": "Не удалось включить синхронизацию. Попробуйте позже."
     }
   },
   "messenger": {
-    "description": "This integration lets you create Messenger bots.",
-    "welcomeMessage": "Welcome Message",
-    "welcomeMessageDescription": "This is the first message the user will receive from your Bot. This message is sent when the user interacts for the first time with the Bot by clicking on the 'Get Started' button.",
-    "conversationStarters": "Conversation Starters",
-    "conversationStartersDescription": "Conversation Starters provide a way for users to start a conversation with your business with a list of frequently asked questions.",
-    "persistentMenu": "Persistent Menu",
-    "persistentMenuDescription": "The menu can be configured to help users to more easily discover and access your Bot features. The menu is always available to users. This menu should contain the top-level actions that users can use it at any time. Having a menu easily communicates the basic capabilities of your bot for beginners and returned users.",
-    "dynamicPersistentMenu": "Dynamic Persistent Menu",
-    "dynamicPersistentMenuDescription": "Allows you to dynamically change the persistent menu at any time at the user level.",
-    "botProfile": "Bot Profile",
-    "botProfileDescription": "This setting allows you to set a different name and image for your bot",
-    "personas": "Personas",
-    "personasDescription": "This setting allows you to set a different name and image for your bot",
-    "defaultPersona": "Default Persona",
-    "reconnect": "Reconnect",
-    "reconnectDescription": "Always reconnect your bot if your Messenger bot is not responding, or if you are seem any permission error on the error log.",
+    "description": "Эта интеграция позволяет создавать ботов для Messenger.",
+    "welcomeMessage": "Приветственное сообщение",
+    "welcomeMessageDescription": "Первое сообщение, которое пользователь получит от бота. Оно отправляется, когда пользователь впервые обращается к боту, нажимая кнопку «Начать».",
+    "conversationStarters": "Стартовые сообщения",
+    "conversationStartersDescription": "Стартовые сообщения помогают пользователям начать диалог с вашей компанией: им показывается список частых вопросов.",
+    "persistentMenu": "Постоянное меню",
+    "persistentMenuDescription": "Меню помогает пользователям быстрее находить возможности бота. Оно всегда доступно и должно содержать основные действия, которыми можно воспользоваться в любой момент. Меню сразу показывает новым и вернувшимся пользователям, что умеет бот.",
+    "dynamicPersistentMenu": "Динамическое постоянное меню",
+    "dynamicPersistentMenuDescription": "Позволяет в любой момент менять постоянное меню для конкретного пользователя.",
+    "botProfile": "Профиль бота",
+    "botProfileDescription": "Здесь можно задать боту другое имя и изображение",
+    "personas": "Персоны",
+    "personasDescription": "Здесь можно задать боту другое имя и изображение",
+    "defaultPersona": "Персона по умолчанию",
+    "reconnect": "Переподключить",
+    "reconnectDescription": "Переподключите бота, если бот в Messenger не отвечает или в журнале ошибок появляются ошибки разрешений.",
     "selectPage": {
-      "noPagesTitle": "No Facebook Pages found",
-      "noPagesDescription": "Pages inside a Business Manager require Business Manager access during connection. Reconnect Messenger and grant all requested permissions.",
-      "alreadyConnectedNote": "This page is already connected",
-      "tryAgain": "Try reconnecting"
+      "noPagesTitle": "Страницы Facebook не найдены",
+      "noPagesDescription": "Для страниц в Business Manager при подключении нужен доступ к Business Manager. Переподключите Messenger и предоставьте все запрошенные разрешения.",
+      "alreadyConnectedNote": "Эта страница уже подключена",
+      "tryAgain": "Переподключить"
     },
     "title": "Facebook Messenger",
     "tabs": {
-      "generalSettings": "General Settings",
-      "messageTemplates": "Message Templates",
-      "conversionsApi": "Ads Optimization"
+      "generalSettings": "Основные настройки",
+      "messageTemplates": "Шаблоны сообщений",
+      "conversionsApi": "Оптимизация рекламы"
     },
     "messageTemplate": {
       "params": {
-        "postbackPayload": "Button Payload",
-        "postbackPayloadPlaceholder": "Enter payload (optional)"
+        "postbackPayload": "Payload кнопки",
+        "postbackPayloadPlaceholder": "Введите payload (необязательно)"
       },
       "create": {
-        "trigger": "Create new template",
-        "header": "Header",
-        "headerType": "Header Type",
-        "none": "None",
-        "text": "Text",
-        "textAndImage": "Text + Image",
-        "image": "Image",
-        "imageHint": "PNG, JPG, or GIF. The image is uploaded before submission.",
-        "noImageSelected": "No image selected",
-        "body": "Body",
-        "buttons": "Buttons",
-        "addButton": "Add Button",
-        "addVariable": "Add Variable",
-        "buttonText": "Button Text",
-        "buttonType": "Button Type",
-        "visitWebsite": "Visit Website",
-        "callPhoneNumber": "Call Phone Number",
-        "postback": "Button"
+        "trigger": "Создать шаблон",
+        "header": "Заголовок",
+        "headerType": "Тип заголовка",
+        "none": "Нет",
+        "text": "Текст",
+        "textAndImage": "Текст + изображение",
+        "image": "Изображение",
+        "imageHint": "PNG, JPG или GIF. Изображение загружается перед отправкой.",
+        "noImageSelected": "Изображение не выбрано",
+        "body": "Текст сообщения",
+        "buttons": "Кнопки",
+        "addButton": "Добавить кнопку",
+        "addVariable": "Добавить переменную",
+        "buttonText": "Текст кнопки",
+        "buttonType": "Тип кнопки",
+        "visitWebsite": "Открыть сайт",
+        "callPhoneNumber": "Позвонить",
+        "postback": "Кнопка"
       },
       "clone": {
-        "title": "Clone Message Template",
-        "titleWithName": "Clone Message Template: {name}",
-        "channelsLabel": "Target Channels",
-        "channelsPlaceholder": "Select channels",
-        "succeededCount": "{count} channel(s) cloned successfully",
-        "failedCount": "{count} channel(s) failed to clone",
-        "partialSuccess": "Cloned to {succeeded} channel(s); {failed} channel(s) failed",
+        "title": "Копировать шаблон сообщения",
+        "titleWithName": "Копировать шаблон сообщения: {name}",
+        "channelsLabel": "Целевые каналы",
+        "channelsPlaceholder": "Выберите каналы",
+        "succeededCount": "Скопировано в каналы: {count}",
+        "failedCount": "Не удалось скопировать в каналы: {count}",
+        "partialSuccess": "Скопировано в каналы: {succeeded}; с ошибкой: {failed}",
         "result": {
-          "title": "Clone Results",
-          "succeededTitle": "Succeeded",
-          "pendingTitle": "Pending Meta review",
-          "close": "Close"
+          "title": "Результаты копирования",
+          "succeededTitle": "Успешно",
+          "pendingTitle": "На проверке в Meta",
+          "close": "Закрыть"
         }
       }
     },
     "tagSync": {
-      "title": "Tag Sync",
-      "description": "Two-way sync of tags between this workspace and the connected channel.",
-      "toggleSuccess": "Tag sync setting updated.",
-      "enabledSince": "Enabled since {date}",
-      "disabled": "Disabled",
-      "labelSync": "Sync tags",
-      "on": "On",
-      "off": "Off",
-      "termsRequired": "Page admin must accept the Facebook Page Contact Terms:"
+      "title": "Синхронизация тегов",
+      "description": "Двусторонняя синхронизация тегов между этим пространством и подключенным каналом.",
+      "toggleSuccess": "Настройка синхронизации тегов обновлена.",
+      "enabledSince": "Включено с {date}",
+      "disabled": "Выключено",
+      "labelSync": "Синхронизировать теги",
+      "on": "Вкл.",
+      "off": "Выкл.",
+      "termsRequired": "Администратор страницы должен принять условия Facebook Page Contact Terms:"
     }
   },
   "omnichannel": {
-    "title": "Omnichannel"
+    "title": "Омниканальность"
   },
   "openai": {
     "connect": {
@@ -4889,7 +4889,7 @@
     }
   },
   "emailTopics": {
-    "title": "Email Topics"
+    "title": "Темы рассылок"
   },
   "tags": {
     "title": "Теги"
@@ -4920,14 +4920,14 @@
     }
   },
   "webchat": {
-    "chatUnavailable": "This chat is currently unavailable.",
-    "description": "Let your customers get instant automated responses from your business directly from your website",
-    "rateLimitExceeded": "Too many requests. Please try again in a moment.",
-    "title": "Web Chat",
-    "workspaceUnavailable": "This workspace is no longer available.",
+    "chatUnavailable": "Чат сейчас недоступен.",
+    "description": "Клиенты получают мгновенные автоматические ответы от вашей компании прямо на вашем сайте",
+    "rateLimitExceeded": "Слишком много запросов. Попробуйте чуть позже.",
+    "title": "Веб-чат",
+    "workspaceUnavailable": "Это пространство больше недоступно.",
     "unauthorizedDomain": {
-      "description": "This website is not authorized to load this chat widget.",
-      "title": "Webchat unavailable"
+      "description": "Этому сайту не разрешено загружать виджет чата.",
+      "title": "Веб-чат недоступен"
     }
   },
   "whatsapp": {
@@ -5495,19 +5495,19 @@
   },
   "zalo": {
     "title": "Zalo OA",
-    "reconnect": "Reconnect",
-    "duplicated": "This Zalo OA account has already been connected to another workspace.",
+    "reconnect": "Переподключить",
+    "duplicated": "Этот аккаунт Zalo OA уже подключен к другому пространству.",
     "tagSync": {
-      "title": "Tag Sync",
-      "description": "Mirror local tag assignments to this Zalo OA.",
-      "toggleSuccess": "Tag sync setting updated.",
-      "enabledSince": "Enabled since {date}",
-      "disabled": "Disabled"
+      "title": "Синхронизация тегов",
+      "description": "Дублировать назначение тегов в этот Zalo OA.",
+      "toggleSuccess": "Настройка синхронизации тегов обновлена.",
+      "enabledSince": "Включено с {date}",
+      "disabled": "Выключено"
     },
-    "refreshPermissions": "Refresh permissions"
+    "refreshPermissions": "Обновить разрешения"
   },
   "telegram": {
-    "description": "This integration lets you create Telegram bots.",
+    "description": "Эта интеграция позволяет создавать ботов для Telegram.",
     "title": "Telegram"
   },
   "invitation": {
@@ -5518,20 +5518,20 @@
   },
   "inboxes": {
     "markReadOnOutbound": {
-      "label": "Mark bot messages as read",
-      "enabled": "Enabled",
-      "disabled": "Disabled",
-      "description": "When enabled, the bot automatically marks its own messages as read"
+      "label": "Отмечать сообщения бота как прочитанные",
+      "enabled": "Включено",
+      "disabled": "Выключено",
+      "description": "Если включено, бот автоматически отмечает свои сообщения как прочитанные"
     }
   },
   "inboxTeams": {
-    "title": "Inbox Teams"
+    "title": "Команды ящиков входящих"
   },
   "userPersistentMenus": {
-    "title": "User Persistent Menus"
+    "title": "Постоянные меню пользователей"
   },
   "webhooks": {
-    "title": "Webhooks"
+    "title": "Вебхуки"
   },
   "reflinks": {
     "title": "Entry Point Links",
@@ -5925,126 +5925,126 @@
     "at": "At"
   },
   "errorLogs": {
-    "title": "Error Logs",
-    "unknownContact": "Unknown contact"
+    "title": "Журнал ошибок",
+    "unknownContact": "Неизвестный контакт"
   },
   "developerAccessToken": {
-    "title": "API Access Token",
-    "description": "Generate a token to allow your workspace to access the public APIs. Keep this token secret and do not share it with anyone.",
-    "createDialogTitle": "Create API token",
-    "namePlaceholder": "e.g. Zapier integration",
-    "empty": "No API tokens yet.",
-    "defaultBadge": "Default",
-    "allScopes": "All scopes"
+    "title": "Токен доступа к API",
+    "description": "Создайте токен, чтобы пространство получило доступ к публичному API. Храните токен в секрете и никому его не передавайте.",
+    "createDialogTitle": "Создать API-токен",
+    "namePlaceholder": "например, интеграция с Zapier",
+    "empty": "API-токенов пока нет.",
+    "defaultBadge": "По умолчанию",
+    "allScopes": "Все области доступа"
   },
   "contacts": {
-    "title": "Contacts",
-    "exportPreparing": "Preparing your export…",
-    "exportPreparingDescription": "We're generating your CSV file. This may take a moment.",
-    "exportReadyTitle": "Your export is ready",
-    "exportReadyDescription": "Copy the link below or download the file directly.",
-    "exportDownloadCount": "Download ({count})",
-    "exportFailed": "Export failed. Please try again.",
-    "copyLink": "Copy link",
-    "linkCopied": "Link copied to clipboard",
-    "countExact": "{count} contacts",
-    "countCapped": "{count}+ contacts",
-    "exportAllNotice": "All contacts matching the current filter will be exported.",
-    "exportTakingLong": "Export is taking longer than expected",
-    "exportTakingLongDescription": "The export is still processing. You can close this dialog and check back in a few minutes from the export history."
+    "title": "Контакты",
+    "exportPreparing": "Готовим экспорт…",
+    "exportPreparingDescription": "Создаем CSV-файл. Это может занять некоторое время.",
+    "exportReadyTitle": "Экспорт готов",
+    "exportReadyDescription": "Скопируйте ссылку ниже или скачайте файл.",
+    "exportDownloadCount": "Скачать ({count})",
+    "exportFailed": "Не удалось выполнить экспорт. Попробуйте еще раз.",
+    "copyLink": "Копировать ссылку",
+    "linkCopied": "Ссылка скопирована",
+    "countExact": "Контактов: {count}",
+    "countCapped": "Контактов: {count}+",
+    "exportAllNotice": "Будут экспортированы все контакты, соответствующие текущему фильтру.",
+    "exportTakingLong": "Экспорт занимает больше времени, чем ожидалось",
+    "exportTakingLongDescription": "Экспорт еще выполняется. Можно закрыть это окно и через несколько минут проверить историю экспорта."
   },
   "contactScan": {
     "menu": {
-      "importFromFile": "Import from File",
-      "automaticScan": "Automatic Customer Scan"
+      "importFromFile": "Импорт из файла",
+      "automaticScan": "Автоматический поиск клиентов"
     },
-    "title": "Automatic Customer Scan",
-    "submit": "Automatic Scan",
+    "title": "Автоматический поиск клиентов",
+    "submit": "Запустить поиск",
     "fields": {
-      "inbox": "Inbox",
-      "scanFrom": "Scan Inbox from Time"
+      "inbox": "Ящик входящих",
+      "scanFrom": "Искать начиная с"
     },
     "hint": {
-      "range": "The system will scan customers who have messaged the page from {from} until now.",
-      "beforeChoose": "After scanning, you must wait another 24 hours before you can use this feature again."
+      "range": "Система найдет клиентов, которые писали на страницу с {from} по сегодняшний день.",
+      "beforeChoose": "После поиска воспользоваться функцией снова можно только через 24 часа."
     },
     "status": {
-      "idle": "No scan has been run yet for this inbox. Choose a start date and run your first Automatic Customer Scan.",
-      "running": "The system is performing an automatic scan; estimated completion time is {eta}.",
-      "nextScan": "Next scan time: {at}",
-      "finished": "The system completed the last customer scan request at {at}.",
-      "total": "Total customers scanned: {count}",
-      "waitCooldown": "You must wait another 24 hours before you can use this feature again.",
-      "failed": "The last scan failed. You can try again once the cooldown ends.",
-      "partial": "The last scan finished partially — some conversations could not be imported."
+      "idle": "Для этого ящика поиск еще не запускался. Выберите дату начала и запустите первый автоматический поиск клиентов.",
+      "running": "Идет автоматический поиск; ожидаемое время завершения — {eta}.",
+      "nextScan": "Следующий поиск: {at}",
+      "finished": "Последний поиск клиентов завершен {at}.",
+      "total": "Всего найдено клиентов: {count}",
+      "waitCooldown": "Воспользоваться функцией снова можно только через 24 часа.",
+      "failed": "Последний поиск завершился ошибкой. Повторить можно после окончания паузы.",
+      "partial": "Последний поиск завершен частично — некоторые диалоги не удалось импортировать."
     },
     "errors": {
-      "contactScanFromTimeInvalid": "Scan-from time must be in the past.",
-      "contactScanInboxNotFound": "Inbox not found.",
-      "contactScanChannelUnsupported": "This channel does not support Automatic Customer Scan.",
-      "contactScanIntegrationDisconnected": "This inbox is not connected.",
-      "contactScanCooldown": "This inbox was scanned recently. Please wait before scanning again.",
-      "contactScanAlreadyRunning": "A scan is already running for this inbox.",
-      "contactScanForbidden": "You do not have permission to run an Automatic Customer Scan."
+      "contactScanFromTimeInvalid": "Время начала поиска должно быть в прошлом.",
+      "contactScanInboxNotFound": "Ящик входящих не найден.",
+      "contactScanChannelUnsupported": "Этот канал не поддерживает автоматический поиск клиентов.",
+      "contactScanIntegrationDisconnected": "Этот ящик входящих не подключен.",
+      "contactScanCooldown": "Поиск в этом ящике уже недавно выполнялся. Подождите, прежде чем запускать снова.",
+      "contactScanAlreadyRunning": "Для этого ящика уже идет поиск.",
+      "contactScanForbidden": "У вас нет прав на запуск автоматического поиска клиентов."
     },
     "histories": {
-      "title": "Scan History",
+      "title": "История поиска",
       "columns": {
-        "channel": "Channel",
-        "scanFrom": "Scan from",
-        "importedContacts": "Imported contacts",
-        "scannedConversations": "Scanned conversations",
-        "finishedAt": "Finished at",
-        "error": "Error"
+        "channel": "Канал",
+        "scanFrom": "Начиная с",
+        "importedContacts": "Импортировано контактов",
+        "scannedConversations": "Просмотрено диалогов",
+        "finishedAt": "Завершено",
+        "error": "Ошибка"
       },
       "status": {
-        "init": "Queued",
-        "running": "Running",
-        "succeeded": "Succeeded",
-        "partial": "Partial",
-        "failed": "Failed"
+        "init": "В очереди",
+        "running": "Выполняется",
+        "succeeded": "Успешно",
+        "partial": "Частично",
+        "failed": "Ошибка"
       },
-      "empty": "No scans have been run yet."
+      "empty": "Поиск еще не запускался."
     }
   },
   "auditLogs": {
-    "title": "Audit Logs",
+    "title": "Журнал аудита",
     "columns": {
-      "user": "User",
-      "action": "Action",
-      "detail": "Detail",
-      "ipAddress": "IP Address",
-      "date": "Date"
+      "user": "Пользователь",
+      "action": "Действие",
+      "detail": "Подробности",
+      "ipAddress": "IP-адрес",
+      "date": "Дата"
     },
     "filters": {
-      "from": "From",
-      "to": "To",
-      "user": "User",
-      "userPlaceholder": "User ID",
-      "keyword": "Keyword",
-      "keywordPlaceholder": "Action, detail, or IP address",
-      "allAdmins": "All Admin"
+      "from": "С",
+      "to": "По",
+      "user": "Пользователь",
+      "userPlaceholder": "ID пользователя",
+      "keyword": "Ключевое слово",
+      "keywordPlaceholder": "Действие, подробности или IP-адрес",
+      "allAdmins": "Все администраторы"
     }
   },
   "customFields": {
-    "title": "Custom Fields",
+    "title": "Пользовательские поля",
     "variables": {
-      "rawGroup": "Raw custom fields"
+      "rawGroup": "Исходные пользовательские поля"
     }
   },
   "keywords": {
-    "title": "Keywords",
+    "title": "Ключевые слова",
     "tabs": {
-      "contact": "Contact",
-      "page": "Page"
+      "contact": "Контакт",
+      "page": "Страница"
     },
     "descriptions": {
-      "contactTitle": "Contact keywords",
-      "contact": "Automatically reply when a contact sends a message containing a keyword to your workspace.",
-      "pageTitle": "Page keywords",
-      "page": "Automatically reply when you send a message containing a keyword to a contact."
+      "contactTitle": "Ключевые слова контакта",
+      "contact": "Автоматически отвечать, когда контакт присылает в пространство сообщение с ключевым словом.",
+      "pageTitle": "Ключевые слова страницы",
+      "page": "Автоматически отвечать, когда вы отправляете контакту сообщение с ключевым словом."
     },
-    "pageWarning": "Message content containing a Page keyword can cause messages to be sent to the customer in an infinite loop. Disable the Page keyword immediately if you encounter this situation!"
+    "pageWarning": "Если сообщение содержит ключевое слово страницы, клиенту могут бесконечно отправляться сообщения по кругу. В такой ситуации сразу выключите ключевое слово страницы!"
   },
   "triggers": {
     "title": "Triggers"
@@ -6195,35 +6195,35 @@
   },
   "smtp": {
     "setting": {
-      "description": "Send emails using your SMTP server.",
+      "description": "Отправляйте письма через свой SMTP-сервер.",
       "label": "(Email) SMTP"
     },
     "errors": {
-      "connectionFailed": "Cannot connect to SMTP server. Please check your credentials and try again."
+      "connectionFailed": "Не удалось подключиться к SMTP-серверу. Проверьте учетные данные и попробуйте еще раз."
     }
   },
   "botSimulator": {
-    "title": "Bot Simulator",
-    "description": "Simulate your bot's behavior in a real-time environment.",
-    "formDescription": "Get a link that shows a website with your webchat on it, so you can demo the bot to a customer.",
-    "websiteLink": "Website Link",
+    "title": "Симулятор бота",
+    "description": "Проверьте поведение бота в реальном времени.",
+    "formDescription": "Получите ссылку на сайт с вашим веб-чатом, чтобы показать бота клиенту.",
+    "websiteLink": "Ссылка на сайт",
     "websiteLinkPlaceholder": "https://example.com",
-    "websiteLinkHint": "The website to show behind the webchat. Some websites do not allow being shown inside another page.",
-    "selectWebchat": "Select a webchat",
-    "webchatRequired": "Please select a webchat",
-    "invalidUrl": "Enter a full link starting with http:// or https://",
-    "getLink": "Get Link",
-    "linkCopied": "Link copied to clipboard",
-    "copyFailed": "Could not copy the link",
-    "noWebchat": "This workspace has no webchat yet.",
-    "createWebchat": "Create a webchat",
-    "websitePreview": "Website preview",
-    "webchatDisabled": "This webchat is turned off. Turn it on or choose another one.",
-    "domainNotAllowed": "This website is not in the webchat's allowed domains.",
-    "disabledWebchatLabel": "{name} (turned off)",
-    "allowedDomainsHint": "Only works with websites on: {domains}",
-    "noEnabledWebchat": "No webchat is turned on in this workspace.",
-    "enableWebchat": "Turn on a webchat"
+    "websiteLinkHint": "Сайт, который будет показан за веб-чатом. Некоторые сайты нельзя показывать внутри другой страницы.",
+    "selectWebchat": "Выберите веб-чат",
+    "webchatRequired": "Выберите веб-чат",
+    "invalidUrl": "Введите полную ссылку, начинающуюся с http:// или https://",
+    "getLink": "Получить ссылку",
+    "linkCopied": "Ссылка скопирована",
+    "copyFailed": "Не удалось скопировать ссылку",
+    "noWebchat": "В этом пространстве пока нет веб-чата.",
+    "createWebchat": "Создать веб-чат",
+    "websitePreview": "Предпросмотр сайта",
+    "webchatDisabled": "Этот веб-чат выключен. Включите его или выберите другой.",
+    "domainNotAllowed": "Этого сайта нет в списке разрешенных доменов веб-чата.",
+    "disabledWebchatLabel": "{name} (выключен)",
+    "allowedDomainsHint": "Работает только с сайтами на доменах: {domains}",
+    "noEnabledWebchat": "В этом пространстве нет включенного веб-чата.",
+    "enableWebchat": "Включить веб-чат"
   },
   "pollManager": {
     "title": "Poll Manager",
@@ -7465,8 +7465,8 @@
   },
   "tiktok": {
     "title": "TikTok",
-    "description": "Connect your TikTok account to reply to direct messages.",
-    "refreshToken": "Refresh Token"
+    "description": "Подключите аккаунт TikTok, чтобы отвечать на личные сообщения.",
+    "refreshToken": "Обновить токен"
   },
   "coupons": {
     "title": "Coupons",
@@ -7898,32 +7898,32 @@
     }
   },
   "mediaLibrary": {
-    "title": "Media Library",
-    "searchPlaceholder": "Search files...",
-    "newFolder": "New folder",
-    "recent": "Recent",
-    "favourite": "Favourite",
-    "upload": "Upload",
-    "select": "Select",
-    "bulkSelect": "Bulk select",
-    "deleteFolder": "Delete folder",
-    "renameFolder": "Rename folder",
-    "noFiles": "No files found",
-    "noFolders": "No folders yet",
-    "folderNamePlaceholder": "Folder name",
-    "confirmDeleteFolder": "Delete folder and all its files?",
-    "confirmDeleteFolderDescription": "All files in this folder will be permanently deleted from the server. This action cannot be undone.",
-    "confirmDeleteFile": "Delete file?",
-    "confirmDeleteFileDescription": "This file will be permanently deleted from the server.",
-    "addToFavourites": "Add to favourites",
-    "removeFromFavourites": "Remove from favourites",
-    "deleteFile": "Delete file",
-    "selectOnlyOneFile": "You can only select up to 1 file",
-    "confirmDeleteFiles": "{count, plural, =1 {Delete 1 file?} other {Delete # files?}}",
-    "confirmDeleteFilesDescription": "These files will be permanently deleted from the server. This action cannot be undone.",
-    "filesCount": "{count, plural, =0 {No files} =1 {1 file} other {# files}}",
-    "openMediaLibrary": "Open Media Library",
-    "uploadFailed": "Failed to upload {name}"
+    "title": "Медиатека",
+    "searchPlaceholder": "Поиск файлов...",
+    "newFolder": "Новая папка",
+    "recent": "Недавние",
+    "favourite": "Избранное",
+    "upload": "Загрузить",
+    "select": "Выбрать",
+    "bulkSelect": "Выбрать несколько",
+    "deleteFolder": "Удалить папку",
+    "renameFolder": "Переименовать папку",
+    "noFiles": "Файлы не найдены",
+    "noFolders": "Папок пока нет",
+    "folderNamePlaceholder": "Название папки",
+    "confirmDeleteFolder": "Удалить папку и все файлы в ней?",
+    "confirmDeleteFolderDescription": "Все файлы в этой папке будут безвозвратно удалены с сервера. Это действие нельзя отменить.",
+    "confirmDeleteFile": "Удалить файл?",
+    "confirmDeleteFileDescription": "Файл будет безвозвратно удален с сервера.",
+    "addToFavourites": "Добавить в избранное",
+    "removeFromFavourites": "Убрать из избранного",
+    "deleteFile": "Удалить файл",
+    "selectOnlyOneFile": "Можно выбрать только 1 файл",
+    "confirmDeleteFiles": "{count, plural, =1 {Удалить 1 файл?} one {Удалить # файл?} few {Удалить # файла?} many {Удалить # файлов?} other {Удалить # файла?}}",
+    "confirmDeleteFilesDescription": "Эти файлы будут безвозвратно удалены с сервера. Это действие нельзя отменить.",
+    "filesCount": "{count, plural, =0 {Нет файлов} =1 {1 файл} one {# файл} few {# файла} many {# файлов} other {# файла}}",
+    "openMediaLibrary": "Открыть медиатеку",
+    "uploadFailed": "Не удалось загрузить {name}"
   },
   "adsCampaign": {
     "title": "Ads",
@@ -8111,7 +8111,7 @@
     }
   },
   "accountFields": {
-    "title": "Bot Fields"
+    "title": "Поля бота"
   },
   "openLink": {
     "title": "Open link",
@@ -8124,120 +8124,120 @@
   "conversationRouting": {
     "owner": {
       "metaAi": "Meta AI",
-      "partner": "Partner",
-      "partnerWithRole": "Partner · {role}",
-      "self": "you"
+      "partner": "Партнер",
+      "partnerWithRole": "Партнер · {role}",
+      "self": "вы"
     },
     "roles": {
       "ai_agent": "Meta AI",
-      "ctwa": "Click-to-WhatsApp ads",
-      "customer_service": "Customer service",
-      "escalation": "Escalation",
-      "marketing": "Marketing",
-      "utility": "Utility"
+      "ctwa": "Реклама Click-to-WhatsApp",
+      "customer_service": "Поддержка клиентов",
+      "escalation": "Эскалация",
+      "marketing": "Маркетинг",
+      "utility": "Сервисные"
     },
     "pill": {
-      "standby": "Standby ({owner})",
-      "owned": "Active",
-      "tooltip": "Handled by {owner}"
+      "standby": "Ожидание ({owner})",
+      "owned": "Активен",
+      "tooltip": "Обрабатывает: {owner}"
     },
     "release": {
-      "label": "Release",
-      "tooltip": "Release this conversation so other apps can answer",
-      "success": "Conversation released"
+      "label": "Освободить",
+      "tooltip": "Освободить диалог, чтобы на него могли отвечать другие приложения",
+      "success": "Диалог освобожден"
     },
     "pass": {
-      "menuItem": "Pass to escalation",
-      "title": "Pass to the escalation partner?",
-      "description": "Hand this conversation to your escalation partner? Your replies will pause until the thread comes back.",
-      "confirm": "Pass",
-      "success": "Conversation passed to the escalation partner"
+      "menuItem": "Передать на эскалацию",
+      "title": "Передать партнеру по эскалации?",
+      "description": "Передать этот диалог партнеру по эскалации? Ваши ответы будут приостановлены, пока диалог не вернется.",
+      "confirm": "Передать",
+      "success": "Диалог передан партнеру по эскалации"
     },
     "aiHandover": {
       "label": "BizAI",
-      "tooltip": "Hand this conversation back to the AI assistant",
-      "title": "Hand back to the AI assistant?",
-      "description": "The AI assistant will resume answering this customer. Your replies will pause until the conversation comes back to you. Meta doesn't guarantee the assistant replies to every message.",
-      "confirm": "Hand back",
-      "success": "Conversation handed back to the AI assistant"
+      "tooltip": "Вернуть диалог ИИ-ассистенту",
+      "title": "Вернуть ИИ-ассистенту?",
+      "description": "ИИ-ассистент снова начнет отвечать этому клиенту. Ваши ответы будут приостановлены, пока диалог не вернется к вам. Meta не гарантирует, что ассистент ответит на каждое сообщение.",
+      "confirm": "Вернуть",
+      "success": "Диалог возвращен ИИ-ассистенту"
     },
     "composer": {
-      "aiStandbyHint": "Replying takes over this conversation from the AI assistant.",
-      "title": "You’re on standby (listening only)",
-      "description": "A third-party partner is handling this conversation. The message box is locked to avoid duplicate replies.",
-      "takeOver": "Take over",
-      "takeOverSuccess": "You're now handling this conversation",
-      "notEscalation": "Only the escalation partner can take over. Routing is configured in Meta Business Suite.",
-      "notPrimaryReceiver": "This app must be the Page's primary receiver to take over. Set it in the Page's Handover Protocol settings.",
-      "learnMore": "Learn more",
-      "dismiss": "Send anyway"
+      "aiStandbyHint": "Если ответить, диалог перейдет к вам от ИИ-ассистента.",
+      "title": "Режим ожидания (только просмотр)",
+      "description": "Этот диалог обрабатывает сторонний партнер. Поле ввода заблокировано, чтобы не было двойных ответов.",
+      "takeOver": "Взять диалог",
+      "takeOverSuccess": "Теперь диалог ведете вы",
+      "notEscalation": "Взять диалог может только партнер по эскалации. Маршрутизация настраивается в Meta Business Suite.",
+      "notPrimaryReceiver": "Чтобы взять диалог, это приложение должно быть основным получателем страницы. Укажите это в настройках Handover Protocol страницы.",
+      "learnMore": "Подробнее",
+      "dismiss": "Все равно отправить"
     },
     "divider": {
-      "ownerHandling": "{owner} is now handling this conversation",
-      "handedOver": "{previousOwner} handed this conversation back to you",
-      "selfHandling": "You are now handling this conversation",
-      "takenOver": "You took over this conversation",
-      "released": "Conversation released",
-      "passed": "Conversation passed to the escalation partner",
-      "serviceRejected": "Message not sent: {owner} is handling this conversation"
+      "ownerHandling": "Теперь диалог ведет {owner}",
+      "handedOver": "{previousOwner} вернул вам диалог",
+      "selfHandling": "Теперь диалог ведете вы",
+      "takenOver": "Вы взяли диалог",
+      "released": "Диалог освобожден",
+      "passed": "Диалог передан партнеру по эскалации",
+      "serviceRejected": "Сообщение не отправлено: диалог ведет {owner}"
     },
     "context": {
-      "title": "Conversation context",
-      "summaryBadge": "AI summary",
-      "historyBadge": "History",
-      "customer": "Customer",
-      "business": "Business",
-      "handoverNote": "Handover note: {note}",
-      "showAll": "Show all ({count})",
-      "showLess": "Show less"
+      "title": "Контекст диалога",
+      "summaryBadge": "Сводка ИИ",
+      "historyBadge": "История",
+      "customer": "Клиент",
+      "business": "Компания",
+      "handoverNote": "Заметка при передаче: {note}",
+      "showAll": "Показать все ({count})",
+      "showLess": "Свернуть"
     },
     "echo": {
-      "partner": "Partner"
+      "partner": "Партнер"
     },
     "panel": {
-      "title": "Conversation routing",
-      "threadState": "Thread state",
-      "threadStateOwned": "Owned",
-      "threadStateStandby": "Standby",
-      "threadStateIdle": "Idle",
-      "currentOwner": "Current owner",
-      "noOwner": "No owner",
-      "roleLabel": "Your role",
-      "selfOwned": "Active — handling the conversation",
-      "selfStandby": "Standby — listening only",
-      "selfIdle": "Idle — waiting",
-      "hintOwned": "Release when you're done so other apps can answer.",
-      "hintStandby": "While a partner is handling this, your messages are held so the customer doesn't get duplicate replies. Take over from the message box to reply.",
-      "hintIdle": "The next customer message decides who answers.",
-      "syncOwner": "Sync owner",
-      "syncOwnerSuccess": "Owner synced"
+      "title": "Маршрутизация диалога",
+      "threadState": "Состояние диалога",
+      "threadStateOwned": "Ведется",
+      "threadStateStandby": "Ожидание",
+      "threadStateIdle": "Неактивен",
+      "currentOwner": "Текущий владелец",
+      "noOwner": "Нет владельца",
+      "roleLabel": "Ваша роль",
+      "selfOwned": "Активно — вы ведете диалог",
+      "selfStandby": "Ожидание — только просмотр",
+      "selfIdle": "Неактивно — ожидание",
+      "hintOwned": "Когда закончите, освободите диалог, чтобы могли отвечать другие приложения.",
+      "hintStandby": "Пока диалог ведет партнер, ваши сообщения задерживаются, чтобы клиент не получал двойных ответов. Чтобы ответить, возьмите диалог в поле ввода.",
+      "hintIdle": "Кто ответит, решит следующее сообщение клиента.",
+      "syncOwner": "Синхронизировать владельца",
+      "syncOwnerSuccess": "Владелец синхронизирован"
     },
     "settings": {
-      "title": "Handover resume flow",
-      "description": "The automation that runs when a partner hands a conversation back.",
-      "resumeFlowLabel": "Choose a flow",
-      "resumeFlowPlaceholder": "Select a flow",
-      "info": "This flow starts automatically when control is handed back. The conversation summary and chat history are then shown to your agents in the live chat.",
-      "save": "Save changes",
-      "clearFlow": "Clear flow",
-      "adminOnly": "Only workspace admins can change routing",
-      "flowNotFound": "The selected flow was not found or is not active",
-      "integrationNotFound": "WhatsApp number not found",
-      "messengerIntegrationNotFound": "Messenger page not found"
+      "title": "Сценарий после возврата диалога",
+      "description": "Автоматизация, которая запускается, когда партнер возвращает диалог.",
+      "resumeFlowLabel": "Выберите сценарий",
+      "resumeFlowPlaceholder": "Выберите сценарий",
+      "info": "Сценарий запускается автоматически при возврате управления. Затем сводка и история переписки показываются операторам в живом чате.",
+      "save": "Сохранить изменения",
+      "clearFlow": "Убрать сценарий",
+      "adminOnly": "Менять маршрутизацию могут только администраторы пространства",
+      "flowNotFound": "Выбранный сценарий не найден или не активен",
+      "integrationNotFound": "Номер WhatsApp не найден",
+      "messengerIntegrationNotFound": "Страница Messenger не найдена"
     },
     "errors": {
-      "unsupported": "Conversation routing is not available on this channel",
-      "notFound": "This conversation is not on that channel",
-      "actionFailed": "Couldn't update conversation routing. Please try again."
+      "unsupported": "Маршрутизация диалогов недоступна в этом канале",
+      "notFound": "Этот диалог не относится к этому каналу",
+      "actionFailed": "Не удалось обновить маршрутизацию диалога. Попробуйте еще раз."
     },
     "step": {
-      "action": "Action",
-      "release": "Release the conversation",
-      "pass": "Pass to the escalation partner",
-      "helper": "WhatsApp only. On other channels, or when the conversation isn’t owned here, the step follows the Error path."
+      "action": "Действие",
+      "release": "Освободить диалог",
+      "pass": "Передать партнеру по эскалации",
+      "helper": "Только для WhatsApp. В других каналах или если диалог ведется не здесь, шаг идет по ветке «Ошибка»."
     },
     "template": {
-      "sent": "Template sent"
+      "sent": "Шаблон отправлен"
     }
   },
   "miniApps": {
