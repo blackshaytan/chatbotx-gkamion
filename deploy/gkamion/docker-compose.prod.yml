@@ -1,0 +1,64 @@
+# ChatbotX production on the GKamion VPS (https://chatbotx.gkamion.ru).
+#
+# Host networking with loopback-only listeners: the host nginx is the only
+# public entry, and the existing infra stack (root docker-compose.yml:
+# postgres 127.0.0.1:5442, redis :6389, rustfs :9010, mailhog :1035) is reached
+# with the same URLs as in `.env`. `.env.prod` (gitignored, see
+# `deploy/gkamion/README.md`) overrides only the public URLs and NODE_ENV.
+#
+# Build: deploy/gkamion/build.sh   Run: deploy/gkamion/up.sh
+name: chatbotx-prod
+
+x-app: &app
+  restart: unless-stopped
+  network_mode: host
+  env_file:
+    - ../../.env
+    - ../../.env.prod
+  logging:
+    driver: json-file
+    options:
+      max-size: 20m
+      max-file: "5"
+
+services:
+  builder:
+    <<: *app
+    image: chatbotx-gkamion/builder:latest
+    build:
+      context: ../..
+      dockerfile: apps/builder/docker/Dockerfile
+    environment:
+      HOSTNAME: 127.0.0.1
+      PORT: "3123"
+    mem_limit: 3g
+
+  worker:
+    <<: *app
+    image: chatbotx-gkamion/worker:latest
+    build:
+      context: ../..
+      dockerfile: apps/worker/docker/Dockerfile
+    mem_limit: 3g
+
+  realtime:
+    <<: *app
+    image: chatbotx-gkamion/realtime:latest
+    build:
+      context: ../..
+      dockerfile: apps/realtime/docker/Dockerfile
+    environment:
+      HOSTNAME: 127.0.0.1
+      PORT: "1999"
+    mem_limit: 1g
+
+  javascript-executor:
+    <<: *app
+    image: chatbotx-gkamion/javascript-executor:latest
+    build:
+      context: ../..
+      dockerfile: apps/javascript-executor/docker/Dockerfile
+    environment:
+      HOST: 127.0.0.1
+      PORT: "3210"
+    mem_limit: 1g
