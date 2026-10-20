@@ -255,6 +255,16 @@ const OUTCOME_TEXT: Record<ImportOutcome, string> = {
   updatedAuth: "channel is on: secrets replaced, status and cursor kept",
 }
 
+const countCookies = (text: string): number => {
+  try {
+    const parsed: unknown = JSON.parse(text)
+    const list = Array.isArray(parsed) ? parsed : asRecord(parsed).cookies
+    return Array.isArray(list) ? list.length : 0
+  } catch {
+    return text.split(";").filter((part) => part.includes("=")).length
+  }
+}
+
 const describeSource = (channel: GekaChannel, dir: string): string => {
   if (channel === "max") {
     const source = readMaxSource(dir)
@@ -266,7 +276,10 @@ const describeSource = (channel: GekaChannel, dir: string): string => {
   }
   const source = readDromSource(dir)
   const dialogs = source.cursor ? Object.keys(source.cursor.dialogs).length : 0
-  return `seller ${source.sellerLogin}, cookies ${mask(source.secretText)}, poll ${source.pollIntervalSeconds ?? "default"}s; cursor ${source.cursor ? `${dialogs} dialogs from Geka` : "none"}`
+  const poll = source.pollIntervalSeconds
+    ? `${source.pollIntervalSeconds}s`
+    : "default"
+  return `seller ${source.sellerLogin}, ${countCookies(source.secretText)} cookies, poll ${poll}; cursor ${source.cursor ? `${dialogs} dialogs from Geka` : "none"}`
 }
 
 const importChannel = async (
