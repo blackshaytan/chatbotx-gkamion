@@ -1,4 +1,5 @@
-export const MAX_API_BASE_URL = "https://platform-api2.max.ru/"
+/** `platform-api2.max.ru` is signed by the Russian Trusted CA, which Node and Docker images do not trust. */
+export const MAX_API_BASE_URL = "https://platform-api.max.ru/"
 export const MAX_TEXT_LIMIT = 4000
 export const MAX_BUTTONS_PER_ROW = 3
 export const MAX_WEBHOOK_SECRET_HEADER = "X-Max-Bot-Api-Secret"
