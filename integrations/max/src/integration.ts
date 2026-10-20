@@ -15,6 +15,21 @@ import { isRevokedTokenError } from "./lib/error-mapper"
 import { resolveMaxWebhookUrl } from "./lib/webhook-url"
 import type { MaxAuthValue, MaxConfig } from "./schema"
 
+/** One `GET /me`; a fresh random webhook secret unless one is given. */
+export const resolveMaxAuth = async (input: {
+  secretText: string
+  webhookSecret?: string
+}): Promise<MaxAuthValue> => {
+  const bot = await getMe(input.secretText)
+  return {
+    authType: "secretText",
+    secretText: input.secretText,
+    botId: String(bot.user_id),
+    botName: bot.username ? `@${bot.username}` : (bot.name ?? "MAX bot"),
+    webhookSecret: input.webhookSecret || randomBytes(24).toString("hex"),
+  }
+}
+
 const config: IntegrationDefinition<MaxConfig, MaxAuthValue> = {
   name: "max",
   channels: {
@@ -30,16 +45,8 @@ const config: IntegrationDefinition<MaxConfig, MaxAuthValue> = {
     startsPaused: true,
     configFields: [{ name: "secretText", type: "secret", required: true }],
     describe: (auth) => ({ sourceId: auth.botId, displayName: auth.botName }),
-    fromCredentials: async (input: { secretText: string }) => {
-      const bot = await getMe(input.secretText)
-      return {
-        authType: "secretText",
-        secretText: input.secretText,
-        botId: String(bot.user_id),
-        botName: bot.username ? `@${bot.username}` : (bot.name ?? "MAX bot"),
-        webhookSecret: randomBytes(24).toString("hex"),
-      }
-    },
+    fromCredentials: async (input: { secretText: string }) =>
+      await resolveMaxAuth({ secretText: input.secretText }),
     verify: async ({ auth }) =>
       await probeVerify(() => getMe(auth.secretText), {
         label: "MAX bot token",

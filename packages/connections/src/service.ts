@@ -5,6 +5,7 @@ import {
 } from "./connect-session-flow"
 import { connectTargets } from "./connect-targets"
 import { connectFromCredentials, reconnect } from "./credentials"
+import { importFromAuth } from "./import"
 import { attachIntegrationConnectionRow } from "./internal"
 import { disconnect, refresh, verify } from "./lifecycle"
 import { pause, resume } from "./pause"
@@ -24,6 +25,7 @@ import { pause, resume } from "./pause"
  * - `lifecycle.ts` — `disconnect`/`refresh`/`verify`.
  * - `pause.ts` — `pause`/`resume` (operator on/off switch for `startsPaused` providers).
  * - `credentials.ts` — `connectFromCredentials`/`reconnect`.
+ * - `import.ts` — `importFromAuth` (paused import of migrated settings, no provider probe).
  * - `connect-session-flow.ts` — `startSession`/`completeAuthorization`/
  *   `listAndAttachCandidates` plus the private `completeReconnect` helper.
  * - `connect-targets.ts` — `connectTargets` plus its private
@@ -40,6 +42,7 @@ export const connectionService = {
   pause,
   resume,
   connectFromCredentials,
+  importFromAuth,
   reconnect,
   startSession,
   completeAuthorization,
