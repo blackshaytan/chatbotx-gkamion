@@ -2877,442 +2877,442 @@
   },
   "googleAds": {
     "title": "Google Ads",
-    "description": "Send offline conversions to Google Ads for contacts who arrived from a Google ad click.",
+    "description": "Отправляйте офлайн-конверсии в Google Ads по контактам, пришедшим по клику на рекламу Google.",
     "notAvailable": {
-      "description": "The platform's Google Ads credentials (OAuth client ID and secret) are not configured. Ask your platform administrator to add them in the Google Ads platform settings."
+      "description": "Учетные данные Google Ads на платформе (OAuth client ID и secret) не настроены. Попросите администратора платформы добавить их в настройках Google Ads платформы."
     },
     "connect": {
-      "scopes": "We request permission to read your Google Ads accounts and conversion actions, and to send conversions on your behalf.",
-      "button": "Connect Google Ads",
-      "reconnect": "Reconnect",
-      "unnamedAccount": "Google Ads account",
-      "viaManager": "via manager {manager}",
-      "statusLabel": "Connection status",
-      "needsReauthDescription": "Google access was revoked or has expired. Reconnect to keep sending conversions.",
-      "pausedDescription": "This connection is paused, so conversions are not being sent.",
-      "degradedDescription": "Google Ads is responding with errors. Conversions will be retried automatically.",
-      "howItWorks": "How it works",
+      "scopes": "Мы запрашиваем доступ на чтение ваших аккаунтов Google Ads и действий-конверсий, а также на отправку конверсий от вашего имени.",
+      "button": "Подключить Google Ads",
+      "reconnect": "Переподключить",
+      "unnamedAccount": "Аккаунт Google Ads",
+      "viaManager": "через управляющий аккаунт {manager}",
+      "statusLabel": "Статус подключения",
+      "needsReauthDescription": "Доступ Google отозван или истек. Переподключитесь, чтобы продолжить отправку конверсий.",
+      "pausedDescription": "Подключение приостановлено, конверсии не отправляются.",
+      "degradedDescription": "Google Ads отвечает с ошибками. Конверсии будут отправлены повторно автоматически.",
+      "howItWorks": "Как это работает",
       "steps": {
-        "signIn": "Sign in with the Google account that manages your ads.",
-        "chooseAccount": "Choose the Google Ads account.",
-        "pickAction": "Pick the conversion action in your flows."
+        "signIn": "Войдите в аккаунт Google, через который управляете рекламой.",
+        "chooseAccount": "Выберите аккаунт Google Ads.",
+        "pickAction": "Выберите действие-конверсию в сценариях."
       },
-      "uploadMethod": "Upload method: {method}"
+      "uploadMethod": "Способ загрузки: {method}"
     },
     "status": {
-      "connected": "Connected",
-      "degraded": "Degraded",
-      "needsReauth": "Needs reconnect",
-      "paused": "Paused",
-      "disconnected": "Disconnected"
+      "connected": "Подключено",
+      "degraded": "Есть сбои",
+      "needsReauth": "Нужно переподключить",
+      "paused": "Приостановлено",
+      "disconnected": "Отключено"
     },
     "picker": {
-      "title": "Choose a Google Ads account",
-      "legend": "Google Ads accounts",
-      "loading": "Loading the Google Ads connection",
-      "loadError": "Couldn't load the Google Ads connection attempt.",
-      "waiting": "Waiting for Google to confirm the sign-in…",
-      "noTargets": "No Google Ads accounts were found for this Google account.",
-      "alreadyThisWorkspace": "Already connected to this workspace",
-      "alreadyOtherWorkspace": "Already connected to another workspace",
-      "notSelectable": "This account can't be selected",
-      "connectSelected": "Connect account",
-      "sessionExpired": "The connection attempt expired. Connect again to continue.",
-      "sessionCancelled": "The connection attempt was cancelled.",
-      "stalled": "The sign-in did not finish. Use Connect Google Ads to try again.",
-      "dismiss": "Dismiss",
-      "cancelFailed": "Couldn't cancel the connection attempt. Try again.",
-      "connectErrorTitle": "Couldn't connect Google Ads",
+      "title": "Выберите аккаунт Google Ads",
+      "legend": "Аккаунты Google Ads",
+      "loading": "Загрузка подключения Google Ads",
+      "loadError": "Не удалось загрузить попытку подключения Google Ads.",
+      "waiting": "Ожидаем подтверждения входа от Google…",
+      "noTargets": "Для этого аккаунта Google не найдено аккаунтов Google Ads.",
+      "alreadyThisWorkspace": "Уже подключен к этому пространству",
+      "alreadyOtherWorkspace": "Уже подключен к другому пространству",
+      "notSelectable": "Этот аккаунт нельзя выбрать",
+      "connectSelected": "Подключить аккаунт",
+      "sessionExpired": "Время попытки подключения истекло. Подключитесь снова.",
+      "sessionCancelled": "Попытка подключения отменена.",
+      "stalled": "Вход не завершен. Нажмите «Подключить Google Ads», чтобы повторить.",
+      "dismiss": "Закрыть",
+      "cancelFailed": "Не удалось отменить попытку подключения. Повторите попытку.",
+      "connectErrorTitle": "Не удалось подключить Google Ads",
       "errors": {
-        "stateMismatch": "The sign-in couldn't be verified. Connect again to continue.",
-        "expired": "The connection attempt expired. Connect again to continue.",
-        "providerDenied": "Google access was not granted. Connect again and allow the requested permissions.",
-        "exchangeFailed": "Couldn't complete the Google sign-in. Connect again to continue.",
-        "providerError": "Google returned an error. Try connecting again in a moment.",
-        "noCandidates": "No active Google Ads account was found for this Google user. Accounts that are cancelled, suspended or not fully set up can't be used. Sign in with a Google account that manages an active Google Ads account.",
-        "alreadyConnected": "That Google Ads account is already connected.",
-        "quotaExceeded": "Your plan's connection limit has been reached.",
-        "trialExpired": "Your trial has ended, so new connections can't be added.",
-        "internalError": "Something went wrong while connecting. Try again.",
-        "providerUnavailable": "Google Ads is temporarily unavailable, so the connection couldn't be finished. Try again in a moment.",
-        "developerTokenMissing": "Google Ads isn't fully set up: the platform's Google credential is incomplete. Ask your administrator to check the Google Ads credential.",
-        "developerTokenNotApproved": "Google rejected the developer token stored in the Google Ads credential. The token is optional: ask your administrator to remove it or replace it with a valid one.",
-        "projectNotApproved": "Your Google Cloud project is not approved for production Google Ads accounts yet. Apply for Explorer or Basic access for the project in Google Cloud Console (Google Ads API → Overview), then connect again.",
-        "permissionDenied": "This Google user doesn't have permission to access Google Ads accounts. Sign in with a Google user that has access to a Google Ads account.",
-        "apiNotEnabled": "The Google Ads API isn't enabled for the Google Cloud project. Ask your administrator to enable it, then try again.",
-        "credentialsInvalid": "Google rejected the sign-in credentials. Connect again to continue.",
-        "scopeMissing": "Not every permission was granted. Google Ads needs access to your Google Ads account and permission to send conversions. Connect again and tick every permission.",
-        "legacyUploadNotAllowed": "Google doesn't allow the legacy upload API for this account. Switch the credential to Data Manager and reconnect this workspace."
+        "stateMismatch": "Не удалось проверить вход. Подключитесь снова.",
+        "expired": "Время попытки подключения истекло. Подключитесь снова.",
+        "providerDenied": "Доступ Google не предоставлен. Подключитесь снова и разрешите запрошенные права.",
+        "exchangeFailed": "Не удалось завершить вход в Google. Подключитесь снова.",
+        "providerError": "Google вернул ошибку. Попробуйте подключиться чуть позже.",
+        "noCandidates": "Для этого пользователя Google не найдено активных аккаунтов Google Ads. Отмененные, заблокированные и не до конца настроенные аккаунты использовать нельзя. Войдите в аккаунт Google, который управляет активным аккаунтом Google Ads.",
+        "alreadyConnected": "Этот аккаунт Google Ads уже подключен.",
+        "quotaExceeded": "Достигнут лимит подключений вашего тарифа.",
+        "trialExpired": "Пробный период закончился, новые подключения добавить нельзя.",
+        "internalError": "Не удалось выполнить подключение. Повторите попытку.",
+        "providerUnavailable": "Google Ads временно недоступен, подключение не завершено. Попробуйте чуть позже.",
+        "developerTokenMissing": "Google Ads настроен не полностью: учетные данные Google на платформе неполные. Попросите администратора проверить учетные данные Google Ads.",
+        "developerTokenNotApproved": "Google отклонил токен разработчика из учетных данных Google Ads. Токен необязателен: попросите администратора удалить его или заменить на действительный.",
+        "projectNotApproved": "Ваш проект Google Cloud еще не одобрен для рабочих аккаунтов Google Ads. Запросите для проекта доступ Explorer или Basic в Google Cloud Console (Google Ads API → Overview), затем подключитесь снова.",
+        "permissionDenied": "У этого пользователя Google нет доступа к аккаунтам Google Ads. Войдите под пользователем Google, у которого есть доступ к аккаунту Google Ads.",
+        "apiNotEnabled": "Google Ads API не включен для проекта Google Cloud. Попросите администратора включить его и повторите попытку.",
+        "credentialsInvalid": "Google отклонил учетные данные для входа. Подключитесь снова.",
+        "scopeMissing": "Предоставлены не все права. Google Ads нужен доступ к вашему аккаунту Google Ads и право отправлять конверсии. Подключитесь снова и отметьте все разрешения.",
+        "legacyUploadNotAllowed": "Google не разрешает для этого аккаунта устаревший API загрузки. Переключите учетные данные на Data Manager и переподключите это пространство."
       }
     },
     "setup": {
-      "conversionCustomer": "Conversion account",
-      "notResolved": "Not resolved yet",
-      "retry": "Retry setup",
-      "dataTermsWarning": "The customer data terms have not been accepted for this account. Accept them in Google Ads, then retry setup.",
+      "conversionCustomer": "Аккаунт конверсий",
+      "notResolved": "Еще не определен",
+      "retry": "Повторить настройку",
+      "dataTermsWarning": "Для этого аккаунта не приняты условия использования данных клиентов. Примите их в Google Ads и повторите настройку.",
       "errors": {
-        "conversionCustomerInaccessible": "The conversion account can't be accessed with this Google sign-in. Check your access in Google Ads and retry.",
-        "customerDataTermsNotAccepted": "The customer data terms have not been accepted for this account. Accept them in Google Ads, then retry setup.",
-        "syncFailed": "Couldn't read the conversion actions from Google Ads. Retry setup in a moment.",
-        "developerTokenMissing": "The platform's Google Ads credentials (OAuth client ID and secret) are not configured."
+        "conversionCustomerInaccessible": "Нет доступа к аккаунту конверсий с этим входом в Google. Проверьте доступ в Google Ads и повторите попытку.",
+        "customerDataTermsNotAccepted": "Для этого аккаунта не приняты условия использования данных клиентов. Примите их в Google Ads и повторите настройку.",
+        "syncFailed": "Не удалось получить действия-конверсии из Google Ads. Повторите настройку чуть позже.",
+        "developerTokenMissing": "Учетные данные Google Ads на платформе (OAuth client ID и secret) не настроены."
       }
     },
     "conversionActions": {
-      "title": "Conversion actions",
-      "description": "Only enabled actions that import conversions from clicks can receive conversions.",
-      "helpLink": "Google Ads Help",
-      "sync": "Sync conversion actions",
-      "syncedAt": "Last synced {date}",
-      "neverSynced": "Not synced yet",
-      "empty": "No conversion actions found. Create an offline import conversion action in Google Ads, then sync.",
-      "name": "Name",
-      "category": "Category",
-      "counting": "Counting",
-      "status": "Status",
-      "onePerClickNote": "iOS clicks (gbraid) can't be sent to this action. Use \"Every\" counting to receive them.",
-      "externalNote": "Not supported: this action uses external attribution, which can't be sent through Google's Data Manager.",
-      "count": "{count, plural, one {# conversion action} other {# conversion actions}}"
+      "title": "Действия-конверсии",
+      "description": "Получать конверсии могут только включенные действия с импортом конверсий из кликов.",
+      "helpLink": "Справка Google Ads",
+      "sync": "Синхронизировать действия-конверсии",
+      "syncedAt": "Последняя синхронизация: {date}",
+      "neverSynced": "Еще не синхронизировано",
+      "empty": "Действия-конверсии не найдены. Создайте в Google Ads действие-конверсию с офлайн-импортом, затем синхронизируйте.",
+      "name": "Название",
+      "category": "Категория",
+      "counting": "Подсчет",
+      "status": "Статус",
+      "onePerClickNote": "Клики с iOS (gbraid) нельзя отправить в это действие. Выберите подсчет «Каждая», чтобы получать их.",
+      "externalNote": "Не поддерживается: действие использует внешнюю атрибуцию, ее нельзя отправить через Data Manager Google.",
+      "count": "{count, plural, one {# действие-конверсия} few {# действия-конверсии} many {# действий-конверсий} other {# действия-конверсии}}"
     },
     "events": {
-      "title": "Conversion history",
-      "description": "Recent conversions sent to Google Ads. Click IDs are masked.",
-      "empty": "Conversions appear here once a flow or trigger sends one.",
-      "emptyFiltered": "No conversions match this status.",
-      "loadError": "Couldn't load the conversion history.",
-      "page": "Page {page} of {pages}",
+      "title": "История конверсий",
+      "description": "Последние конверсии, отправленные в Google Ads. ID кликов скрыты.",
+      "empty": "Конверсии появятся здесь, когда сценарий или триггер отправит первую.",
+      "emptyFiltered": "Нет конверсий с этим статусом.",
+      "loadError": "Не удалось загрузить историю конверсий.",
+      "page": "Страница {page} из {pages}",
       "filter": {
-        "label": "Status",
-        "all": "All statuses"
+        "label": "Статус",
+        "all": "Все статусы"
       },
       "columns": {
-        "status": "Status",
-        "action": "Conversion action",
-        "channel": "Channel",
-        "clickId": "Click ID",
-        "occurredAt": "Occurred",
-        "actions": "Actions",
-        "dedup": "Dedup",
-        "consent": "Consent snapshot",
-        "matching": "Matching",
-        "properties": "Properties"
+        "status": "Статус",
+        "action": "Действие-конверсия",
+        "channel": "Канал",
+        "clickId": "ID клика",
+        "occurredAt": "Время",
+        "actions": "Действия",
+        "dedup": "Дедупликация",
+        "consent": "Согласие на момент отправки",
+        "matching": "Сопоставление",
+        "properties": "Свойства"
       },
       "status": {
-        "pending": "Pending",
-        "sending": "Sending",
-        "sent": "Sent",
-        "processed": "Processed",
-        "failed": "Failed",
-        "skippedNoAccount": "Skipped: no account",
-        "skippedExpired": "Skipped: expired"
+        "pending": "Ожидает",
+        "sending": "Отправляется",
+        "sent": "Отправлено",
+        "processed": "Обработано",
+        "failed": "Ошибка",
+        "skippedNoAccount": "Пропущено: нет аккаунта",
+        "skippedExpired": "Пропущено: истек срок"
       },
       "processing": {
-        "processing": "Google is processing",
-        "success": "Accepted",
-        "partialSuccess": "Partially accepted",
-        "failed": "Rejected",
-        "unknown": "Result unknown",
-        "timedOut": "Timed out"
+        "processing": "Google обрабатывает",
+        "success": "Принято",
+        "partialSuccess": "Принято частично",
+        "failed": "Отклонено",
+        "unknown": "Результат неизвестен",
+        "timedOut": "Время ожидания истекло"
       },
       "stage": {
-        "delivery": "Delivery failed",
-        "processing": "Processing failed",
-        "timeout": "Timed out"
+        "delivery": "Ошибка доставки",
+        "processing": "Ошибка обработки",
+        "timeout": "Время ожидания истекло"
       },
       "consent": {
-        "adUserDataFull": "Ad user data: {status}",
-        "adPersonalizationFull": "Ad personalization: {status}",
+        "adUserDataFull": "Данные пользователя для рекламы: {status}",
+        "adPersonalizationFull": "Персонализация рекламы: {status}",
         "status": {
-          "granted": "Granted",
-          "denied": "Denied",
-          "notProvided": "Not provided",
-          "notSupported": "Not supported (legacy upload)"
+          "granted": "Дано",
+          "denied": "Отклонено",
+          "notProvided": "Не указано",
+          "notSupported": "Не поддерживается (устаревшая загрузка)"
         },
-        "adUserDataShort": "Data: {status}",
-        "adPersonalizationShort": "Pers.: {status}",
+        "adUserDataShort": "Данные: {status}",
+        "adPersonalizationShort": "Персон.: {status}",
         "delivery": {
-          "toSend": "To send",
-          "notSent": "Not sent",
-          "unknown": "Not confirmed"
+          "toSend": "К отправке",
+          "notSent": "Не отправлено",
+          "unknown": "Не подтверждено"
         }
       },
       "dedup": {
-        "click": "Per click",
+        "click": "По клику",
         "id": "ID: {id}",
-        "event": "Every run"
+        "event": "При каждом запуске"
       },
       "matching": {
-        "enabled": "Configured: {fields}",
-        "withheldConsent": "Withheld (no consent): {fields}",
-        "unsupportedTransport": "Not sent (legacy): {fields}"
+        "enabled": "Настроено: {fields}",
+        "withheldConsent": "Не передано (нет согласия): {fields}",
+        "unsupportedTransport": "Не отправлено (устаревший способ): {fields}"
       },
-      "timeProvided": "Provided time",
-      "timeProvidedTooltip": "This conversion time came from the step, not from when it ran."
+      "timeProvided": "Указанное время",
+      "timeProvidedTooltip": "Время конверсии взято из шага, а не из момента его выполнения."
     },
     "validate": {
-      "open": "Validate request",
-      "title": "Validate request",
-      "description": "A configuration check: Google validates the request without recording a conversion.",
-      "conversionAction": "Conversion action",
-      "clickIdType": "Click ID type",
+      "open": "Проверить запрос",
+      "title": "Проверить запрос",
+      "description": "Проверка настроек: Google проверяет запрос, не записывая конверсию.",
+      "conversionAction": "Действие-конверсия",
+      "clickIdType": "Тип ID клика",
       "clickIdTypes": {
         "gclid": "GCLID",
         "gbraid": "GBRAID"
       },
-      "clickId": "Click ID",
-      "submit": "Run check",
-      "ok": "Google accepted this configuration. Nothing was recorded.",
+      "clickId": "ID клика",
+      "submit": "Запустить проверку",
+      "ok": "Google принял эту конфигурацию. Ничего не записано.",
       "reasons": {
-        "accountNotReady": "Google Ads isn't ready yet. Finish connecting and setting up your account, then try again.",
-        "needsReauth": "The Google Ads connection needs to be reconnected.",
-        "rejected": "Google rejected this request",
-        "legacyUploadNotAllowed": "Google doesn't allow the legacy upload API for this account. Switch the credential to Data Manager and reconnect this workspace."
+        "accountNotReady": "Google Ads еще не готов. Завершите подключение и настройку аккаунта, затем повторите попытку.",
+        "needsReauth": "Подключение Google Ads нужно переподключить.",
+        "rejected": "Google отклонил этот запрос",
+        "legacyUploadNotAllowed": "Google не разрешает для этого аккаунта устаревший API загрузки. Переключите учетные данные на Data Manager и переподключите это пространство."
       },
-      "invalid": "Choose a conversion action and enter a valid click ID.",
-      "consentIncluded": "Includes consent: {values}.",
-      "consentNone": "No consent is included in this test.",
-      "consentVariableSkipped": "Consent from a contact field can't be tested and is left out.",
-      "consentNotSentLegacy": "Ad personalization ({status}) is not sent with the legacy upload method."
+      "invalid": "Выберите действие-конверсию и введите корректный ID клика.",
+      "consentIncluded": "Включено согласие: {values}.",
+      "consentNone": "В этой проверке согласие не передается.",
+      "consentVariableSkipped": "Согласие из поля контакта нельзя проверить, оно не включено.",
+      "consentNotSentLegacy": "Согласие на персонализацию рекламы ({status}) не передается при устаревшем способе загрузки."
     },
     "conversionFields": {
-      "conversionAction": "Conversion action",
-      "unavailableOption": "{id} (unavailable)",
-      "unavailableWarning": "The selected conversion action is no longer available or is not enabled. Choose another one before publishing.",
-      "externalOption": "{name} (external attribution, not supported)",
-      "loading": "Loading conversion actions",
-      "loadError": "Couldn't load your Google Ads conversion actions.",
-      "notConnected": "Connect Google Ads to send conversions.",
-      "noActions": "No enabled conversion actions found. Sync them in your Google Ads settings.",
-      "openSettings": "Open Google Ads settings",
-      "needsReauth": "The Google Ads connection needs to be reconnected.",
-      "dedupModeClick": "Once per ad click",
-      "dedupModeClickHelp": "Counts this conversion action once for each ad click.",
-      "dedupModeIdHelp": "Counts once for each different ID.",
-      "dedupModeId": "Once per order or event ID",
-      "dedupModeEvent": "Every time it runs",
-      "dedupModeEventHelp": "Records a new conversion each time this runs, even for the same ad click. A retry of the same run is not counted twice.",
-      "dedupId": "Order or event ID",
-      "dedupIdPlaceholder": "e.g. '{{order_number}}'",
-      "dedupIdHelp": "Reuse the same ID for retries and imports. Use a different ID for each purchase or event.",
-      "dedupIdExample": "No order ID in chat sales? Combine the contact with a field you set per sale, e.g. {example}. Don't use the current time: it changes on every run.",
-      "dedupIdInfoLabel": "About the order or event ID",
-      "dedupLeadIdNote": "Each different ID counts as a new lead from the same click.",
-      "dedupClickNote": "Repeat purchases from the same click won't be counted.",
-      "dedupLegacyNote": "Legacy upload: Google gets a scrambled ID.",
-      "additionalOptions": "Additional options",
-      "additionalOptionsCount": "{count} set",
-      "customerMatching": "Customer matching",
-      "customerMatchingCount": "{count} on",
-      "customerMatchingLegacy": "Not supported by the legacy upload method. Switch the connection to the Data Manager API to use it.",
-      "customerMatchingTermsNotAccepted": "Not sent until the customer data terms are accepted in Google Ads conversion settings.",
-      "learnMore": "Learn more",
-      "matchEmailLabel": "E-mail",
-      "matchPhoneLabel": "Phone number",
+      "conversionAction": "Действие-конверсия",
+      "unavailableOption": "{id} (недоступно)",
+      "unavailableWarning": "Выбранное действие-конверсия больше недоступно или выключено. Выберите другое перед публикацией.",
+      "externalOption": "{name} (внешняя атрибуция, не поддерживается)",
+      "loading": "Загрузка действий-конверсий",
+      "loadError": "Не удалось загрузить действия-конверсии Google Ads.",
+      "notConnected": "Подключите Google Ads, чтобы отправлять конверсии.",
+      "noActions": "Включенные действия-конверсии не найдены. Синхронизируйте их в настройках Google Ads.",
+      "openSettings": "Открыть настройки Google Ads",
+      "needsReauth": "Подключение Google Ads нужно переподключить.",
+      "dedupModeClick": "Один раз на клик по рекламе",
+      "dedupModeClickHelp": "Конверсия учитывается один раз для каждого клика по рекламе.",
+      "dedupModeIdHelp": "Учитывается один раз для каждого уникального ID.",
+      "dedupModeId": "Один раз на ID заказа или события",
+      "dedupModeEvent": "При каждом запуске",
+      "dedupModeEventHelp": "Каждый запуск записывает новую конверсию, даже для того же клика по рекламе. Повтор того же запуска не учитывается дважды.",
+      "dedupId": "ID заказа или события",
+      "dedupIdPlaceholder": "Например, '{{order_number}}'",
+      "dedupIdHelp": "Для повторов и импорта используйте тот же ID. Для каждой покупки или события — разный.",
+      "dedupIdExample": "Нет ID заказа при продажах в чате? Объедините контакт с полем, которое заполняется при каждой продаже, например {example}. Не используйте текущее время: оно меняется при каждом запуске.",
+      "dedupIdInfoLabel": "Об ID заказа или события",
+      "dedupLeadIdNote": "Каждый новый ID учитывается как новый лид с того же клика.",
+      "dedupClickNote": "Повторные покупки с того же клика не будут учтены.",
+      "dedupLegacyNote": "Устаревшая загрузка: Google получает зашифрованный ID.",
+      "additionalOptions": "Дополнительные параметры",
+      "additionalOptionsCount": "Задано: {count}",
+      "customerMatching": "Сопоставление клиентов",
+      "customerMatchingCount": "Включено: {count}",
+      "customerMatchingLegacy": "Не поддерживается устаревшим способом загрузки. Переключите подключение на Data Manager API, чтобы использовать эту функцию.",
+      "customerMatchingTermsNotAccepted": "Не отправляется, пока в настройках конверсий Google Ads не приняты условия использования данных клиентов.",
+      "learnMore": "Подробнее",
+      "matchEmailLabel": "Email",
+      "matchPhoneLabel": "Номер телефона",
       "matchEmailPlaceholder": "'{{email}}'",
       "matchPhonePlaceholder": "'{{phone}}'",
-      "customerTypeLabel": "Customer type",
-      "customerValueBucketLabel": "Customer value",
-      "customerPropertiesLegacy": "Not supported by the legacy upload method. Switch the connection to the Data Manager API to use it.",
-      "conversionTime": "Conversion time",
-      "conversionTimePlaceholder": "Leave blank to use the time this step runs",
-      "valuePlaceholder": "Optional, e.g. 250",
-      "currencyPlaceholder": "Optional, USD",
+      "customerTypeLabel": "Тип клиента",
+      "customerValueBucketLabel": "Ценность клиента",
+      "customerPropertiesLegacy": "Не поддерживается устаревшим способом загрузки. Переключите подключение на Data Manager API, чтобы использовать эту функцию.",
+      "conversionTime": "Время конверсии",
+      "conversionTimePlaceholder": "Оставьте пустым, чтобы использовать время выполнения шага",
+      "valuePlaceholder": "Необязательно, например 250",
+      "currencyPlaceholder": "Необязательно, RUB",
       "validation": {
-        "dedupIdRequired": "Enter an ID, or choose Once per ad click.",
-        "dedupIdTooLong": "Use 64 characters or fewer.",
-        "matchTemplateInvalid": "Use one variable only, such as '{{email}}'. A fixed value is not allowed.",
-        "customerTypeInvalid": "Use NEW or RETURNING, or a variable such as '{{customer_type}}'.",
-        "customerValueBucketInvalid": "Use LOW, MEDIUM or HIGH, or a variable such as '{{customer_value}}'.",
-        "timeFormat": "Use a date with a timezone, e.g. 2026-10-08T14:30:00+07:00.",
-        "timeInvalidDate": "This date doesn't exist.",
-        "currencyRequired": "Add a currency when you set a value.",
-        "valueRequired": "Add a value when you set a currency.",
-        "conversionActionRequired": "Choose a conversion action.",
-        "valueInvalid": "Use a plain number, e.g. 19.99.",
-        "valueTooLarge": "This value is too large.",
-        "currencyInvalid": "Use a 3-letter currency code, e.g. USD."
+        "dedupIdRequired": "Введите ID или выберите «Один раз на клик по рекламе».",
+        "dedupIdTooLong": "Не более 64 символов.",
+        "matchTemplateInvalid": "Используйте только одну переменную, например '{{email}}'. Фиксированное значение не допускается.",
+        "customerTypeInvalid": "Укажите NEW или RETURNING либо переменную, например '{{customer_type}}'.",
+        "customerValueBucketInvalid": "Укажите LOW, MEDIUM или HIGH либо переменную, например '{{customer_value}}'.",
+        "timeFormat": "Укажите дату с часовым поясом, например 2026-10-08T14:30:00+07:00.",
+        "timeInvalidDate": "Такой даты не существует.",
+        "currencyRequired": "Укажите валюту, если задаете ценность.",
+        "valueRequired": "Укажите ценность, если задаете валюту.",
+        "conversionActionRequired": "Выберите действие-конверсию.",
+        "valueInvalid": "Укажите обычное число, например 19.99.",
+        "valueTooLarge": "Слишком большое значение.",
+        "currencyInvalid": "Укажите трехбуквенный код валюты, например RUB."
       },
-      "consentInvalid": "Consent settings can't be read, so this step will fail.",
-      "consentFixLink": "Fix them in settings",
-      "dedupModeLabel": "Avoid duplicate conversions"
+      "consentInvalid": "Не удалось прочитать настройки согласия, поэтому шаг завершится ошибкой.",
+      "consentFixLink": "Исправить в настройках",
+      "dedupModeLabel": "Исключать дубли конверсий"
     },
     "summary": {
-      "conversionAction": "Conversion action {id}",
-      "notConfigured": "Choose a conversion action",
-      "dedupClick": "Once per ad click",
+      "conversionAction": "Действие-конверсия {id}",
+      "notConfigured": "Выберите действие-конверсию",
+      "dedupClick": "Один раз на клик по рекламе",
       "dedupId": "ID: {id}",
-      "dedupEvent": "Every time it runs"
+      "dedupEvent": "При каждом запуске"
     },
     "consent": {
-      "title": "Conversion data consent",
-      "description": "Whether customers agreed to share their data for ads. Applies to every conversion this workspace sends.",
-      "learnMore": "Learn more",
-      "notConnected": "Applies to conversions once a Google Ads account is connected.",
+      "title": "Согласие на передачу данных конверсий",
+      "description": "Согласились ли клиенты передавать свои данные для рекламы. Применяется ко всем конверсиям, которые отправляет это пространство.",
+      "learnMore": "Подробнее",
+      "notConnected": "Применяется к конверсиям после подключения аккаунта Google Ads.",
       "adUserData": {
-        "label": "Ad user data"
+        "label": "Данные пользователя для рекламы"
       },
       "adPersonalization": {
-        "label": "Ad personalization"
+        "label": "Персонализация рекламы"
       },
       "source": {
-        "notProvided": "Not provided",
-        "granted": "Always granted",
-        "denied": "Always denied",
-        "variable": "From a contact field"
+        "notProvided": "Не указано",
+        "granted": "Всегда дано",
+        "denied": "Всегда отклонено",
+        "variable": "Из поля контакта"
       },
       "help": {
-        "notProvided": "Left out. Google uses your account's default consent.",
-        "granted": "Every conversion says the customer agreed.",
-        "denied": "Every conversion says the customer declined.",
-        "variable": "Use \"{granted}\" or \"{denied}\". Empty is skipped; anything else fails the step."
+        "notProvided": "Не передается. Google использует согласие по умолчанию из вашего аккаунта.",
+        "granted": "Каждая конверсия сообщает, что клиент согласился.",
+        "denied": "Каждая конверсия сообщает, что клиент отказался.",
+        "variable": "Используйте «{granted}» или «{denied}». Пустое значение пропускается, любое другое приводит к ошибке шага."
       },
-      "templatePlaceholder": "e.g. '{{gdpr_consent}}'",
-      "templateLabel": "{setting} contact field",
+      "templatePlaceholder": "Например, '{{gdpr_consent}}'",
+      "templateLabel": "Поле контакта: {setting}",
       "validation": {
-        "templateRequired": "Insert a contact field, e.g. '{{gdpr_consent}}'.",
-        "templateTooLong": "Use 200 characters or fewer."
+        "templateRequired": "Вставьте поле контакта, например '{{gdpr_consent}}'.",
+        "templateTooLong": "Не более 200 символов."
       },
       "legacy": {
-        "title": "Not sent with legacy upload",
-        "body": "Legacy upload only accepts ad user data consent. Reconnect with Data Manager to send it."
+        "title": "Не передается при устаревшей загрузке",
+        "body": "Устаревшая загрузка принимает только согласие на данные пользователя для рекламы. Переподключитесь через Data Manager, чтобы передавать его."
       },
-      "save": "Save",
-      "saved": "Consent settings saved",
-      "invalidStored": "Saved consent settings couldn't be read. Steps that send conversions fail until you save new settings."
+      "save": "Сохранить",
+      "saved": "Настройки согласия сохранены",
+      "invalidStored": "Не удалось прочитать сохраненные настройки согласия. Шаги, отправляющие конверсии, будут завершаться ошибкой, пока вы не сохраните новые настройки."
     },
     "errors": {
-      "supportSession": "Platform support sessions can't change the Google Ads connection or send conversions.",
-      "developerTokenMissing": "Google Ads isn't available yet: the platform's Google Ads credentials (OAuth client ID and secret) are not configured.",
-      "notConnected": "Google Ads is not connected for this workspace.",
-      "sessionNotFound": "This Google Ads connection attempt was not found or has expired. Start again.",
-      "pickFailed": "Couldn't connect that Google Ads account. It may already be connected elsewhere or the attempt expired.",
-      "notRetryable": "This conversion can't be retried: only failed conversions can be retried.",
-      "authorizationUnavailable": "Couldn't start the Google sign-in. Try again in a moment.",
-      "credentialSecretsRequired": "Enter the client secret. It isn't stored yet."
+      "supportSession": "В сеансе поддержки платформы нельзя менять подключение Google Ads или отправлять конверсии.",
+      "developerTokenMissing": "Google Ads пока недоступен: учетные данные Google Ads на платформе (OAuth client ID и secret) не настроены.",
+      "notConnected": "Google Ads не подключен к этому пространству.",
+      "sessionNotFound": "Попытка подключения Google Ads не найдена или истекла. Начните заново.",
+      "pickFailed": "Не удалось подключить этот аккаунт Google Ads. Возможно, он уже подключен в другом месте или время попытки истекло.",
+      "notRetryable": "Эту конверсию нельзя отправить повторно: повторить можно только конверсии с ошибкой.",
+      "authorizationUnavailable": "Не удалось начать вход в Google. Попробуйте чуть позже.",
+      "credentialSecretsRequired": "Введите client secret. Он еще не сохранен."
     },
     "enums": {
       "category": {
-        "default": "Default",
-        "purchase": "Purchase",
-        "addToCart": "Add to cart",
-        "beginCheckout": "Begin checkout",
-        "subscribePaid": "Paid subscription",
-        "phoneCallLead": "Phone call lead",
-        "importedLead": "Imported lead",
-        "submitLeadForm": "Submit lead form",
-        "bookAppointment": "Book appointment",
-        "signup": "Sign-up",
-        "requestQuote": "Request quote",
-        "getDirections": "Get directions",
-        "outboundClick": "Outbound click",
-        "contact": "Contact",
-        "engagement": "Engagement",
-        "storeVisit": "Store visit",
-        "storeSale": "Store sale",
-        "qualifiedLead": "Qualified lead",
-        "convertedLead": "Converted lead",
-        "pageView": "Page view",
-        "download": "Download",
-        "lead": "Lead"
+        "default": "По умолчанию",
+        "purchase": "Покупка",
+        "addToCart": "Добавление в корзину",
+        "beginCheckout": "Начало оформления заказа",
+        "subscribePaid": "Платная подписка",
+        "phoneCallLead": "Лид по телефонному звонку",
+        "importedLead": "Импортированный лид",
+        "submitLeadForm": "Отправка формы лида",
+        "bookAppointment": "Запись на прием",
+        "signup": "Регистрация",
+        "requestQuote": "Запрос коммерческого предложения",
+        "getDirections": "Прокладка маршрута",
+        "outboundClick": "Переход по внешней ссылке",
+        "contact": "Связь",
+        "engagement": "Взаимодействие",
+        "storeVisit": "Посещение магазина",
+        "storeSale": "Продажа в магазине",
+        "qualifiedLead": "Квалифицированный лид",
+        "convertedLead": "Конвертированный лид",
+        "pageView": "Просмотр страницы",
+        "download": "Скачивание",
+        "lead": "Лид"
       },
       "countingType": {
-        "onePerClick": "One per click",
-        "manyPerClick": "Many per click"
+        "onePerClick": "Одна на клик",
+        "manyPerClick": "Несколько на клик"
       },
       "actionStatus": {
-        "enabled": "Enabled",
-        "removed": "Removed",
-        "hidden": "Hidden"
+        "enabled": "Включено",
+        "removed": "Удалено",
+        "hidden": "Скрыто"
       },
-      "unknown": "Other ({value})"
+      "unknown": "Другое ({value})"
     },
     "uploadMethods": {
       "dataManager": "Data Manager",
-      "legacy": "Legacy upload"
+      "legacy": "Устаревшая загрузка"
     },
     "stepErrors": {
-      "google_ads_unsupported_channel": "This contact's channel can't send Google Ads conversions.",
-      "google_ads_no_click": "The contact didn't arrive from a Google ad click.",
-      "google_ads_no_account": "No ready Google Ads account is connected.",
-      "google_ads_unknown_conversion_action": "The conversion action no longer exists. Sync and pick another one.",
-      "google_ads_action_disabled": "The conversion action is not enabled in Google Ads.",
-      "google_ads_incompatible_action": "This action counts one conversion per click, which Google doesn't allow for this iOS click.",
-      "google_ads_unsupported_action": "This action uses external attribution, which can't receive these conversions.",
-      "google_ads_invalid_value": "The value or currency was not valid.",
-      "google_ads_invalid_input": "The step's settings were not valid.",
-      "google_ads_record_failed": "The conversion couldn't be saved.",
-      "google_ads_missing_dedup_id": "The order or event ID was empty.",
-      "google_ads_invalid_dedup_id": "The order or event ID was longer than 64 characters.",
-      "google_ads_missing_occurrence_key": "This run had no stable identifier, so the conversion was not recorded.",
-      "google_ads_invalid_customer_property": "The customer type or customer value was not an allowed value.",
-      "google_ads_invalid_consent_config": "Saved consent settings couldn't be read.",
-      "google_ads_invalid_consent_value": "A consent field held a value other than \"granted\" or \"denied\".",
-      "google_ads_invalid_conversion_time": "The conversion time was not a valid date with a timezone, or was in the future."
+      "google_ads_unsupported_channel": "Канал этого контакта не поддерживает отправку конверсий Google Ads.",
+      "google_ads_no_click": "Контакт пришел не по клику на рекламу Google.",
+      "google_ads_no_account": "Нет подключенного и готового аккаунта Google Ads.",
+      "google_ads_unknown_conversion_action": "Действие-конверсия больше не существует. Синхронизируйте и выберите другое.",
+      "google_ads_action_disabled": "Действие-конверсия выключено в Google Ads.",
+      "google_ads_incompatible_action": "Это действие учитывает одну конверсию на клик, а Google не разрешает это для клика с iOS.",
+      "google_ads_unsupported_action": "Это действие использует внешнюю атрибуцию и не может принимать такие конверсии.",
+      "google_ads_invalid_value": "Некорректная ценность или валюта.",
+      "google_ads_invalid_input": "Некорректные настройки шага.",
+      "google_ads_record_failed": "Не удалось сохранить конверсию.",
+      "google_ads_missing_dedup_id": "ID заказа или события пуст.",
+      "google_ads_invalid_dedup_id": "ID заказа или события длиннее 64 символов.",
+      "google_ads_missing_occurrence_key": "У этого запуска нет стабильного идентификатора, поэтому конверсия не записана.",
+      "google_ads_invalid_customer_property": "Недопустимое значение типа клиента или ценности клиента.",
+      "google_ads_invalid_consent_config": "Не удалось прочитать сохраненные настройки согласия.",
+      "google_ads_invalid_consent_value": "Поле согласия содержит значение, отличное от «granted» или «denied».",
+      "google_ads_invalid_conversion_time": "Время конверсии не является корректной датой с часовым поясом или указано в будущем."
     },
     "stats": {
       "filters": {
-        "allChannels": "All channels",
-        "allActions": "All actions",
-        "channelLabel": "Channel",
-        "actionLabel": "Conversion action"
+        "allChannels": "Все каналы",
+        "allActions": "Все действия",
+        "channelLabel": "Канал",
+        "actionLabel": "Действие-конверсия"
       },
       "tiles": {
-        "confirmed": "Confirmed",
-        "awaitingGoogle": "Awaiting Google",
-        "queued": "Queued",
-        "failed": "Failed",
-        "skipped": "Skipped",
-        "deliveryRate": "Delivery rate",
-        "confirmedHelp": "Google confirmed it recorded these conversions.",
-        "awaitingGoogleHelp": "Sent to Google, waiting for Google to finish processing.",
-        "queuedHelp": "Waiting to be sent.",
-        "failedHelp": "Not accepted or not processed by Google.",
-        "skippedHelp": "Not sent: no ready account, or too old for Google.",
-        "deliveryRateHelp": "Confirmed ÷ (confirmed + failed). Queued, awaiting and skipped are not counted."
+        "confirmed": "Подтверждено",
+        "awaitingGoogle": "Ожидает Google",
+        "queued": "В очереди",
+        "failed": "Ошибка",
+        "skipped": "Пропущено",
+        "deliveryRate": "Доля доставки",
+        "confirmedHelp": "Google подтвердил, что записал эти конверсии.",
+        "awaitingGoogleHelp": "Отправлено в Google, ожидается завершение обработки.",
+        "queuedHelp": "Ожидает отправки.",
+        "failedHelp": "Не принято или не обработано Google.",
+        "skippedHelp": "Не отправлено: нет готового аккаунта или конверсия слишком старая для Google.",
+        "deliveryRateHelp": "Подтвержденные ÷ (подтвержденные + с ошибкой). Конверсии в очереди, ожидающие и пропущенные не учитываются."
       },
-      "confirmedValue": "Confirmed value",
-      "confirmedValueItem": "{value} ({count, plural, one {# conversion} other {# conversions}})",
-      "moreCurrencies": "+{count} more",
+      "confirmedValue": "Подтвержденная ценность",
+      "confirmedValueItem": "{value} ({count, plural, one {# конверсия} few {# конверсии} many {# конверсий} other {# конверсии}})",
+      "moreCurrencies": "Еще +{count}",
       "chart": {
-        "title": "Conversions per day",
-        "viewAsTable": "View as table",
-        "tableCaption": "Conversions per day",
-        "dateColumn": "Date"
+        "title": "Конверсии по дням",
+        "viewAsTable": "Показать таблицей",
+        "tableCaption": "Конверсии по дням",
+        "dateColumn": "Дата"
       },
       "byAction": {
-        "title": "By conversion action",
-        "truncated": "Showing the 50 actions with the most conversions."
+        "title": "По действиям-конверсиям",
+        "truncated": "Показаны 50 действий с наибольшим числом конверсий."
       },
       "byChannel": {
-        "title": "By channel",
-        "confirmedCount": "{count, plural, one {# confirmed} other {# confirmed}}"
+        "title": "По каналам",
+        "confirmedCount": "{count, plural, one {# подтверждена} few {# подтверждены} many {# подтверждено} other {# подтверждено}}"
       },
       "failures": {
-        "title": "Failures by stage",
-        "unknown": "Unknown"
+        "title": "Ошибки по этапам",
+        "unknown": "Неизвестно"
       },
       "empty": {
-        "title": "No conversions in this period",
-        "description": "Conversions appear here once a flow step or trigger sends one."
+        "title": "Нет конверсий за этот период",
+        "description": "Конверсии появятся здесь, когда шаг сценария или триггер отправит первую."
       },
       "error": {
-        "title": "Couldn't load statistics",
-        "retry": "Try again"
+        "title": "Не удалось загрузить статистику",
+        "retry": "Повторить"
       },
-      "viewStatistics": "View statistics",
+      "viewStatistics": "Открыть статистику",
       "deliveryRateNone": "—",
-      "deliveryRateNoneHelp": "No confirmed or failed conversions in this period.",
-      "actionFallback": "Action {id}",
-      "openSettings": "Open Google Ads settings",
+      "deliveryRateNoneHelp": "За этот период нет подтвержденных конверсий или конверсий с ошибкой.",
+      "actionFallback": "Действие {id}",
+      "openSettings": "Открыть настройки Google Ads",
       "outcome": {
-        "title": "Outcome share"
+        "title": "Доля результатов"
       },
       "googleReport": {
-        "title": "Reported by Google Ads",
-        "description": "Conversions Google Ads itself recorded for these days, next to what ChatbotX sent and Google confirmed.",
-        "sent": "Confirmed by ChatbotX",
-        "reported": "Reported by Google",
-        "note": "Google can take hours to update its reports, and counts follow the action's own settings, so small gaps are normal.",
-        "unavailable": "Google Ads reporting is not available right now."
+        "title": "Данные Google Ads",
+        "description": "Конверсии, которые сам Google Ads записал за эти дни, рядом с отправленными ChatbotX и подтвержденными Google.",
+        "sent": "Подтверждено ChatbotX",
+        "reported": "Данные Google",
+        "note": "Google может обновлять отчеты несколько часов, а подсчет зависит от настроек самого действия, поэтому небольшие расхождения — это нормально.",
+        "unavailable": "Отчеты Google Ads сейчас недоступны."
       }
     }
   },
@@ -6050,46 +6050,46 @@
     "title": "Триггеры"
   },
   "appointments": {
-    "title": "Appointments",
+    "title": "Записи",
     "statuses": {
-      "scheduled": "Scheduled",
-      "cancelled": "Canceled"
+      "scheduled": "Запланирована",
+      "cancelled": "Отменена"
     },
     "messages": {
-      "empty": "No appointments yet."
+      "empty": "Записей пока нет."
     }
   },
   "appointmentManagement": {
-    "title": "Appointments",
-    "singular": "Appointment",
-    "unknownContact": "Unknown contact",
-    "searchPlaceholder": "Search by name...",
+    "title": "Записи",
+    "singular": "Запись",
+    "unknownContact": "Неизвестный контакт",
+    "searchPlaceholder": "Поиск по имени...",
     "tabs": {
-      "next": "Next",
-      "past": "Past"
+      "next": "Предстоящие",
+      "past": "Прошедшие"
     },
     "fields": {
-      "name": "Name",
-      "date": "Date",
-      "status": "Status",
-      "calendar": "Calendar"
+      "name": "Имя",
+      "date": "Дата",
+      "status": "Статус",
+      "calendar": "Календарь"
     },
     "statuses": {
-      "scheduled": "Scheduled",
-      "cancelled": "Canceled"
+      "scheduled": "Запланирована",
+      "cancelled": "Отменена"
     },
     "actions": {
-      "cancelAppointment": "Cancel appointment"
+      "cancelAppointment": "Отменить запись"
     },
     "dialogs": {
-      "cancelTitle": "Cancel appointment",
-      "cancelDescription": "Cancel this appointment and run its cancellation side effects.",
-      "deleteTitle": "Delete appointment",
-      "deleteDescription": "Delete this appointment from the management list. This will not run the cancellation flow."
+      "cancelTitle": "Отменить запись",
+      "cancelDescription": "Отменить эту запись и выполнить связанные с отменой действия.",
+      "deleteTitle": "Удалить запись",
+      "deleteDescription": "Удалить эту запись из списка. Сценарий отмены при этом не запустится."
     },
     "messages": {
-      "cancelled": "Appointment canceled.",
-      "deleted": "Appointment deleted."
+      "cancelled": "Запись отменена.",
+      "deleted": "Запись удалена."
     }
   },
   "users": {
@@ -6817,176 +6817,176 @@
     "dashboardCta": "View on Ads dashboard"
   },
   "ecommerce": {
-    "title": "Ecommerce",
-    "description": "Create and manage your ecommerce store."
+    "title": "Интернет-магазин",
+    "description": "Создавайте интернет-магазин и управляйте им."
   },
   "appointmentScheduling": {
-    "title": "Appointment Scheduling",
-    "description": "Create and manage your appointment scheduling.",
+    "title": "Онлайн-запись",
+    "description": "Настраивайте онлайн-запись и управляйте ею.",
     "flowModes": {
-      "bookFromCustomField": "Book appointment",
-      "checkAvailabilityFromCustomField": "Check availability",
-      "book": "Open booking page",
-      "checkAvailability": "Open availability page",
-      "cancel": "Cancel appointment"
+      "bookFromCustomField": "Создать запись",
+      "checkAvailabilityFromCustomField": "Проверить доступность",
+      "book": "Открыть страницу записи",
+      "checkAvailability": "Открыть страницу доступности",
+      "cancel": "Отменить запись"
     },
     "fields": {
-      "mode": "Mode",
-      "dateTimeFieldId": "Save selected date to",
-      "dateTimeFieldIdSource": "Date/time field",
-      "startDateFieldId": "Start date field",
-      "startDateFieldIdSelected": "Save selected start date to",
-      "endDateFieldId": "End date field",
-      "endDateFieldIdSelected": "Save selected end date to",
-      "resultUsedByAI": "Use result for AI",
-      "outputCustomFieldId": "Save response to a custom field"
+      "mode": "Режим",
+      "dateTimeFieldId": "Сохранить выбранную дату в",
+      "dateTimeFieldIdSource": "Поле даты и времени",
+      "startDateFieldId": "Поле даты начала",
+      "startDateFieldIdSelected": "Сохранить выбранную дату начала в",
+      "endDateFieldId": "Поле даты окончания",
+      "endDateFieldIdSelected": "Сохранить выбранную дату окончания в",
+      "resultUsedByAI": "Использовать результат для ИИ",
+      "outputCustomFieldId": "Сохранить ответ в пользовательское поле"
     },
     "dialogDescriptions": {
-      "flowStep": "Choose how this flow step schedules appointments."
+      "flowStep": "Выберите, как этот шаг сценария работает с записями."
     }
   },
   "appointmentCalendars": {
-    "title": "Appointment Calendars",
-    "singular": "Appointment Calendar",
-    "addNew": "Add New",
-    "none": "None",
-    "addReminder": "Add Reminder",
-    "reminderSummary": "Send Reminder - {calendar} {timing}.",
-    "noExternalConnections": "No external calendar connections yet",
+    "title": "Календари записи",
+    "singular": "Календарь записи",
+    "addNew": "Добавить",
+    "none": "Нет",
+    "addReminder": "Добавить напоминание",
+    "reminderSummary": "Отправить напоминание — {calendar} {timing}.",
+    "noExternalConnections": "Внешние календари пока не подключены",
     "dialogDescriptions": {
-      "create": "Give your appointment calendar a name to get started.",
-      "rename": "Rename this appointment calendar."
+      "create": "Для начала задайте название календаря записи.",
+      "rename": "Переименовать этот календарь записи."
     },
     "tabs": {
-      "calendars": "Calendars",
-      "appointments": "Appointments",
-      "externalCalendars": "External Calendars"
+      "calendars": "Календари",
+      "appointments": "Записи",
+      "externalCalendars": "Внешние календари"
     },
     "sections": {
-      "appointment": "What is your appointment",
-      "availability": "When can people book?",
-      "duration": "How long is your appointment?",
-      "location": "Where will the appointment happen?",
-      "notifications": "Notifications",
-      "restrictions": "Restrictions",
-      "externalCalendar": "Connect Google Calendar"
+      "appointment": "Что за запись",
+      "availability": "Когда можно записаться?",
+      "duration": "Сколько длится запись?",
+      "location": "Где пройдет встреча?",
+      "notifications": "Уведомления",
+      "restrictions": "Ограничения",
+      "externalCalendar": "Подключить Google Calendar"
     },
     "fields": {
-      "description": "Description",
-      "timezone": "Timezone",
-      "locationType": "Location Type",
-      "locationDetail": "Detail",
-      "durationMinutes": "Appointment duration",
-      "bufferAfterMinutes": "Add time after your appointments",
-      "scheduleWindowType": "People can schedule",
-      "rollingDays": "Rolling Days",
-      "minAdvanceDays": "Minimum days in advance",
-      "startDate": "Start Date",
-      "endDate": "End Date",
-      "specificDate": "Date",
-      "maxAppointmentsPerUser": "Maximum appointments per user",
-      "maxAppointmentsUnlimited": "Unlimited",
-      "dailyLimitEnabled": "Daily limit",
-      "maxPerDay": "Max Per Day",
-      "allowGroupMeeting": "Allow Group Meeting",
-      "maxPerSlot": "Max Per Slot",
-      "confirmationMessage": "Confirmation Message",
-      "confirmationFlowId": "Confirmation Flow",
-      "cancellationFlowId": "Cancellation Flow",
-      "externalConnectionId": "External Calendar",
-      "externalEventTitleTemplate": "Event title template",
-      "externalEventDescriptionTemplate": "Event description template",
-      "externalEventAttendeesTemplate": "Attendees template",
-      "reminders": "Reminders",
-      "reminderTimingValue": "Value",
-      "reminderTimingUnit": "Unit"
+      "description": "Описание",
+      "timezone": "Часовой пояс",
+      "locationType": "Тип места",
+      "locationDetail": "Подробности",
+      "durationMinutes": "Длительность записи",
+      "bufferAfterMinutes": "Перерыв после записи",
+      "scheduleWindowType": "Можно записаться",
+      "rollingDays": "Дней вперед",
+      "minAdvanceDays": "Минимум дней заранее",
+      "startDate": "Дата начала",
+      "endDate": "Дата окончания",
+      "specificDate": "Дата",
+      "maxAppointmentsPerUser": "Максимум записей на пользователя",
+      "maxAppointmentsUnlimited": "Без ограничений",
+      "dailyLimitEnabled": "Дневной лимит",
+      "maxPerDay": "Максимум в день",
+      "allowGroupMeeting": "Разрешить групповые встречи",
+      "maxPerSlot": "Максимум на слот",
+      "confirmationMessage": "Сообщение с подтверждением",
+      "confirmationFlowId": "Сценарий подтверждения",
+      "cancellationFlowId": "Сценарий отмены",
+      "externalConnectionId": "Внешний календарь",
+      "externalEventTitleTemplate": "Шаблон названия события",
+      "externalEventDescriptionTemplate": "Шаблон описания события",
+      "externalEventAttendeesTemplate": "Шаблон участников",
+      "reminders": "Напоминания",
+      "reminderTimingValue": "Значение",
+      "reminderTimingUnit": "Единица"
     },
     "placeholders": {
-      "externalEventTitleTemplate": "Appointment: '{{booking_calendar}}'",
-      "externalEventDescriptionTemplate": "Add appointment details or variables",
+      "externalEventTitleTemplate": "Запись: '{{booking_calendar}}'",
+      "externalEventDescriptionTemplate": "Добавьте детали записи или переменные",
       "externalEventAttendeesTemplate": "one@example.com, another@example.com"
     },
-    "externalEventDisclosure": "Template values and attendees are shared with the connected Google Calendar. Attendees receive Google invitations and cancellation updates.",
+    "externalEventDisclosure": "Значения шаблонов и участники передаются в подключенный Google Calendar. Участники получат приглашения и уведомления об отмене от Google.",
     "locationTypes": {
-      "inPerson": "In-Person Meeting",
-      "phoneCall": "Phone Call",
-      "onlineMeeting": "Online Meeting"
+      "inPerson": "Личная встреча",
+      "phoneCall": "Телефонный звонок",
+      "onlineMeeting": "Онлайн-встреча"
     },
     "scheduleWindowTypes": {
-      "rollingDays": "Within rolling days in future",
-      "dateRange": "Within a date range",
-      "specificDay": "One specific day",
-      "anyFutureDate": "At any date in future"
+      "rollingDays": "На ближайшие N дней",
+      "dateRange": "В диапазоне дат",
+      "specificDay": "В определенный день",
+      "anyFutureDate": "На любую будущую дату"
     },
     "reminderTimingUnits": {
-      "minutes": "Minutes before",
-      "hours": "Hours before",
-      "days": "Days before"
+      "minutes": "Минут до",
+      "hours": "Часов до",
+      "days": "Дней до"
     },
     "reminderTimingLabels": {
-      "minutes": "{count, plural, one {# minute before} other {# minutes before}}",
-      "hours": "{count, plural, one {an hour before} other {# hours before}}",
-      "days": "{count, plural, one {a day before} other {# days before}}"
+      "minutes": "{count, plural, one {за # минуту} few {за # минуты} many {за # минут} other {за # минуты}}",
+      "hours": "{count, plural, one {за час} few {за # часа} many {за # часов} other {за # часа}}",
+      "days": "{count, plural, one {за день} few {за # дня} many {за # дней} other {за # дня}}"
     },
     "weekdays": {
-      "0": "Sunday",
-      "1": "Monday",
-      "2": "Tuesday",
-      "3": "Wednesday",
-      "4": "Thursday",
-      "5": "Friday",
-      "6": "Saturday"
+      "0": "Воскресенье",
+      "1": "Понедельник",
+      "2": "Вторник",
+      "3": "Среда",
+      "4": "Четверг",
+      "5": "Пятница",
+      "6": "Суббота"
     },
     "weekdayEditor": {
-      "description": "Set the available time intervals for this day.",
-      "unavailable": "Unavailable",
-      "overlapWarning": "Some intervals overlap. Overlapping time is not counted twice.",
-      "addInterval": "Add Interval",
-      "startTime": "Start Time",
-      "endTime": "End Time"
+      "description": "Задайте доступные интервалы времени на этот день.",
+      "unavailable": "Недоступно",
+      "overlapWarning": "Некоторые интервалы пересекаются. Пересекающееся время не учитывается дважды.",
+      "addInterval": "Добавить интервал",
+      "startTime": "Время начала",
+      "endTime": "Время окончания"
     },
     "tooltips": {
-      "timezone": "The timezone you are creating this calendar. People will see availability based on their timezone.",
-      "confirmationFlow": "The flow that is sent once the user book an appointment.",
-      "cancellationFlow": "The flow that is sent once an appointment is canceled.",
-      "reminders": "Send reminders to remember the invitee about the appointment.",
-      "appointmentDuration": "Define how long your appointment will be.",
-      "bufferAfterMinutes": "Give yourself some buffer time to wrap up from booked appointments.",
-      "peopleCanSchedule": "Set a range of dates when you can accept meetings.",
-      "maxAppointmentsPerUser": "The maximum number of future appointments a user is allowed to book.",
-      "rollingDays": "Allow schedule up to how many days in the future",
-      "minAdvanceDays": "Require bookings to be made at least this many days in advance. Use 0 to allow same-day bookings.",
-      "dailyLimit": "The maximum number of people that are allowed to book per day.",
-      "allowGroupMeeting": "Allow many people to book at the same time slot.",
-      "externalCalendar": "Connect Google Calendar to sync your appointments."
+      "timezone": "Часовой пояс, в котором вы создаете календарь. Клиенты увидят доступное время в своем часовом поясе.",
+      "confirmationFlow": "Сценарий, который отправляется после того, как пользователь записался.",
+      "cancellationFlow": "Сценарий, который отправляется после отмены записи.",
+      "reminders": "Отправлять клиенту напоминания о записи.",
+      "appointmentDuration": "Укажите, сколько длится запись.",
+      "bufferAfterMinutes": "Оставьте себе время на завершение после каждой записи.",
+      "peopleCanSchedule": "Задайте диапазон дат, в которые вы принимаете записи.",
+      "maxAppointmentsPerUser": "Максимальное число будущих записей у одного пользователя.",
+      "rollingDays": "На сколько дней вперед можно записаться",
+      "minAdvanceDays": "Минимальное число дней до записи. Укажите 0, чтобы разрешить запись на тот же день.",
+      "dailyLimit": "Максимальное число записей в день.",
+      "allowGroupMeeting": "Разрешить нескольким людям записываться на один слот.",
+      "externalCalendar": "Подключите Google Calendar для синхронизации записей."
     },
-    "minutesLabel": "{count} minutes"
+    "minutesLabel": "{count} мин"
   },
   "externalCalendars": {
-    "title": "External Calendars",
-    "connectGoogle": "Connect Google",
-    "emptyEmail": "No email",
+    "title": "Внешние календари",
+    "connectGoogle": "Подключить Google",
+    "emptyEmail": "Нет email",
     "fields": {
-      "provider": "Provider",
+      "provider": "Провайдер",
       "email": "Email",
-      "calendarId": "Calendar ID",
-      "connected": "Connected",
-      "date": "Date"
+      "calendarId": "ID календаря",
+      "connected": "Подключен",
+      "date": "Дата"
     },
     "providers": {
       "googleCalendar": "Google Calendar"
     },
     "dialogs": {
-      "editTitle": "Edit Calendar ID",
-      "editDescription": "Choose the Google Calendar ID to check for conflicts and create appointment events.",
-      "deleteTitle": "Disconnect Calendar",
-      "deleteDescription": "Disconnect this Google Calendar from appointment scheduling."
+      "editTitle": "Изменить ID календаря",
+      "editDescription": "Выберите ID календаря Google для проверки конфликтов и создания событий записи.",
+      "deleteTitle": "Отключить календарь",
+      "deleteDescription": "Отключить этот Google Calendar от онлайн-записи."
     },
     "messages": {
-      "connected": "Google Calendar connected.",
-      "connectFailed": "Could not connect Google Calendar. Check the Google OAuth settings and Calendar API access, then try again.",
-      "calendarIdUpdated": "Calendar ID updated.",
-      "disconnected": "Calendar disconnected."
+      "connected": "Google Calendar подключен.",
+      "connectFailed": "Не удалось подключить Google Calendar. Проверьте настройки Google OAuth и доступ к Calendar API, затем повторите попытку.",
+      "calendarIdUpdated": "ID календаря обновлен.",
+      "disconnected": "Календарь отключен."
     }
   },
   "templates": {
@@ -7221,79 +7221,79 @@
     "noEligibleWorkspaces": "У вас нет пространства, в которое можно установить этот шаблон."
   },
   "bookingPage": {
-    "metadataTitle": "Booking",
-    "comingSoonTitle": "Booking page coming soon",
-    "comingSoonDescription": "This public booking page is not available yet."
+    "metadataTitle": "Запись",
+    "comingSoonTitle": "Страница записи скоро появится",
+    "comingSoonDescription": "Эта публичная страница записи пока недоступна."
   },
   "bookingWebview": {
-    "metadataTitle": "Book appointment",
-    "badge": "Appointment",
-    "timezone": "Timezone",
-    "empty": "No available times were found.",
-    "noSelection": "Choose a time",
+    "metadataTitle": "Записаться",
+    "badge": "Запись",
+    "timezone": "Часовой пояс",
+    "empty": "Свободного времени не найдено.",
+    "noSelection": "Выберите время",
     "range": {
-      "metadataTitle": "Check availability",
-      "empty": "Not selected",
-      "successTitle": "Date range received.",
-      "successDescription": "We are checking available appointment times.",
+      "metadataTitle": "Проверить доступность",
+      "empty": "Не выбрано",
+      "successTitle": "Диапазон дат получен.",
+      "successDescription": "Проверяем свободное время для записи.",
       "fields": {
-        "startDate": "Start Date",
-        "endDate": "End Date",
-        "startTime": "Start Time",
-        "endTime": "End Time"
+        "startDate": "Дата начала",
+        "endDate": "Дата окончания",
+        "startTime": "Время начала",
+        "endTime": "Время окончания"
       },
       "actions": {
-        "skip": "Skip"
+        "skip": "Пропустить"
       },
       "errors": {
-        "invalidRange": "End Date must be on or after Start Date."
+        "invalidRange": "Дата окончания не может быть раньше даты начала."
       },
-      "timezoneHint": "Times are shown in {timezone}."
+      "timezoneHint": "Время указано в часовом поясе {timezone}."
     },
     "actions": {
-      "book": "Book appointment",
-      "viewDetails": "View details"
+      "book": "Записаться",
+      "viewDetails": "Подробнее"
     },
     "errors": {
-      "invalidTokenTitle": "This booking link is unavailable.",
-      "invalidTokenDescription": "The link may be invalid or expired. Please ask for a new booking link.",
-      "staleSlot": "This time is no longer available. Please choose another time.",
-      "availabilityChanged": "Availability changed while you were choosing a time. Please choose again.",
-      "submitFailed": "We couldn't complete this request. Please try again."
+      "invalidTokenTitle": "Ссылка на запись недоступна.",
+      "invalidTokenDescription": "Ссылка недействительна или устарела. Запросите новую ссылку на запись.",
+      "staleSlot": "Это время уже занято. Выберите другое.",
+      "availabilityChanged": "Пока вы выбирали, доступное время изменилось. Выберите снова.",
+      "submitFailed": "Не удалось выполнить запрос. Повторите попытку."
     },
     "success": {
-      "title": "Your appointment is booked.",
-      "description": "The appointment details are ready."
+      "title": "Вы записаны.",
+      "description": "Детали записи готовы."
     },
     "schedule": {
-      "metadataTitle": "Appointment details",
-      "defaultMessage": "Your appointment has been scheduled.",
-      "unknownInvitee": "Guest",
+      "metadataTitle": "Детали записи",
+      "defaultMessage": "Ваша запись запланирована.",
+      "unknownInvitee": "Гость",
       "fields": {
-        "invitee": "Invitee",
-        "time": "Time",
-        "timezone": "Timezone",
-        "location": "Location"
+        "invitee": "Участник",
+        "time": "Время",
+        "timezone": "Часовой пояс",
+        "location": "Место"
       },
       "status": {
-        "scheduled": "Scheduled",
-        "cancelled": "Canceled"
+        "scheduled": "Запланирована",
+        "cancelled": "Отменена"
       },
       "locationTypes": {
-        "inPerson": "In-person meeting",
-        "phoneCall": "Phone call",
-        "onlineMeeting": "Online meeting"
+        "inPerson": "Личная встреча",
+        "phoneCall": "Телефонный звонок",
+        "onlineMeeting": "Онлайн-встреча"
       }
     },
     "cancel": {
-      "metadataTitle": "Cancel appointment",
-      "title": "Cancel appointment",
-      "description": "Cancel {calendar} at {time}.",
-      "action": "Cancel appointment",
-      "cancelledTitle": "Appointment canceled",
-      "cancelledDescription": "This appointment has been canceled.",
-      "unavailableTitle": "Cancellation unavailable",
-      "unavailableDescription": "This appointment is already canceled, deleted, or in the past."
+      "metadataTitle": "Отменить запись",
+      "title": "Отменить запись",
+      "description": "Отменить запись «{calendar}» на {time}.",
+      "action": "Отменить запись",
+      "cancelledTitle": "Запись отменена",
+      "cancelledDescription": "Эта запись отменена.",
+      "unavailableTitle": "Отмена недоступна",
+      "unavailableDescription": "Эта запись уже отменена, удалена или прошла."
     }
   },
   "userDataWebview": {
@@ -7347,120 +7347,120 @@
     "unknown": "Неизвестно"
   },
   "orders": {
-    "title": "Orders"
+    "title": "Заказы"
   },
   "products": {
-    "title": "Products",
+    "title": "Товары",
     "create": {
-      "title": "Create Product"
+      "title": "Создать товар"
     },
     "edit": {
-      "title": "Edit Product"
+      "title": "Изменить товар"
     },
     "sections": {
-      "pricing": "Pricing",
-      "images": "Images",
-      "inventory": "Inventory",
-      "variants": "Variants",
-      "addons": "Add-ons",
-      "tags": "Tags",
-      "moreOptions": "More Options"
+      "pricing": "Цены",
+      "images": "Изображения",
+      "inventory": "Остатки",
+      "variants": "Варианты",
+      "addons": "Дополнения",
+      "tags": "Теги",
+      "moreOptions": "Дополнительно"
     },
     "fields": {
       "shortDescription": {
-        "label": "Short Description"
+        "label": "Краткое описание"
       },
       "longDescription": {
-        "label": "Long Description"
+        "label": "Полное описание"
       },
       "price": {
-        "label": "Price"
+        "label": "Цена"
       },
       "taxes": {
-        "label": "Taxes (0-100%)"
+        "label": "Налоги (0–100%)"
       },
       "discount": {
-        "label": "Discount (0-100%)"
+        "label": "Скидка (0–100%)"
       },
       "currency": {
-        "label": "Currency"
+        "label": "Валюта"
       },
       "productUrl": {
-        "label": "Product URL",
+        "label": "URL товара",
         "placeholder": "https://store.example.com/products/123",
-        "description": "The page customers open from Messenger Shopping. Products without a URL are skipped when syncing to Meta Catalog."
+        "description": "Страница, которую клиенты открывают из Messenger Shopping. Товары без URL пропускаются при синхронизации с каталогом Meta."
       },
       "sku": {
         "label": "SKU",
-        "placeholder": "Optional"
+        "placeholder": "Необязательно"
       },
       "inventoryPolicy": {
-        "label": "Inventory policy"
+        "label": "Учет остатков"
       },
       "inventoryQuantity": {
-        "label": "Quantity"
+        "label": "Количество"
       },
       "allowOutOfStockPurchase": {
-        "label": "Allow customers to purchase this product when it's out of stock"
+        "label": "Разрешить покупку товара, когда его нет в наличии"
       },
       "vendor": {
-        "label": "Vendor"
+        "label": "Производитель"
       },
       "rank": {
-        "label": "Rank"
+        "label": "Порядок"
       },
       "category": {
-        "label": "Category",
-        "placeholder": "Uncategorized"
+        "label": "Категория",
+        "placeholder": "Без категории"
       },
       "subcategory": {
-        "label": "Subcategory",
-        "placeholder": "None"
+        "label": "Подкатегория",
+        "placeholder": "Нет"
       },
       "isSearchable": {
-        "label": "This product is searchable inside the bot"
+        "label": "Товар доступен для поиска в боте"
       },
       "allowSpecialRequest": {
-        "label": "Allow the user to request a special request (attach notes)"
+        "label": "Разрешить пользователю оставлять особые пожелания (примечания)"
       },
       "isActive": {
-        "label": "Active"
+        "label": "Активен"
       },
       "isAddonOnly": {
-        "label": "Use this product only as an addon for others products"
+        "label": "Использовать товар только как дополнение к другим товарам"
       },
       "optionName": {
-        "label": "Option Name"
+        "label": "Название опции"
       },
       "optionValue": {
-        "label": "Option Value"
+        "label": "Значение опции"
       },
       "variant": {
-        "label": "Variant"
+        "label": "Вариант"
       },
-      "addImageFromLink": "Add Image",
-      "uploadImage": "Upload Image",
-      "tagsDescription": "Tags are searchable.",
-      "addonsDescription": "Add products that clients can buy as an add-on. You can also give free products here. For example, a restaurant may give free drinks options here. You must create a product before you use it as add-on.",
+      "addImageFromLink": "Добавить изображение",
+      "uploadImage": "Загрузить изображение",
+      "tagsDescription": "По тегам работает поиск.",
+      "addonsDescription": "Добавьте товары, которые клиенты могут купить в дополнение. Здесь также можно предложить бесплатные товары — например, ресторан может добавить бесплатные напитки. Товар нужно создать до того, как использовать его как дополнение.",
       "addonName": {
-        "label": "Name",
-        "placeholder": "name"
+        "label": "Название",
+        "placeholder": "название"
       },
       "addonMaxSelections": {
-        "label": "Max selections"
+        "label": "Максимум для выбора"
       },
       "addonProducts": {
-        "label": "Products",
-        "placeholder": "Select products..."
+        "label": "Товары",
+        "placeholder": "Выберите товары..."
       },
-      "variantsDescription": "Add variants if this product comes in multiple versions, like different sizes or colors",
+      "variantsDescription": "Добавьте варианты, если у товара есть несколько версий, например разные размеры или цвета",
       "metaCatalogId": {
-        "label": "Meta Catalog ID"
+        "label": "ID в каталоге Meta"
       }
     },
     "inventoryPolicy": {
-      "dont_track": "Don't track inventory",
-      "track": "Track inventory"
+      "dont_track": "Не учитывать остатки",
+      "track": "Учитывать остатки"
     }
   },
   "tiktok": {
@@ -7469,268 +7469,268 @@
     "refreshToken": "Обновить токен"
   },
   "coupons": {
-    "title": "Coupons",
-    "description": "Manage campaign coupon topics, imports, exports, and flow-ready coupon codes.",
-    "singular": "Coupon",
-    "topicCouponsTitle": "Topic Coupons",
+    "title": "Купоны",
+    "description": "Управляйте темами купонов для кампаний, импортом, экспортом и кодами купонов для сценариев.",
+    "singular": "Купон",
+    "topicCouponsTitle": "Купоны темы",
     "tabs": {
-      "topicCoupon": "Topic Coupon",
-      "coupon": "Coupon",
-      "listTopic": "List Topic",
-      "archive": "Archive"
+      "topicCoupon": "Темы купонов",
+      "coupon": "Купоны",
+      "listTopic": "Список тем",
+      "archive": "Архив"
     },
     "topic": {
-      "create": "Create New",
-      "edit": "Edit topic"
+      "create": "Создать",
+      "edit": "Изменить тему"
     },
     "actions": {
-      "import": "Import coupons",
-      "export": "Download Coupon List",
-      "downloadImportTemplate": "Download import template"
+      "import": "Импортировать купоны",
+      "export": "Скачать список купонов",
+      "downloadImportTemplate": "Скачать шаблон импорта"
     },
     "fields": {
-      "topic": "Topic",
-      "selectTopic": "Select topic",
-      "importCsvOnly": "Click or drag .csv file to this area to upload",
-      "allTopics": "All topics",
-      "couponCount": "Coupons",
-      "validity": "Validity period",
-      "unlimited": "Unlimited",
-      "code": "Code",
-      "issueStatus": "Status",
-      "usageStatus": "Usage",
-      "allIssueStatuses": "All statuses",
-      "allUsageStatuses": "All usage",
-      "searchCode": "Search code"
+      "topic": "Тема",
+      "selectTopic": "Выберите тему",
+      "importCsvOnly": "Нажмите или перетащите сюда файл .csv для загрузки",
+      "allTopics": "Все темы",
+      "couponCount": "Купоны",
+      "validity": "Срок действия",
+      "unlimited": "Бессрочно",
+      "code": "Код",
+      "issueStatus": "Статус",
+      "usageStatus": "Использование",
+      "allIssueStatuses": "Все статусы",
+      "allUsageStatuses": "Любое использование",
+      "searchCode": "Поиск по коду"
     },
     "issueStatuses": {
-      "published": "Published",
-      "unpublished": "Unpublished"
+      "published": "Выдан",
+      "unpublished": "Не выдан"
     },
     "usageStatuses": {
-      "used": "Used",
-      "notUsed": "Not used yet"
+      "used": "Использован",
+      "notUsed": "Еще не использован"
     },
     "variables": {
-      "group": "Coupons"
+      "group": "Купоны"
     },
     "messages": {
-      "topicSaved": "Coupon topic saved.",
-      "editLocked": "Name and description are locked after coupons have been created or imported.",
-      "archiveTitle": "Archive coupon topic",
-      "archiveConfirm": "Archive \"{name}\"? It will move to the Archive list.",
-      "archiveBulkConfirm": "Archive {count} selected topics? They will move to the Archive list.",
-      "restoreTitle": "Restore coupon topic",
-      "unarchiveConfirm": "Restore \"{name}\"? It will move back to the Topic list.",
-      "unarchiveBulkConfirm": "Restore {count} selected topics? They will move back to the Topic list.",
-      "deleteTitle": "Delete coupon topic",
-      "deleteConfirm": "Delete this archived topic? Coupon history is preserved.",
-      "empty": "No coupons found.",
-      "importStarted": "Coupon import started.",
-      "exportStarted": "Coupon export started.",
-      "exportFailed": "Coupon export failed.",
-      "exportCount": "{count} coupon rows will be exported."
+      "topicSaved": "Тема купонов сохранена.",
+      "editLocked": "Название и описание нельзя изменить после создания или импорта купонов.",
+      "archiveTitle": "Архивировать тему купонов",
+      "archiveConfirm": "Архивировать «{name}»? Тема переместится в архив.",
+      "archiveBulkConfirm": "Архивировать выбранные темы ({count})? Они переместятся в архив.",
+      "restoreTitle": "Восстановить тему купонов",
+      "unarchiveConfirm": "Восстановить «{name}»? Тема вернется в список тем.",
+      "unarchiveBulkConfirm": "Восстановить выбранные темы ({count})? Они вернутся в список тем.",
+      "deleteTitle": "Удалить тему купонов",
+      "deleteConfirm": "Удалить эту архивную тему? История купонов сохранится.",
+      "empty": "Купоны не найдены.",
+      "importStarted": "Импорт купонов запущен.",
+      "exportStarted": "Экспорт купонов запущен.",
+      "exportFailed": "Не удалось экспортировать купоны.",
+      "exportCount": "Будет экспортировано строк: {count}."
     }
   },
   "productCategories": {
-    "title": "Categories",
-    "loadError": "Unable to load product categories.",
-    "all": "All products",
-    "create": "Create category",
-    "edit": "Rename category",
-    "name": "Category name",
-    "namePlaceholder": "e.g. Summer collection",
-    "parent": "Parent category",
-    "noParent": "None (top level)",
-    "save": "Save",
-    "created": "Category created.",
-    "updated": "Category updated.",
-    "deleted": "Category deleted.",
-    "saveError": "Unable to save this category.",
-    "deleteError": "Unable to delete this category.",
-    "delete": "Delete",
-    "cancel": "Cancel",
-    "actions": "Category actions",
-    "deleteTitle": "Delete “{name}”?",
-    "deleteDescription": "{count, plural, =0 {No products are assigned to this category.} one {# product will move to Uncategorized.} other {# products will move to Uncategorized.}}",
-    "createSub": "Create subcategory",
-    "empty": "No categories yet. Create one to group your products.",
+    "title": "Категории",
+    "loadError": "Не удалось загрузить категории товаров.",
+    "all": "Все товары",
+    "create": "Создать категорию",
+    "edit": "Переименовать категорию",
+    "name": "Название категории",
+    "namePlaceholder": "Например, Летняя коллекция",
+    "parent": "Родительская категория",
+    "noParent": "Нет (верхний уровень)",
+    "save": "Сохранить",
+    "created": "Категория создана.",
+    "updated": "Категория обновлена.",
+    "deleted": "Категория удалена.",
+    "saveError": "Не удалось сохранить категорию.",
+    "deleteError": "Не удалось удалить категорию.",
+    "delete": "Удалить",
+    "cancel": "Отмена",
+    "actions": "Действия с категорией",
+    "deleteTitle": "Удалить «{name}»?",
+    "deleteDescription": "{count, plural, =0 {В этой категории нет товаров.} one {# товар переместится в «Без категории».} few {# товара переместятся в «Без категории».} many {# товаров переместятся в «Без категории».} other {# товара переместятся в «Без категории».}}",
+    "createSub": "Создать подкатегорию",
+    "empty": "Категорий пока нет. Создайте категорию, чтобы сгруппировать товары.",
     "columns": {
-      "name": "Name",
-      "products": "Products",
-      "subcategories": "Subcategories"
+      "name": "Название",
+      "products": "Товары",
+      "subcategories": "Подкатегории"
     },
-    "expand": "Show subcategories",
-    "collapse": "Hide subcategories",
-    "productCount": "{count, plural, =0 {No products} one {# product} other {# products}}",
-    "deleteChildrenWarning": "{count, plural, one {Its # subcategory will be deleted too.} other {Its # subcategories will be deleted too.}}"
+    "expand": "Показать подкатегории",
+    "collapse": "Скрыть подкатегории",
+    "productCount": "{count, plural, =0 {Нет товаров} one {# товар} few {# товара} many {# товаров} other {# товара}}",
+    "deleteChildrenWarning": "{count, plural, one {Также будет удалена # подкатегория.} few {Также будут удалены # подкатегории.} many {Также будут удалены # подкатегорий.} other {Также будут удалены # подкатегории.}}"
   },
   "productImport": {
-    "title": "Import",
-    "mapColumns": "Column mapping",
-    "mapColumnsHint": "Match each product field to a column from your file. Leave a field unmapped to skip it.",
-    "downloadTemplate": "Download template",
-    "upload": "Upload a .csv or .xlsx file",
-    "confirm": "Start import",
-    "started": "Product import started.",
-    "error": "Product import failed.",
-    "notMapped": "Not mapped",
-    "createMissingCategories": "Create categories that do not exist",
+    "title": "Импорт",
+    "mapColumns": "Сопоставление столбцов",
+    "mapColumnsHint": "Сопоставьте каждое поле товара со столбцом из файла. Несопоставленные поля будут пропущены.",
+    "downloadTemplate": "Скачать шаблон",
+    "upload": "Загрузите файл .csv или .xlsx",
+    "confirm": "Начать импорт",
+    "started": "Импорт товаров запущен.",
+    "error": "Не удалось импортировать товары.",
+    "notMapped": "Не сопоставлено",
+    "createMissingCategories": "Создавать отсутствующие категории",
     "fields": {
-      "name": "Product name",
+      "name": "Название товара",
       "sku": "SKU",
-      "price": "Price",
-      "discount": "Discount",
-      "shortDescription": "Short description",
-      "category": "Category",
-      "vendor": "Vendor",
-      "inventoryQuantity": "Inventory quantity",
-      "imageUrl": "Image URL",
-      "productUrl": "Product URL"
+      "price": "Цена",
+      "discount": "Скидка",
+      "shortDescription": "Краткое описание",
+      "category": "Категория",
+      "vendor": "Производитель",
+      "inventoryQuantity": "Остаток",
+      "imageUrl": "URL изображения",
+      "productUrl": "URL товара"
     },
     "template": {
-      "sheetName": "Products",
-      "name": "Product name",
+      "sheetName": "Товары",
+      "name": "Название товара",
       "sku": "SKU",
-      "price": "Price",
-      "discount": "Discount",
-      "shortDescription": "Short description",
-      "category": "Category",
-      "vendor": "Vendor",
-      "inventoryQuantity": "Inventory quantity",
-      "imageUrl": "Image URL",
-      "productUrl": "Product URL",
+      "price": "Цена",
+      "discount": "Скидка",
+      "shortDescription": "Краткое описание",
+      "category": "Категория",
+      "vendor": "Производитель",
+      "inventoryQuantity": "Остаток",
+      "imageUrl": "URL изображения",
+      "productUrl": "URL товара",
       "exampleOne": {
-        "name": "Classic T-shirt",
-        "description": "Soft cotton T-shirt",
-        "category": "Clothing",
-        "vendor": "Example Brand"
+        "name": "Тормозные колодки передние",
+        "description": "Комплект передних тормозных колодок",
+        "category": "Тормозная система",
+        "vendor": "Пример бренда"
       },
       "exampleTwo": {
-        "name": "Canvas tote",
-        "description": "Reusable canvas tote bag",
-        "category": "Accessories",
-        "vendor": "Example Brand"
+        "name": "Масляный фильтр",
+        "description": "Фильтр моторного масла",
+        "category": "Фильтры",
+        "vendor": "Пример бренда"
       }
     }
   },
   "metaCatalog": {
-    "title": "Sync Meta Catalog",
-    "connect": "Connect Meta",
-    "connectDescription": "Connect a Meta Business account to push your products to an existing catalog.",
+    "title": "Синхронизация с каталогом Meta",
+    "connect": "Подключить Meta",
+    "connectDescription": "Подключите аккаунт Meta Business, чтобы выгружать товары в существующий каталог.",
     "tabs": {
-      "sync": "Sync to Meta",
-      "import": "Sync from Meta",
-      "history": "History",
-      "connection": "Connection"
+      "sync": "Выгрузка в Meta",
+      "import": "Загрузка из Meta",
+      "history": "История",
+      "connection": "Подключение"
     },
-    "catalogId": "Meta Catalog ID",
-    "catalogIdPlaceholder": "Enter a Catalog ID from Commerce Manager",
+    "catalogId": "ID каталога Meta",
+    "catalogIdPlaceholder": "Введите ID каталога из Commerce Manager",
     "createCatalog": {
-      "trigger": "Create a new catalog",
-      "description": "An empty commerce catalog will be created in your Business Manager and used for this workspace.",
+      "trigger": "Создать новый каталог",
+      "description": "В вашем Business Manager будет создан пустой торговый каталог для этого пространства.",
       "business": "Business Manager",
-      "businessPlaceholder": "Select a Business Manager",
-      "noBusinesses": "This Meta account does not manage any Business Manager, so a catalog cannot be created here.",
-      "name": "Catalog name",
-      "confirm": "Create catalog",
-      "created": "Catalog created.",
+      "businessPlaceholder": "Выберите Business Manager",
+      "noBusinesses": "Этот аккаунт Meta не управляет ни одним Business Manager, поэтому создать каталог здесь нельзя.",
+      "name": "Название каталога",
+      "confirm": "Создать каталог",
+      "created": "Каталог создан.",
       "errors": {
-        "businesses": "Unable to load your Business Managers.",
-        "create": "Unable to create the catalog."
+        "businesses": "Не удалось загрузить ваши Business Manager.",
+        "create": "Не удалось создать каталог."
       }
     },
-    "importDescription": "Pull products from a Meta catalog into your workspace. Find the ID in Commerce Manager.",
-    "importCatalogAction": "Import",
-    "importProgress": "Importing Meta products: {imported}/{total}",
-    "importQueued": "Waiting for the import to start…",
-    "importResult": "Imported {imported} of {total} Meta products",
-    "retryImport": "Retry import",
-    "syncNow": "Sync now",
-    "syncSelectionRequired": "Select the products you want to push, then run the sync.",
-    "syncSelectionCount": "{count} selected products will be pushed to Meta Catalog.",
+    "importDescription": "Загрузите товары из каталога Meta в пространство. ID можно найти в Commerce Manager.",
+    "importCatalogAction": "Импортировать",
+    "importProgress": "Импорт товаров Meta: {imported}/{total}",
+    "importQueued": "Ожидание запуска импорта…",
+    "importResult": "Импортировано товаров Meta: {imported} из {total}",
+    "retryImport": "Повторить импорт",
+    "syncNow": "Синхронизировать",
+    "syncSelectionRequired": "Выберите товары для выгрузки и запустите синхронизацию.",
+    "syncSelectionCount": "Товаров к выгрузке в каталог Meta: {count}.",
     "connectionInfo": {
-      "heading": "Connected Meta catalog",
-      "noCatalog": "No catalog selected yet",
-      "lastCatalogId": "Last Meta Catalog ID",
-      "businessId": "Business ID",
-      "authMode": "Authorization",
-      "tokenExpiresAt": "Token expires",
-      "lastImportedAt": "Last import",
-      "unknown": "Not available",
-      "never": "Never",
-      "noExpiry": "Does not expire",
+      "heading": "Подключенный каталог Meta",
+      "noCatalog": "Каталог еще не выбран",
+      "lastCatalogId": "Последний ID каталога Meta",
+      "businessId": "ID компании",
+      "authMode": "Авторизация",
+      "tokenExpiresAt": "Токен истекает",
+      "lastImportedAt": "Последний импорт",
+      "unknown": "Нет данных",
+      "never": "Никогда",
+      "noExpiry": "Бессрочно",
       "authModes": {
         "oauth": "OAuth",
         "fbe": "Facebook Business Extension"
       },
       "connectionStatuses": {
-        "active": "Active",
-        "invalid": "Needs reconnect"
+        "active": "Активно",
+        "invalid": "Нужно переподключить"
       }
     },
-    "disconnect": "Disconnect",
-    "reconnect": "Reconnect",
-    "reconnectWarning": "The Meta token is invalid or expires within seven days.",
+    "disconnect": "Отключить",
+    "reconnect": "Переподключить",
+    "reconnectWarning": "Токен Meta недействителен или истекает в течение семи дней.",
     "requirements": {
-      "intro": "Products synced to Messenger Shopping must meet these requirements:",
+      "intro": "Товары для Messenger Shopping должны соответствовать требованиям:",
       "description": {
-        "label": "Detailed description",
-        "value": "Beyond the title, cover specifications, materials, use cases, and standout features."
+        "label": "Подробное описание",
+        "value": "Помимо названия, укажите характеристики, материалы, сценарии использования и ключевые особенности."
       },
       "image": {
-        "label": "Product image",
-        "value": "High resolution of at least 500px × 500px, file size up to 8MB."
+        "label": "Изображение товара",
+        "value": "Высокое разрешение — не менее 500 × 500 пикселей, размер файла до 8 МБ."
       },
       "video": {
-        "label": "Product video",
-        "value": "File size up to 200MB."
+        "label": "Видео товара",
+        "value": "Размер файла до 200 МБ."
       },
       "price": {
-        "label": "Price",
-        "value": "Every product must carry a price."
+        "label": "Цена",
+        "value": "У каждого товара должна быть цена."
       },
-      "minimumItems": "Publish at least 6 items so customers have enough to choose from."
+      "minimumItems": "Опубликуйте не менее 6 товаров, чтобы клиентам было из чего выбрать."
     },
-    "historyEmpty": "No sync or import has run yet.",
-    "historyFailures": "{failed} failed · {skipped} skipped",
-    "historyCatalog": "Catalog {id}",
-    "diagnostics": "Error and skipped-item details",
-    "itemError": "Item {id}: {reason}",
-    "itemSkipped": "Item {id}: skipped — {reason}",
+    "historyEmpty": "Синхронизаций и импортов еще не было.",
+    "historyFailures": "Ошибок: {failed} · пропущено: {skipped}",
+    "historyCatalog": "Каталог {id}",
+    "diagnostics": "Подробности об ошибках и пропущенных товарах",
+    "itemError": "Товар {id}: {reason}",
+    "itemSkipped": "Товар {id}: пропущен — {reason}",
     "skipReasons": {
-      "missingImage": "missing image",
-      "missingDescription": "missing description",
-      "missingStoreUrl": "store URL is not configured",
-      "hasVariants": "variants are not supported yet"
+      "missingImage": "нет изображения",
+      "missingDescription": "нет описания",
+      "missingStoreUrl": "не настроен URL магазина",
+      "hasVariants": "варианты пока не поддерживаются"
     },
     "statuses": {
-      "queued": "Queued",
-      "running": "Running",
-      "succeeded": "Succeeded",
-      "partial": "Partially completed",
-      "failed": "Failed"
+      "queued": "В очереди",
+      "running": "Выполняется",
+      "succeeded": "Выполнено",
+      "partial": "Выполнено частично",
+      "failed": "Ошибка"
     },
     "directions": {
-      "push": "Pushed to Meta",
-      "import": "Imported from Meta"
+      "push": "Выгружено в Meta",
+      "import": "Импортировано из Meta"
     },
     "messages": {
-      "catalogSelected": "Catalog import started.",
-      "syncStarted": "Meta Catalog sync started.",
-      "disconnected": "Meta Catalog disconnected."
+      "catalogSelected": "Импорт каталога запущен.",
+      "syncStarted": "Синхронизация с каталогом Meta запущена.",
+      "disconnected": "Каталог Meta отключен."
     },
     "errors": {
-      "load": "Unable to load Meta Catalog settings.",
-      "connect": "Unable to connect Meta Catalog.",
-      "catalog": "Unable to select this catalog.",
-      "sync": "Unable to start catalog sync.",
-      "disconnect": "Unable to disconnect Meta Catalog.",
-      "invalidAppSettings": "Meta app settings are not configured.",
-      "emptyScope": "The selected sync scope has no products.",
-      "alreadyRunning": "A Meta Catalog sync or import is already running. Wait for it to finish.",
-      "queueImport": "Unable to queue the Meta Catalog import.",
-      "queueSync": "Unable to queue the Meta Catalog sync."
+      "load": "Не удалось загрузить настройки каталога Meta.",
+      "connect": "Не удалось подключить каталог Meta.",
+      "catalog": "Не удалось выбрать этот каталог.",
+      "sync": "Не удалось запустить синхронизацию каталога.",
+      "disconnect": "Не удалось отключить каталог Meta.",
+      "invalidAppSettings": "Настройки приложения Meta не заданы.",
+      "emptyScope": "В выбранной области синхронизации нет товаров.",
+      "alreadyRunning": "Синхронизация или импорт каталога Meta уже выполняется. Дождитесь завершения.",
+      "queueImport": "Не удалось поставить импорт каталога Meta в очередь.",
+      "queueSync": "Не удалось поставить синхронизацию каталога Meta в очередь."
     }
   },
   "helpMenu": {
