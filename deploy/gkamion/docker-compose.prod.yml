@@ -41,14 +41,19 @@ services:
       dockerfile: apps/worker/docker/Dockerfile
     mem_limit: 3g
 
+  # partykit binds every interface regardless of HOSTNAME, so realtime runs on
+  # a bridge network and is published on loopback only. It needs no infra —
+  # just REALTIME_BROADCAST_SECRET and the public builder URL.
   realtime:
     <<: *app
+    network_mode: bridge
     image: ghcr.io/blackshaytan/chatbotx-gkamion-realtime:latest
     build:
       context: ../..
       dockerfile: apps/realtime/docker/Dockerfile
+    ports:
+      - "127.0.0.1:1999:1999"
     environment:
-      HOSTNAME: 127.0.0.1
       PORT: "1999"
     mem_limit: 1g
 
