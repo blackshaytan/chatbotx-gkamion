@@ -41,6 +41,15 @@ All checks run on GitHub (`gkamion-checks.yml`); the VPS shares its memory with 
 - `messages.sentAttachments`: `i18n-check` requires the `one` branch to match English, which has a literal «1» and no `#`, so Russian uses «1 вложение» in that branch. Counts of 21, 31, … attachments would read «1 вложение». A single message never carries that many attachments.
 - The strict ICU test compared nested ICU nodes one occurrence at a time, which rejected correct Russian plurals with extra branches. It now compares per argument.
 
-## Known gap
+## Hardcoded strings (plan task 18)
 
-Some UI text is hardcoded in English in components rather than taken from the catalog. A rough scan found about 160 places. They are mostly the data-table defaults in `packages/ui` («No results.», «Rows per page», «Page 1 of 0», «row(s) selected»), «Actions» column headers, and some placeholders. These strings stay English in every locale until they are moved into the catalog.
+`pnpm --filter builder i18n:hardcoded` scans components for English text that does not come from the catalog. It found 1126 places before the work and 969 after.
+
+- Shared components in `packages/ui` (table pagination, column menu, filters, dialogs, sidebar, pickers, upload button) read their labels from `UiLabelsProvider`. The builder fills it from `uiLabels.*` in `UiLabelsBridge`. Without the provider the components keep their English defaults.
+- Builder components now use catalog keys for «Actions» columns, «Open menu» and «Delete selected rows» buttons, «No data», loading fallbacks, the error page, WhatsApp profile fields, flow step viewers and the message input buttons.
+- Language lists in WhatsApp and Messenger templates are named through `Intl.DisplayNames` in the interface language («Арабский (Египет)»). English keeps the original labels.
+
+The remaining hits are intentionally left alone: server error and API texts, brands, URL and code examples, default content (e.g. a new button's «Button» label), platform admin credential labels, and page metadata of public end-customer pages. The language list of the contact filter is also still English, as is the country list next to it.
+
+![Contacts table](ru-translation/contacts-table.png)
+![Triggers table](ru-translation/triggers-table.png)
