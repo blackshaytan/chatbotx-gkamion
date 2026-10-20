@@ -61,6 +61,9 @@
 | Live chat | Живой чат |
 | Handover | Передача оператору |
 | Assign / Unassigned | Назначить / Не назначен |
+| Follow up (статус диалога) | На контроле; Mark as / Remove from — Поставить на контроль / Снять с контроля |
+| Upgrade (тариф) | Сменить тариф |
+| Opportunity | Сделка |
 | Template | Шаблон |
 | Webhook | Вебхук |
 | API token | API-токен |
