@@ -43,6 +43,31 @@ describe("i18n catalog helpers", () => {
     expect(result.errors).toHaveLength(3)
   })
 
+  test("requires Russian plural branches", () => {
+    const pluralEnglish = {
+      "p.count": "{count, plural, one {# item} other {# items}}",
+    }
+    const missing = mergeTranslations({
+      english: pluralEnglish,
+      target: pluralEnglish,
+      sameAsEnglish: [],
+      translations: {
+        "p.count": "{count, plural, one {# элемент} other {# элементов}}",
+      },
+    })
+    expect(missing.errors).toHaveLength(1)
+    const complete = mergeTranslations({
+      english: pluralEnglish,
+      target: pluralEnglish,
+      sameAsEnglish: [],
+      translations: {
+        "p.count":
+          "{count, plural, one {# элемент} few {# элемента} many {# элементов} other {# элемента}}",
+      },
+    })
+    expect(complete.errors).toEqual([])
+  })
+
   test("records identical translations in the same-as-English list", () => {
     const result = mergeTranslations({
       english: flatEnglish,

@@ -44,8 +44,16 @@ const simplePlaceholderPattern = /\{[A-Za-z][\w.-]*\}/g
 const icuArgumentPattern =
   /\{[A-Za-z][\w.-]*,\s*(plural|select|selectordinal)\s*,/
 
+const pluralArgumentPattern = /\{[A-Za-z][\w.-]*,\s*plural\s*,/
+const russianPluralBranchPatterns = [/\bone\s*\{/, /\bfew\s*\{/, /\bmany\s*\{/]
+
 const simplePlaceholders = (value: string) =>
   [...(value.match(simplePlaceholderPattern) ?? [])].sort().join()
+
+const isMissingRussianPluralBranches = (englishValue: string, value: string) =>
+  pluralArgumentPattern.test(englishValue) &&
+  value !== englishValue &&
+  russianPluralBranchPatterns.some((pattern) => !pattern.test(value))
 
 export const listPendingKeys = (props: {
   english: FlatCatalog
@@ -93,6 +101,10 @@ export const mergeTranslations = (props: {
       simplePlaceholders(value) !== simplePlaceholders(englishValue)
     ) {
       errors.push(`${key}: placeholders differ from English`)
+      continue
+    }
+    if (isMissingRussianPluralBranches(englishValue, value)) {
+      errors.push(`${key}: plural needs one, few and many branches`)
       continue
     }
     target[key] = value

@@ -57,9 +57,9 @@ const printPending = (batchId: string | undefined, limitArg?: string) => {
   )
 }
 
-const mergeFile = (file: string | undefined) => {
+const mergeFile = (file: string | undefined, isDryRun: boolean) => {
   if (!file) {
-    return fail("Usage: merge <translated.json>")
+    return fail("Usage: merge|check <translated.json>")
   }
   const result = mergeTranslations({
     english,
@@ -69,6 +69,10 @@ const mergeFile = (file: string | undefined) => {
   })
   if (result.errors.length > 0) {
     return fail(result.errors.join("\n"))
+  }
+  if (isDryRun) {
+    process.stdout.write("OK.\n")
+    return
   }
   writeJson(russianUrl, buildCatalogLike(englishCatalog, result.target))
   writeJson(sameAsEnglishUrl, result.sameAsEnglish)
@@ -91,10 +95,12 @@ const limitArg = limitIndex === -1 ? undefined : rest[limitIndex + 1]
 
 if (command === "pending") {
   printPending(firstArg, limitArg)
-} else if (command === "merge") {
-  mergeFile(firstArg)
+} else if (command === "merge" || command === "check") {
+  mergeFile(firstArg, command === "check")
 } else if (command === "status") {
   printStatus()
 } else {
-  fail("Usage: i18n:ru pending <batch> [--limit N] | merge <file> | status")
+  fail(
+    "Usage: i18n:ru pending <batch> [--limit N] | merge <file> | check <file> | status",
+  )
 }
