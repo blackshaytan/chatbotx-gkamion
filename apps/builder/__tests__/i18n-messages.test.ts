@@ -117,9 +117,29 @@ const findStrictPluralCategoryErrors = (props: {
       .filter((category) => !props.translated.includes(category))
       .map((category) => `missing ${category}`),
     ...props.translated
-      .filter((category) => !allowed.has(category))
+      .filter(
+        (category) => !(allowed.has(category) || category.startsWith("=")),
+      )
       .map((category) => `unexpected ${category}`),
   ]
+}
+
+// Extra plural branches repeat nested ICU arguments, so strict locales are
+// compared per argument instead of per occurrence.
+const groupIcuStructures = (structures: IcuStructure[]) => {
+  const groups = new Map<string, Set<string>>()
+  for (const { argument, keyword, categories } of structures) {
+    const groupKey = `${argument}:${keyword}`
+    const group = groups.get(groupKey) ?? new Set<string>()
+    for (const category of categories) {
+      group.add(category)
+    }
+    groups.set(groupKey, group)
+  }
+  return [...groups].map(([groupKey, categories]) => ({
+    groupKey,
+    categories: [...categories].sort(),
+  }))
 }
 
 const expectIcuStructuresMatch = (props: {
@@ -133,21 +153,22 @@ const expectIcuStructuresMatch = (props: {
     expect(props.translated, props.key).toEqual(props.english)
     return
   }
-  const shape = (structures: IcuStructure[]) =>
-    structures.map(({ argument, keyword }) => ({ argument, keyword }))
-  expect(shape(props.translated), props.key).toEqual(shape(props.english))
-  props.english.forEach((englishStructure, index) => {
-    const translatedCategories = props.translated[index]?.categories ?? []
-    if (englishStructure.keyword !== "plural") {
-      expect(translatedCategories, props.key).toEqual(
-        englishStructure.categories,
-      )
+  const englishGroups = groupIcuStructures(props.english)
+  const translatedGroups = groupIcuStructures(props.translated)
+  expect(
+    translatedGroups.map(({ groupKey }) => groupKey),
+    props.key,
+  ).toEqual(englishGroups.map(({ groupKey }) => groupKey))
+  englishGroups.forEach((englishGroup, index) => {
+    const translatedCategories = translatedGroups[index]?.categories ?? []
+    if (!englishGroup.groupKey.endsWith(":plural")) {
+      expect(translatedCategories, props.key).toEqual(englishGroup.categories)
       return
     }
     expect(
       findStrictPluralCategoryErrors({
         locale: props.locale,
-        english: englishStructure.categories,
+        english: englishGroup.categories,
         translated: translatedCategories,
       }),
       props.key,
@@ -171,6 +192,16 @@ describe("strict plural categories", () => {
         translated: ["one", "other", "two"],
       }),
     ).toEqual(["missing few", "missing many", "missing =0", "unexpected two"])
+  })
+
+  test("extra exact branches are allowed", () => {
+    expect(
+      findStrictPluralCategoryErrors({
+        locale: "ru",
+        english: ["one", "other"],
+        translated: ["=1", "one", "few", "many", "other"],
+      }),
+    ).toEqual([])
   })
 })
 
