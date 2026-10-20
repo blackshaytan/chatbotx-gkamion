@@ -950,7 +950,29 @@
       "lastError": "Last error"
     },
     "drom": {
-      "label": "DROM"
+      "label": "DROM",
+      "sellerLogin": "Seller login",
+      "cookies": "Cookies",
+      "cookiesHint": "Paste the cookies exported with Cookie-Editor (JSON) or a Cookie header.",
+      "connectInstructions": {
+        "step1": "Sign in to baza.drom.ru as the seller in your browser.",
+        "step2": "Export the cookies of drom.ru with the Cookie-Editor extension (Export → JSON).",
+        "step3": "Paste them below together with your seller login. The channel is created switched off."
+      },
+      "updateCookies": "Update cookies",
+      "enabled": "Receiving and sending",
+      "enabledHint": "While switched off ChatbotX does not poll DROM, so another system can serve this seller.",
+      "status": {
+        "connected": "On",
+        "paused": "Off",
+        "needs_reauth": "Cookies expired",
+        "degraded": "Problem",
+        "disconnected": "Disconnected"
+      },
+      "switchedOn": "DROM channel is on",
+      "switchedOff": "DROM channel is off",
+      "lastPolledAt": "Last poll",
+      "lastError": "Last error"
     },
     "matchAll": {
       "label": "Correspondre à toutes les conditions ci-dessous"

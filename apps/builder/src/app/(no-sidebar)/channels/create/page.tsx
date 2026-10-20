@@ -4,6 +4,7 @@ import { getIdFromParams } from "@chatbotx.io/utils"
 import { notFound, redirect } from "next/navigation"
 import InboxSelectCard from "@/features/inboxes/components/inbox-select-card"
 import { CreateApiForm } from "@/features/integration-api/components/create-api-form"
+import { DromConnect } from "@/features/integration-drom/components/drom-connect"
 import { InstagramLoginSelect } from "@/features/integration-instagram/components/instagram-login-select"
 import { MaxConnect } from "@/features/integration-max/components/max-connect"
 import { TelegramConnect } from "@/features/integration-telegram/components/telegram-connect"
@@ -36,7 +37,11 @@ type CreateChannelPageProps = {
   }>
 }
 
-const WORKSPACE_REQUIRED_CHANNELS: readonly ChannelType[] = ["max", "zzap"]
+const WORKSPACE_REQUIRED_CHANNELS: readonly ChannelType[] = [
+  "max",
+  "zzap",
+  "drom",
+]
 
 export default async function CreateChannelPage(props: CreateChannelPageProps) {
   const searchParams = await props.searchParams
@@ -82,6 +87,10 @@ export default async function CreateChannelPage(props: CreateChannelPageProps) {
 
   if (selectedChannel === "zzap" && isVisible("zzap") && workspaceId) {
     return <ZzapConnect autoOpen={true} workspaceId={workspaceId} />
+  }
+
+  if (selectedChannel === "drom" && isVisible("drom") && workspaceId) {
+    return <DromConnect autoOpen={true} workspaceId={workspaceId} />
   }
 
   if (selectedChannel === "webchat" && isVisible("webchat")) {
