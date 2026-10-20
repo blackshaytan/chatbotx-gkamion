@@ -267,7 +267,7 @@ export default function FileDropzone({
                 }
               />
               <TooltipContent>
-                <p>Upload File</p>
+                <p>{t("actions.uploadFile")}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

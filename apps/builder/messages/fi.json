@@ -157,7 +157,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "Näytä ajot",
-    "editSchedule": "Muokkaa aikataulua"
+    "editSchedule": "Muokkaa aikataulua",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "Sinun täytyy olla työtilan pääylläpitäjä tehdäksesi tämän."
@@ -182,16 +185,22 @@
     "defaultAgent": "Oletusagentti",
     "description": "Hallitse ja määritä AI-agentteja, jotka tehostavat työtilasi ominaisuuksia älykkäällä automaatiolla ja vastauksilla.",
     "title": "AI-agentit",
-    "name": "Agentit"
+    "name": "Agentit",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "Anna agenteillesi pääsy PDF-tiedostoihin, asiakirjoihin ja muuhun sisältöön",
     "title": "Tietämys",
-    "noEmbeddingProvider": "Upotuspalveluntarjoajaa ei ole määritetty. AI-tiedostojen upotukset edellyttävät OpenAI- tai Gemini-integraatiota. DeepSeek ja Claude eivät tue upotusmalleja."
+    "noEmbeddingProvider": "Upotuspalveluntarjoajaa ei ole määritetty. AI-tiedostojen upotukset edellyttävät OpenAI- tai Gemini-integraatiota. DeepSeek ja Claude eivät tue upotusmalleja.",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "Määritä LLM-toimintoja, jotka tekevät AI-agentistasi älykkäämmän",
-    "title": "AI-toiminnot"
+    "title": "AI-toiminnot",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "Yhdistä AI ulkoisiin järjestelmiin MCP:n kautta",
@@ -2840,6 +2849,13 @@
       "productsSelected": "{count, plural, one {# tuote} other {# tuotetta}}",
       "noneSelected": "Ei vielä tuotteita",
       "sendFailed": "Tuotteita ei voitu lähettää."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -3868,7 +3884,13 @@
     },
     "referredProduct": {
       "askedAbout": "Kysyi tästä tuotteesta"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "Tämän integraation avulla voit luoda Instagram-botteja.",
@@ -4204,7 +4226,8 @@
       "sessionExpired": "Kirjautumisyritys vanheni. Yritä uudelleen.",
       "accessDenied": "Kirjautuminen peruutettiin.",
       "generic": "Kirjautuminen epäonnistui. Yritä uudelleen."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "Sähköpostiaiheet"
@@ -4809,7 +4832,16 @@
         "callInformation": "Puhelun tiedot"
       }
     },
-    "credentialSecretsRequired": "Anna sovelluksen salaisuus ja järjestelmäkäyttäjän tunnus. Niitä ei ole vielä tallennettu."
+    "credentialSecretsRequired": "Anna sovelluksen salaisuus ja järjestelmäkäyttäjän tunnus. Niitä ei ole vielä tallennettu.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -4832,7 +4864,8 @@
     "chatbotInvitationDescription1": "Liity kohteeseen {chatbotName}",
     "chatbotInvitationDescription2": "{userName} on kutsunut sinut liittymään kohteeseen {chatbotName}.",
     "invalidInvitation": "Tämä kutsu on virheellinen tai vanhentunut.",
-    "workspaceUnavailable": "Tämä työtila ei ole enää käytettävissä."
+    "workspaceUnavailable": "Tämä työtila ei ole enää käytettävissä.",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -4840,7 +4873,9 @@
       "enabled": "Käytössä",
       "disabled": "Pois käytöstä",
       "description": "Kun tämä on käytössä, botti merkitsee omat viestinsä automaattisesti luetuiksi"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "Saapuneet-tiimit"
@@ -5368,7 +5403,12 @@
     "title": "Käynnistimet"
   },
   "users": {
-    "title": "Käyttäjät"
+    "title": "Käyttäjät",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "Sekvenssit",
@@ -5454,7 +5494,8 @@
     "friday": "Perjantai",
     "saturday": "Lauantai",
     "sunday": "Sunnuntai",
-    "afterText": "Jälkeen"
+    "afterText": "Jälkeen",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "Työkalut",
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "Nämä tiedostot poistetaan pysyvästi palvelimelta. Tätä toimintoa ei voi kumota.",
     "filesCount": "{count, plural, =0 {Ei tiedostoja} =1 {1 tiedosto} other {# tiedostoa}}",
     "openMediaLibrary": "Avaa mediakirjasto",
-    "uploadFailed": "Tiedoston {name} lataus epäonnistui"
+    "uploadFailed": "Tiedoston {name} lataus epäonnistui",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "Mainokset",
@@ -9010,5 +9052,50 @@
       "showLess": "Näytä vähemmän",
       "clearAll": "Tyhjennä kaikki"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

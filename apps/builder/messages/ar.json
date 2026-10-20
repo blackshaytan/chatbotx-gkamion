@@ -157,7 +157,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "عرض عمليات التشغيل",
-    "editSchedule": "تعديل الجدول"
+    "editSchedule": "تعديل الجدول",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "يجب أن تكون مسؤولًا فائقًا لمساحة العمل للقيام بذلك."
@@ -182,16 +185,22 @@
     "defaultAgent": "الوكيل الافتراضي",
     "description": "إدارة وتهيئة وكلاء الذكاء الاصطناعي لتعزيز قدرات مساحة عملك بالأتمتة الذكية والردود.",
     "title": "وكلاء الذكاء الاصطناعي",
-    "name": "الوكلاء"
+    "name": "الوكلاء",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "امنح وكلاءك إمكانية الوصول إلى ملفات PDF والمستندات والمزيد",
     "title": "المعرفة",
-    "noEmbeddingProvider": "لم يتم تهيئة مزود تضمين. تتطلب تضمينات ملفات الذكاء الاصطناعي تكامل OpenAI أو Gemini. لا يدعم DeepSeek وClaude نماذج التضمين."
+    "noEmbeddingProvider": "لم يتم تهيئة مزود تضمين. تتطلب تضمينات ملفات الذكاء الاصطناعي تكامل OpenAI أو Gemini. لا يدعم DeepSeek وClaude نماذج التضمين.",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "تهيئة وظائف نماذج اللغة الكبيرة لجعل وكيل الذكاء الاصطناعي أكثر ذكاءً",
-    "title": "وظائف الذكاء الاصطناعي"
+    "title": "وظائف الذكاء الاصطناعي",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "ربط الذكاء الاصطناعي بالأنظمة الخارجية عبر MCP",
@@ -2986,6 +2995,13 @@
       "productsSelected": "{count, plural, one {# منتج} other {# منتجات}}",
       "noneSelected": "لا توجد منتجات بعد",
       "sendFailed": "تعذّر إرسال المنتجات."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -3868,7 +3884,13 @@
     },
     "referredProduct": {
       "askedAbout": "سأل عن هذا المنتج"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "يتيح لك هذا التكامل إنشاء بوتات Instagram.",
@@ -4204,7 +4226,8 @@
       "sessionExpired": "انتهت صلاحية محاولة تسجيل الدخول. يرجى المحاولة مرة أخرى.",
       "accessDenied": "تم إلغاء تسجيل الدخول.",
       "generic": "فشل تسجيل الدخول. يرجى المحاولة مرة أخرى."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "موضوعات البريد الإلكتروني"
@@ -4809,7 +4832,16 @@
         "callInformation": "معلومات المكالمة"
       }
     },
-    "credentialSecretsRequired": "أدخل سر التطبيق ورمز مستخدم النظام. لم يتم تخزينهما بعد."
+    "credentialSecretsRequired": "أدخل سر التطبيق ورمز مستخدم النظام. لم يتم تخزينهما بعد.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -4832,7 +4864,8 @@
     "chatbotInvitationDescription1": "الانضمام إلى {chatbotName}",
     "chatbotInvitationDescription2": "دعاك {userName} للانضمام إلى {chatbotName}.",
     "invalidInvitation": "هذه الدعوة غير صالحة أو انتهت صلاحيتها.",
-    "workspaceUnavailable": "مساحة العمل هذه لم تعد متاحة."
+    "workspaceUnavailable": "مساحة العمل هذه لم تعد متاحة.",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -4840,7 +4873,9 @@
       "enabled": "مفعّل",
       "disabled": "معطّل",
       "description": "عند التفعيل، يقوم البوت تلقائيًا بوضع علامة مقروءة على رسائله"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "فرق صندوق الوارد"
@@ -5368,7 +5403,12 @@
     "title": "المشغّلات"
   },
   "users": {
-    "title": "المستخدمون"
+    "title": "المستخدمون",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "التسلسلات",
@@ -5454,7 +5494,8 @@
     "friday": "الجمعة",
     "saturday": "السبت",
     "sunday": "الأحد",
-    "afterText": "بعد"
+    "afterText": "بعد",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "الأدوات",
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "سيتم حذف هذه الملفات نهائيًا من الخادم. لا يمكن التراجع عن هذا الإجراء.",
     "filesCount": "{count, plural, =0 {لا توجد ملفات} =1 {ملف واحد} other {# ملفات}}",
     "openMediaLibrary": "فتح مكتبة الوسائط",
-    "uploadFailed": "فشل رفع {name}"
+    "uploadFailed": "فشل رفع {name}",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "الإعلانات",
@@ -9010,5 +9052,50 @@
       "showLess": "عرض أقل",
       "clearAll": "مسح الكل"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

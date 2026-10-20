@@ -98,7 +98,7 @@ export function DeleteFieldsDialog({
             }
           />
           <Button
-            aria-label="Delete selected rows"
+            aria-label={t("actions.deleteSelectedRows")}
             disabled={isPending}
             onClick={() => execute({ ids: records.map((r) => r.id) })}
             size="sm"

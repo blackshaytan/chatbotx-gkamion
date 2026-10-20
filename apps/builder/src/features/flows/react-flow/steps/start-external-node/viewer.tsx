@@ -27,7 +27,7 @@ const StartExternalNodeStepViewer = ({
     >
       {targetFlow && (
         <div className="flex flex-col">
-          <div>Flow: {targetFlow.label}</div>
+          <div>{t("flows.viewer.flow", { name: targetFlow.label })}</div>
         </div>
       )}
     </BaseStepViewer>

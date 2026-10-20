@@ -157,7 +157,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "Durchläufe anzeigen",
-    "editSchedule": "Zeitplan bearbeiten"
+    "editSchedule": "Zeitplan bearbeiten",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "Sie müssen Super-Administrator des Arbeitsbereichs sein, um dies zu tun."
@@ -182,16 +185,22 @@
     "defaultAgent": "Standard-Agent",
     "description": "Verwalten und konfigurieren Sie KI-Agenten, um die Funktionen Ihres Arbeitsbereichs durch intelligente Automatisierung und Antworten zu erweitern.",
     "title": "KI-Agenten",
-    "name": "Agenten"
+    "name": "Agenten",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "Geben Sie Ihren Agenten Zugriff auf PDFs, Dokumente und mehr",
     "title": "Wissensdatenbank",
-    "noEmbeddingProvider": "Kein Embedding-Anbieter konfiguriert. KI-Datei-Embeddings erfordern eine OpenAI- oder Gemini-Integration. DeepSeek und Claude unterstützen keine Embedding-Modelle."
+    "noEmbeddingProvider": "Kein Embedding-Anbieter konfiguriert. KI-Datei-Embeddings erfordern eine OpenAI- oder Gemini-Integration. DeepSeek und Claude unterstützen keine Embedding-Modelle.",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "Konfigurieren Sie LLM-Funktionen, um Ihren KI-Agenten intelligenter zu machen",
-    "title": "KI-Funktionen"
+    "title": "KI-Funktionen",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "KI über MCP mit externen Systemen verbinden",
@@ -2840,6 +2849,13 @@
       "productsSelected": "{count, plural, one {# Produkt} other {# Produkte}}",
       "noneSelected": "Noch keine Produkte",
       "sendFailed": "Die Produkte konnten nicht gesendet werden."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -3868,7 +3884,13 @@
     },
     "referredProduct": {
       "askedAbout": "Hat nach diesem Produkt gefragt"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "Mit dieser Integration können Sie Instagram-Bots erstellen.",
@@ -4204,7 +4226,8 @@
       "sessionExpired": "Der Anmeldeversuch ist abgelaufen. Bitte versuche es erneut.",
       "accessDenied": "Die Anmeldung wurde abgebrochen.",
       "generic": "Anmeldung fehlgeschlagen. Bitte versuche es erneut."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "E-Mail-Themen"
@@ -4809,7 +4832,16 @@
         "callInformation": "Anrufinformationen"
       }
     },
-    "credentialSecretsRequired": "Gib das App-Geheimnis und das Systembenutzer-Token ein. Sie sind noch nicht gespeichert."
+    "credentialSecretsRequired": "Gib das App-Geheimnis und das Systembenutzer-Token ein. Sie sind noch nicht gespeichert.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -4832,7 +4864,8 @@
     "chatbotInvitationDescription1": "{chatbotName} beitreten",
     "chatbotInvitationDescription2": "{userName} hat Sie eingeladen, {chatbotName} beizutreten.",
     "invalidInvitation": "Diese Einladung ist ungültig oder abgelaufen.",
-    "workspaceUnavailable": "Dieser Arbeitsbereich ist nicht mehr verfügbar."
+    "workspaceUnavailable": "Dieser Arbeitsbereich ist nicht mehr verfügbar.",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -4840,7 +4873,9 @@
       "enabled": "Aktiviert",
       "disabled": "Deaktiviert",
       "description": "Wenn aktiviert, markiert der Bot seine eigenen Nachrichten automatisch als gelesen"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "Posteingangsteams"
@@ -5368,7 +5403,12 @@
     "title": "Trigger"
   },
   "users": {
-    "title": "Benutzer"
+    "title": "Benutzer",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "Sequenzen",
@@ -5454,7 +5494,8 @@
     "friday": "Freitag",
     "saturday": "Samstag",
     "sunday": "Sonntag",
-    "afterText": "Nach"
+    "afterText": "Nach",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "Tools",
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "Diese Dateien werden dauerhaft vom Server gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
     "filesCount": "{count, plural, =0 {Keine Dateien} =1 {1 Datei} other {# Dateien}}",
     "openMediaLibrary": "Medienbibliothek öffnen",
-    "uploadFailed": "Hochladen von {name} fehlgeschlagen"
+    "uploadFailed": "Hochladen von {name} fehlgeschlagen",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "Anzeigen",
@@ -9010,5 +9052,50 @@
       "showLess": "Weniger anzeigen",
       "clearAll": "Alle löschen"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

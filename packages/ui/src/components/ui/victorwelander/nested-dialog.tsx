@@ -6,6 +6,7 @@ import * as React from "react";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { X } from "lucide-react";
 import { cn } from "@chatbotx.io/ui/lib/utils";
+import { UiLabelText } from "@chatbotx.io/ui/components/ui-labels"
 
 interface DialogContextValue {
   innerOpen: boolean;
@@ -70,7 +71,7 @@ const DialogContent = React.forwardRef<
         {children}
         <DialogClose className="absolute end-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-popup-open:bg-accent data-popup-open:text-muted-foreground">
           <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only"><UiLabelText name="close" /></span>
         </DialogClose>
       </DialogPrimitive.Popup>
     </DialogPortal>
@@ -188,7 +189,7 @@ const InnerDialogContent = React.forwardRef<
           <div ref={contentRef}>{children}</div>
           <InnerDialogClose className="absolute end-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-popup-open:bg-accent data-popup-open:text-muted-foreground">
             <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only"><UiLabelText name="close" /></span>
           </InnerDialogClose>
         </DialogPrimitive.Popup>
       </DialogPortal>

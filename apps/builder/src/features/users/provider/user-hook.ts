@@ -1,6 +1,7 @@
 import type { SelectOption } from "@chatbotx.io/ui/components/form/select-field"
 import type { MultiSelectGroup } from "@chatbotx.io/ui/components/ui/sersavan/multi-select"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useTranslations } from "next-intl"
 import { useCallback, useMemo } from "react"
 import { useWorkspaceId } from "@/hooks/routing"
 import { orpc } from "@/lib/orpc/query"
@@ -64,6 +65,7 @@ const useContactAssigneeOptionsState = (
     includeUnassigned = false,
   } = props || {}
 
+  const t = useTranslations()
   const workspaceId = useWorkspaceId()
   const { data: workspaceMembers = [], isPending: isWorkspaceMembersPending } =
     useWorkspaceMembers(workspaceId, {
@@ -76,7 +78,7 @@ const useContactAssigneeOptionsState = (
   const options = useMemo(() => {
     const result: SelectOption[] = [
       {
-        label: "Agents",
+        label: t("users.options.agents"),
         value: "agents",
         children: workspaceMembers.map((v) => ({
           label: v.user?.name ?? "--",
@@ -84,7 +86,7 @@ const useContactAssigneeOptionsState = (
         })),
       },
       {
-        label: "Inbox Teams",
+        label: t("inboxTeams.title"),
         value: "inbox-teams",
         children: inboxTeams.map((v) => ({
           label: v.name,
@@ -95,14 +97,14 @@ const useContactAssigneeOptionsState = (
 
     if (includeUnassigned) {
       result.unshift({
-        label: "Unassigned",
+        label: t("users.options.unassigned"),
         value: "unassigned",
       })
     }
 
     if (includeAll) {
       result.unshift({
-        label: "All",
+        label: t("users.options.all"),
         value: "all",
       })
     }
@@ -113,7 +115,14 @@ const useContactAssigneeOptionsState = (
     return result
       .flatMap((v) => v.children ?? [])
       .filter(Boolean) as SelectOption[]
-  }, [workspaceMembers, inboxTeams, autoGroup, includeAll, includeUnassigned])
+  }, [
+    workspaceMembers,
+    inboxTeams,
+    autoGroup,
+    includeAll,
+    includeUnassigned,
+    t,
+  ])
 
   return {
     options,

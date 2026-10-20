@@ -149,6 +149,7 @@ export function TemplatePreview({
   buttonParams,
   limitedTimeOfferParam,
 }: TemplatePreviewProps) {
+  const t = useTranslations()
   if (!components || components.length === 0) {
     return null
   }
@@ -181,7 +182,7 @@ export function TemplatePreview({
                 {imageUrl ? (
                   <div className="relative h-32 w-full">
                     <Image
-                      alt="Header preview"
+                      alt={t("messages.headerPreview")}
                       className="h-full w-full rounded object-contain object-left"
                       fill={true}
                       src={imageUrl.toString()}

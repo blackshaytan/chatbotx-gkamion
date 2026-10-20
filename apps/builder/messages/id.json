@@ -157,7 +157,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "Lihat eksekusi",
-    "editSchedule": "Ubah jadwal"
+    "editSchedule": "Ubah jadwal",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "Anda harus menjadi super admin workspace untuk melakukan ini."
@@ -182,16 +185,22 @@
     "defaultAgent": "Agen Default",
     "description": "Kelola dan konfigurasikan Agen AI untuk meningkatkan kemampuan workspace Anda dengan otomatisasi dan respons cerdas.",
     "title": "Agen AI",
-    "name": "Agen"
+    "name": "Agen",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "Berikan Agen Anda Akses ke PDF, Dokumen, dan Lainnya",
     "title": "Pengetahuan",
-    "noEmbeddingProvider": "Tidak ada penyedia embedding yang dikonfigurasi. Embedding file AI memerlukan integrasi OpenAI atau Gemini. DeepSeek dan Claude tidak mendukung model embedding."
+    "noEmbeddingProvider": "Tidak ada penyedia embedding yang dikonfigurasi. Embedding file AI memerlukan integrasi OpenAI atau Gemini. DeepSeek dan Claude tidak mendukung model embedding.",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "Konfigurasikan fungsi LLM agar agen AI Anda lebih cerdas",
-    "title": "Fungsi AI"
+    "title": "Fungsi AI",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "Hubungkan AI ke Sistem Eksternal melalui MCP",
@@ -2840,6 +2849,13 @@
       "productsSelected": "{count, plural, one {# produk} other {# produk}}",
       "noneSelected": "Belum ada produk",
       "sendFailed": "Produk tidak dapat dikirim."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -3868,7 +3884,13 @@
     },
     "referredProduct": {
       "askedAbout": "Bertanya tentang produk ini"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "Integrasi ini memungkinkan Anda membuat bot Instagram.",
@@ -4204,7 +4226,8 @@
       "sessionExpired": "Percobaan login telah kedaluwarsa. Silakan coba lagi.",
       "accessDenied": "Login dibatalkan.",
       "generic": "Login gagal. Silakan coba lagi."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "Topik Email"
@@ -4809,7 +4832,16 @@
         "callInformation": "Informasi panggilan"
       }
     },
-    "credentialSecretsRequired": "Masukkan app secret dan system user token. Keduanya belum tersimpan."
+    "credentialSecretsRequired": "Masukkan app secret dan system user token. Keduanya belum tersimpan.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -4832,7 +4864,8 @@
     "chatbotInvitationDescription1": "Bergabung dengan {chatbotName}",
     "chatbotInvitationDescription2": "{userName} mengundang Anda untuk bergabung dengan {chatbotName}.",
     "invalidInvitation": "Undangan ini tidak valid atau telah kedaluwarsa.",
-    "workspaceUnavailable": "Ruang kerja ini tidak lagi tersedia."
+    "workspaceUnavailable": "Ruang kerja ini tidak lagi tersedia.",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -4840,7 +4873,9 @@
       "enabled": "Aktif",
       "disabled": "Nonaktif",
       "description": "Jika diaktifkan, bot akan otomatis menandai pesannya sebagai sudah dibaca"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "Tim Kotak Masuk"
@@ -5368,7 +5403,12 @@
     "title": "Pemicu"
   },
   "users": {
-    "title": "Pengguna"
+    "title": "Pengguna",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "Urutan",
@@ -5454,7 +5494,8 @@
     "friday": "Jumat",
     "saturday": "Sabtu",
     "sunday": "Minggu",
-    "afterText": "Setelah"
+    "afterText": "Setelah",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "Alat",
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "File-file ini akan dihapus secara permanen dari server. Tindakan ini tidak dapat dibatalkan.",
     "filesCount": "{count, plural, =0 {Tidak ada file} =1 {1 file} other {# file}}",
     "openMediaLibrary": "Buka Pustaka Media",
-    "uploadFailed": "Gagal mengunggah {name}"
+    "uploadFailed": "Gagal mengunggah {name}",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "Iklan",
@@ -9010,5 +9052,50 @@
       "showLess": "Tampilkan lebih sedikit",
       "clearAll": "Hapus semua"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

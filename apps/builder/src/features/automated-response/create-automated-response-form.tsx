@@ -176,13 +176,13 @@ export function CreateAutomatedResponseForm(
             variant="outline"
           >
             <ToggleGroupItem
-              aria-label="Send flow"
+              aria-label={t("actions.sendFlow")}
               value={responseModes.enum.flowId}
             >
               {t("fields.flow.label")}
             </ToggleGroupItem>
             <ToggleGroupItem
-              aria-label="Send text"
+              aria-label={t("flows.actions.sendText")}
               value={responseModes.enum.text}
             >
               {t("fields.text.label")}

@@ -157,7 +157,10 @@
     "stop": "Остановить",
     "resume": "Возобновить",
     "viewRuns": "Просмотреть запуски",
-    "editSchedule": "Изменить расписание"
+    "editSchedule": "Изменить расписание",
+    "deleteSelectedRows": "Удалить выбранные строки",
+    "somethingWentWrong": "Что-то пошло не так!",
+    "tryAgain": "Попробовать снова"
   },
   "errors": {
     "superAdminRequired": "Для этого нужны права суперадминистратора пространства."
@@ -182,7 +185,11 @@
     "defaultAgent": "Агент по умолчанию",
     "description": "Управляйте ИИ-агентами и настраивайте их для умной автоматизации и ответов в вашем пространстве.",
     "title": "ИИ-агенты",
-    "name": "Агенты"
+    "name": "Агенты",
+    "messageRoles": {
+      "user": "Пользователь",
+      "assistant": "Ассистент"
+    }
   },
   "aiAgentActions": {
     "title": "ИИ-действия",
@@ -229,11 +236,13 @@
   "aiFiles": {
     "description": "Дайте агентам доступ к PDF, документам и другим файлам",
     "title": "База знаний",
-    "noEmbeddingProvider": "Не настроен провайдер эмбеддингов. Для эмбеддингов файлов нужна интеграция OpenAI или Gemini. DeepSeek и Claude не поддерживают модели эмбеддингов."
+    "noEmbeddingProvider": "Не настроен провайдер эмбеддингов. Для эмбеддингов файлов нужна интеграция OpenAI или Gemini. DeepSeek и Claude не поддерживают модели эмбеддингов.",
+    "deleteFile": "Удалить файл ИИ"
   },
   "aiFunctions": {
     "description": "Настройте LLM-функции, чтобы сделать ИИ-агента умнее",
-    "title": "ИИ-функции"
+    "title": "ИИ-функции",
+    "attributePlaceholder": "Атрибут"
   },
   "aiMcpServers": {
     "description": "Подключите ИИ к внешним системам через MCP",
@@ -3668,6 +3677,13 @@
       "productsSelected": "{count, plural, one {# товар} few {# товара} many {# товаров} other {# товара}}",
       "noneSelected": "Товары не выбраны",
       "sendFailed": "Не удалось отправить товары."
+    },
+    "viewer": {
+      "deleteEdge": "Удалить связь",
+      "sendNode": "Отправить шаг: {name}",
+      "flow": "Поток: {name}",
+      "typing": "Печатает {seconds, plural, one {# секунду} few {# секунды} many {# секунд} other {# секунды}}",
+      "nodeIdCopied": "ID шага скопирован"
     }
   },
   "folders": {
@@ -4550,7 +4566,13 @@
     },
     "referredProduct": {
       "askedAbout": "Вопрос об этом товаре"
-    }
+    },
+    "input": {
+      "form": "Форма ввода сообщения",
+      "clearReply": "Отменить ответ",
+      "attachFile": "Прикрепить файл"
+    },
+    "headerPreview": "Превью заголовка"
   },
   "instagram": {
     "description": "Эта интеграция позволяет создавать ботов для Instagram.",
@@ -4886,7 +4908,8 @@
       "sessionExpired": "Время попытки входа истекло. Попробуйте еще раз.",
       "accessDenied": "Вход отменен.",
       "generic": "Не удалось войти. Попробуйте еще раз."
-    }
+    },
+    "signedIn": "Вход выполнен"
   },
   "emailTopics": {
     "title": "Темы рассылок"
@@ -5491,7 +5514,16 @@
       "inboundLabel": "Принимать входящие звонки",
       "inboundHelper": "Клиенты смогут звонить вам. Выключите, чтобы только звонить самим, без звонков во входящих."
     },
-    "credentialSecretsRequired": "Введите секрет приложения и токен системного пользователя. Они еще не сохранены."
+    "credentialSecretsRequired": "Введите секрет приложения и токен системного пользователя. Они еще не сохранены.",
+    "ecommerce": {
+      "title": "Продавайте товары в WhatsApp",
+      "manageProducts": "Управление товарами"
+    },
+    "profile": {
+      "about": "О компании",
+      "address": "Адрес",
+      "websiteUrl": "Сайт"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -5514,7 +5546,8 @@
     "chatbotInvitationDescription1": "Присоединяйтесь к {chatbotName}",
     "chatbotInvitationDescription2": "{userName} приглашает вас присоединиться к {chatbotName}.",
     "invalidInvitation": "Приглашение недействительно или истекло.",
-    "workspaceUnavailable": "Это пространство больше недоступно."
+    "workspaceUnavailable": "Это пространство больше недоступно.",
+    "greeting": "Здравствуйте!"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -5522,7 +5555,9 @@
       "enabled": "Включено",
       "disabled": "Выключено",
       "description": "Если включено, бот автоматически отмечает свои сообщения как прочитанные"
-    }
+    },
+    "getLink": "Получить ссылку",
+    "availableTypes": "Доступные типы каналов"
   },
   "inboxTeams": {
     "title": "Команды ящиков входящих"
@@ -6093,7 +6128,12 @@
     }
   },
   "users": {
-    "title": "Пользователи"
+    "title": "Пользователи",
+    "options": {
+      "agents": "Сотрудники",
+      "unassigned": "Не назначен",
+      "all": "Все"
+    }
   },
   "sequences": {
     "title": "Цепочки",
@@ -6179,7 +6219,8 @@
     "friday": "Пятница",
     "saturday": "Суббота",
     "sunday": "Воскресенье",
-    "afterText": "Через"
+    "afterText": "Через",
+    "inactive": "Неактивна"
   },
   "tools": {
     "title": "Инструменты",
@@ -7923,7 +7964,8 @@
     "confirmDeleteFilesDescription": "Эти файлы будут безвозвратно удалены с сервера. Это действие нельзя отменить.",
     "filesCount": "{count, plural, =0 {Нет файлов} =1 {1 файл} one {# файл} few {# файла} many {# файлов} other {# файла}}",
     "openMediaLibrary": "Открыть медиатеку",
-    "uploadFailed": "Не удалось загрузить {name}"
+    "uploadFailed": "Не удалось загрузить {name}",
+    "deleteFiles": "Удалить файлы"
   },
   "adsCampaign": {
     "title": "Реклама",
@@ -9010,5 +9052,50 @@
       "showLess": "Свернуть",
       "clearAll": "Очистить все"
     }
+  },
+  "uiLabels": {
+    "close": "Закрыть",
+    "clear": "Очистить",
+    "reset": "Сбросить",
+    "noResults": "Нет результатов.",
+    "noResultsFound": "Ничего не найдено.",
+    "selectedRows": "Выбрано строк: {selected} из {total}.",
+    "rowsPerPage": "Строк на странице",
+    "pageOf": "Страница {page} из {pageCount}",
+    "firstPage": "На первую страницу",
+    "previousPage": "На предыдущую страницу",
+    "nextPage": "На следующую страницу",
+    "lastPage": "На последнюю страницу",
+    "sortAscending": "По возрастанию",
+    "sortDescending": "По убыванию",
+    "hideColumn": "Скрыть",
+    "selectedCount": "Выбрано: {count}",
+    "clearFilters": "Очистить фильтры",
+    "resetFilters": "Сбросить фильтры",
+    "selectDate": "Выберите дату",
+    "selectDateRange": "Выберите период",
+    "rangeFrom": "От",
+    "rangeTo": "до",
+    "rangeSlider": "Ползунок: {title}",
+    "clearFilter": "Очистить фильтр: {title}",
+    "view": "Вид",
+    "toggleColumns": "Показать или скрыть столбцы",
+    "searchColumns": "Поиск столбцов...",
+    "noColumnsFound": "Столбцы не найдены.",
+    "noEmojiFound": "Эмодзи не найдены.",
+    "selectEmoji": "Выберите эмодзи…",
+    "previousSlide": "Предыдущий слайд",
+    "nextSlide": "Следующий слайд",
+    "increaseValue": "Увеличить",
+    "decreaseValue": "Уменьшить",
+    "searchOptions": "Поиск вариантов...",
+    "selectAll": "(Выбрать все)",
+    "selectAllWithCount": "(Выбрать все — вариантов: {count})",
+    "toggleSidebar": "Показать или скрыть боковую панель",
+    "sidebarTitle": "Боковая панель",
+    "sidebarDescription": "Мобильная боковая панель.",
+    "uploadFile": "Загрузить файл",
+    "uploadFailed": "Не удалось загрузить",
+    "uploadUnexpectedError": "При загрузке произошла непредвиденная ошибка"
   }
 }

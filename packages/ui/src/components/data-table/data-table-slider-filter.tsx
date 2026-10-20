@@ -14,6 +14,7 @@ import {
 import { Separator } from "@chatbotx.io/ui/components/ui/separator"
 import { Slider } from "@chatbotx.io/ui/components/ui/slider"
 import { cn } from "@chatbotx.io/ui/lib/utils"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 
 interface Range {
   min: number
@@ -40,6 +41,7 @@ export function DataTableSliderFilter<TData>({
   column,
   title,
 }: DataTableSliderFilterProps<TData>) {
+  const uiLabels = useUiLabels()
   const id = React.useId()
 
   const columnFilterValue = getIsValidRange(column.getFilterValue())
@@ -137,7 +139,7 @@ export function DataTableSliderFilter<TData>({
               <div
                 // biome-ignore lint/a11y/useSemanticElements: <explanation>
                 role="button"
-                aria-label={`Clear ${title} filter`}
+                aria-label={uiLabels.clearFilter(title ?? "")}
                 tabIndex={0}
                 className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 onClick={onReset}
@@ -169,7 +171,7 @@ export function DataTableSliderFilter<TData>({
           </p>
           <div className="flex items-center gap-4">
             <Label htmlFor={`${id}-from`} className="sr-only">
-              From
+              {uiLabels.rangeFrom}
             </Label>
             <div className="relative">
               <Input
@@ -193,7 +195,7 @@ export function DataTableSliderFilter<TData>({
               )}
             </div>
             <Label htmlFor={`${id}-to`} className="sr-only">
-              to
+              {uiLabels.rangeTo}
             </Label>
             <div className="relative">
               <Input
@@ -218,7 +220,7 @@ export function DataTableSliderFilter<TData>({
             </div>
           </div>
           <Label htmlFor={`${id}-slider`} className="sr-only">
-            {title} slider
+            {uiLabels.rangeSlider(title ?? "")}
           </Label>
           <Slider
             id={`${id}-slider`}
@@ -230,12 +232,12 @@ export function DataTableSliderFilter<TData>({
           />
         </div>
         <Button
-          aria-label={`Clear ${title} filter`}
+          aria-label={uiLabels.clearFilter(title ?? "")}
           variant="outline"
           size="sm"
           onClick={onReset}
         >
-          Clear
+          {uiLabels.clear}
         </Button>
       </PopoverContent>
     </Popover>

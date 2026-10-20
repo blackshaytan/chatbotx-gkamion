@@ -146,14 +146,14 @@ export function getColumns({
     {
       id: "action",
       size: 10,
-      header: "Actions",
+      header: t("fields.actions.label"),
       cell: ({ row }) => (
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
               <Button size="icon" variant="ghost">
                 <MoreHorizontalIcon className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">{t("actions.openMenu")}</span>
               </Button>
             }
           />

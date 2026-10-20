@@ -27,6 +27,7 @@ import {
   XIcon,
 } from "lucide-react"
 import * as React from "react"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 
 /**
  * Animation types and configurations
@@ -364,6 +365,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
     },
     ref,
   ) => {
+    const uiLabels = useUiLabels()
     const [selectedValues, setSelectedValues] =
       React.useState<string[]>(defaultValue)
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false)
@@ -1079,7 +1081,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                   aria-label="Search through available options"
                   onKeyDown={handleInputKeyDown}
                   onValueChange={handleSearchValueChange}
-                  placeholder="Search options..."
+                  placeholder={uiLabels.searchOptions}
                   value={searchValue}
                 />
               )}
@@ -1128,11 +1130,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                         <CheckIcon className="h-4 w-4" />
                       </div>
                       <span>
-                        (Select All
-                        {getAllOptions().length > 20
-                          ? ` - ${getAllOptions().length} options`
-                          : ""}
-                        )
+                        {uiLabels.selectAll(getAllOptions().length)}
                       </span>
                     </CommandItem>
                   </CommandGroup>
@@ -1265,7 +1263,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                           className="flex-1 cursor-pointer justify-center"
                           onSelect={handleClear}
                         >
-                          Clear
+                          {uiLabels.clear}
                         </CommandItem>
                         <Separator
                           className="flex h-full min-h-6"
@@ -1277,7 +1275,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                       className="max-w-full flex-1 cursor-pointer justify-center"
                       onSelect={() => setIsPopoverOpen(false)}
                     >
-                      Close
+                      {uiLabels.close}
                     </CommandItem>
                   </div>
                 </CommandGroup>

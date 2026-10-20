@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import { cn } from "@chatbotx.io/ui/lib/utils"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
+import { UiLabelText } from "@chatbotx.io/ui/components/ui-labels"
 
 type CarouselApi = UseEmblaCarouselType[1]
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
@@ -221,7 +222,7 @@ function CarouselPrevious({
       {...props}
     >
       <ArrowLeft className="rtl:rotate-180" />
-      <span className="sr-only">Previous slide</span>
+      <span className="sr-only"><UiLabelText name="previousSlide" /></span>
     </Button>
   )
 }
@@ -251,7 +252,7 @@ function CarouselNext({
       {...props}
     >
       <ArrowRight className="rtl:rotate-180" />
-      <span className="sr-only">Next slide</span>
+      <span className="sr-only"><UiLabelText name="nextSlide" /></span>
     </Button>
   )
 }

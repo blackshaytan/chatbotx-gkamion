@@ -27,6 +27,7 @@ export const ruBatches = {
     "helpMenu",
     "helpItems",
     "recurrence",
+    "uiLabels",
   ],
   "02-fields": ["fields"],
   "03-inbox-contacts-channels": [

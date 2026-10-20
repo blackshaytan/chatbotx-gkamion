@@ -854,7 +854,7 @@ export function MediaLibraryDialog({
               }
             />
             <Button
-              aria-label="Delete folder"
+              aria-label={t("deleteFolder")}
               disabled={isDeletingFolder}
               onClick={() =>
                 deleteFolderId && executeDeleteFolder(deleteFolderId)
@@ -900,7 +900,7 @@ export function MediaLibraryDialog({
               }
             />
             <Button
-              aria-label="Delete file"
+              aria-label={t("deleteFile")}
               disabled={isDeletingFile}
               onClick={() => deleteFileId && executeDeleteFile(deleteFileId)}
               size="sm"
@@ -946,7 +946,7 @@ export function MediaLibraryDialog({
               }
             />
             <Button
-              aria-label="Delete files"
+              aria-label={t("deleteFiles")}
               disabled={isBulkDeleting}
               onClick={handleBulkDelete}
               size="sm"

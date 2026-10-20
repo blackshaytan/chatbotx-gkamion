@@ -233,7 +233,7 @@ export function IgCommentsTable({
                 render={
                   <Button size="icon" variant="ghost">
                     <MoreHorizontalIcon className="h-4 w-4" />
-                    <span className="sr-only">Open menu</span>
+                    <span className="sr-only">{t("actions.openMenu")}</span>
                   </Button>
                 }
               />

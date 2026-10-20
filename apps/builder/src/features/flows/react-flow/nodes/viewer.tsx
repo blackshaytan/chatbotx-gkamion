@@ -38,7 +38,7 @@ export const NodeViewer = memo((props: NodeViewerProps) => {
         {data.isStartNode && (
           <div className="inline-flex items-center gap-1 rounded-xl border bg-destructive px-1.5 py-0.5 text-sm text-white">
             <PlayCircleIcon className="text-sm" size={16} />
-            Start
+            {t("flowAnalytics.nodes.start")}
           </div>
         )}
       </div>
@@ -96,6 +96,6 @@ export const NodeViewer = memo((props: NodeViewerProps) => {
       </Card>
     </>
   ) : (
-    <div>Node not found</div>
+    <div>{t("flowAnalytics.nodes.notFound")}</div>
   )
 })

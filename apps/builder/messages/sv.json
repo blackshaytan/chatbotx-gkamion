@@ -161,7 +161,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "Visa körningar",
-    "editSchedule": "Redigera schema"
+    "editSchedule": "Redigera schema",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "Du måste vara superadministratör för arbetsytan för att göra detta."
@@ -230,16 +233,22 @@
     "defaultAgent": "Standardagent",
     "description": "Hantera och konfigurera AI-agenter för att förbättra arbetsytans funktioner med intelligent automatisering och intelligenta svar.",
     "name": "Agenter",
-    "title": "AI-agenter"
+    "title": "AI-agenter",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "Ge dina agenter åtkomst till PDF-filer, dokument och annat",
     "noEmbeddingProvider": "Ingen leverantör för inbäddningar har konfigurerats. AI-filinbäddningar kräver en OpenAI- eller Gemini-integration. DeepSeek och Claude stöder inte inbäddningsmodeller.",
-    "title": "Kunskap"
+    "title": "Kunskap",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "Konfigurera LLM-funktioner för att göra din AI-agent intelligentare",
-    "title": "AI-funktioner"
+    "title": "AI-funktioner",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "Anslut AI till externa system via MCP",
@@ -429,7 +438,8 @@
       "sessionExpired": "Inloggningsförsöket har gått ut. Försök igen.",
       "accessDenied": "Inloggningen avbröts.",
       "generic": "Inloggningen misslyckades. Försök igen."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "autoAssignConversation": {
     "rule": {
@@ -3763,6 +3773,13 @@
       "productsSelected": "{count, plural, one {# produkt} other {# produkter}}",
       "noneSelected": "Inga produkter ännu",
       "sendFailed": "Produkterna kunde inte skickas."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -3871,7 +3888,9 @@
       "enabled": "Aktiverad",
       "disabled": "Inaktiverad",
       "description": "När detta är aktiverat markerar boten automatiskt sina egna meddelanden som lästa"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "Inkorgsteam"
@@ -4412,7 +4431,8 @@
     "chatbotInvitationDescription1": "Gå med i {chatbotName}",
     "chatbotInvitationDescription2": "{userName} har bjudit in dig att gå med i {chatbotName}.",
     "invalidInvitation": "Den här inbjudan är ogiltig eller har löpt ut.",
-    "workspaceUnavailable": "Den här arbetsytan är inte längre tillgänglig."
+    "workspaceUnavailable": "Den här arbetsytan är inte längre tillgänglig.",
+    "greeting": "Hello,"
   },
   "keywords": {
     "title": "Nyckelord",
@@ -4926,7 +4946,13 @@
     },
     "referredProduct": {
       "askedAbout": "Frågade om den här produkten"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "messenger": {
     "botProfile": "Botprofil",
@@ -5898,7 +5924,8 @@
       "exception": "Valideringsfel",
       "nameExists": "Sekvensnamnet finns redan"
     },
-    "wednesday": "Onsdag"
+    "wednesday": "Onsdag",
+    "inactive": "Inactive"
   },
   "settings": {
     "agents": {
@@ -6124,7 +6151,12 @@
     "title": "Beständiga användarmenyer"
   },
   "users": {
-    "title": "Användare"
+    "title": "Användare",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "validation": {
     "invalidApiKey": "Ogiltig API-nyckel",
@@ -6718,7 +6750,16 @@
         "callInformation": "Samtalsinformation"
       }
     },
-    "credentialSecretsRequired": "Ange apphemligheten och systemanvändartoken. De är inte sparade än."
+    "credentialSecretsRequired": "Ange apphemligheten och systemanvändartoken. De är inte sparade än.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "workspace": {
     "deletion": {
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "Dessa filer kommer att tas bort permanent från servern. Denna åtgärd kan inte ångras.",
     "filesCount": "{count, plural, =0 {Inga filer} =1 {1 fil} other {# filer}}",
     "openMediaLibrary": "Öppna mediebibliotek",
-    "uploadFailed": "Det gick inte att ladda upp {name}"
+    "uploadFailed": "Det gick inte att ladda upp {name}",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "Annonser",
@@ -9010,5 +9052,50 @@
       "showLess": "Visa färre",
       "clearAll": "Rensa alla"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

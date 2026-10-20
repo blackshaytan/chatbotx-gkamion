@@ -351,6 +351,13 @@
       "productsSelected": "{count, plural, one {# produs} other {# produse}}",
       "noneSelected": "Încă nu există produse",
       "sendFailed": "Produsele nu au putut fi trimise."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -1200,7 +1207,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "Vezi rulările",
-    "editSchedule": "Editează programarea"
+    "editSchedule": "Editează programarea",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "Trebuie să fii superadministrator al spațiului de lucru pentru a face acest lucru."
@@ -1225,16 +1235,22 @@
     "defaultAgent": "Agent implicit",
     "description": "Gestionează și configurează agenți AI pentru a îmbunătăți capacitățile spațiului tău de lucru prin automatizări și răspunsuri inteligente.",
     "title": "Agenți AI",
-    "name": "Agenți"
+    "name": "Agenți",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "Oferă agenților acces la PDF-uri, documente și altele",
     "title": "Cunoștințe",
-    "noEmbeddingProvider": "Nu este configurat niciun furnizor de încorporări. Încorporările fișierelor AI necesită integrarea OpenAI sau Gemini. DeepSeek și Claude nu acceptă modele de încorporare."
+    "noEmbeddingProvider": "Nu este configurat niciun furnizor de încorporări. Încorporările fișierelor AI necesită integrarea OpenAI sau Gemini. DeepSeek și Claude nu acceptă modele de încorporare.",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "Configurează funcții LLM pentru a face agentul AI mai inteligent",
-    "title": "Funcții AI"
+    "title": "Funcții AI",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "Conectează AI la sisteme externe prin MCP",
@@ -3868,7 +3884,13 @@
     },
     "referredProduct": {
       "askedAbout": "A întrebat despre acest produs"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "Această integrare îți permite să creezi boți Instagram.",
@@ -4204,7 +4226,8 @@
       "sessionExpired": "Încercarea de autentificare a expirat. Încearcă din nou.",
       "accessDenied": "Autentificarea a fost anulată.",
       "generic": "Autentificarea a eșuat. Încearcă din nou."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "Subiecte de e-mail"
@@ -4809,7 +4832,16 @@
         "callInformation": "Informații despre apel"
       }
     },
-    "credentialSecretsRequired": "Introdu secretul aplicației și tokenul utilizatorului de sistem. Nu sunt încă salvate."
+    "credentialSecretsRequired": "Introdu secretul aplicației și tokenul utilizatorului de sistem. Nu sunt încă salvate.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -4832,7 +4864,8 @@
     "chatbotInvitationDescription1": "Alătură-te lui {chatbotName}",
     "chatbotInvitationDescription2": "{userName} te-a invitat să te alături lui {chatbotName}.",
     "invalidInvitation": "Această invitație este invalidă sau a expirat.",
-    "workspaceUnavailable": "Acest spațiu de lucru nu mai este disponibil."
+    "workspaceUnavailable": "Acest spațiu de lucru nu mai este disponibil.",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -4840,7 +4873,9 @@
       "enabled": "Activat",
       "disabled": "Dezactivat",
       "description": "Dacă este activat, botul își marchează automat propriile mesaje ca citite"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "Echipe mesaje primite"
@@ -5368,7 +5403,12 @@
     "title": "Declanșatoare"
   },
   "users": {
-    "title": "Utilizatori"
+    "title": "Utilizatori",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "Secvențe",
@@ -5454,7 +5494,8 @@
     "friday": "Vineri",
     "saturday": "Sâmbătă",
     "sunday": "Duminică",
-    "afterText": "După"
+    "afterText": "După",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "Instrumente",
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "Aceste fișiere vor fi șterse definitiv de pe server. Această acțiune nu poate fi anulată.",
     "filesCount": "{count, plural, =0 {Niciun fișier} =1 {1 fișier} other {# fișiere}}",
     "openMediaLibrary": "Deschide biblioteca media",
-    "uploadFailed": "Încărcarea {name} a eșuat"
+    "uploadFailed": "Încărcarea {name} a eșuat",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "Reclame",
@@ -9010,5 +9052,50 @@
       "showLess": "Arată mai puține",
       "clearAll": "Șterge tot"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

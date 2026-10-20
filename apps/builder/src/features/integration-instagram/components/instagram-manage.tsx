@@ -96,7 +96,7 @@ export function InstagramManage({
             ))}
             {integrationInstagrams.length === 0 && (
               <TableRow>
-                <TableCell colSpan={2}>No data</TableCell>
+                <TableCell colSpan={2}>{t("messages.noData")}</TableCell>
               </TableRow>
             )}
           </TableBody>

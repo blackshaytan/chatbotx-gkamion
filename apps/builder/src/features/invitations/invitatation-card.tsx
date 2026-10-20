@@ -112,7 +112,7 @@ export function WorkspaceInvitationCard({
         })}
       </h3>
 
-      <p>Hello,</p>
+      <p>{t("invitation.greeting")}</p>
 
       <p>
         {t("invitation.chatbotInvitationDescription2", {

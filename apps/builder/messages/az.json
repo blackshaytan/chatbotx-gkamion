@@ -157,7 +157,10 @@
     "stop": "Dayandır",
     "resume": "Davam et",
     "viewRuns": "İcraları göstər",
-    "editSchedule": "Cədvəli redaktə et"
+    "editSchedule": "Cədvəli redaktə et",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "Bunu etmək üçün iş sahəsinin super administratoru olmalısınız."
@@ -182,7 +185,11 @@
     "defaultAgent": "Standart agent",
     "description": "Ağıllı avtomatlaşdırma və cavablarla iş sahənizin imkanlarını genişləndirmək üçün AI agentlərini idarə edin və konfiqurasiya edin.",
     "title": "AI agentləri",
-    "name": "Agentlər"
+    "name": "Agentlər",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiAgentActions": {
     "title": "Sİ Əməliyyatları",
@@ -229,11 +236,13 @@
   "aiFiles": {
     "description": "Agentlərinizə PDF-lərə, sənədlərə və digər mənbələrə giriş verin",
     "title": "Bilik",
-    "noEmbeddingProvider": "Vektorlaşdırma provayderi konfiqurasiya edilməyib. AI fayllarının vektorlaşdırılması üçün OpenAI və ya Gemini inteqrasiyası tələb olunur. DeepSeek və Claude vektorlaşdırma modellərini dəstəkləmir."
+    "noEmbeddingProvider": "Vektorlaşdırma provayderi konfiqurasiya edilməyib. AI fayllarının vektorlaşdırılması üçün OpenAI və ya Gemini inteqrasiyası tələb olunur. DeepSeek və Claude vektorlaşdırma modellərini dəstəkləmir.",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "AI agentinizi daha ağıllı etmək üçün LLM funksiyalarını konfiqurasiya edin",
-    "title": "AI funksiyaları"
+    "title": "AI funksiyaları",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "AI-ni MCP vasitəsilə xarici sistemlərə qoşun",
@@ -3668,6 +3677,13 @@
       "productsSelected": "{count, plural, one {# məhsul} other {# məhsul}}",
       "noneSelected": "Hələ məhsul yoxdur",
       "sendFailed": "Məhsullar göndərilə bilmədi."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -4550,7 +4566,13 @@
     },
     "referredProduct": {
       "askedAbout": "Bu məhsul haqqında soruşdu"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "Bu inteqrasiya Instagram botları yaratmağa imkan verir.",
@@ -4886,7 +4908,8 @@
       "sessionExpired": "Giriş cəhdinin vaxtı bitdi. Zəhmət olmasa yenidən cəhd edin.",
       "accessDenied": "Giriş ləğv edildi.",
       "generic": "Giriş uğursuz oldu. Zəhmət olmasa yenidən cəhd edin."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "E-poçt mövzuları"
@@ -5491,7 +5514,16 @@
       "inboundLabel": "Daxil olan zəngləri qəbul et",
       "inboundHelper": "Müştərilərin zəng etməsinə icazə verin. Gələnlər qutusunda zəng çalmadan zəng etməyə davam etmək üçün bu seçimi söndürün."
     },
-    "credentialSecretsRequired": "Tətbiq sirrini və sistem istifadəçisi tokenini daxil edin. Hələ saxlanmayıb."
+    "credentialSecretsRequired": "Tətbiq sirrini və sistem istifadəçisi tokenini daxil edin. Hələ saxlanmayıb.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -5514,7 +5546,8 @@
     "chatbotInvitationDescription1": "{chatbotName} botuna qoşul",
     "chatbotInvitationDescription2": "{userName} sizi {chatbotName} botuna qoşulmağa dəvət edib.",
     "invalidInvitation": "Bu dəvət etibarsızdır və ya müddəti bitib.",
-    "workspaceUnavailable": "Bu iş sahəsi artıq əlçatan deyil."
+    "workspaceUnavailable": "Bu iş sahəsi artıq əlçatan deyil.",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -5522,7 +5555,9 @@
       "enabled": "Aktivdir",
       "disabled": "Deaktiv",
       "description": "Aktiv olduqda bot öz mesajlarını avtomatik olaraq oxunmuş kimi işarələyir"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "Gələnlər qutusu komandaları"
@@ -6093,7 +6128,12 @@
     }
   },
   "users": {
-    "title": "İstifadəçilər"
+    "title": "İstifadəçilər",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "Ardıcıllıqlar",
@@ -6179,7 +6219,8 @@
     "friday": "Cümə",
     "saturday": "Şənbə",
     "sunday": "Bazar",
-    "afterText": "Sonra"
+    "afterText": "Sonra",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "Alətlər",
@@ -7923,7 +7964,8 @@
     "confirmDeleteFilesDescription": "Bu fayllar serverdən həmişəlik silinəcək. Bu əməliyyat geri qaytarıla bilməz.",
     "filesCount": "{count, plural, =0 {Fayl yoxdur} =1 {1 fayl} other {# fayl}}",
     "openMediaLibrary": "Media kitabxanasını aç",
-    "uploadFailed": "{name} faylını yükləmək mümkün olmadı"
+    "uploadFailed": "{name} faylını yükləmək mümkün olmadı",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "Reklamlar",
@@ -9010,5 +9052,50 @@
       "showLess": "Az göstər",
       "clearAll": "Hamısını təmizlə"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

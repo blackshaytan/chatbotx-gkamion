@@ -1,3 +1,4 @@
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 import { Loader2Icon, UploadIcon } from "lucide-react"
 import { useCallback, useState } from "react"
 import { randomString } from "remeda"
@@ -69,9 +70,10 @@ export function DirectUploadButton({
   onUploadSuccess,
   onUploadError,
   triggerRef,
-  label = "Upload File",
+  label,
   ...props
 }: DirectUploadButtonProps) {
+  const uiLabels = useUiLabels()
   const [files, setFiles] = useState<File[]>([])
   const [isUploading, setIsUploading] = useState(false)
 
@@ -172,8 +174,8 @@ export function DirectUploadButton({
         await Promise.all(uploadPromises)
       } catch {
         // This handles any error that might occur outside the individual upload processes
-        toast.error("Upload failed", {
-          description: "An unexpected error occurred during upload",
+        toast.error(uiLabels.uploadFailed, {
+          description: uiLabels.uploadUnexpectedError,
         })
       } finally {
         setIsUploading(false)
@@ -188,6 +190,7 @@ export function DirectUploadButton({
       uploadSubType,
       onUploadSuccess,
       onUploadError,
+      uiLabels,
     ],
   )
 
@@ -214,7 +217,7 @@ export function DirectUploadButton({
               ) : (
                 <UploadIcon />
               )}
-              {label}
+              {label ?? uiLabels.uploadFile}
             </Button>
           }
         />

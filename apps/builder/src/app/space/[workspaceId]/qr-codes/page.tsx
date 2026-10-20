@@ -43,7 +43,7 @@ export default async function QrCodesPage({
           { label: t("qrCodes.title"), href: "" },
         ]}
       />
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div>{t("actions.loading")}</div>}>
         <QrCodesTable promises={promises} workspaceId={workspaceId} />
       </Suspense>
     </div>

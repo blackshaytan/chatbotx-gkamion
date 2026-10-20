@@ -157,7 +157,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "Se kørsler",
-    "editSchedule": "Rediger tidsplan"
+    "editSchedule": "Rediger tidsplan",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "Du skal være super admin for arbejdsområdet for at gøre dette."
@@ -182,16 +185,22 @@
     "defaultAgent": "Standardagent",
     "description": "Administrer og konfigurer AI-agenter for at udvide dit arbejdsområde med intelligent automatisering og intelligente svar.",
     "title": "AI-agenter",
-    "name": "Agenter"
+    "name": "Agenter",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "Giv dine agenter adgang til PDF-filer, dokumenter og meget mere",
     "title": "Viden",
-    "noEmbeddingProvider": "Der er ikke konfigureret en embedding-udbyder. Embeddings til AI-filer kræver en OpenAI- eller Gemini-integration. DeepSeek og Claude understøtter ikke embedding-modeller."
+    "noEmbeddingProvider": "Der er ikke konfigureret en embedding-udbyder. Embeddings til AI-filer kræver en OpenAI- eller Gemini-integration. DeepSeek og Claude understøtter ikke embedding-modeller.",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "Konfigurer LLM-funktioner for at gøre din AI-agent mere intelligent",
-    "title": "AI-funktioner"
+    "title": "AI-funktioner",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "Forbind AI med eksterne systemer via MCP",
@@ -2840,6 +2849,13 @@
       "productsSelected": "{count, plural, one {# produkt} other {# produkter}}",
       "noneSelected": "Ingen produkter endnu",
       "sendFailed": "Produkterne kunne ikke sendes."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -3868,7 +3884,13 @@
     },
     "referredProduct": {
       "askedAbout": "Spurgte om dette produkt"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "Denne integration lets du opret Instagram bots.",
@@ -4204,7 +4226,8 @@
       "sessionExpired": "Loginforsøget er udløbet. Prøv igen.",
       "accessDenied": "Login blev annulleret.",
       "generic": "Login mislykkedes. Prøv igen."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "E-mail Topics"
@@ -4809,7 +4832,16 @@
         "callInformation": "Opkaldsoplysninger"
       }
     },
-    "credentialSecretsRequired": "Indtast app-hemmeligheden og systembruger-tokenet. De er ikke gemt endnu."
+    "credentialSecretsRequired": "Indtast app-hemmeligheden og systembruger-tokenet. De er ikke gemt endnu.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -4832,7 +4864,8 @@
     "chatbotInvitationDescription1": "Join {chatbotName}",
     "chatbotInvitationDescription2": "{userName} har invited du til join {chatbotName}.",
     "invalidInvitation": "Denne invitation er ugyldig eller har udløbet.",
-    "workspaceUnavailable": "Denne arbejdsområde er ingen longer tilgængelig."
+    "workspaceUnavailable": "Denne arbejdsområde er ingen longer tilgængelig.",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -4840,7 +4873,9 @@
       "enabled": "Aktiveret",
       "disabled": "Deaktiveret",
       "description": "Når det er slået til, markerer botten automatisk sine egne beskeder som læst"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "Indbakke Teams"
@@ -5368,7 +5403,12 @@
     "title": "Udløsere"
   },
   "users": {
-    "title": "Brugere"
+    "title": "Brugere",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "Sekvenser",
@@ -5454,7 +5494,8 @@
     "friday": "Friday",
     "saturday": "Saturday",
     "sunday": "Sunday",
-    "afterText": "Efter"
+    "afterText": "Efter",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "Værktøjer",
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "Disse filer slettes permanent fra serveren. Denne handling kan ikke fortrydes.",
     "filesCount": "{count, plural, =0 {Ingen filer} =1 {1 fil} other {# filer}}",
     "openMediaLibrary": "Åbn mediebibliotek",
-    "uploadFailed": "Kunne ikke uploade {name}"
+    "uploadFailed": "Kunne ikke uploade {name}",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "Annoncer",
@@ -9010,5 +9052,50 @@
       "showLess": "Vis færre",
       "clearAll": "Ryd alle"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

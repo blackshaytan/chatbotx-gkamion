@@ -9,10 +9,12 @@ import {
   useReactFlow,
 } from "@xyflow/react"
 import { Trash2Icon } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { memo } from "react"
 
 export default memo((props: EdgeProps) => {
   const { deleteElements } = useReactFlow()
+  const t = useTranslations()
 
   const onDelete = () => {
     deleteElements({
@@ -55,7 +57,7 @@ export default memo((props: EdgeProps) => {
           y={centerY}
         >
           <Button
-            aria-label="Delete edge"
+            aria-label={t("flows.viewer.deleteEdge")}
             className={cn(
               "nodrag nopan pointer-events-auto cursor-pointer rounded-full px-1.5! font-bold text-destructive hover:bg-color-none hover:text-destructive",
               props.data && "inline-flex",

@@ -157,7 +157,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "Ver ejecuciones",
-    "editSchedule": "Editar programación"
+    "editSchedule": "Editar programación",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "Debes ser superadministrador del espacio de trabajo para hacer esto."
@@ -182,16 +185,22 @@
     "defaultAgent": "Agente predeterminado",
     "description": "Gestiona y configura agentes de IA para ampliar las capacidades de tu espacio de trabajo con automatizaciones y respuestas inteligentes.",
     "title": "Agentes de IA",
-    "name": "Agentes"
+    "name": "Agentes",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "Da a tus agentes acceso a archivos PDF, documentos y mucho más",
     "title": "Conocimiento",
-    "noEmbeddingProvider": "No hay ningún proveedor de embeddings configurado. Los embeddings de archivos de IA requieren una integración con OpenAI o Gemini. DeepSeek y Claude no admiten modelos de embeddings."
+    "noEmbeddingProvider": "No hay ningún proveedor de embeddings configurado. Los embeddings de archivos de IA requieren una integración con OpenAI o Gemini. DeepSeek y Claude no admiten modelos de embeddings.",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "Configura funciones LLM para hacer que tu agente de IA sea más inteligente",
-    "title": "Funciones de IA"
+    "title": "Funciones de IA",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "Conecta la IA con sistemas externos mediante MCP",
@@ -2986,6 +2995,13 @@
       "productsSelected": "{count, plural, one {# producto} other {# productos}}",
       "noneSelected": "Aún no hay productos",
       "sendFailed": "No se pudieron enviar los productos."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -3868,7 +3884,13 @@
     },
     "referredProduct": {
       "askedAbout": "Preguntó por este producto"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "This integración lets tú Crear Instagram bots.",
@@ -4204,7 +4226,8 @@
       "sessionExpired": "El intento de inicio de sesión ha caducado. Inténtalo de nuevo.",
       "accessDenied": "Se canceló el inicio de sesión.",
       "generic": "Error al iniciar sesión. Inténtalo de nuevo."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "Correo Topics"
@@ -4809,7 +4832,16 @@
         "callInformation": "Información de la llamada"
       }
     },
-    "credentialSecretsRequired": "Introduce el secreto de la app y el token de usuario del sistema. Aún no están guardados."
+    "credentialSecretsRequired": "Introduce el secreto de la app y el token de usuario del sistema. Aún no están guardados.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -4832,7 +4864,8 @@
     "chatbotInvitationDescription1": "Únete a {chatbotName}",
     "chatbotInvitationDescription2": "{userName} tiene invited tú un join {chatbotName}.",
     "invalidInvitation": "This invitación es no válido o tiene caducado.",
-    "workspaceUnavailable": "This espacio de trabajo es no longer disponible."
+    "workspaceUnavailable": "This espacio de trabajo es no longer disponible.",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -4840,7 +4873,9 @@
       "enabled": "Activado",
       "disabled": "Desactivado",
       "description": "Si está activado, el bot marcará automáticamente sus propios mensajes como leídos"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "Equipos de la bandeja de entrada"
@@ -5368,7 +5403,12 @@
     "title": "Desencadenadores"
   },
   "users": {
-    "title": "Usuarios"
+    "title": "Usuarios",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "Secuencias",
@@ -5454,7 +5494,8 @@
     "friday": "Fridía",
     "saturday": "Saturdía",
     "sunday": "Sundía",
-    "afterText": "Después"
+    "afterText": "Después",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "Herramientas",
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "Estos archivos se eliminarán permanentemente del servidor. Esta acción no se puede deshacer.",
     "filesCount": "{count, plural, =0 {Sin archivos} =1 {1 archivo} other {# archivos}}",
     "openMediaLibrary": "Abrir biblioteca de medios",
-    "uploadFailed": "Error al subir {name}"
+    "uploadFailed": "Error al subir {name}",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "Anuncios",
@@ -9010,5 +9052,50 @@
       "showLess": "Mostrar menos",
       "clearAll": "Borrar todo"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

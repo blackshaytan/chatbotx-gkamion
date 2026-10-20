@@ -7,6 +7,7 @@ import { createId } from "@chatbotx.io/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
 import { PaperclipIcon, SendHorizonalIcon } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { type KeyboardEvent, useEffect, useMemo, useRef } from "react"
 import { Controller, useWatch } from "react-hook-form"
 import { createWebchatMessageAction } from "../messages/actions/create-webchat-message.action"
@@ -26,6 +27,7 @@ type WebchatMessageInputProps = {
 }
 
 export const WebchatMessageInput = (props: WebchatMessageInputProps) => {
+  const t = useTranslations()
   const {
     workspaceId,
     webchatId,
@@ -170,7 +172,7 @@ export const WebchatMessageInput = (props: WebchatMessageInputProps) => {
                     autoComplete="off"
                     className="h-16 resize-none border-0 px-1.5 py-0 shadow-none focus:ring-0 focus-visible:ring-0"
                     disabled={files.length > 0}
-                    placeholder="Message..."
+                    placeholder={t("actions.messagePlaceholder")}
                     {...field}
                     onKeyDown={onKeyDown}
                     ref={textareaRef}

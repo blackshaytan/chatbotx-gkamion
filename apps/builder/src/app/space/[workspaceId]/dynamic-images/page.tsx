@@ -42,7 +42,7 @@ export default async function DynamicImagesPage({
           { label: t("dynamicImages.title"), href: "" },
         ]}
       />
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div>{t("actions.loading")}</div>}>
         <DynamicImagesTable promises={promises} workspaceId={workspaceId} />
       </Suspense>
     </div>

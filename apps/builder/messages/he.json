@@ -157,7 +157,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "הצג הרצות",
-    "editSchedule": "ערוך לוח זמנים"
+    "editSchedule": "ערוך לוח זמנים",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "עליכם להיות מנהל-על של סביבת העבודה כדי לבצע פעולה זו."
@@ -182,16 +185,22 @@
     "defaultAgent": "סוכן ברירת מחדל",
     "description": "נהלו והגדירו סוכני AI כדי לשפר את יכולות סביבת העבודה שלכם באמצעות אוטומציה ותגובות חכמות.",
     "title": "סוכני AI",
-    "name": "סוכנים"
+    "name": "סוכנים",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "העניקו לסוכנים שלכם גישה לקובצי PDF, למסמכים ועוד",
     "title": "ידע",
-    "noEmbeddingProvider": "לא הוגדר ספק הטמעות. הטמעות של קובצי AI דורשות שילוב OpenAI או Gemini. ‏DeepSeek ו-Claude אינם תומכים במודלים של הטמעות."
+    "noEmbeddingProvider": "לא הוגדר ספק הטמעות. הטמעות של קובצי AI דורשות שילוב OpenAI או Gemini. ‏DeepSeek ו-Claude אינם תומכים במודלים של הטמעות.",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "הגדירו פונקציות LLM כדי להפוך את סוכן ה-AI שלכם לחכם יותר",
-    "title": "פונקציות AI"
+    "title": "פונקציות AI",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "חיבור AI למערכות חיצוניות באמצעות MCP",
@@ -647,6 +656,13 @@
       "productsSelected": "{count, plural, one {מוצר #} other {# מוצרים}}",
       "noneSelected": "עדיין אין מוצרים",
       "sendFailed": "לא ניתן היה לשלוח את המוצרים."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -1675,7 +1691,13 @@
     },
     "referredProduct": {
       "askedAbout": "שאל על מוצר זה"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "שילוב זה מאפשר ליצור בוטים ל-Instagram.",
@@ -2011,7 +2033,8 @@
       "sessionExpired": "ניסיון ההתחברות פג תוקף. נסה שוב.",
       "accessDenied": "ההתחברות בוטלה.",
       "generic": "ההתחברות נכשלה. נסה שוב."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "נושאי דוא\"ל"
@@ -2616,7 +2639,16 @@
         "callInformation": "פרטי השיחה"
       }
     },
-    "credentialSecretsRequired": "הזינו את סוד האפליקציה ואת אסימון משתמש המערכת. הם עדיין לא נשמרו."
+    "credentialSecretsRequired": "הזינו את סוד האפליקציה ואת אסימון משתמש המערכת. הם עדיין לא נשמרו.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -2639,7 +2671,8 @@
     "chatbotInvitationDescription1": "הצטרפות אל {chatbotName}",
     "chatbotInvitationDescription2": "{userName} הזמין אתכם להצטרף אל {chatbotName}.",
     "invalidInvitation": "הזמנה זו אינה תקינה או שפג תוקפה.",
-    "workspaceUnavailable": "סביבת עבודה זו אינה זמינה עוד."
+    "workspaceUnavailable": "סביבת עבודה זו אינה זמינה עוד.",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -2647,7 +2680,9 @@
       "enabled": "מופעל",
       "disabled": "מושבת",
       "description": "כשמופעל, הבוט מסמן אוטומטית את ההודעות שלו כנקראו"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "צוותי תיבת דואר נכנס"
@@ -3175,7 +3210,12 @@
     "title": "גורמים מפעילים"
   },
   "users": {
-    "title": "משתמשים"
+    "title": "משתמשים",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "רצפים",
@@ -3261,7 +3301,8 @@
     "friday": "יום שישי",
     "saturday": "שבת",
     "sunday": "יום ראשון",
-    "afterText": "אחרי"
+    "afterText": "אחרי",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "כלים",
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "קבצים אלה יימחקו לצמיתות מהשרת. לא ניתן לבטל פעולה זו.",
     "filesCount": "{count, plural, =0 {אין קבצים} =1 {קובץ אחד} other {# קבצים}}",
     "openMediaLibrary": "פתיחת ספריית מדיה",
-    "uploadFailed": "העלאת {name} נכשלה"
+    "uploadFailed": "העלאת {name} נכשלה",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "מודעות",
@@ -9010,5 +9052,50 @@
       "showLess": "הצג פחות",
       "clearAll": "נקה הכול"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

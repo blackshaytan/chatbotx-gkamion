@@ -61,7 +61,7 @@ export function WhatsappManage({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead>{t("fields.name.label")}</TableHead>
               <TableHead>{t("inboxes.markReadOnOutbound.label")}</TableHead>
               <TableHead className="w-[200px]" />
             </TableRow>

@@ -128,9 +128,18 @@ export default function ConversationList({
           <SelectField
             name="botCategory"
             options={[
-              { label: "All", value: conversationBotCategories.enum.all },
-              { label: "Human", value: conversationBotCategories.enum.human },
-              { label: "Bot", value: conversationBotCategories.enum.bot },
+              {
+                label: t("broadcasts.filters.all"),
+                value: conversationBotCategories.enum.all,
+              },
+              {
+                label: t("analytics.human"),
+                value: conversationBotCategories.enum.human,
+              },
+              {
+                label: t("analytics.bot"),
+                value: conversationBotCategories.enum.bot,
+              },
             ]}
           />
 

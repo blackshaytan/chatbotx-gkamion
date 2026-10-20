@@ -469,7 +469,7 @@ export const MessageInput = () => {
     <div className="m-3 shrink-0 rounded-xl border pt-2">
       <Form {...form}>
         <form
-          aria-label="Message input form"
+          aria-label={t("messages.input.form")}
           className="flex w-full flex-col"
           onSubmit={(e) => {
             e.preventDefault()
@@ -498,7 +498,7 @@ export const MessageInput = () => {
                 {replyToMessage.text || t("messages.facebookComment")}
               </span>
               <Button
-                aria-label="Clear reply"
+                aria-label={t("messages.input.clearReply")}
                 className="size-4 shrink-0 p-0"
                 onClick={() => setReplyToMessage(null)}
                 size="sm"
@@ -584,7 +584,7 @@ export const MessageInput = () => {
               {!isInstagramPostComment && (
                 <>
                   <Button
-                    aria-label="Attach file"
+                    aria-label={t("messages.input.attachFile")}
                     className="px-2 py-1.5 [&_svg]:size-5"
                     disabled={selectedMediaFiles.length > 0}
                     onClick={onClickAttachment}
@@ -624,7 +624,7 @@ export const MessageInput = () => {
                 </>
               )}
               <Button
-                aria-label="Send message"
+                aria-label={t("actions.sendMessage")}
                 className="px-2 py-1.5 [&_svg]:size-5"
                 disabled={
                   !form.formState.isValid || form.formState.isSubmitting

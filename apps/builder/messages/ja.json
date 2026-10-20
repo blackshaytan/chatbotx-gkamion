@@ -157,7 +157,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "実行履歴を見る",
-    "editSchedule": "スケジュールを編集"
+    "editSchedule": "スケジュールを編集",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "この操作を行うには、ワークスペースのスーパー管理者である必要があります。"
@@ -182,16 +185,22 @@
     "defaultAgent": "デフォルトエージェント",
     "description": "AIエージェントを管理・設定し、インテリジェントな自動化と応答によってワークスペースの機能を強化します。",
     "title": "AIエージェント",
-    "name": "エージェント"
+    "name": "エージェント",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "エージェントがPDFやドキュメントなどを利用できるようにします",
     "title": "ナレッジ",
-    "noEmbeddingProvider": "埋め込みプロバイダーが設定されていません。AIファイルの埋め込みにはOpenAIまたはGeminiとの連携が必要です。DeepSeekとClaudeは埋め込みモデルに対応していません。"
+    "noEmbeddingProvider": "埋め込みプロバイダーが設定されていません。AIファイルの埋め込みにはOpenAIまたはGeminiとの連携が必要です。DeepSeekとClaudeは埋め込みモデルに対応していません。",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "LLM関数を設定してAIエージェントをより賢くします",
-    "title": "AI関数"
+    "title": "AI関数",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "MCPを介してAIを外部システムに接続します",
@@ -2840,6 +2849,13 @@
       "productsSelected": "{count, plural, one {# 件の商品} other {# 件の商品}}",
       "noneSelected": "商品はまだありません",
       "sendFailed": "商品を送信できませんでした。"
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -3847,7 +3863,13 @@
     },
     "referredProduct": {
       "askedAbout": "この商品について質問しました"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "この連携を使用すると、Instagramボットを作成できます。",
@@ -4183,7 +4205,8 @@
       "sessionExpired": "ログインの試行の有効期限が切れました。もう一度お試しください。",
       "accessDenied": "ログインがキャンセルされました。",
       "generic": "ログインに失敗しました。もう一度お試しください。"
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "メールトピック"
@@ -4788,7 +4811,16 @@
         "callInformation": "通話情報"
       }
     },
-    "credentialSecretsRequired": "アプリシークレットとシステムユーザートークンを入力してください。まだ保存されていません。"
+    "credentialSecretsRequired": "アプリシークレットとシステムユーザートークンを入力してください。まだ保存されていません。",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -4811,7 +4843,8 @@
     "chatbotInvitationDescription1": "{chatbotName}に参加",
     "chatbotInvitationDescription2": "{userName}さんから{chatbotName}への招待が届いています。",
     "invalidInvitation": "この招待は無効か、有効期限が切れています。",
-    "workspaceUnavailable": "このワークスペースは利用できなくなりました。"
+    "workspaceUnavailable": "このワークスペースは利用できなくなりました。",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -4819,7 +4852,9 @@
       "enabled": "有効",
       "disabled": "無効",
       "description": "有効にすると、ボットが自身のメッセージを自動的に既読にします"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "受信トレイチーム"
@@ -5347,7 +5382,12 @@
     "title": "トリガー"
   },
   "users": {
-    "title": "ユーザー"
+    "title": "ユーザー",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "シーケンス",
@@ -5433,7 +5473,8 @@
     "friday": "金曜日",
     "saturday": "土曜日",
     "sunday": "日曜日",
-    "afterText": "後"
+    "afterText": "後",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "ツール",
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "これらのファイルはサーバーから完全に削除されます。この操作は元に戻せません。",
     "filesCount": "{count, plural, =0 {ファイルなし} =1 {1件のファイル} other {#件のファイル}}",
     "openMediaLibrary": "メディアライブラリを開く",
-    "uploadFailed": "{name} のアップロードに失敗しました"
+    "uploadFailed": "{name} のアップロードに失敗しました",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "広告",
@@ -9010,5 +9052,50 @@
       "showLess": "表示を減らす",
       "clearAll": "すべてクリア"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

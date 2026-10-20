@@ -12,6 +12,7 @@ import { DataTableViewOptions } from "@chatbotx.io/ui/components/data-table/data
 import { Button } from "@chatbotx.io/ui/components/ui/button"
 import { Input } from "@chatbotx.io/ui/components/ui/input"
 import { cn } from "@chatbotx.io/ui/lib/utils"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 
 interface DataTableToolbarProps<TData> extends React.ComponentProps<"div"> {
   table: Table<TData>
@@ -25,6 +26,7 @@ export function DataTableToolbar<TData>({
   locale,
   ...props
 }: DataTableToolbarProps<TData>) {
+  const uiLabels = useUiLabels()
   const isFiltered = table.getState().columnFilters.length > 0
 
   const columns = React.useMemo(
@@ -58,14 +60,14 @@ export function DataTableToolbar<TData>({
         ))}
         {isFiltered && (
           <Button
-            aria-label="Reset filters"
+            aria-label={uiLabels.resetFilters}
             variant="outline"
             size="sm"
             className="border-dashed"
             onClick={onReset}
           >
             <X />
-            Reset
+            {uiLabels.reset}
           </Button>
         )}
       </div>

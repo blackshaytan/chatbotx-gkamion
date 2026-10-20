@@ -27,13 +27,14 @@ export function GetInboxUrlDialog({
   onOpenChange,
   refConfig,
 }: GetInboxUrlDialogProps) {
+  const t = useTranslations()
   const inboxLinks = useInboxLinks({ enabled: open, refConfig })
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Get Link</DialogTitle>
+          <DialogTitle>{t("inboxes.getLink")}</DialogTitle>
           <DialogDescription />
         </DialogHeader>
 

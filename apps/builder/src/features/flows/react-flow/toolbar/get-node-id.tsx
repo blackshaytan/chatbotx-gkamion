@@ -21,7 +21,7 @@ export function GetNodeId({ nodeId }: { nodeId: string }) {
     // Copy THIS node's id (from NodeViewer), not a `forceToolbarVisible` scan:
     // overlapping nodes can flag more than one and the scan would pick the wrong id.
     copy(nodeId).then(() => {
-      toast.success("Copied Node ID")
+      toast.success(t("flows.viewer.nodeIdCopied"))
     })
   }
 

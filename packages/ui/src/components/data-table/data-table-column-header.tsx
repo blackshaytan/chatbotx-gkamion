@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@chatbotx.io/ui/components/ui/dropdown-menu"
 import { cn } from "@chatbotx.io/ui/lib/utils"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 
 interface DataTableColumnHeaderProps<TData, TValue>
   extends React.ComponentProps<typeof DropdownMenuTrigger> {
@@ -24,6 +25,7 @@ export function DataTableColumnHeader<TData, TValue>({
   className,
   ...props
 }: DataTableColumnHeaderProps<TData, TValue>) {
+  const uiLabels = useUiLabels()
   if (!column.getCanSort() && !column.getCanHide()) {
     return <div className={cn(className)}>{title}</div>
   }
@@ -56,7 +58,7 @@ export function DataTableColumnHeader<TData, TValue>({
               onClick={() => column.toggleSorting(false)}
             >
               <ChevronUp />
-              Asc
+              {uiLabels.sortAscending}
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
               className="relative pe-8 ps-2 [&>span:first-child]:end-2 [&>span:first-child]:start-auto [&_svg]:text-muted-foreground"
@@ -64,7 +66,7 @@ export function DataTableColumnHeader<TData, TValue>({
               onClick={() => column.toggleSorting(true)}
             >
               <ChevronDown />
-              Desc
+              {uiLabels.sortDescending}
             </DropdownMenuCheckboxItem>
             {column.getIsSorted() && (
               <DropdownMenuItem
@@ -72,7 +74,7 @@ export function DataTableColumnHeader<TData, TValue>({
                 onClick={() => column.clearSorting()}
               >
                 <X />
-                Reset
+                {uiLabels.reset}
               </DropdownMenuItem>
             )}
           </>
@@ -84,7 +86,7 @@ export function DataTableColumnHeader<TData, TValue>({
             onClick={() => column.toggleVisibility(false)}
           >
             <EyeOff />
-            Hide
+            {uiLabels.hideColumn}
           </DropdownMenuCheckboxItem>
         )}
       </DropdownMenuContent>

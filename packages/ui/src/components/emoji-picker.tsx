@@ -1,5 +1,6 @@
 "use client"
 
+import { UiLabelText } from "@chatbotx.io/ui/components/ui-labels"
 import { cn } from "@chatbotx.io/ui/lib/utils"
 import {
   type EmojiPickerListCategoryHeaderProps,
@@ -107,7 +108,7 @@ function EmojiPickerContent({
         className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm"
         data-slot="emoji-picker-empty"
       >
-        No emoji found.
+        <UiLabelText name="noEmojiFound" />
       </EmojiPickerPrimitive.Empty>
       <EmojiPickerPrimitive.List
         className="select-none pb-1"
@@ -148,7 +149,7 @@ function EmojiPickerFooter({
             </>
           ) : (
             <span className="ms-1.5 flex h-7 items-center truncate text-muted-foreground text-xs">
-              Select an emoji…
+              <UiLabelText name="selectEmoji" />
             </span>
           )
         }

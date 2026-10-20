@@ -7,6 +7,7 @@ import { FormOptionalLabelBridge } from "@/components/form-optional-label-bridge
 import { PublicEnvScript } from "@/components/public-env-script"
 import { SupportChatScript } from "@/components/support-chat-script"
 import { TimezoneSync } from "@/components/timezone-sync"
+import { UiLabelsBridge } from "@/components/ui-labels-bridge"
 import { env } from "@/env"
 import { TenantProvider } from "@/features/tenant"
 import { getTenantSettings } from "@/features/tenant/utils"
@@ -84,10 +85,12 @@ export default async function RootLayout({ children }: Props) {
             <UiProvider>
               <NextIntlClientProvider>
                 <FormOptionalLabelBridge>
-                  <QueryProvider>
-                    <TimezoneSync timezone={timezone} />
-                    {children}
-                  </QueryProvider>
+                  <UiLabelsBridge>
+                    <QueryProvider>
+                      <TimezoneSync timezone={timezone} />
+                      {children}
+                    </QueryProvider>
+                  </UiLabelsBridge>
                 </FormOptionalLabelBridge>
               </NextIntlClientProvider>
             </UiProvider>

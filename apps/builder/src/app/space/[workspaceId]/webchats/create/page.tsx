@@ -1,5 +1,6 @@
 import { getIdFromParams } from "@chatbotx.io/utils"
 import { notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { Suspense } from "react"
 
 import { CreateWebchatForm } from "@/features/integration-webchat/components/create-webchat-form"
@@ -20,8 +21,10 @@ export default async function CreateWebchatPage({
     return notFound()
   }
 
+  const t = await getTranslations()
+
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>{t("actions.loading")}</div>}>
       <CreateWebchatForm workspaceId={workspaceId} />
     </Suspense>
   )

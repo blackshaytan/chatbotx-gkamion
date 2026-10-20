@@ -92,7 +92,7 @@ export function DeleteInboxTeamMembersDialog({
             }
           />
           <Button
-            aria-label="Delete selected rows"
+            aria-label={t("actions.deleteSelectedRows")}
             disabled={isPending}
             onClick={() => execute({ ids: [teamMember?.id ?? ""] })}
             size="sm"

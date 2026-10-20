@@ -157,7 +157,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "Voir les envois",
-    "editSchedule": "Modifier le planning"
+    "editSchedule": "Modifier le planning",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "Vous devez être super-administrateur de l’espace de travail pour effectuer cette action."
@@ -182,16 +185,22 @@
     "defaultAgent": "Agent par défaut",
     "description": "Gérez et configurez les agents IA pour enrichir les capacités de votre espace de travail grâce à l’automatisation et aux réponses intelligentes.",
     "title": "Agents IA",
-    "name": "Agents"
+    "name": "Agents",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "Donnez à vos agents accès aux PDF, documents et autres fichiers",
     "title": "Connaissances",
-    "noEmbeddingProvider": "Aucun fournisseur d’embeddings n’est configuré. Les embeddings de fichiers IA nécessitent une intégration OpenAI ou Gemini. DeepSeek et Claude ne prennent pas en charge les modèles d’embedding."
+    "noEmbeddingProvider": "Aucun fournisseur d’embeddings n’est configuré. Les embeddings de fichiers IA nécessitent une intégration OpenAI ou Gemini. DeepSeek et Claude ne prennent pas en charge les modèles d’embedding.",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "Configurez les fonctions LLM pour rendre votre agent IA plus intelligent",
-    "title": "Fonctions IA"
+    "title": "Fonctions IA",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "Connectez l’IA à des systèmes externes via MCP",
@@ -2840,6 +2849,13 @@
       "productsSelected": "{count, plural, one {# produit} other {# produits}}",
       "noneSelected": "Aucun produit pour l'instant",
       "sendFailed": "Impossible d'envoyer les produits."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -3868,7 +3884,13 @@
     },
     "referredProduct": {
       "askedAbout": "A posé une question sur ce produit"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "Cette intégration permet de créer des bots Instagram.",
@@ -4204,7 +4226,8 @@
       "sessionExpired": "La tentative de connexion a expiré. Veuillez réessayer.",
       "accessDenied": "La connexion a été annulée.",
       "generic": "Échec de la connexion. Veuillez réessayer."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "Sujets d’e-mail"
@@ -4809,7 +4832,16 @@
         "callInformation": "Informations sur l'appel"
       }
     },
-    "credentialSecretsRequired": "Saisissez le secret de l'application et le jeton d'utilisateur système. Ils ne sont pas encore enregistrés."
+    "credentialSecretsRequired": "Saisissez le secret de l'application et le jeton d'utilisateur système. Ils ne sont pas encore enregistrés.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -4832,7 +4864,8 @@
     "chatbotInvitationDescription1": "Rejoignez {chatbotName}",
     "chatbotInvitationDescription2": "{userName} vous a invité à rejoindre {chatbotName}.",
     "invalidInvitation": "Cette invitation n’est pas valide ou a expiré.",
-    "workspaceUnavailable": "Cet espace de travail n’est plus disponible."
+    "workspaceUnavailable": "Cet espace de travail n’est plus disponible.",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -4840,7 +4873,9 @@
       "enabled": "Activé",
       "disabled": "Désactivé",
       "description": "Si activé, le bot marque automatiquement ses propres messages comme lus"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "Équipes de la boîte de réception"
@@ -5368,7 +5403,12 @@
     "title": "Déclencheurs"
   },
   "users": {
-    "title": "Utilisateurs"
+    "title": "Utilisateurs",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "Séquences",
@@ -5454,7 +5494,8 @@
     "friday": "Vendredi",
     "saturday": "Samedi",
     "sunday": "Dimanche",
-    "afterText": "Après"
+    "afterText": "Après",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "Outils",
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "Ces fichiers seront définitivement supprimés du serveur. Cette action est irréversible.",
     "filesCount": "{count, plural, =0 {Aucun fichier} =1 {1 fichier} other {# fichiers}}",
     "openMediaLibrary": "Ouvrir la bibliothèque multimédia",
-    "uploadFailed": "Échec du téléversement de {name}"
+    "uploadFailed": "Échec du téléversement de {name}",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "Publicités",
@@ -9010,5 +9052,50 @@
       "showLess": "Afficher moins",
       "clearAll": "Tout effacer"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

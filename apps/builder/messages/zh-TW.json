@@ -1818,7 +1818,13 @@
     },
     "referredProduct": {
       "askedAbout": "詢問了此商品"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "productCategories": {
     "deleteDescription": "{count, plural, =0 {此分類尚未指派任何商品。} one {# 項商品將移至未分類。} other {# 項商品將移至未分類。}}",
@@ -2011,7 +2017,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "查看執行記錄",
-    "editSchedule": "編輯排程"
+    "editSchedule": "編輯排程",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "您需要是工作區的超級管理員才能執行此操作。"
@@ -2036,16 +2045,22 @@
     "defaultAgent": "預設 AI Agent",
     "description": "管理與設定 AI Agent，以透過智慧自動化與回應提升工作區能力。",
     "title": "AI Agent",
-    "name": "AI Agents"
+    "name": "AI Agents",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "讓您的Agent程式存取 PDF、檔案等",
     "title": "知識",
-    "noEmbeddingProvider": "尚未設定嵌入提供者。AI 檔案嵌入需要 OpenAI 或 Gemini 整合；DeepSeek 和 Claude 不支援嵌入模型。"
+    "noEmbeddingProvider": "尚未設定嵌入提供者。AI 檔案嵌入需要 OpenAI 或 Gemini 整合；DeepSeek 和 Claude 不支援嵌入模型。",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "設定 LLM 功能，讓您的 AI Agent 更加智能",
-    "title": "人工智慧功能"
+    "title": "人工智慧功能",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "透過 MCP 連接 AI 與外部系統。",
@@ -3212,6 +3227,13 @@
       "productsSelected": "{count, plural, one {# 件商品} other {# 件商品}}",
       "noneSelected": "尚無商品",
       "sendFailed": "無法傳送商品。"
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -4237,7 +4259,8 @@
       "sessionExpired": "登入嘗試已逾時。請重試。",
       "accessDenied": "登入已取消。",
       "generic": "登入失敗。請重試。"
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "電子郵件主題"
@@ -4842,7 +4865,16 @@
         "callInformation": "通話資訊"
       }
     },
-    "credentialSecretsRequired": "請輸入應用程式密鑰和系統使用者權杖。它們尚未儲存。"
+    "credentialSecretsRequired": "請輸入應用程式密鑰和系統使用者權杖。它們尚未儲存。",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "ZaloOA",
@@ -4865,7 +4897,8 @@
     "chatbotInvitationDescription1": "加入 {chatbotName}",
     "chatbotInvitationDescription2": "{userName} 邀請您加入 {chatbotName}。",
     "invalidInvitation": "此邀請無效或已過期。",
-    "workspaceUnavailable": "此工作區不再可用。"
+    "workspaceUnavailable": "此工作區不再可用。",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -4873,7 +4906,9 @@
       "enabled": "已啟用",
       "disabled": "已停用",
       "description": "啟用後，機器人會自動將自己的訊息標記為已讀"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "收件匣團隊"
@@ -5401,7 +5436,12 @@
     "title": "觸發器"
   },
   "users": {
-    "title": "使用者"
+    "title": "使用者",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "序列",
@@ -5487,7 +5527,8 @@
     "friday": "週五",
     "saturday": "星期六",
     "sunday": "週日",
-    "afterText": "之後"
+    "afterText": "之後",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "工具",
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "這些檔案將從伺服器永久刪除。此操作無法復原。",
     "filesCount": "{count, plural, =0 {沒有檔案} =1 {1 個檔案} other {# 個檔案}}",
     "openMediaLibrary": "開啟媒體庫",
-    "uploadFailed": "{name} 上傳失敗"
+    "uploadFailed": "{name} 上傳失敗",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "廣告",
@@ -9010,5 +9052,50 @@
       "showLess": "收合",
       "clearAll": "全部清除"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

@@ -78,7 +78,7 @@ export function SimpleCreateWebchat({ workspaceId }: SimpleCreateWebchatProps) {
         <CardContent>
           <Form {...form}>
             <form className="space-y-6" onSubmit={handleSubmitWithAction}>
-              <InputField label="Name" name="name" required />
+              <InputField label={t("fields.name.label")} name="name" required />
 
               <div className="flex justify-end gap-2">
                 <Button

@@ -14,6 +14,7 @@ import {
 } from "@chatbotx.io/ui/components/ui/popover"
 import { Separator } from "@chatbotx.io/ui/components/ui/separator"
 import { formatDate } from "@chatbotx.io/ui/lib/format"
+import { UiLabelText } from "@chatbotx.io/ui/components/ui-labels"
 
 type DateSelection = Date[] | DateRange
 
@@ -136,7 +137,7 @@ export function DataTableDateFilter<TData>({
       const hasSelectedDates = selectedDates.from || selectedDates.to
       const dateText = hasSelectedDates
         ? formatDateRange(selectedDates)
-        : "Select date range"
+        : <UiLabelText name="selectDateRange" />
 
       return (
         <span className="flex items-center gap-2">
@@ -159,7 +160,7 @@ export function DataTableDateFilter<TData>({
     const hasSelectedDate = selectedDates.length > 0
     const dateText = hasSelectedDate
       ? formatDate(selectedDates[0], { locale })
-      : "Select date"
+      : <UiLabelText name="selectDate" />
 
     return (
       <span className="flex items-center gap-2">

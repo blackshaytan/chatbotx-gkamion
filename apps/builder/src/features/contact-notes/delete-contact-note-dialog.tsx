@@ -79,7 +79,7 @@ export function DeleteContactNoteDialog({
             }
           />
           <Button
-            aria-label="Delete selected rows"
+            aria-label={t("actions.deleteSelectedRows")}
             disabled={isPending}
             onClick={() => execute({ contactNoteId: contactNoteId ?? "" })}
             size="sm"

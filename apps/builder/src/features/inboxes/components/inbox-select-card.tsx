@@ -72,7 +72,10 @@ function InboxSelectCard({
             <AlertDescription>{t(errorMessageKey)}</AlertDescription>
           </Alert>
         )}
-        <ul aria-label="Available inbox types" className="flex flex-col gap-4">
+        <ul
+          aria-label={t("inboxes.availableTypes")}
+          className="flex flex-col gap-4"
+        >
           {offeredChannels.map((channel) => (
             <li className="flex items-center gap-2" key={channel}>
               <div className="min-w-0 flex-1">

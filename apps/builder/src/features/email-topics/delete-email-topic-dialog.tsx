@@ -95,7 +95,7 @@ export function DeleteEmailTopicsDialog({
             }
           />
           <Button
-            aria-label="Delete selected rows"
+            aria-label={t("actions.deleteSelectedRows")}
             disabled={isPending}
             onClick={() =>
               execute({ ids: emailTopics.map((topic) => topic.id) })

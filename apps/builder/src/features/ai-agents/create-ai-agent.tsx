@@ -143,10 +143,16 @@ export function CreateAIAgentDialog({
 
   const messageRoleOptions = useMemo(
     () => [
-      { label: "User", value: aiMessageRoles.enum.user },
-      { label: "Assistant", value: aiMessageRoles.enum.assistant },
+      {
+        label: t("aiAgent.messageRoles.user"),
+        value: aiMessageRoles.enum.user,
+      },
+      {
+        label: t("aiAgent.messageRoles.assistant"),
+        value: aiMessageRoles.enum.assistant,
+      },
     ],
-    [],
+    [t],
   )
 
   const addOptions = () => {

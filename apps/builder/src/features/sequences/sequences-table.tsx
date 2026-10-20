@@ -181,9 +181,9 @@ export function SequencesTable({ workspaceId, promises }: SequencesTableProps) {
         cell: ({ row }) => (
           <div className="flex justify-center">
             {row.original.active ? (
-              <Badge variant="default">Active</Badge>
+              <Badge variant="default">{t("sequences.active")}</Badge>
             ) : (
-              <Badge variant="outline">Inactive</Badge>
+              <Badge variant="outline">{t("sequences.inactive")}</Badge>
             )}
           </div>
         ),
@@ -200,7 +200,7 @@ export function SequencesTable({ workspaceId, promises }: SequencesTableProps) {
                 render={
                   <Button size="icon" variant="ghost">
                     <MoreHorizontalIcon className="h-4 w-4" />
-                    <span className="sr-only">Open menu</span>
+                    <span className="sr-only">{t("actions.openMenu")}</span>
                   </Button>
                 }
               />

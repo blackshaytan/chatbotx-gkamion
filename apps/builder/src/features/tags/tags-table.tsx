@@ -43,10 +43,10 @@ function TagsTableContent({ promises, workspaceId, folderId }: TagsTableProps) {
   const handleCopy = (id: string) => {
     copy(id)
       .then(() => {
-        toast.success("Copied to clipboard!")
+        toast.success(t("messages.copiedToClipboard"))
       })
       .catch(() => {
-        toast.error("Failed to copy!")
+        toast.error(t("messages.failedToCopy"))
       })
   }
 

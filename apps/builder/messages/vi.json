@@ -157,7 +157,10 @@
     "stop": "Dừng",
     "resume": "Tiếp tục",
     "viewRuns": "Xem các lần gửi",
-    "editSchedule": "Sửa lịch"
+    "editSchedule": "Sửa lịch",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "Bạn cần là super admin của workspace để thực hiện thao tác này."
@@ -182,7 +185,11 @@
     "defaultAgent": "Agent mặc định",
     "description": "Quản lý và cấu hình AI Agents để nâng cao khả năng workspace của bạn với tự động hóa và phản hồi thông minh.",
     "title": "AI Agents",
-    "name": "Agents"
+    "name": "Agents",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiAgentActions": {
     "title": "Hành động AI",
@@ -229,11 +236,13 @@
   "aiFiles": {
     "description": "Cho phép Agents của bạn truy cập PDF, Docs và nhiều hơn nữa",
     "title": "Knowledge",
-    "noEmbeddingProvider": "Chưa cấu hình nhà cung cấp embedding. Tính năng AI File yêu cầu tích hợp OpenAI hoặc Gemini. DeepSeek và Claude không hỗ trợ mô hình embedding."
+    "noEmbeddingProvider": "Chưa cấu hình nhà cung cấp embedding. Tính năng AI File yêu cầu tích hợp OpenAI hoặc Gemini. DeepSeek và Claude không hỗ trợ mô hình embedding.",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "Cấu hình các chức năng LLM để làm cho AI agent thông minh hơn",
-    "title": "AI Functions"
+    "title": "AI Functions",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "Kết nối AI với các hệ thống bên ngoài qua MCP",
@@ -3028,6 +3037,13 @@
       "productsSelected": "{count, plural, one {# sản phẩm} other {# sản phẩm}}",
       "noneSelected": "Chưa có sản phẩm",
       "sendFailed": "Không thể gửi sản phẩm."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -3910,7 +3926,13 @@
     },
     "referredProduct": {
       "askedAbout": "Đã hỏi về sản phẩm này"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "Tích hợp này cho phép bạn tạo bot Instagram.",
@@ -4246,7 +4268,8 @@
       "sessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng thử lại.",
       "accessDenied": "Bạn đã huỷ đăng nhập.",
       "generic": "Đăng nhập thất bại. Vui lòng thử lại."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "Chủ đề Email"
@@ -4851,7 +4874,16 @@
         "callInformation": "Thông tin cuộc gọi"
       }
     },
-    "credentialSecretsRequired": "Nhập App Secret và System User Token. Hiện chưa được lưu."
+    "credentialSecretsRequired": "Nhập App Secret và System User Token. Hiện chưa được lưu.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -4874,7 +4906,8 @@
     "chatbotInvitationDescription1": "Tham gia {chatbotName}",
     "chatbotInvitationDescription2": "{userName} đã mời bạn tham gia {chatbotName}.",
     "invalidInvitation": "Lời mời này không hợp lệ hoặc đã hết hạn.",
-    "workspaceUnavailable": "Không gian làm việc này không còn khả dụng."
+    "workspaceUnavailable": "Không gian làm việc này không còn khả dụng.",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -4882,7 +4915,9 @@
       "enabled": "Đang bật",
       "disabled": "Đang tắt",
       "description": "Nếu bật thì bot sẽ tự động đánh dấu tin nhắn bot là đã đọc"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "Nhóm hộp thư"
@@ -5532,14 +5567,20 @@
     "saturday": "Thứ Bảy",
     "sunday": "Chủ Nhật",
     "afterText": "Sau",
-    "title": "Chăm sóc"
+    "title": "Chăm sóc",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "Công cụ",
     "beta": "Beta"
   },
   "users": {
-    "title": "Người dùng"
+    "title": "Người dùng",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "aiProviders": {
     "openai": "OpenAI",
@@ -7923,7 +7964,8 @@
     "confirmDeleteFilesDescription": "Các tệp này sẽ bị xoá vĩnh viễn khỏi máy chủ. Hành động này không thể hoàn tác.",
     "filesCount": "{count, plural, =0 {Không có tệp} =1 {1 tệp} other {# tệp}}",
     "openMediaLibrary": "Mở Thư viện Media",
-    "uploadFailed": "Tải lên thất bại: {name}"
+    "uploadFailed": "Tải lên thất bại: {name}",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "Quảng cáo",
@@ -9010,5 +9052,50 @@
       "showLess": "Thu gọn",
       "clearAll": "Xoá tất cả"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

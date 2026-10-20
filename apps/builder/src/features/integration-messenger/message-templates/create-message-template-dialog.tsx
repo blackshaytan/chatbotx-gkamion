@@ -43,6 +43,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { MediaLibraryTrigger } from "@/features/media-library/components/media-library-trigger"
+import { localizeLanguageOptions } from "@/lib/language-names"
 import { createMessengerMessageTemplateAction } from "./actions/create-message-template"
 import { messengerTemplateLanguageOptions } from "./components/language-options"
 import { TextWithVariablesField } from "./components/text-with-variables-field"
@@ -228,7 +229,15 @@ export function CreateMessageTemplateDialog({
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(null)
-  const defaultLanguage = locale.startsWith("en") ? "en" : "vi"
+  const languageOptions = useMemo(
+    () => localizeLanguageOptions(messengerTemplateLanguageOptions, locale),
+    [locale],
+  )
+  const isTemplateLanguage = messengerTemplateLanguageOptions.some(
+    (option) => option.value === locale,
+  )
+  const fallbackLanguage = locale.startsWith("en") ? "en" : "vi"
+  const defaultLanguage = isTemplateLanguage ? locale : fallbackLanguage
   const formDefaultValues = useMemo(
     () => ({ ...defaultValues, language: defaultLanguage }),
     [defaultLanguage],
@@ -344,7 +353,7 @@ export function CreateMessageTemplateDialog({
               <SelectField
                 label={t("fields.language.label")}
                 name="language"
-                options={messengerTemplateLanguageOptions}
+                options={languageOptions}
                 required
               />
             </div>

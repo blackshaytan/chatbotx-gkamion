@@ -5,6 +5,7 @@ import { NumericFormat, type NumericFormatProps } from "react-number-format"
 import { useComposedRefs } from "../../lib/compose-refs"
 import { Button } from "./button"
 import { Input } from "./input"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 
 export interface NumberInputProps
   extends Omit<
@@ -47,6 +48,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     },
     ref,
   ) => {
+    const uiLabels = useUiLabels()
     const inputRef = useRef<HTMLInputElement>(null)
     const handleInputRef = useCallback(
       (node: HTMLInputElement | null) => {
@@ -167,7 +169,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
 
         <div className="flex flex-col">
           <Button
-            aria-label="Increase value"
+            aria-label={uiLabels.increaseValue}
             className="px-2 h-4.5 rounded-s-none rounded-ee-none border-input border-s-0 border-b-[0.5px] focus-visible:relative"
             variant="outline"
             type="button"
@@ -177,7 +179,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             <ChevronUp size={15} />
           </Button>
           <Button
-            aria-label="Decrease value"
+            aria-label={uiLabels.decreaseValue}
             className="px-2 h-4.5 rounded-s-none rounded-se-none border-input border-s-0 border-t-[0.5px] focus-visible:relative"
             variant="outline"
             type="button"

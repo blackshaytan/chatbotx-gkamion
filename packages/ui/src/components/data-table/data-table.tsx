@@ -17,6 +17,7 @@ import {
 } from "@chatbotx.io/ui/components/ui/table"
 import { getCommonPinningStyles } from "@chatbotx.io/ui/lib/data-table"
 import { cn } from "@chatbotx.io/ui/lib/utils"
+import { useUiLabels } from "@chatbotx.io/ui/components/ui-labels"
 
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   table: TanstackTable<TData>
@@ -50,7 +51,8 @@ export function DataTable<TData>({
   ...props
 }: DataTableProps<TData>) {
   const rows = table.getRowModel().rows
-  const noResults = labels?.noResults ?? "No results."
+  const uiLabels = useUiLabels()
+  const noResults = labels?.noResults ?? uiLabels.noResults
 
   return (
     <div

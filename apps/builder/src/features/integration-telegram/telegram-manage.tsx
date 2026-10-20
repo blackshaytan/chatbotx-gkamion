@@ -82,7 +82,7 @@ export function TelegramManage({
             ))}
             {integrationTelegrams.length === 0 && (
               <TableRow>
-                <TableCell colSpan={3}>No data</TableCell>
+                <TableCell colSpan={3}>{t("messages.noData")}</TableCell>
               </TableRow>
             )}
           </TableBody>

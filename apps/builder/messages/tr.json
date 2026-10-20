@@ -157,7 +157,10 @@
     "stop": "Stop",
     "resume": "Resume",
     "viewRuns": "Çalıştırmaları gör",
-    "editSchedule": "Programı düzenle"
+    "editSchedule": "Programı düzenle",
+    "deleteSelectedRows": "Delete selected rows",
+    "somethingWentWrong": "Something went wrong!",
+    "tryAgain": "Try again"
   },
   "errors": {
     "superAdminRequired": "Bunu yapmak için çalışma alanı süper yöneticisi olmanız gerekir."
@@ -182,16 +185,22 @@
     "defaultAgent": "Varsayılan Temsilci",
     "description": "Akıllı otomasyon ve yanıtlarla çalışma alanınızın yeteneklerini geliştirmek için yapay zekâ temsilcilerini yönetin ve yapılandırın.",
     "title": "Yapay Zekâ Temsilcileri",
-    "name": "Temsilciler"
+    "name": "Temsilciler",
+    "messageRoles": {
+      "user": "User",
+      "assistant": "Assistant"
+    }
   },
   "aiFiles": {
     "description": "Temsilcilerinize PDF'lere, Belgelere ve Daha Fazlasına Erişim Verin",
     "title": "Bilgi",
-    "noEmbeddingProvider": "Yapılandırılmış bir gömme sağlayıcısı yok. Yapay zekâ dosya gömmeleri OpenAI veya Gemini entegrasyonu gerektirir. DeepSeek ve Claude gömme modellerini desteklemez."
+    "noEmbeddingProvider": "Yapılandırılmış bir gömme sağlayıcısı yok. Yapay zekâ dosya gömmeleri OpenAI veya Gemini entegrasyonu gerektirir. DeepSeek ve Claude gömme modellerini desteklemez.",
+    "deleteFile": "Delete AI file"
   },
   "aiFunctions": {
     "description": "Yapay zekâ temsilcinizi daha akıllı hâle getirmek için LLM işlevlerini yapılandırın",
-    "title": "Yapay Zekâ İşlevleri"
+    "title": "Yapay Zekâ İşlevleri",
+    "attributePlaceholder": "Attribute"
   },
   "aiMcpServers": {
     "description": "Yapay Zekâyı MCP Aracılığıyla Harici Sistemlere Bağlayın",
@@ -2986,6 +2995,13 @@
       "productsSelected": "{count, plural, one {# ürün} other {# ürün}}",
       "noneSelected": "Henüz ürün yok",
       "sendFailed": "Ürünler gönderilemedi."
+    },
+    "viewer": {
+      "deleteEdge": "Delete edge",
+      "sendNode": "Send node: {name}",
+      "flow": "Flow: {name}",
+      "typing": "Typing for {seconds, plural, one {# second} other {# seconds}}",
+      "nodeIdCopied": "Copied Node ID"
     }
   },
   "folders": {
@@ -3868,7 +3884,13 @@
     },
     "referredProduct": {
       "askedAbout": "Bu ürün hakkında soru sordu"
-    }
+    },
+    "input": {
+      "form": "Message input form",
+      "clearReply": "Clear reply",
+      "attachFile": "Attach file"
+    },
+    "headerPreview": "Header preview"
   },
   "instagram": {
     "description": "Bu entegrasyon, Instagram botları oluşturmanızı sağlar.",
@@ -4204,7 +4226,8 @@
       "sessionExpired": "Giriş denemesinin süresi doldu. Lütfen tekrar deneyin.",
       "accessDenied": "Giriş iptal edildi.",
       "generic": "Giriş başarısız oldu. Lütfen tekrar deneyin."
-    }
+    },
+    "signedIn": "Signed in successfully"
   },
   "emailTopics": {
     "title": "E-posta Konuları"
@@ -4809,7 +4832,16 @@
         "callInformation": "Çağrı bilgisi"
       }
     },
-    "credentialSecretsRequired": "Uygulama sırrını ve sistem kullanıcısı jetonunu girin. Henüz kaydedilmediler."
+    "credentialSecretsRequired": "Uygulama sırrını ve sistem kullanıcısı jetonunu girin. Henüz kaydedilmediler.",
+    "ecommerce": {
+      "title": "Sell your products on WhatsApp",
+      "manageProducts": "Manage your products"
+    },
+    "profile": {
+      "about": "About",
+      "address": "Address",
+      "websiteUrl": "Website URL"
+    }
   },
   "zalo": {
     "title": "Zalo OA",
@@ -4832,7 +4864,8 @@
     "chatbotInvitationDescription1": "{chatbotName}'a katılın",
     "chatbotInvitationDescription2": "{userName}, sizi {chatbotName}'a katılmaya davet etti.",
     "invalidInvitation": "Bu davet geçersiz veya süresi dolmuş.",
-    "workspaceUnavailable": "Bu çalışma alanı artık kullanılamıyor."
+    "workspaceUnavailable": "Bu çalışma alanı artık kullanılamıyor.",
+    "greeting": "Hello,"
   },
   "inboxes": {
     "markReadOnOutbound": {
@@ -4840,7 +4873,9 @@
       "enabled": "Etkin",
       "disabled": "Devre dışı",
       "description": "Etkinleştirildiğinde bot kendi mesajlarını otomatik olarak okundu olarak işaretler"
-    }
+    },
+    "getLink": "Get Link",
+    "availableTypes": "Available inbox types"
   },
   "inboxTeams": {
     "title": "Gelen Kutusu Ekipleri"
@@ -5368,7 +5403,12 @@
     "title": "Tetikleyiciler"
   },
   "users": {
-    "title": "Kullanıcılar"
+    "title": "Kullanıcılar",
+    "options": {
+      "agents": "Agents",
+      "unassigned": "Unassigned",
+      "all": "All"
+    }
   },
   "sequences": {
     "title": "Sıralar",
@@ -5454,7 +5494,8 @@
     "friday": "Cuma",
     "saturday": "Cumartesi",
     "sunday": "Pazar",
-    "afterText": "Sonra"
+    "afterText": "Sonra",
+    "inactive": "Inactive"
   },
   "tools": {
     "title": "Araçlar",
@@ -7881,7 +7922,8 @@
     "confirmDeleteFilesDescription": "Bu dosyalar sunucudan kalıcı olarak silinecek. Bu işlem geri alınamaz.",
     "filesCount": "{count, plural, =0 {Dosya yok} =1 {1 dosya} other {# dosya}}",
     "openMediaLibrary": "Medya Kitaplığını Aç",
-    "uploadFailed": "{name} yüklenemedi"
+    "uploadFailed": "{name} yüklenemedi",
+    "deleteFiles": "Delete files"
   },
   "adsCampaign": {
     "title": "Reklamlar",
@@ -9010,5 +9052,50 @@
       "showLess": "Daha az göster",
       "clearAll": "Tümünü temizle"
     }
+  },
+  "uiLabels": {
+    "close": "Close",
+    "clear": "Clear",
+    "reset": "Reset",
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedRows": "{selected} of {total} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {page} of {pageCount}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortAscending": "Asc",
+    "sortDescending": "Desc",
+    "hideColumn": "Hide",
+    "selectedCount": "{count} selected",
+    "clearFilters": "Clear filters",
+    "resetFilters": "Reset filters",
+    "selectDate": "Select date",
+    "selectDateRange": "Select date range",
+    "rangeFrom": "From",
+    "rangeTo": "to",
+    "rangeSlider": "{title} slider",
+    "clearFilter": "Clear {title} filter",
+    "view": "View",
+    "toggleColumns": "Toggle columns",
+    "searchColumns": "Search columns...",
+    "noColumnsFound": "No columns found.",
+    "noEmojiFound": "No emoji found.",
+    "selectEmoji": "Select an emoji…",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "searchOptions": "Search options...",
+    "selectAll": "(Select All)",
+    "selectAllWithCount": "(Select All - {count} options)",
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebarTitle": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "uploadFile": "Upload File",
+    "uploadFailed": "Upload failed",
+    "uploadUnexpectedError": "An unexpected error occurred during upload"
   }
 }

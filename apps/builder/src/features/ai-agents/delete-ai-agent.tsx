@@ -97,7 +97,7 @@ export function DeleteAIAgentsDialog({
             }
           />
           <Button
-            aria-label="Delete selected rows"
+            aria-label={t("actions.deleteSelectedRows")}
             disabled={isExecuting}
             onClick={() =>
               execute({ ids: (agents ?? []).map((agent) => agent.id) })

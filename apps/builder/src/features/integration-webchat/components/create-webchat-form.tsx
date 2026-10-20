@@ -124,7 +124,7 @@ export function CreateWebchatForm({ workspaceId }: { workspaceId: string }) {
   return (
     <Form {...form}>
       <form className="space-y-6" onSubmit={handleSubmitWithAction}>
-        <InputField label="Name" name="name" required />
+        <InputField label={t("fields.name.label")} name="name" required />
 
         <ComboboxField
           allowClear

@@ -148,7 +148,9 @@ function ListInboxTeamsDetail({
                             render={
                               <Button size="icon" variant="ghost">
                                 <MoreHorizontalIcon className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
+                                <span className="sr-only">
+                                  {t("actions.openMenu")}
+                                </span>
                               </Button>
                             }
                           />
@@ -211,7 +213,7 @@ function ListInboxTeamsDetail({
             ) : (
               <TableRow>
                 <TableCell className="h-24 text-center" colSpan={3}>
-                  No results.
+                  {t("uiLabels.noResults")}
                 </TableCell>
               </TableRow>
             )}

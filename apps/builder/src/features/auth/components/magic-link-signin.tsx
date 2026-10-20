@@ -36,7 +36,7 @@ export const MagicLinkSignIn = () => {
     })
 
     if (data) {
-      toast.success("We sent verification URL to your email")
+      toast.success(t("auth.magicLinkSent"))
       redirect("/auth/magic-link-sent")
     } else {
       toast.error(error.message)

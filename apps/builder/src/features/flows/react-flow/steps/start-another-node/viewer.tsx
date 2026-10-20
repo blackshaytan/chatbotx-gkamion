@@ -2,6 +2,7 @@
 
 import type { StartAnotherNodeStepSchema } from "@chatbotx.io/flow-config"
 import { useReactFlow } from "@xyflow/react"
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 
 type SendNodeStepViewerProps = {
@@ -12,6 +13,7 @@ const SendNodeStepViewer = (props: SendNodeStepViewerProps) => {
   const { data } = props
 
   const { getNodes } = useReactFlow()
+  const t = useTranslations()
   const targetNode = useMemo(() => {
     const nodes = getNodes()
     return nodes.find((n) => n.id === data.nodeId)
@@ -20,7 +22,11 @@ const SendNodeStepViewer = (props: SendNodeStepViewerProps) => {
   return (
     <div className="items-center justify-center overflow-hidden rounded-lg bg-secondary">
       {targetNode && (
-        <p className="px-4 py-2">Send node: {targetNode.data.name as string}</p>
+        <p className="px-4 py-2">
+          {t("flows.viewer.sendNode", {
+            name: targetNode.data.name as string,
+          })}
+        </p>
       )}
     </div>
   )
