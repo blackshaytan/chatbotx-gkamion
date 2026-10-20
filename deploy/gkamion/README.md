@@ -24,8 +24,8 @@ rustfs, mailhog).
 2. Build on GitHub (repo `blackshaytan/chatbotx-gkamion`, workflow
    `.github/workflows/gkamion-images.yml`, manual):
    `gh workflow run gkamion-images.yml -R blackshaytan/chatbotx-gkamion`.
-   Images: `ghcr.io/blackshaytan/chatbotx-gkamion-<service>:latest` (private packages).
-3. `deploy/gkamion/up.sh` (the VPS `gh` token has `read:packages`; `up.sh` logs in to GHCR with it)
+   Images: `ghcr.io/blackshaytan/chatbotx-gkamion-<service>:latest`.
+3. `deploy/gkamion/up.sh` (public packages pull anonymously; for private ones set `GHCR_TOKEN` to a classic PAT with `read:packages`)
 4. `sudo deploy/gkamion/enable-nginx.sh`
 5. Sign up at `https://chatbotx.gkamion.ru`, then `deploy/gkamion/verify-email.sh <email>`.
 

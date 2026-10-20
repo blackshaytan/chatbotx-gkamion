@@ -10,7 +10,11 @@ ROOT=$(cd "$(dirname "$0")/../.." && pwd)
   exit 1
 }
 COMPOSE=(docker compose -f "$ROOT/deploy/gkamion/docker-compose.prod.yml")
-gh auth token | docker login ghcr.io -u "$(gh api user --jq .login)" --password-stdin >/dev/null
+# Public packages pull anonymously; private ones need `docker login ghcr.io`
+# with a classic PAT (read:packages) — the gh CLI OAuth token is refused.
+if [ -n "${GHCR_TOKEN:-}" ]; then
+  printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "${GHCR_USER:-blackshaytan}" --password-stdin >/dev/null
+fi
 "${COMPOSE[@]}" pull "$@"
 "${COMPOSE[@]}" up -d --no-build "$@"
 "${COMPOSE[@]}" ps
