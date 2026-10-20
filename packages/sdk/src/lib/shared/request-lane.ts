@@ -1,12 +1,12 @@
 const lanes = new Map<string, Promise<void>>()
 
 /**
- * Serialises ZZAP requests of one API key: resolves with a `release` callback
- * once the previous request of `key` was released at least `minIntervalMs`
- * ago. Call `release` when the request finished (also on failure).
- * Process-local, like Geka's limiter.
+ * Serialises requests of one key (an API key, a seller session): resolves
+ * with a `release` callback once the previous request of `key` was released
+ * at least `minIntervalMs` ago. Call `release` when the request finished
+ * (also on failure). Process-local.
  */
-export const acquireZzapSlot = async (
+export const acquireRequestSlot = async (
   key: string,
   minIntervalMs: number,
 ): Promise<() => void> => {

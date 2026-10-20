@@ -1,3 +1,4 @@
+import { acquireRequestSlot } from "@chatbotx.io/sdk"
 import ky from "ky"
 import {
   ZZAP_429_MAX_RETRIES,
@@ -8,7 +9,6 @@ import {
 } from "../constants"
 import { ZzapAPIException, ZzapRateLimitException } from "../exception"
 import type { ZzapAuthValue } from "../schema"
-import { acquireZzapSlot } from "./rate-limiter"
 
 type Envelope<T> = {
   success?: boolean
@@ -77,7 +77,7 @@ export const createZzapClient = (auth: ZzapAuthValue): ZzapClient => {
     init: { json?: unknown; searchParams?: ZzapSearchParams },
   ): Promise<T> => {
     for (let attempt = 0; attempt <= ZZAP_429_MAX_RETRIES; attempt++) {
-      const release = await acquireZzapSlot(auth.secretText, minIntervalMs)
+      const release = await acquireRequestSlot(auth.secretText, minIntervalMs)
       let response: Response
       try {
         response = await http(path, {

@@ -1,48 +1,11 @@
-import { afterEach, describe, expect, test, vi } from "vitest"
+import { describe, expect, test } from "vitest"
 import { makeZzapMessageId, makeZzapOutgoingId } from "../src/lib/ids"
 import { isAllowedZzapFileUrl, parseZzapMedia } from "../src/lib/media"
 import { formatMoscowDate } from "../src/lib/moscow-time"
 import { extractOrderCodes } from "../src/lib/orders"
-import { acquireZzapSlot } from "../src/lib/rate-limiter"
 
 const MESSAGE_ID_PATTERN = /^zzap:[0-9a-f]{24}$/
 const OUTGOING_ID_PATTERN = /^zzap-out:[0-9a-f]{16}$/
-
-describe("acquireZzapSlot", () => {
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
-  test("spaces requests of one key from the previous release", async () => {
-    vi.useFakeTimers()
-    const started: string[] = []
-    const first = acquireZzapSlot("key-a", 3000).then((release) => {
-      started.push("first")
-      return release
-    })
-    const second = acquireZzapSlot("key-a", 3000).then((release) => {
-      started.push("second")
-      release()
-    })
-    const releaseFirst = await first
-    await vi.advanceTimersByTimeAsync(10_000)
-    expect(started).toEqual(["first"])
-
-    releaseFirst()
-    await vi.advanceTimersByTimeAsync(2999)
-    expect(started).toEqual(["first"])
-    await vi.advanceTimersByTimeAsync(1)
-    await second
-    expect(started).toEqual(["first", "second"])
-  })
-
-  test("does not hold back other keys", async () => {
-    const releaseA = await acquireZzapSlot("key-b", 60_000)
-    const releaseC = await acquireZzapSlot("key-c", 60_000)
-    releaseA()
-    releaseC()
-  })
-})
 
 describe("parseZzapMedia", () => {
   test("extracts an [img] tag", () => {

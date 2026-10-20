@@ -1,19 +1,12 @@
-import type { ButtonStepProps } from "@chatbotx.io/flow-config"
 import type { Context, MessageHandlers } from "@chatbotx.io/sdk"
 import { ChannelError } from "@chatbotx.io/sdk"
 import { HttpResponse, http, server } from "@chatbotx.io/vitest-config/msw"
 import { describe, expect, test, vi } from "vitest"
-import { ZZAP_TEXT_LIMIT } from "../src/constants"
 import { receiveMessage } from "../src/handlers/message/incoming-message"
 import {
   sendFlowStep,
   sendMessage,
 } from "../src/handlers/message/outgoing-message"
-import {
-  fromFlowButton,
-  splitZzapText,
-  toZzapTexts,
-} from "../src/handlers/message/to-zzap-text"
 import type { ZzapAuthValue } from "../src/schema"
 import { ZZAP_BASE, zzapAuth } from "./fixtures"
 
@@ -52,49 +45,6 @@ const event = (text: string, extra: Record<string, unknown> = {}) => ({
   text,
   buyer: null,
   ...extra,
-})
-
-describe("toZzapTexts", () => {
-  test("renders buttons as a numbered list under the text", () => {
-    expect(
-      toZzapTexts({
-        text: "Привет",
-        buttons: [{ label: "Да" }, { label: "Сайт", url: "https://x.ru" }],
-      }),
-    ).toEqual(["Привет\n\n1. Да\n2. Сайт: https://x.ru"])
-  })
-
-  test("renders media as links", () => {
-    expect(
-      toZzapTexts({
-        media: [
-          { url: "https://cdn/a.jpg" },
-          { url: "https://cdn/b.pdf", filename: "b.pdf" },
-        ],
-      }),
-    ).toEqual(["https://cdn/a.jpg\n\n📎 b.pdf\nhttps://cdn/b.pdf"])
-  })
-
-  test("returns nothing for an empty message", () => {
-    expect(toZzapTexts({ text: "  " })).toEqual([])
-  })
-
-  test("splits long text at line breaks within the limit", () => {
-    const line = "x".repeat(ZZAP_TEXT_LIMIT - 10)
-    const parts = splitZzapText(`${line}\n${line}`)
-    expect(parts).toEqual([line, line])
-    expect(splitZzapText("y".repeat(ZZAP_TEXT_LIMIT + 1))).toHaveLength(2)
-  })
-
-  test("keeps website buttons' URL", () => {
-    expect(
-      fromFlowButton({
-        label: "Каталог",
-        buttonType: "openWebsite",
-        beforeStep: { url: "https://shop.ru" },
-      } as unknown as ButtonStepProps),
-    ).toEqual({ label: "Каталог", url: "https://shop.ru" })
-  })
 })
 
 describe("sending", () => {

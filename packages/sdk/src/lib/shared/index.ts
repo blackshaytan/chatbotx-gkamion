@@ -14,6 +14,8 @@ export * from "./meta-messaging"
 export * from "./mime-types"
 export * from "./profile-fields"
 export * from "./recording-content-type"
+export * from "./request-lane"
+export * from "./text-channel"
 
 export type Handler<I, O> = (props: I) => Promise<O>
 
