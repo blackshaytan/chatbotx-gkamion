@@ -1,12 +1,10 @@
-import {
-  type ButtonStepProps,
-  buttonTypes,
-  type SendFileStepSchema,
-  type SendImageStepSchema,
-  type SendQuickReplyStepSchema,
-  type SendTextStepSchema,
-  type StepType,
-  stepTypes,
+import type {
+  ButtonStepProps,
+  SendFileStepSchema,
+  SendImageStepSchema,
+  SendQuickReplyStepSchema,
+  SendTextStepSchema,
+  StepType,
 } from "@chatbotx.io/flow-config"
 import type { SendFlowStepData } from "../flow-step-data"
 import type { MessageButtonTemplate } from "./message"
@@ -24,14 +22,14 @@ export type TextChannelOutgoing = {
 
 /** Flow steps a text-only chat (ZZAP, DROM) can deliver. */
 export const textHandledFlowStepTypes = [
-  stepTypes.enum.sendText,
-  stepTypes.enum.sendImage,
-  stepTypes.enum.sendFile,
-  stepTypes.enum.sendQuickReply,
+  "sendText",
+  "sendImage",
+  "sendFile",
+  "sendQuickReply",
 ] as const satisfies readonly StepType[]
 
 export const fromFlowButton = (button: ButtonStepProps): TextChannelButton =>
-  button.buttonType === buttonTypes.enum.openWebsite
+  button.buttonType === "openWebsite"
     ? { label: button.label, url: button.beforeStep.url }
     : { label: button.label }
 
@@ -52,19 +50,19 @@ export const flowStepToTextOutgoing = (
     ...replies,
   ]
   switch (step.stepType) {
-    case stepTypes.enum.sendText: {
+    case "sendText": {
       const s = step as SendTextStepSchema
       return { text: s.text, buttons: withReplies(s.buttons) }
     }
-    case stepTypes.enum.sendImage: {
+    case "sendImage": {
       const s = step as SendImageStepSchema
       return { media: [{ url: s.url }], buttons: withReplies(s.buttons ?? []) }
     }
-    case stepTypes.enum.sendFile: {
+    case "sendFile": {
       const s = step as SendFileStepSchema
       return { media: [{ url: s.url }], buttons: withReplies(s.buttons) }
     }
-    case stepTypes.enum.sendQuickReply: {
+    case "sendQuickReply": {
       const s = step as SendQuickReplyStepSchema
       return { text: s.message, buttons: withReplies(s.buttons) }
     }
