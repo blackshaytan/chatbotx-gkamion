@@ -131,6 +131,9 @@ importers:
       '@chatbotx.io/integration-drip':
         specifier: workspace:*
         version: link:../../integrations/drip
+      '@chatbotx.io/integration-drom':
+        specifier: workspace:*
+        version: link:../../integrations/drom
       '@chatbotx.io/integration-facebook-ads':
         specifier: workspace:*
         version: link:../../integrations/facebook-ads
@@ -763,6 +766,9 @@ importers:
       '@chatbotx.io/integration-drip':
         specifier: workspace:*
         version: link:../../integrations/drip
+      '@chatbotx.io/integration-drom':
+        specifier: workspace:*
+        version: link:../../integrations/drom
       '@chatbotx.io/integration-facebook-ads':
         specifier: workspace:*
         version: link:../../integrations/facebook-ads
@@ -2585,6 +2591,9 @@ importers:
       '@chatbotx.io/integration-drip':
         specifier: workspace:*
         version: link:../../integrations/drip
+      '@chatbotx.io/integration-drom':
+        specifier: workspace:*
+        version: link:../../integrations/drom
       '@chatbotx.io/integration-facebook-ads':
         specifier: workspace:*
         version: link:../../integrations/facebook-ads
@@ -2709,6 +2718,9 @@ importers:
       '@chatbotx.io/integration-drip':
         specifier: workspace:*
         version: link:../../integrations/drip
+      '@chatbotx.io/integration-drom':
+        specifier: workspace:*
+        version: link:../../integrations/drom
       '@chatbotx.io/integration-facebook-ads':
         specifier: workspace:*
         version: link:../../integrations/facebook-ads

@@ -13,6 +13,7 @@ import { integration as integrationActiveCampaign } from "@chatbotx.io/integrati
 import { integration as integrationApi } from "@chatbotx.io/integration-api"
 import { integration as integrationChatbotx } from "@chatbotx.io/integration-chatbotx"
 import { integration as integrationDrip } from "@chatbotx.io/integration-drip"
+import { integration as integrationDrom } from "@chatbotx.io/integration-drom"
 import { integration as integrationFacebookAds } from "@chatbotx.io/integration-facebook-ads"
 import { integration as integrationGetResponse } from "@chatbotx.io/integration-get-response"
 import { integration as integrationGoogleAds } from "@chatbotx.io/integration-google-ads"
@@ -112,6 +113,7 @@ export const CONNECTION_REGISTRY: StoreBoundConnectionRegistry = {
   claude: fromCredentialProvider(claudeConnectionProvider, "claude"),
   deepseek: fromCredentialProvider(deepseekConnectionProvider, "deepseek"),
   drip: fromIntegration(integrationDrip, "drip"),
+  drom: fromIntegration(integrationDrom, "drom"),
   facebookAds: fromIntegration(
     integrationFacebookAds,
     "facebookAds",
@@ -165,5 +167,4 @@ export const CONNECTION_REGISTRY: StoreBoundConnectionRegistry = {
   whatsapp: fromIntegration(integrationWhatsapp, "whatsapp", "whatsapp"),
   zalo: fromIntegration(integrationZalo, "zalo", "zalo"),
   zzap: fromIntegration(integrationZzap, "zzap"),
-  drom: null,
 }

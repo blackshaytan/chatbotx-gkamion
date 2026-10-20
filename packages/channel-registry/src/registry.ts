@@ -22,6 +22,7 @@ import { integration as integrationActiveCampaign } from "@chatbotx.io/integrati
 import { integration as integrationApi } from "@chatbotx.io/integration-api"
 import { integration as integrationChatbotx } from "@chatbotx.io/integration-chatbotx"
 import { integration as integrationDrip } from "@chatbotx.io/integration-drip"
+import { integration as integrationDrom } from "@chatbotx.io/integration-drom"
 import { integration as integrationFacebookAds } from "@chatbotx.io/integration-facebook-ads"
 import { integration as integrationGetResponse } from "@chatbotx.io/integration-get-response"
 import { integration as integrationGoogleAds } from "@chatbotx.io/integration-google-ads"
@@ -63,6 +64,7 @@ export const integrations = {
   api: integrationApi,
   chatbotx: integrationChatbotx,
   drip: integrationDrip,
+  drom: integrationDrom,
   facebookAds: integrationFacebookAds,
   getResponse: integrationGetResponse,
   googleAds: integrationGoogleAds,
@@ -193,6 +195,11 @@ export const integrationService = {
         columnName = "codeObject"
         break
       }
+      case "drom": {
+        modelName = "IntegrationDrom"
+        columnName = "sellerLogin"
+        break
+      }
       case "messenger": {
         modelName = "IntegrationMessenger"
         columnName = "pageId"
@@ -278,6 +285,7 @@ export const integrationService = {
 
     const integrationTableByChannel: Partial<Record<string, string>> = {
       api: "IntegrationApi",
+      drom: "IntegrationDrom",
       instagram: "IntegrationInstagram",
       max: "IntegrationMax",
       messenger: "IntegrationMessenger",

@@ -40,6 +40,7 @@
     "@chatbotx.io/integration-api": "workspace:*",
     "@chatbotx.io/integration-chatbotx": "workspace:*",
     "@chatbotx.io/integration-drip": "workspace:*",
+    "@chatbotx.io/integration-drom": "workspace:*",
     "@chatbotx.io/integration-facebook-ads": "workspace:*",
     "@chatbotx.io/integration-get-response": "workspace:*",
     "@chatbotx.io/integration-google-calendar": "workspace:*",

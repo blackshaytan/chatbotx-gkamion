@@ -5,6 +5,7 @@ import {
   integrationClaudeModel,
   integrationDeepseekModel,
   integrationDripModel,
+  integrationDromModel,
   integrationFacebookAdsModel,
   integrationGeminiModel,
   integrationGetResponseModel,
@@ -417,6 +418,14 @@ export const buildConnectionStoreBindings = (
     identityColumn: "codeObject",
     onDisconnect: "delete_row",
     duplicateConstraint: "IntegrationZzap_codeObject_key",
+    sealAuth: true,
+  }),
+  drom: makeChannelBinding({
+    table: integrationDromModel,
+    tableName: "IntegrationDrom",
+    identityColumn: "sellerLogin",
+    onDisconnect: "delete_row",
+    duplicateConstraint: "IntegrationDrom_sellerLogin_key",
     sealAuth: true,
   }),
 })

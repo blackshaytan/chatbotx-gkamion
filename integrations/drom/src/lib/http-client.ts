@@ -148,7 +148,7 @@ export const createDromClient = (auth: DromAuthValue): DromClient => {
       const body = new FormData()
       body.append(
         field,
-        new Blob([file.bytes], { type: file.mime }),
+        new Blob([Uint8Array.from(file.bytes)], { type: file.mime }),
         file.name.replace(FILE_NAME_UNSAFE, "_") || "file",
       )
       const { bytes } = await send(path, {
