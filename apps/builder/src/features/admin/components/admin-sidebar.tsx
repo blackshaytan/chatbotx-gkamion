@@ -14,6 +14,7 @@ import {
   MailIcon,
   PaletteIcon,
   RadioTowerIcon,
+  UsersIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
@@ -47,6 +48,11 @@ export function AdminSidebar({
       title: t("platformAdmin.platformCredentials.title"),
       url: "/admin/platform-credentials",
       icon: Grid2x2PlusIcon,
+    },
+    {
+      title: t("platformAdmin.users.title"),
+      url: "/admin/users",
+      icon: UsersIcon,
     },
     {
       title: t("platformAdmin.workspaces.title"),

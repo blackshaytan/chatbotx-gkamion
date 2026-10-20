@@ -6203,6 +6203,27 @@
       "supportEnabledUntil": "Diaktifkan hingga {time}",
       "supportOff": "Nonaktif",
       "searchPlaceholder": "Cari berdasarkan nama, email pemilik, atau ID"
+    },
+    "users": {
+      "title": "Users",
+      "description": "Accounts on this platform. A new user gets a temporary password and must set their own on first sign-in. Add them to a workspace with an invitation link.",
+      "searchPlaceholder": "Search by name or email",
+      "create": "Create user",
+      "createDescription": "The account is created with a confirmed email and a temporary password that is shown once.",
+      "resetPassword": "Reset password",
+      "resetConfirmTitle": "Reset the password of {email}?",
+      "resetConfirmDescription": "A new temporary password is generated. The user is signed out everywhere within 5 minutes and must set a new password on next sign-in.",
+      "userAlreadyExists": "A user with this email already exists",
+      "cannotResetOwnPassword": "Change your own password in your account settings",
+      "status": {
+        "temporaryPassword": "Temporary password",
+        "active": "Active"
+      },
+      "passwordReveal": {
+        "title": "Temporary password",
+        "description": "Copy it now and send it to {email}. It is not shown again. The user sets a new password on first sign-in.",
+        "done": "Done"
+      }
     }
   },
   "platformCredentials": {

@@ -4,8 +4,19 @@ import {
   workspaceService,
 } from "@chatbotx.io/business"
 import { ChatbotXException } from "@chatbotx.io/business/errors"
-import { db, isUniqueViolationError } from "@chatbotx.io/database/client"
-import { accountModel, userModel } from "@chatbotx.io/database/schema"
+import {
+  and,
+  type DatabaseClient,
+  db,
+  eq,
+  isUniqueViolationError,
+} from "@chatbotx.io/database/client"
+import { ROOT_TENANT_ID } from "@chatbotx.io/database/partials"
+import {
+  accountModel,
+  sessionModel,
+  userModel,
+} from "@chatbotx.io/database/schema"
 import {
   DEFAULT_ACCOUNT_CREDENTIALS_SUBJECT,
   sendAccountCredentials,
@@ -14,6 +25,49 @@ import { generateRandomString, hashPassword } from "better-auth/crypto"
 import { isPlaceholderEmail } from "./placeholder-email"
 
 const TEMP_PASSWORD_LENGTH = 16
+
+const generateTemporaryPassword = () =>
+  generateRandomString(TEMP_PASSWORD_LENGTH, "a-z", "A-Z", "0-9")
+
+/** A verified `User` plus its credential `Account`, forced to change the password on first sign-in. */
+const insertCredentialUser = async (
+  tx: DatabaseClient,
+  input: {
+    email: string
+    name: string
+    tenantId: string
+    hashedPassword: string
+  },
+): Promise<string> => {
+  const [createdUser] = await tx
+    .insert(userModel)
+    .values({
+      email: input.email,
+      name: input.name,
+      emailVerified: true,
+      mustChangePassword: true,
+      tenantId: input.tenantId,
+    })
+    .returning({ id: userModel.id })
+
+  if (!createdUser) {
+    throw new ChatbotXException(
+      "Failed to create provisioned user",
+      "provisionFailed",
+      500,
+    )
+  }
+
+  await tx.insert(accountModel).values({
+    accountId: createdUser.id,
+    providerId: "credential",
+    password: input.hashedPassword,
+    userId: createdUser.id,
+    tenantId: input.tenantId,
+  })
+
+  return createdUser.id
+}
 
 export type ProvisionResellerAccountInput = {
   /** The reseller (white-label owner) provisioning the account. */
@@ -95,12 +149,7 @@ export async function provisionResellerAccount(
 
   // 4. Generate + hash a temporary password using better-auth's own hasher so
   //    the credential verifies on first sign-in.
-  const initialPassword = generateRandomString(
-    TEMP_PASSWORD_LENGTH,
-    "a-z",
-    "A-Z",
-    "0-9",
-  )
+  const initialPassword = generateTemporaryPassword()
   const hashedPassword = await hashPassword(initialPassword)
 
   // 5. Resolve branding + sign-in link for the credentials email.
@@ -145,36 +194,9 @@ export async function provisionResellerAccount(
   //    `User_email_tenant_key` rejects the loser, so translate that into the
   //    idempotent `alreadyExisted` result instead of surfacing a raw 23505.
   try {
-    const userId = await db.transaction(async (tx) => {
-      const [createdUser] = await tx
-        .insert(userModel)
-        .values({
-          email,
-          name,
-          emailVerified: true,
-          mustChangePassword: true,
-          tenantId,
-        })
-        .returning({ id: userModel.id })
-
-      if (!createdUser) {
-        throw new ChatbotXException(
-          "Failed to create provisioned user",
-          "provisionFailed",
-          500,
-        )
-      }
-
-      await tx.insert(accountModel).values({
-        accountId: createdUser.id,
-        providerId: "credential",
-        password: hashedPassword,
-        userId: createdUser.id,
-        tenantId,
-      })
-
-      return createdUser.id
-    })
+    const userId = await db.transaction((tx) =>
+      insertCredentialUser(tx, { email, name, tenantId, hashedPassword }),
+    )
 
     return { userId, alreadyExisted: false }
   } catch (error) {
@@ -189,4 +211,116 @@ export async function provisionResellerAccount(
     }
     throw error
   }
+}
+
+export type PlatformAccountCredentials = {
+  userId: string
+  /** Shown to the platform admin once; only its hash is stored. */
+  temporaryPassword: string
+}
+
+const userAlreadyExistsException = () =>
+  new ChatbotXException(
+    "A user with this email already exists",
+    "userAlreadyExists",
+    409,
+  )
+
+/**
+ * Create a root-tenant account for the platform admin console. Unlike
+ * `provisionResellerAccount` nothing is emailed: the temporary password is
+ * returned so the admin can hand it over, and the user must change it on first
+ * sign-in.
+ */
+export async function provisionPlatformAccount(input: {
+  email: string
+  name: string
+}): Promise<PlatformAccountCredentials> {
+  const email = input.email.trim().toLowerCase()
+  if (isPlaceholderEmail(email)) {
+    throw new ChatbotXException(
+      "Email address is reserved and cannot be provisioned",
+      "invalidEmail",
+      400,
+    )
+  }
+
+  const existing = await db.query.userModel.findFirst({
+    where: { email, tenantId: ROOT_TENANT_ID },
+    columns: { id: true },
+  })
+  if (existing) {
+    throw userAlreadyExistsException()
+  }
+
+  const temporaryPassword = generateTemporaryPassword()
+  const hashedPassword = await hashPassword(temporaryPassword)
+
+  try {
+    const userId = await db.transaction((tx) =>
+      insertCredentialUser(tx, {
+        email,
+        name: input.name,
+        tenantId: ROOT_TENANT_ID,
+        hashedPassword,
+      }),
+    )
+    return { userId, temporaryPassword }
+  } catch (error) {
+    if (isUniqueViolationError(error)) {
+      throw userAlreadyExistsException()
+    }
+    throw error
+  }
+}
+
+/**
+ * Replace a root-tenant user's password with a new temporary one, force a
+ * change on next sign-in and drop every session. A user who only signed in
+ * with a social provider gets a credential account added.
+ */
+export async function resetPlatformAccountPassword(input: {
+  userId: string
+}): Promise<PlatformAccountCredentials> {
+  const user = await db.query.userModel.findFirst({
+    where: { id: input.userId, tenantId: ROOT_TENANT_ID },
+    columns: { id: true },
+  })
+  if (!user) {
+    throw new ChatbotXException("User not found", "notFound", 404)
+  }
+
+  const temporaryPassword = generateTemporaryPassword()
+  const hashedPassword = await hashPassword(temporaryPassword)
+
+  await db.transaction(async (tx) => {
+    const updated = await tx
+      .update(accountModel)
+      .set({ password: hashedPassword })
+      .where(
+        and(
+          eq(accountModel.userId, user.id),
+          eq(accountModel.providerId, "credential"),
+        ),
+      )
+      .returning({ id: accountModel.id })
+
+    if (updated.length === 0) {
+      await tx.insert(accountModel).values({
+        accountId: user.id,
+        providerId: "credential",
+        password: hashedPassword,
+        userId: user.id,
+        tenantId: ROOT_TENANT_ID,
+      })
+    }
+
+    await tx
+      .update(userModel)
+      .set({ mustChangePassword: true })
+      .where(eq(userModel.id, user.id))
+    await tx.delete(sessionModel).where(eq(sessionModel.userId, user.id))
+  })
+
+  return { userId: user.id, temporaryPassword }
 }

@@ -1,8 +1,37 @@
-import { db, eq, inArray } from "@chatbotx.io/database/client"
+import {
+  and,
+  db,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  or,
+  sql,
+} from "@chatbotx.io/database/client"
+import { ROOT_TENANT_ID } from "@chatbotx.io/database/partials"
 import { userModel } from "@chatbotx.io/database/schema"
 import type { UserModel } from "@chatbotx.io/database/types"
+import {
+  getPaginationWithDefaults,
+  likeContains,
+} from "@chatbotx.io/database/utils"
 import { BaseService } from "../base.service"
 import { notFoundException } from "../errors"
+import type { PaginatedResult } from "../types"
+
+type ListPlatformUsersInput = {
+  page?: number | null
+  perPage?: number | null
+  keyword?: string
+}
+
+export type PlatformUserRow = {
+  id: string
+  name: string | null
+  email: string
+  mustChangePassword: boolean
+  createdAt: Date
+}
 
 class UserService extends BaseService {
   /**
@@ -52,6 +81,44 @@ class UserService extends BaseService {
       .where(inArray(userModel.id, input.ids))
 
     return rows.map((row) => row.id)
+  }
+
+  /** Root-tenant users for the platform admin console; reseller tenants manage their own. */
+  async listPlatformUsers(
+    input: ListPlatformUsersInput,
+  ): Promise<PaginatedResult<PlatformUserRow>> {
+    const pagination = getPaginationWithDefaults(input)
+    const where = and(
+      eq(userModel.tenantId, ROOT_TENANT_ID),
+      input.keyword
+        ? or(
+            ilike(userModel.email, likeContains(input.keyword)),
+            ilike(userModel.name, likeContains(input.keyword)),
+          )
+        : undefined,
+    )
+
+    const [data, [{ count }]] = await Promise.all([
+      db
+        .select({
+          id: userModel.id,
+          name: userModel.name,
+          email: userModel.email,
+          mustChangePassword: userModel.mustChangePassword,
+          createdAt: userModel.createdAt,
+        })
+        .from(userModel)
+        .where(where)
+        .orderBy(desc(userModel.createdAt))
+        .limit(pagination.limit)
+        .offset(pagination.offset),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(userModel)
+        .where(where),
+    ])
+
+    return { data, pageCount: Math.ceil(count / pagination.limit) }
   }
 }
 

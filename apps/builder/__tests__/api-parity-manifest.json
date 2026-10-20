@@ -1,5 +1,7 @@
 {
   "operations": {
+    "admin-users/create-admin-user.action:createAdminUserAction": "private:platform administration (super-admin console), exempt per AGENTS.md invariant 23",
+    "admin-users/reset-admin-user-password.action:resetAdminUserPasswordAction": "private:platform administration (super-admin console), exempt per AGENTS.md invariant 23",
     "ads/conversion-rule:createAdsConversionRuleAction": "covered:ads",
     "ads/conversion-rule:updateAdsConversionRuleAction": "covered:ads",
     "ads/conversion-rule:toggleAdsConversionRuleAction": "covered:ads",
