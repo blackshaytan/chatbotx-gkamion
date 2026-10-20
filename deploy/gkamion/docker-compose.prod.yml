@@ -24,7 +24,7 @@ x-app: &app
 services:
   builder:
     <<: *app
-    image: chatbotx-gkamion/builder:latest
+    image: ghcr.io/blackshaytan/chatbotx-gkamion-builder:latest
     build:
       context: ../..
       dockerfile: apps/builder/docker/Dockerfile
@@ -35,7 +35,7 @@ services:
 
   worker:
     <<: *app
-    image: chatbotx-gkamion/worker:latest
+    image: ghcr.io/blackshaytan/chatbotx-gkamion-worker:latest
     build:
       context: ../..
       dockerfile: apps/worker/docker/Dockerfile
@@ -43,7 +43,7 @@ services:
 
   realtime:
     <<: *app
-    image: chatbotx-gkamion/realtime:latest
+    image: ghcr.io/blackshaytan/chatbotx-gkamion-realtime:latest
     build:
       context: ../..
       dockerfile: apps/realtime/docker/Dockerfile
@@ -54,7 +54,7 @@ services:
 
   javascript-executor:
     <<: *app
-    image: chatbotx-gkamion/javascript-executor:latest
+    image: ghcr.io/blackshaytan/chatbotx-gkamion-javascript-executor:latest
     build:
       context: ../..
       dockerfile: apps/javascript-executor/docker/Dockerfile
