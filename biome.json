@@ -27,7 +27,8 @@
       "!**/.github/assets/readme",
       "!**/apps/builder/public/brand",
       "!**/apps/builder/public/chat-widget/plugin-toggle.svg",
-      "!**/.claude"
+      "!**/.claude",
+      "!**/integrations/drom/__tests__/fixtures"
     ]
   },
   "formatter": {
