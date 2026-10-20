@@ -642,68 +642,68 @@
   },
   "commentAutomation": {
     "stats": {
-      "sent": "Sent",
-      "delivered": "Delivered",
-      "seen": "Seen",
-      "clicked": "Clicked",
-      "failed": "Failed",
-      "missed": "Misses",
-      "noContacts": "No contacts found",
-      "noComment": "(no text)",
-      "pageInfo": "Page {page} of {pageCount}",
-      "selectedAll": "All selected",
-      "selectedCount": "{count} selected",
-      "tagAllDialogDescription": "Tags will be added to all selected contacts.",
-      "tagDialogDescription": "Tags will be added to {count} contact(s).",
-      "tagQueued": "Tagging {count} contacts in the background.",
-      "loadingMore": "Loading more...",
-      "receivers": "Receivers"
+      "sent": "Отправлено",
+      "delivered": "Доставлено",
+      "seen": "Просмотрено",
+      "clicked": "Переходы",
+      "failed": "Ошибки",
+      "missed": "Пропуски",
+      "noContacts": "Контакты не найдены",
+      "noComment": "(без текста)",
+      "pageInfo": "Страница {page} из {pageCount}",
+      "selectedAll": "Выбраны все",
+      "selectedCount": "Выбрано: {count}",
+      "tagAllDialogDescription": "Теги будут добавлены всем выбранным контактам.",
+      "tagDialogDescription": "Теги будут добавлены контактам: {count}.",
+      "tagQueued": "Теги добавляются контактам в фоновом режиме: {count}.",
+      "loadingMore": "Загрузка...",
+      "receivers": "Получатели"
     },
     "missReasons": {
-      "outsideSchedule": "Outside schedule",
-      "postNotMatched": "Post not targeted",
-      "commentIsReply": "Comment reply",
-      "keywordsNotMatched": "Keywords did not match",
-      "contactNotNew": "Contact is not new",
-      "alreadyRepliedOnPost": "Already replied on this post",
-      "engagedOnOtherPost": "Already engaged on another post",
-      "mentionCountNotMatched": "Mention count did not match"
+      "outsideSchedule": "Вне расписания",
+      "postNotMatched": "Публикация не выбрана",
+      "commentIsReply": "Ответ на комментарий",
+      "keywordsNotMatched": "Ключевые слова не совпали",
+      "contactNotNew": "Контакт не новый",
+      "alreadyRepliedOnPost": "Уже был ответ в этой публикации",
+      "engagedOnOtherPost": "Уже было взаимодействие в другой публикации",
+      "mentionCountNotMatched": "Число упоминаний не совпало"
     },
     "replyTo": {
-      "mentions": "Comments when enough mentions",
-      "mentionCount": "Number of people tagged",
-      "mentionCountDescription": "Only comments that tag at least this many people (@name) match.",
-      "mentionCountOption": "{count, plural, one {# person} other {# people}}"
+      "mentions": "Комментарии с достаточным числом упоминаний",
+      "mentionCount": "Число отмеченных людей",
+      "mentionCountDescription": "Учитываются только комментарии, в которых отмечено не меньше указанного числа людей (@имя).",
+      "mentionCountOption": "{count, plural, one {# человек} few {# человека} many {# человек} other {# человека}}"
     },
     "excludeKeywordsType": {
-      "equal": "Comments equal to",
-      "contain": "Comments that contain"
+      "equal": "Комментарии, равные",
+      "contain": "Комментарии, содержащие"
     },
     "hideComments": {
-      "hasGif": "Contains GIF",
-      "hasEmoji": "Contains Emoji"
+      "hasGif": "Содержит GIF",
+      "hasEmoji": "Содержит эмодзи"
     },
     "trackUserTags": {
-      "label": "Track if a user tags other users",
-      "descriptionText": "Counts the accounts tagged in each comment and adds them to the contact's running totals across all comments. Use '{{total_tagged}}' for every tagged account and '{{total_new_tagged}}' for accounts that have never messaged your page or been a contact."
+      "label": "Отслеживать отметки других пользователей",
+      "descriptionText": "Считает аккаунты, отмеченные в каждом комментарии, и прибавляет их к накопительным итогам контакта по всем комментариям. Используйте '{{total_tagged}}' для всех отмеченных аккаунтов и '{{total_new_tagged}}' для аккаунтов, которые ни разу не писали вашей странице и не были контактами."
     },
     "card": {
-      "reply": "Reply"
+      "reply": "Ответ"
     },
-    "liveBadge": "Live",
+    "liveBadge": "Эфир",
     "postTypeDialog": {
-      "title": "Select post type"
+      "title": "Выберите тип публикации"
     },
     "account": {
-      "label": "Account",
-      "description": "The connected account this automation answers on. Choose “All accounts” to answer on every connected account of this channel.",
-      "all": "All accounts",
-      "placeholder": "Select an account",
-      "required": "Several accounts are connected: choose one, or choose “All accounts” on purpose.",
-      "targetsCleared": "Selected posts were cleared because they may belong to another account.",
-      "column": "Account",
-      "disconnected": "Disconnected account",
-      "disconnectedDescription": "This automation is tied to an account that is no longer connected, so it answers no comments. Reconnect the account or choose another one."
+      "label": "Аккаунт",
+      "description": "Подключенный аккаунт, на котором работает эта автоматизация. Выберите «Все аккаунты», чтобы отвечать во всех подключенных аккаунтах этого канала.",
+      "all": "Все аккаунты",
+      "placeholder": "Выберите аккаунт",
+      "required": "Подключено несколько аккаунтов: выберите один или осознанно выберите «Все аккаунты».",
+      "targetsCleared": "Выбранные публикации сброшены, так как они могут принадлежать другому аккаунту.",
+      "column": "Аккаунт",
+      "disconnected": "Аккаунт отключен",
+      "disconnectedDescription": "Автоматизация привязана к аккаунту, который больше не подключен, поэтому она не отвечает на комментарии. Переподключите аккаунт или выберите другой."
     }
   },
   "condition": {
@@ -2678,200 +2678,200 @@
   },
   "metaConversions": {
     "flowStep": {
-      "whatsappNote": "WhatsApp events only send for conversations that started from a click-to-WhatsApp ad.",
-      "description": "Queue a LeadSubmitted event for Messenger, Instagram, or WhatsApp."
+      "whatsappNote": "События WhatsApp отправляются только для диалогов, начатых с рекламы с переходом в WhatsApp.",
+      "description": "Поставить в очередь событие LeadSubmitted для Messenger, Instagram или WhatsApp."
     },
     "title": "Conversions API",
-    "description": "Send conversion events from Messenger, Instagram, and WhatsApp conversations to Meta.",
-    "datasetId": "Dataset ID",
-    "reconnect": "Reconnect permissions",
-    "connectViaFacebook": "Connect via Facebook",
-    "unsupportedExplanation": "This Instagram account was connected with Instagram Business Login. Connect the account via Facebook to use Meta Conversions API.",
+    "description": "Отправка событий конверсии из диалогов в Messenger, Instagram и WhatsApp в Meta.",
+    "datasetId": "ID набора данных",
+    "reconnect": "Переподключить разрешения",
+    "connectViaFacebook": "Подключить через Facebook",
+    "unsupportedExplanation": "Этот аккаунт Instagram подключен через вход Instagram Business. Чтобы использовать Meta Conversions API, подключите аккаунт через Facebook.",
     "status": {
       "title": "Meta Conversions API",
-      "ready": "Ready",
-      "unsupported": "Unsupported",
-      "notConnected": "Not connected",
-      "reconnect": "Reconnect needed"
+      "ready": "Готово",
+      "unsupported": "Не поддерживается",
+      "notConnected": "Не подключено",
+      "reconnect": "Нужно переподключить"
     },
     "statusDescriptions": {
-      "ready": "Conversions API events from this integration are sent to Meta.",
-      "unsupported": "Meta Conversions API for Instagram requires an account connected through Facebook Login for Business.",
-      "notConnected": "The Conversions API is a Meta Business Tool that allows you to share data with Meta to enhance the performance of ads.",
-      "reconnect": "The Conversions API permission has lapsed, so events are paused. Your dataset and test settings are kept; reconnect to resume sending."
+      "ready": "События Conversions API из этой интеграции отправляются в Meta.",
+      "unsupported": "Для Meta Conversions API в Instagram аккаунт должен быть подключен через Facebook Login for Business.",
+      "notConnected": "Conversions API — бизнес-инструмент Meta, который позволяет передавать данные в Meta для повышения эффективности рекламы.",
+      "reconnect": "Разрешение Conversions API истекло, поэтому отправка событий приостановлена. Набор данных и тестовые настройки сохранены; переподключите, чтобы возобновить отправку."
     },
     "errors": {
-      "reconnect": "Failed to start Meta CAPI reconnect.",
-      "messengerNotFound": "Messenger integration not found.",
-      "instagramNotFound": "Instagram integration not found.",
-      "instagramRequiresFacebook": "Instagram CAPI requires connecting via Facebook.",
-      "saveFailed": "Could not save. Please try again.",
-      "datasetRequired": "Save a Dataset ID before adding an access token.",
-      "invalidToken": "This token could not access the dataset.",
-      "whatsappNotFound": "WhatsApp integration not found.",
-      "testEventCodeRequired": "Save a test event code before sending a test event.",
-      "invalidTestEventCode": "Test event code may only contain letters, digits, dashes or underscores (max 64).",
-      "invalidMessagingId": "Messaging ID may only contain letters, digits, dashes or underscores (max 512).",
-      "capiDisconnected": "Meta CAPI is disconnected for this channel. Reconnect it before sending a test event.",
-      "appNotConfigured": "The Meta app for this channel is not configured yet.",
-      "capiNotConfigured": "The Conversions API connection is not configured. Ask your administrator to set the Conversions API Config ID.",
-      "wabaMismatch": "The authorized WhatsApp Business Account is not the one this number belongs to. Please connect with the same account."
+      "reconnect": "Не удалось начать переподключение Meta CAPI.",
+      "messengerNotFound": "Интеграция Messenger не найдена.",
+      "instagramNotFound": "Интеграция Instagram не найдена.",
+      "instagramRequiresFacebook": "Для CAPI в Instagram требуется подключение через Facebook.",
+      "saveFailed": "Не удалось сохранить. Повторите попытку.",
+      "datasetRequired": "Сохраните ID набора данных, прежде чем добавлять маркер доступа.",
+      "invalidToken": "У этого маркера нет доступа к набору данных.",
+      "whatsappNotFound": "Интеграция WhatsApp не найдена.",
+      "testEventCodeRequired": "Сохраните код тестового события, прежде чем отправлять тестовое событие.",
+      "invalidTestEventCode": "Код тестового события может содержать только буквы, цифры, дефисы и подчеркивания (не более 64 символов).",
+      "invalidMessagingId": "ID для сообщений может содержать только буквы, цифры, дефисы и подчеркивания (не более 512 символов).",
+      "capiDisconnected": "Meta CAPI для этого канала отключен. Переподключите его, прежде чем отправлять тестовое событие.",
+      "appNotConfigured": "Приложение Meta для этого канала еще не настроено.",
+      "capiNotConfigured": "Подключение Conversions API не настроено. Попросите администратора указать Conversions API Config ID.",
+      "wabaMismatch": "Авторизованный аккаунт WhatsApp Business не тот, к которому относится этот номер. Подключитесь с тем же аккаунтом."
     },
     "fields": {
       "eventType": {
-        "label": "Event type",
-        "leadSubmitted": "Lead Submitted",
-        "purchase": "Purchase",
-        "initiateCheckout": "Initiate Checkout",
-        "addToCart": "Add To Cart",
-        "viewContent": "View Content",
-        "orderCreated": "Order Created",
-        "orderShipped": "Order Shipped",
-        "orderDelivered": "Order Delivered",
-        "orderCanceled": "Order Canceled",
-        "orderReturned": "Order Returned",
-        "cartAbandoned": "Cart Abandoned",
-        "qualifiedLead": "Qualified Lead",
-        "ratingProvided": "Rating Provided",
-        "reviewProvided": "Review Provided",
-        "addPaymentInfo": "Add Payment Info",
-        "addToWishlist": "Add To Wishlist",
-        "completeRegistration": "Complete Registration",
-        "contact": "Contact",
-        "customizeProduct": "Customize Product",
-        "donate": "Donate",
-        "findLocation": "Find Location",
-        "lead": "Lead",
-        "schedule": "Schedule",
-        "search": "Search",
-        "startTrial": "Start Trial",
-        "submitApplication": "Submit Application",
-        "subscribe": "Subscribe",
-        "custom": "Custom event…",
+        "label": "Тип события",
+        "leadSubmitted": "Лид отправлен",
+        "purchase": "Покупка",
+        "initiateCheckout": "Начало оформления заказа",
+        "addToCart": "Добавление в корзину",
+        "viewContent": "Просмотр контента",
+        "orderCreated": "Заказ создан",
+        "orderShipped": "Заказ отправлен",
+        "orderDelivered": "Заказ доставлен",
+        "orderCanceled": "Заказ отменен",
+        "orderReturned": "Заказ возвращен",
+        "cartAbandoned": "Брошенная корзина",
+        "qualifiedLead": "Квалифицированный лид",
+        "ratingProvided": "Оценка получена",
+        "reviewProvided": "Отзыв получен",
+        "addPaymentInfo": "Добавление платежных данных",
+        "addToWishlist": "Добавление в список желаний",
+        "completeRegistration": "Завершение регистрации",
+        "contact": "Контакт",
+        "customizeProduct": "Настройка товара",
+        "donate": "Пожертвование",
+        "findLocation": "Поиск местоположения",
+        "lead": "Лид",
+        "schedule": "Запись",
+        "search": "Поиск",
+        "startTrial": "Начало пробного периода",
+        "submitApplication": "Отправка заявки",
+        "subscribe": "Подписка",
+        "custom": "Свое событие…",
         "groups": {
-          "commerce": "Commerce",
-          "leads": "Leads",
-          "orders": "Orders",
-          "feedback": "Feedback",
-          "leadsAndSignups": "Leads & Sign-ups",
-          "other": "Other"
+          "commerce": "Торговля",
+          "leads": "Лиды",
+          "orders": "Заказы",
+          "feedback": "Отзывы",
+          "leadsAndSignups": "Лиды и регистрации",
+          "other": "Другое"
         }
       },
-      "value": "Value",
-      "valuePlaceholder": "e.g. 250",
-      "currency": "Currency",
-      "currencyPlaceholder": "e.g. USD",
-      "contentCategory": "Content Category",
-      "contentCategoryPlaceholder": "The category of the content associated with the event",
-      "contentName": "Content Name",
-      "contentNamePlaceholder": "The name of the page or product associated with the event",
-      "orderId": "Order ID",
-      "orderIdPlaceholder": "e.g. ORDER-12345",
+      "value": "Ценность",
+      "valuePlaceholder": "например, 250",
+      "currency": "Валюта",
+      "currencyPlaceholder": "например, USD",
+      "contentCategory": "Категория контента",
+      "contentCategoryPlaceholder": "Категория контента, связанного с событием",
+      "contentName": "Название контента",
+      "contentNamePlaceholder": "Название страницы или товара, связанного с событием",
+      "orderId": "ID заказа",
+      "orderIdPlaceholder": "например, ORDER-12345",
       "contents": {
-        "label": "Line items",
-        "item": "line item",
-        "id": "Product ID",
-        "quantity": "Quantity",
-        "itemPrice": "Item price"
+        "label": "Позиции",
+        "item": "позиция",
+        "id": "ID товара",
+        "quantity": "Количество",
+        "itemPrice": "Цена позиции"
       },
-      "customEventName": "Custom event name",
-      "customEventNamePlaceholder": "e.g. MyCustomEvent",
+      "customEventName": "Название своего события",
+      "customEventNamePlaceholder": "например, MyCustomEvent",
       "contentType": {
-        "label": "Content type",
-        "product": "Product",
-        "product_group": "Product Group"
+        "label": "Тип контента",
+        "product": "Товар",
+        "product_group": "Группа товаров"
       },
-      "contentIds": "Content IDs",
-      "contentIdsPlaceholder": "e.g. 123,456"
+      "contentIds": "ID контента",
+      "contentIdsPlaceholder": "например, 123,456"
     },
-    "datasetIdPlaceholder": "Paste Dataset ID from Events Manager",
-    "saveDataset": "Save",
-    "accessToken": "Access Token (optional)",
-    "accessTokenHint": "Paste a token from Events Manager to send events with your own token instead of the connected page token. Requires a Dataset ID.",
-    "accessTokenPlaceholder": "Events Manager access token",
-    "saveToken": "Save token",
-    "tokenSaved": "Token saved",
-    "removeToken": "Remove",
-    "saved": "Saved",
+    "datasetIdPlaceholder": "Вставьте ID набора данных из Events Manager",
+    "saveDataset": "Сохранить",
+    "accessToken": "Маркер доступа (необязательно)",
+    "accessTokenHint": "Вставьте маркер из Events Manager, чтобы отправлять события с собственным маркером вместо маркера подключенной страницы. Требуется ID набора данных.",
+    "accessTokenPlaceholder": "Маркер доступа Events Manager",
+    "saveToken": "Сохранить маркер",
+    "tokenSaved": "Маркер сохранен",
+    "removeToken": "Удалить",
+    "saved": "Сохранено",
     "help": {
-      "delay": "Events may take up to 40 minutes to appear in Events Manager and show as Meta Leads in Ads Manager."
+      "delay": "Появление событий в Events Manager и отображение как лидов Meta в Ads Manager может занять до 40 минут."
     },
-    "connected": "Connected",
-    "disconnect": "Disconnect",
-    "openEventManager": "Open Event Manager",
+    "connected": "Подключено",
+    "disconnect": "Отключить",
+    "openEventManager": "Открыть Events Manager",
     "methods": {
       "custom": {
-        "title": "Custom connection",
-        "description": "Use a Dataset ID and an access token from Meta Events Manager.",
-        "start": "Set up custom connection",
-        "connect": "Connect",
-        "connectedLabel": "Custom"
+        "title": "Собственное подключение",
+        "description": "Используйте ID набора данных и маркер доступа из Meta Events Manager.",
+        "start": "Настроить собственное подключение",
+        "connect": "Подключить",
+        "connectedLabel": "Собственное"
       }
     },
     "whatsapp": {
-      "connect": "Connect"
+      "connect": "Подключить"
     },
     "limitedDataUse": {
-      "label": "Limited Data Use (US privacy)",
-      "description": "Restrict Meta's use of event data for users in applicable US states. Meta auto-detects the user's location from this event; no location data is sent by ChatbotX."
+      "label": "Ограниченное использование данных (конфиденциальность в США)",
+      "description": "Ограничить использование Meta данных о событиях для пользователей из соответствующих штатов США. Meta сама определяет местоположение пользователя по событию; ChatbotX не передает данные о местоположении."
     },
     "actionSource": {
-      "label": "Action source",
-      "help": "Where this event took place. See Meta's action source documentation.",
-      "business_messaging": "Business Messaging",
+      "label": "Источник действия",
+      "help": "Где произошло событие. См. документацию Meta об источниках действий.",
+      "business_messaging": "Бизнес-переписка",
       "email": "Email",
-      "phone_call": "Phone Call",
-      "chat": "Chat",
-      "physical_store": "Physical Store",
-      "system_generated": "System Generated",
-      "other": "Other"
+      "phone_call": "Телефонный звонок",
+      "chat": "Чат",
+      "physical_store": "Физический магазин",
+      "system_generated": "Сгенерировано системой",
+      "other": "Другое"
     },
     "dialog": {
       "title": "Meta CAPI",
-      "advanced": "Advanced"
+      "advanced": "Дополнительно"
     },
     "testEvents": {
-      "title": "Test events",
-      "description": "Paste the test_event_code from Events Manager → Test events. While it is set, every event from this channel is routed to the Test events view with its full payload (value, currency, content IDs) and is not counted in reports. Clear it when you are done.",
-      "codeLabel": "Test event code",
-      "codePlaceholder": "e.g. TEST12345",
-      "save": "Save code",
-      "clear": "Clear",
-      "saved": "Test event code saved.",
-      "cleared": "Test event code cleared. Events are live again.",
-      "send": "Send test event",
-      "sent": "Test event sent. It appears under Test events in Events Manager within a minute.",
-      "sendHint": "Sends one sample Purchase (100 USD) to a messaging id you enter. No stored contact is used.",
-      "activeNotice": "Test mode is on: events from this channel are not counted in reports until the code is cleared.",
-      "openTestEvents": "Open Test events",
-      "dialogTitle": "Send test event",
-      "dialogDescription": "One sample Purchase (100 USD) is sent with your test event code. Paste the sample messaging id from Events Manager → Test events → Messaging → Graph API Explorer, so nothing is attributed to a real contact.",
+      "title": "Тестовые события",
+      "description": "Вставьте test_event_code из Events Manager → «Тестовые события». Пока код задан, все события этого канала направляются в раздел «Тестовые события» с полными данными (ценность, валюта, ID контента) и не учитываются в отчетах. Очистите код, когда закончите.",
+      "codeLabel": "Код тестового события",
+      "codePlaceholder": "например, TEST12345",
+      "save": "Сохранить код",
+      "clear": "Очистить",
+      "saved": "Код тестового события сохранен.",
+      "cleared": "Код тестового события очищен. События снова отправляются в рабочем режиме.",
+      "send": "Отправить тестовое событие",
+      "sent": "Тестовое событие отправлено. Оно появится в разделе «Тестовые события» в Events Manager в течение минуты.",
+      "sendHint": "Отправляет одно пробное событие Purchase (100 USD) на указанный вами ID для сообщений. Сохраненные контакты не используются.",
+      "activeNotice": "Включен тестовый режим: события этого канала не учитываются в отчетах, пока код не очищен.",
+      "openTestEvents": "Открыть «Тестовые события»",
+      "dialogTitle": "Отправить тестовое событие",
+      "dialogDescription": "С вашим кодом тестового события отправляется одно пробное событие Purchase (100 USD). Вставьте пробный ID для сообщений из Events Manager → «Тестовые события» → Messaging → Graph API Explorer, чтобы ничего не было отнесено к реальному контакту.",
       "messagingIdLabel": {
-        "messenger": "Contact ID (page_scoped_user_id)",
-        "instagram": "Contact ID (ig_sid)",
-        "whatsapp": "Click ID (ctwa_clid)"
+        "messenger": "ID контакта (page_scoped_user_id)",
+        "instagram": "ID контакта (ig_sid)",
+        "whatsapp": "ID клика (ctwa_clid)"
       },
-      "messagingIdPlaceholder": "Paste the sample value from Meta",
-      "messagingIdHint": "Letters, digits, dashes and underscores only (max 512).",
-      "cancel": "Cancel",
-      "confirmSend": "Send"
+      "messagingIdPlaceholder": "Вставьте пробное значение из Meta",
+      "messagingIdHint": "Только буквы, цифры, дефисы и подчеркивания (не более 512 символов).",
+      "cancel": "Отмена",
+      "confirmSend": "Отправить"
     },
     "connect": {
-      "button": "Connect Conversions API",
-      "success": "Conversions API connected.",
-      "title": "Connect with Meta",
-      "description": "Sign in to Meta and grant access for conversion events. This creates a separate connection for the Conversions API and does not change how this channel signs in.",
-      "reconnect": "Reconnect"
+      "button": "Подключить Conversions API",
+      "success": "Conversions API подключен.",
+      "title": "Подключение через Meta",
+      "description": "Войдите в Meta и предоставьте доступ к событиям конверсии. Будет создано отдельное подключение для Conversions API, способ входа этого канала не изменится.",
+      "reconnect": "Переподключить"
     },
     "connectResult": {
       "errors": {
-        "cancelled": "Connection cancelled. Nothing was changed.",
-        "notFound": "This channel could not be found.",
-        "pageNotFound": "The Facebook account you used does not manage this Page. Sign in with an account that does.",
-        "accountNotFound": "The Facebook account you used does not manage this Instagram account. Sign in with an account that does.",
-        "datasetFailed": "Meta did not allow creating a dataset with this connection. Make sure you grant every requested permission and try again.",
-        "sessionExpired": "The connection took too long or was started in another tab. Please try again.",
-        "failed": "Could not connect the Conversions API. Please try again."
+        "cancelled": "Подключение отменено. Ничего не изменено.",
+        "notFound": "Канал не найден.",
+        "pageNotFound": "Использованный аккаунт Facebook не управляет этой страницей. Войдите с аккаунтом, который ею управляет.",
+        "accountNotFound": "Использованный аккаунт Facebook не управляет этим аккаунтом Instagram. Войдите с аккаунтом, который им управляет.",
+        "datasetFailed": "Meta не разрешила создать набор данных с этим подключением. Предоставьте все запрошенные разрешения и повторите попытку.",
+        "sessionExpired": "Подключение заняло слишком много времени или было начато в другой вкладке. Повторите попытку.",
+        "failed": "Не удалось подключить Conversions API. Повторите попытку."
       }
     }
   },
@@ -3692,256 +3692,256 @@
     "title": "Общие"
   },
   "facebookMarketingMessages": {
-    "deleteWarning": "This removes the campaign from ChatbotX only. The Meta message campaign keeps running — pause or delete it in Ads Manager.",
-    "title": "Facebook Marketing Messages",
-    "description": "Drive engagement and sales with personalized promotional messages on Messenger.",
-    "create": "Create New",
-    "grantTitle": "Grant Facebook access",
-    "grantDescription": "Please grant access to use the Marketing Messages feature",
-    "grantAction": "Grant access",
-    "reconnect": "Reconnect",
-    "expiredWarning": "Your Facebook access has expired or was revoked. Reconnect to create or edit campaigns. Existing campaigns are shown below and are read-only until you reconnect.",
+    "deleteWarning": "Кампания удаляется только из ChatbotX. Кампания сообщений в Meta продолжит работать — приостановите или удалите ее в Ads Manager.",
+    "title": "Маркетинговые сообщения Facebook",
+    "description": "Повышайте вовлеченность и продажи с помощью персонализированных рекламных сообщений в Messenger.",
+    "create": "Создать",
+    "grantTitle": "Предоставьте доступ к Facebook",
+    "grantDescription": "Предоставьте доступ, чтобы использовать маркетинговые сообщения",
+    "grantAction": "Предоставить доступ",
+    "reconnect": "Переподключить",
+    "expiredWarning": "Доступ к Facebook истек или был отозван. Переподключитесь, чтобы создавать и редактировать кампании. Существующие кампании показаны ниже и доступны только для просмотра до переподключения.",
     "fields": {
-      "image": "Image",
-      "video": "Video",
-      "page": "Facebook Page",
-      "adAccount": "Ad account",
-      "budgetType": "Budget type",
-      "budget": "Budget",
-      "daily": "Daily budget",
-      "lifetime": "Lifetime budget",
-      "templateType": "Message type",
-      "text": "Text",
-      "button": "Button",
-      "media": "Media",
-      "generic": "Generic",
-      "greeting": "Greeting",
-      "quickReplies": "Quick replies",
-      "elements": "Cards"
+      "image": "Изображение",
+      "video": "Видео",
+      "page": "Страница Facebook",
+      "adAccount": "Рекламный аккаунт",
+      "budgetType": "Тип бюджета",
+      "budget": "Бюджет",
+      "daily": "Дневной бюджет",
+      "lifetime": "Бюджет на весь срок",
+      "templateType": "Тип сообщения",
+      "text": "Текст",
+      "button": "Кнопка",
+      "media": "Медиа",
+      "generic": "Универсальный",
+      "greeting": "Приветствие",
+      "quickReplies": "Быстрые ответы",
+      "elements": "Карточки"
     },
     "errors": {
-      "notConfigured": "Facebook Marketing Messages is not configured. Ask your administrator to set the Marketing Messages Config ID.",
-      "notGranted": "Please grant access to use the Marketing Messages feature.",
-      "tosNotAccepted": "To use this feature, please accept the custom object terms at {url}",
-      "notFound": "Marketing message not found."
+      "notConfigured": "Маркетинговые сообщения Facebook не настроены. Попросите администратора указать Marketing Messages Config ID.",
+      "notGranted": "Предоставьте доступ, чтобы использовать маркетинговые сообщения.",
+      "tosNotAccepted": "Чтобы использовать эту функцию, примите условия для пользовательских объектов: {url}",
+      "notFound": "Маркетинговое сообщение не найдено."
     }
   },
   "facebookAds": {
     "title": "Facebook Ads",
     "setting": {
       "label": "Facebook Ads",
-      "description": "Grow your business faster by connecting your Facebook Ads to your chatbot. Create custom audiences and add/remove people to custom audiences.",
-      "reconnect": "Reconnect"
+      "description": "Развивайте бизнес быстрее, подключив Facebook Ads к чат-боту. Создавайте пользовательские аудитории, добавляйте в них людей и удаляйте их.",
+      "reconnect": "Переподключить"
     },
     "fields": {
-      "subscriberShouldBe": "Subscriber should be",
-      "addedToCustomAudience": "Added to Custom Audience",
-      "removedFromCustomAudience": "Removed from Custom Audience",
-      "adAccount": "Ad Account",
-      "customAudience": "Custom Audience",
-      "nothingSelected": "Nothing selected"
+      "subscriberShouldBe": "Подписчика нужно",
+      "addedToCustomAudience": "Добавить в пользовательскую аудиторию",
+      "removedFromCustomAudience": "Удалить из пользовательской аудитории",
+      "adAccount": "Рекламный аккаунт",
+      "customAudience": "Пользовательская аудитория",
+      "nothingSelected": "Ничего не выбрано"
     },
     "adAccounts": {
-      "loading": "Loading ad accounts...",
-      "error": "Failed to load ad accounts. Please check your Facebook Ads connection."
+      "loading": "Загрузка рекламных аккаунтов...",
+      "error": "Не удалось загрузить рекламные аккаунты. Проверьте подключение Facebook Ads."
     },
     "customAudiences": {
-      "loading": "Loading custom audiences...",
-      "error": "Failed to load custom audiences. Please check your Facebook Ads connection."
+      "loading": "Загрузка пользовательских аудиторий...",
+      "error": "Не удалось загрузить пользовательские аудитории. Проверьте подключение Facebook Ads."
     },
     "errors": {
-      "invalidAppSettings": "Facebook App settings are not valid"
+      "invalidAppSettings": "Некорректные настройки приложения Facebook"
     }
   },
   "ads": {
-    "title": "Ads",
+    "title": "Реклама",
     "dashboardNav": {
-      "whatsapp": "Click-to-WhatsApp Ads",
-      "messenger": "Click-to-Messenger Ads",
-      "instagram": "Click-to-Instagram Ads",
+      "whatsapp": "Реклама с переходом в WhatsApp",
+      "messenger": "Реклама с переходом в Messenger",
+      "instagram": "Реклама с переходом в Instagram",
       "google": "Google Ads"
     },
     "connectAccounts": {
-      "connectAdAccount": "Connect Ad Account",
-      "adAccountName": "Ad Account Name",
-      "adAccountsReconnectBanner": "Your Meta ad account token has expired or lost permissions. Reconnect Facebook Ads to keep ads reporting available.",
-      "adAccountsNotConnected": "No Meta ad accounts are connected yet.",
-      "adAccountsEmpty": "No Meta ad accounts were found for this Facebook Ads connection.",
-      "reconnect": "Reconnect",
-      "reconnectSuccess": "WhatsApp account reconnected.",
-      "selectAccountLabel": "WhatsApp account",
+      "connectAdAccount": "Подключить рекламный аккаунт",
+      "adAccountName": "Название рекламного аккаунта",
+      "adAccountsReconnectBanner": "Токен рекламного аккаунта Meta истек или потерял разрешения. Переподключите Facebook Ads, чтобы отчеты по рекламе оставались доступны.",
+      "adAccountsNotConnected": "Рекламные аккаунты Meta еще не подключены.",
+      "adAccountsEmpty": "Для этого подключения Facebook Ads рекламные аккаунты Meta не найдены.",
+      "reconnect": "Переподключить",
+      "reconnectSuccess": "Аккаунт WhatsApp переподключен.",
+      "selectAccountLabel": "Аккаунт WhatsApp",
       "status": {
-        "ready": "Automatic events ready",
-        "missingPermission": "Missing Automatic Events permission",
-        "unverified": "Permission not verified"
+        "ready": "Автоматические события готовы",
+        "missingPermission": "Нет разрешения на автоматические события",
+        "unverified": "Разрешение не проверено"
       },
       "table": {
         "wabaId": "WABA ID"
       },
       "connectWhatsapp": {
-        "cta": "Connect WhatsApp account"
+        "cta": "Подключить аккаунт WhatsApp"
       }
     },
     "conversionEvents": {
-      "title": "Conversion events",
+      "title": "События конверсии",
       "tabs": {
         "facebook": "Facebook",
         "instagram": "Instagram",
         "messenger": "Messenger",
         "whatsapp": "WhatsApp"
       },
-      "manageAdsAccounts": "Manage Ads Accounts",
-      "export": "Export",
-      "selectAll": "Select All",
-      "whatsappAsset": "WhatsApp asset",
-      "selectWhatsappAsset": "Select WhatsApp asset",
-      "selectIntegration": "Integration",
-      "selectIntegrationPlaceholder": "Select integration",
-      "noIntegrationsConnected": "No connected integrations for this channel yet.",
-      "connectIntegration": "Connect a channel",
-      "templates": "Templates",
-      "selectTemplates": "Select templates",
-      "noTemplates": "No approved templates found.",
-      "existingRules": "Existing rules",
-      "noRules": "No conversion rules for this WhatsApp asset yet.",
-      "noRulesGeneric": "No conversion rules for this integration yet.",
-      "toggleRule": "Enable or disable rule",
-      "deleteRule": "Delete rule",
-      "qualifyingTemplateMessageSent": "Qualifying template message is sent",
-      "qualifyingFirstReply": "Contact sends their first message",
-      "qualifyingAnyReply": "Contact sends a message",
-      "when": "When",
+      "manageAdsAccounts": "Управление рекламными аккаунтами",
+      "export": "Экспорт",
+      "selectAll": "Выбрать все",
+      "whatsappAsset": "Ресурс WhatsApp",
+      "selectWhatsappAsset": "Выберите ресурс WhatsApp",
+      "selectIntegration": "Интеграция",
+      "selectIntegrationPlaceholder": "Выберите интеграцию",
+      "noIntegrationsConnected": "Для этого канала пока нет подключенных интеграций.",
+      "connectIntegration": "Подключить канал",
+      "templates": "Шаблоны",
+      "selectTemplates": "Выберите шаблоны",
+      "noTemplates": "Одобренные шаблоны не найдены.",
+      "existingRules": "Существующие правила",
+      "noRules": "Для этого ресурса WhatsApp пока нет правил конверсии.",
+      "noRulesGeneric": "Для этой интеграции пока нет правил конверсии.",
+      "toggleRule": "Включить или выключить правило",
+      "deleteRule": "Удалить правило",
+      "qualifyingTemplateMessageSent": "Отправлено сообщение по нужному шаблону",
+      "qualifyingFirstReply": "Контакт отправляет первое сообщение",
+      "qualifyingAnyReply": "Контакт отправляет сообщение",
+      "when": "Когда",
       "whenOptions": {
-        "templateSent": "Qualifying template message is sent",
-        "tagApplied": "Contact is tagged",
-        "keywordMatched": "Contact's message matches a keyword rule",
-        "contactReplied": "Contact sends a message"
+        "templateSent": "Отправлено сообщение по нужному шаблону",
+        "tagApplied": "Контакту назначен тег",
+        "keywordMatched": "Сообщение контакта соответствует правилу ключевых слов",
+        "contactReplied": "Контакт отправляет сообщение"
       },
-      "tags": "Tags",
-      "selectTags": "Select tags",
-      "noTags": "No tags found.",
-      "untitledKeywordRule": "(untitled keyword rule)",
-      "keywordRules": "Keyword rules",
-      "selectKeywordRules": "Select keyword rules",
-      "noKeywordRules": "No inbound keyword rules found.",
-      "replyOptions": "Reply options",
-      "firstReplyOnly": "Only the first message",
-      "dedupeNote": "At most 1 event per day per conversation per rule.",
-      "dealWon": "Deal Won",
-      "eventTypeLead": "Lead",
-      "eventTypePurchase": "Purchase",
+      "tags": "Теги",
+      "selectTags": "Выберите теги",
+      "noTags": "Теги не найдены.",
+      "untitledKeywordRule": "(правило ключевых слов без названия)",
+      "keywordRules": "Правила ключевых слов",
+      "selectKeywordRules": "Выберите правила ключевых слов",
+      "noKeywordRules": "Правила для входящих ключевых слов не найдены.",
+      "replyOptions": "Параметры ответа",
+      "firstReplyOnly": "Только первое сообщение",
+      "dedupeNote": "Не более 1 события в день на диалог для каждого правила.",
+      "dealWon": "Сделка выиграна",
+      "eventTypeLead": "Лид",
+      "eventTypePurchase": "Покупка",
       "messages": {
-        "ruleSaved": "Conversion rule saved",
-        "ruleUpdated": "Conversion rule updated",
-        "ruleDeleted": "Conversion rule deleted"
+        "ruleSaved": "Правило конверсии сохранено",
+        "ruleUpdated": "Правило конверсии обновлено",
+        "ruleDeleted": "Правило конверсии удалено"
       },
       "mockAdAccount": "Banana 1",
       "mockPages": {
-        "page1": "Page 1",
-        "page2": "Page 2"
+        "page1": "Страница 1",
+        "page2": "Страница 2"
       },
       "trackQualifiedLeads": {
-        "title": "Track qualified leads",
-        "question": "At what point in the conversation do you want to qualify a contact as a lead?",
-        "when": "When",
-        "then": "Then mark CTWA lead as",
-        "thenGeneric": "Then mark lead as"
+        "title": "Отслеживание квалифицированных лидов",
+        "question": "На каком этапе диалога контакт считается лидом?",
+        "when": "Когда",
+        "then": "Тогда отметить CTWA-лида как",
+        "thenGeneric": "Тогда отметить лида как"
       },
       "trackPurchases": {
-        "title": "Track purchases",
-        "question": "Which template confirms a purchase?",
-        "when": "When",
-        "then": "Then",
-        "noValueNote": "A rule-based purchase records a Purchase conversion without an order value — it counts toward purchases but adds 0 to revenue. Order value is only captured by Meta Automatic Events.",
-        "questionGeneric": "At what point in the conversation do you want to record a purchase?"
+        "title": "Отслеживание покупок",
+        "question": "Какой шаблон подтверждает покупку?",
+        "when": "Когда",
+        "then": "Тогда",
+        "noValueNote": "Покупка по правилу записывает конверсию Purchase без суммы заказа — она учитывается в покупках, но добавляет 0 к выручке. Сумма заказа фиксируется только автоматическими событиями Meta.",
+        "questionGeneric": "На каком этапе диалога нужно записывать покупку?"
       }
     },
     "analytics": {
-      "title": "Ads Analytics",
-      "funnelOverview": "Funnel overview",
-      "conversationsStarted": "Conversations started",
-      "qualifiedLeads": "Qualified leads",
-      "purchases": "Purchases",
-      "adSpend": "Ad spend",
-      "spendAccountLevelNote": "Spend is reported at the Meta ad account level; with an account selected, spend-only ads without funnel activity for that account are hidden.",
-      "revenue": "Revenue",
+      "title": "Аналитика рекламы",
+      "funnelOverview": "Обзор воронки",
+      "conversationsStarted": "Начатые диалоги",
+      "qualifiedLeads": "Квалифицированные лиды",
+      "purchases": "Покупки",
+      "adSpend": "Расходы на рекламу",
+      "spendAccountLevelNote": "Расходы учитываются на уровне рекламного аккаунта Meta; при выбранном аккаунте объявления только с расходами и без активности в воронке для этого аккаунта скрываются.",
+      "revenue": "Выручка",
       "roas": "ROAS",
-      "revenueCurrencyNote": "Revenue assumes a single currency (USD). Mixed-currency ad accounts are not yet aggregated.",
-      "costPerLead": "Cost/lead",
-      "costPerPurchase": "Cost/purchase",
-      "impressions": "Impressions",
-      "clicks": "Clicks",
+      "revenueCurrencyNote": "Выручка считается в одной валюте (USD). Рекламные аккаунты с разными валютами пока не суммируются.",
+      "costPerLead": "Цена лида",
+      "costPerPurchase": "Цена покупки",
+      "impressions": "Показы",
+      "clicks": "Клики",
       "cpc": "CPC",
       "ctr": "CTR",
       "cpm": "CPM",
-      "costPerConversation": "Cost/conversation",
-      "costCurrencyNote": "Cost metrics assume a single currency (USD), consistent with ad spend.",
+      "costPerConversation": "Цена диалога",
+      "costCurrencyNote": "Показатели стоимости считаются в одной валюте (USD), как и расходы на рекламу.",
       "performanceChart": {
-        "title": "Performance over time",
-        "empty": "No conversations, leads, purchases, or spend in this range yet."
+        "title": "Эффективность по времени",
+        "empty": "За этот период пока нет диалогов, лидов, покупок или расходов."
       },
       "dateRange": {
-        "oneDay": "1D",
-        "oneWeek": "1W",
-        "oneMonth": "1M",
-        "threeMonths": "3M",
-        "custom": "Custom",
-        "apply": "Apply"
+        "oneDay": "1 д",
+        "oneWeek": "1 нед",
+        "oneMonth": "1 мес",
+        "threeMonths": "3 мес",
+        "custom": "Свой период",
+        "apply": "Применить"
       },
-      "allAds": "All Ads",
+      "allAds": "Все объявления",
       "adAccountFilter": {
-        "all": "All ad accounts",
-        "label": "Ad account",
-        "unavailable": "Couldn't load ad accounts — check this integration's Ads connection, or the workspace's Facebook Ads connection, in settings.",
-        "note": "Ads with conversions but zero spend or zero delivery in the selected date range are hidden while filtering by ad account."
+        "all": "Все рекламные аккаунты",
+        "label": "Рекламный аккаунт",
+        "unavailable": "Не удалось загрузить рекламные аккаунты — проверьте в настройках рекламное подключение этой интеграции или подключение Facebook Ads пространства.",
+        "note": "При фильтрации по рекламному аккаунту скрываются объявления с конверсиями, но без расходов или показов за выбранный период."
       },
       "channelFilter": {
-        "label": "Channel",
-        "allAccounts": "All accounts",
-        "allChannels": "All channels"
+        "label": "Канал",
+        "allAccounts": "Все аккаунты",
+        "allChannels": "Все каналы"
       },
-      "retarget": "Retarget",
-      "thoseWhoPurchased": "Those who purchased",
-      "thoseWhoStartedConversation": "Those who started a conversation",
-      "sendWhatsappBroadcast": "Send WhatsApp broadcast",
-      "retargetOnChannel": "Retarget on {channel}",
-      "from": "From",
-      "to": "To",
-      "unattributed": "Unattributed",
+      "retarget": "Ретаргетинг",
+      "thoseWhoPurchased": "Совершившие покупку",
+      "thoseWhoStartedConversation": "Начавшие диалог",
+      "sendWhatsappBroadcast": "Отправить рассылку в WhatsApp",
+      "retargetOnChannel": "Ретаргетинг в {channel}",
+      "from": "С",
+      "to": "По",
+      "unattributed": "Без атрибуции",
       "retargetDialog": {
-        "title": "Retarget ad contacts",
-        "createAudience": "Create audience",
-        "useExistingAudience": "Use existing audience",
-        "audienceName": "Audience name",
-        "audiencePrefix": "Ads",
-        "confirm": "Start sync",
-        "success": "Retarget audience sync queued.",
-        "error": "Failed to queue retarget audience sync."
+        "title": "Ретаргетинг на контакты из рекламы",
+        "createAudience": "Создать аудиторию",
+        "useExistingAudience": "Использовать существующую аудиторию",
+        "audienceName": "Название аудитории",
+        "audiencePrefix": "Реклама",
+        "confirm": "Начать синхронизацию",
+        "success": "Синхронизация аудитории для ретаргетинга поставлена в очередь.",
+        "error": "Не удалось поставить синхронизацию аудитории в очередь."
       },
       "delivery": {
-        "title": "Conversion delivery",
-        "sent": "Sent",
-        "pending": "Pending",
-        "failed": "Failed",
-        "skippedNoScope": "Skipped (no scope)",
-        "skippedRegion": "Skipped (region)",
-        "noScopeWarning": "Some conversions were not sent because this account is missing the events permission. Reconnect it to enable Automatic Events reporting.",
-        "reconnectCta": "Reconnect account",
-        "empty": "No conversion events in this range yet."
+        "title": "Отправка конверсий",
+        "sent": "Отправлено",
+        "pending": "В ожидании",
+        "failed": "Ошибки",
+        "skippedNoScope": "Пропущено (нет разрешения)",
+        "skippedRegion": "Пропущено (регион)",
+        "noScopeWarning": "Часть конверсий не отправлена, так как у этого аккаунта нет разрешения на события. Переподключите его, чтобы включить отчеты по автоматическим событиям.",
+        "reconnectCta": "Переподключить аккаунт",
+        "empty": "За этот период пока нет событий конверсии."
       },
       "export": {
-        "conversations": "Export conversations",
-        "leads": "Export leads",
-        "purchases": "Export purchases"
+        "conversations": "Экспортировать диалоги",
+        "leads": "Экспортировать лиды",
+        "purchases": "Экспортировать покупки"
       },
       "csv": {
-        "contactName": "Contact name",
-        "phone": "Phone",
-        "adId": "Ad ID",
-        "occurredAt": "Occurred at",
-        "channel": "Channel"
+        "contactName": "Имя контакта",
+        "phone": "Телефон",
+        "adId": "ID объявления",
+        "occurredAt": "Время события",
+        "channel": "Канал"
       },
-      "empty": "No data yet. Connect an ad account and start tracking conversions."
+      "empty": "Данных пока нет. Подключите рекламный аккаунт и начните отслеживать конверсии."
     }
   },
   "googleSheets": {
@@ -6294,527 +6294,527 @@
     }
   },
   "facebookCommentAutomation": {
-    "title": "Facebook Comment Automation",
-    "description": "Automate Facebook comments for your contacts.",
-    "create": "Create Automation",
-    "replies": "Replies",
-    "activated": "Automation activated",
-    "deactivated": "Automation deactivated",
-    "trackCommentsOn": "Track comments on",
-    "trackCommentsOnDescription": "Apply this automation to all posts on your Page, or narrow it to specific posts you select.",
-    "privateReply": "Private reply (inbox)",
-    "privateReplyDescription": "Send a private message to the commenter's inbox. Choose AI Agent, a fixed text template, a chatbot flow, or disable.",
-    "publicReply": "Public reply to comment",
-    "publicReplyDescription": "Post a public reply directly under the comment. Supports up to 10 text templates, AI Agent, a chatbot flow, or no reply. Each message is posted as a separate reply. Spintax is supported.",
-    "replyMessage": "Reply message",
-    "replyMessagePlaceholder": "Enter reply message...",
-    "includeKeywordsType": "Reply to",
-    "includeKeywordsTypeDescription": "Choose which comments this automation responds to.",
-    "includeKeywords": "Keywords to match",
-    "excludeKeywords": "Exclude comments containing",
-    "excludeKeywordsDescription": "Comments containing any of these keywords will be ignored by both inbox and public reply automation.",
-    "keywordsPlaceholder": "Type and press Enter...",
-    "replyAfter": "Reply after",
-    "replyAfterValue": "Value",
+    "title": "Автоответы на комментарии в Facebook",
+    "description": "Автоматические ответы на комментарии ваших контактов в Facebook.",
+    "create": "Создать автоматизацию",
+    "replies": "Ответы",
+    "activated": "Автоматизация включена",
+    "deactivated": "Автоматизация выключена",
+    "trackCommentsOn": "Отслеживать комментарии в",
+    "trackCommentsOnDescription": "Применяйте автоматизацию ко всем публикациям страницы или только к выбранным публикациям.",
+    "privateReply": "Личный ответ (в директ)",
+    "privateReplyDescription": "Отправить личное сообщение автору комментария. Выберите ИИ-агента, фиксированный текстовый шаблон, сценарий чат-бота или отключите ответ.",
+    "publicReply": "Публичный ответ на комментарий",
+    "publicReplyDescription": "Публикует ответ прямо под комментарием. Поддерживаются до 10 текстовых шаблонов, ИИ-агент, сценарий чат-бота или отсутствие ответа. Каждое сообщение публикуется отдельным ответом. Поддерживается спинтакс.",
+    "replyMessage": "Текст ответа",
+    "replyMessagePlaceholder": "Введите текст ответа...",
+    "includeKeywordsType": "Отвечать на",
+    "includeKeywordsTypeDescription": "Выберите, на какие комментарии отвечает эта автоматизация.",
+    "includeKeywords": "Ключевые слова",
+    "excludeKeywords": "Исключить комментарии со словами",
+    "excludeKeywordsDescription": "Комментарии с любым из этих ключевых слов будут игнорироваться как личными, так и публичными автоответами.",
+    "keywordsPlaceholder": "Введите и нажмите Enter...",
+    "replyAfter": "Ответить через",
+    "replyAfterValue": "Значение",
     "schedule": {
-      "title": "Set active hours",
-      "description": "Choose a start and end time. If the end time is earlier than the start time, the schedule runs overnight.",
-      "startTime": "Start time",
-      "endTime": "End time",
-      "alwaysRun": "Always run",
-      "save": "Save",
-      "invalidTimeRange": "Start and end time must be different",
-      "timeRequired": "Please select both start and end time"
+      "title": "Часы работы",
+      "description": "Выберите время начала и окончания. Если время окончания раньше времени начала, расписание работает через полночь.",
+      "startTime": "Время начала",
+      "endTime": "Время окончания",
+      "alwaysRun": "Работать всегда",
+      "save": "Сохранить",
+      "invalidTimeRange": "Время начала и окончания должно различаться",
+      "timeRequired": "Выберите время начала и окончания"
     },
     "card": {
-      "targeting": "Targeting & Reply",
-      "filters": "Filters & Options",
-      "replyTiming": "Reply Timing",
-      "hideComments": "Hide Comments"
+      "targeting": "Охват и ответ",
+      "filters": "Фильтры и параметры",
+      "replyTiming": "Время ответа",
+      "hideComments": "Скрытие комментариев"
     },
     "postType": {
-      "all": "All posts",
-      "published": "Published posts",
-      "ads": "Ads posts",
+      "all": "Все публикации",
+      "published": "Обычные публикации",
+      "ads": "Рекламные публикации",
       "reels": "Reels",
-      "specificPosts": "Specific posts"
+      "specificPosts": "Выбранные публикации"
     },
     "replyType": {
-      "text": "Text message",
-      "flow": "Flow",
-      "AIAgent": "AI Agent",
-      "none": "No reply"
+      "text": "Текстовое сообщение",
+      "flow": "Сценарий",
+      "AIAgent": "ИИ-агент",
+      "none": "Без ответа"
     },
     "keywordsType": {
-      "all": "All comments",
-      "equal": "Exact match",
-      "contain": "Contains"
+      "all": "Все комментарии",
+      "equal": "Точное совпадение",
+      "contain": "Содержит"
     },
     "replyAfterType": {
-      "immediately": "Immediately",
-      "seconds": "After X seconds",
-      "minutes": "After X minutes",
-      "hours": "After X hours",
-      "randomWithin3Minutes": "Random within 3 minutes",
-      "randomWithin5Minutes": "Random within 5 minutes",
-      "randomWithin10Minutes": "Random within 10 minutes",
-      "randomWithin20Minutes": "Random within 20 minutes",
-      "randomWithin30Minutes": "Random within 30 minutes",
-      "randomWithin60Minutes": "Random within 60 minutes"
+      "immediately": "Сразу",
+      "seconds": "Через X секунд",
+      "minutes": "Через X минут",
+      "hours": "Через X часов",
+      "randomWithin3Minutes": "Случайно в пределах 3 минут",
+      "randomWithin5Minutes": "Случайно в пределах 5 минут",
+      "randomWithin10Minutes": "Случайно в пределах 10 минут",
+      "randomWithin20Minutes": "Случайно в пределах 20 минут",
+      "randomWithin30Minutes": "Случайно в пределах 30 минут",
+      "randomWithin60Minutes": "Случайно в пределах 60 минут"
     },
     "options": {
-      "replyToNewContactsOnly": "Only reply to new contacts",
-      "replyToNewContactsOnlyDescription": "Only auto-reply to people who have never been a contact in your workspace before.",
-      "replyOncePerUserPerPost": "Reply only once to each user per post",
-      "replyOncePerUserPerPostDescription": "Each user will receive at most one automated reply per post.",
-      "likeUserComment": "Like the user comment",
-      "likeUserCommentDescription": "Automatically react with a like to the commenter's comment.",
-      "replyToUsersWhoCommentedOnOtherPosts": "Reply to users who commented on other posts",
-      "replyToUsersWhoCommentedOnOtherPostsDescription": "Continue replying to users who have already commented on your other posts.",
-      "ignoreCommentReplies": "Don't reply to replies to comments",
-      "ignoreCommentRepliesDescription": "Skip automation for comments that are replies to other comments, not top-level comments.",
-      "trackUserTags": "Track if a user tags other users",
-      "trackUserTagsDescription": "Counts the accounts tagged in each comment and adds them to the contact's running totals across all comments. Use '{{total_tagged}}' for every tagged account and '{{total_new_tagged}}' for accounts that have never messaged your page or been a contact."
+      "replyToNewContactsOnly": "Отвечать только новым контактам",
+      "replyToNewContactsOnlyDescription": "Автоответ только тем, кто ранее никогда не был контактом в вашем пространстве.",
+      "replyOncePerUserPerPost": "Отвечать каждому пользователю один раз на публикацию",
+      "replyOncePerUserPerPostDescription": "Каждый пользователь получит не более одного автоответа на публикацию.",
+      "likeUserComment": "Ставить лайк комментарию",
+      "likeUserCommentDescription": "Автоматически ставить лайк комментарию пользователя.",
+      "replyToUsersWhoCommentedOnOtherPosts": "Отвечать тем, кто комментировал другие публикации",
+      "replyToUsersWhoCommentedOnOtherPostsDescription": "Продолжать отвечать пользователям, которые уже комментировали другие ваши публикации.",
+      "ignoreCommentReplies": "Не отвечать на ответы к комментариям",
+      "ignoreCommentRepliesDescription": "Пропускать комментарии, которые являются ответами на другие комментарии, а не комментариями верхнего уровня.",
+      "trackUserTags": "Отслеживать отметки других пользователей",
+      "trackUserTagsDescription": "Считает аккаунты, отмеченные в каждом комментарии, и прибавляет их к накопительным итогам контакта по всем комментариям. Используйте '{{total_tagged}}' для всех отмеченных аккаунтов и '{{total_new_tagged}}' для аккаунтов, которые ни разу не писали вашей странице и не были контактами."
     },
     "hideComments": {
-      "all": "Hide all comments",
-      "hasPhoneNumber": "Contains phone number",
-      "hasImage": "Contains image",
-      "hasVideo": "Contains video",
-      "hasLink": "Contains link",
-      "hasKeywords": "Contains keywords",
-      "keywords": "Keywords",
-      "showCommentsAfter": "Show comments after"
+      "all": "Скрывать все комментарии",
+      "hasPhoneNumber": "Содержит номер телефона",
+      "hasImage": "Содержит изображение",
+      "hasVideo": "Содержит видео",
+      "hasLink": "Содержит ссылку",
+      "hasKeywords": "Содержит ключевые слова",
+      "keywords": "Ключевые слова",
+      "showCommentsAfter": "Показать комментарии через"
     },
     "showCommentsAfter": {
-      "none": "Never"
+      "none": "Никогда"
     },
-    "selectPosts": "Select Posts",
-    "selectPageAll": "All pages",
-    "chooseSpecificPosts": "Choose posts...",
-    "postIdTab": "Post ID",
-    "postIdPlaceholder": "Enter post IDs, one per line...",
-    "noPostsFound": "No posts found",
+    "selectPosts": "Выбрать публикации",
+    "selectPageAll": "Все страницы",
+    "chooseSpecificPosts": "Выберите публикации...",
+    "postIdTab": "ID публикации",
+    "postIdPlaceholder": "Введите ID публикаций, по одному в строке...",
+    "noPostsFound": "Публикации не найдены",
     "postTypeDialog": {
-      "liveTitle": "Live Stream",
-      "liveDescription": "Automate comments on Live streams. Supports public replies, private replies, hiding, and liking comments.",
-      "postsTitle": "Page Posts",
-      "postsDescription": "Automate comments on Page posts and reels. Supports public replies, private replies, hiding, and liking comments."
+      "liveTitle": "Прямой эфир",
+      "liveDescription": "Автоматизация комментариев в прямых эфирах. Поддерживаются публичные и личные ответы, скрытие комментариев и лайки.",
+      "postsTitle": "Публикации страницы",
+      "postsDescription": "Автоматизация комментариев к публикациям и Reels страницы. Поддерживаются публичные и личные ответы, скрытие комментариев и лайки."
     }
   },
   "instagramCommentAutomation": {
-    "title": "Instagram Comment Automation",
-    "description": "Automate Instagram comments for your contacts.",
-    "create": "Create Automation",
-    "replies": "Replies",
-    "activated": "Automation activated",
-    "deactivated": "Automation deactivated",
-    "trackCommentsOn": "Track comments on",
-    "trackCommentsOnDescription": "Apply this automation to all posts on your connected account, or narrow it to specific posts you select.",
-    "privateReply": "Private reply (inbox)",
-    "privateReplyDescription": "Send a private message to the commenter's inbox. Choose AI Agent, a fixed text template, a chatbot flow, or disable.",
-    "publicReply": "Public reply to comment",
-    "publicReplyDescription": "Post a public reply directly under the comment. Supports up to 10 text templates, AI Agent, a chatbot flow, or no reply. Each message is posted as a separate reply. Spintax is supported.",
-    "replyMessage": "Reply message",
-    "replyMessagePlaceholder": "Enter reply message...",
-    "includeKeywordsType": "Reply to",
-    "includeKeywordsTypeDescription": "Choose which comments this automation responds to.",
-    "includeKeywords": "Keywords to match",
-    "excludeKeywords": "Exclude comments containing",
-    "excludeKeywordsDescription": "Comments containing any of these keywords will be ignored by both inbox and public reply automation.",
-    "keywordsPlaceholder": "Type and press Enter...",
-    "replyAfter": "Reply after",
-    "replyAfterValue": "Value",
+    "title": "Автоответы на комментарии в Instagram",
+    "description": "Автоматические ответы на комментарии ваших контактов в Instagram.",
+    "create": "Создать автоматизацию",
+    "replies": "Ответы",
+    "activated": "Автоматизация включена",
+    "deactivated": "Автоматизация выключена",
+    "trackCommentsOn": "Отслеживать комментарии в",
+    "trackCommentsOnDescription": "Применяйте автоматизацию ко всем публикациям подключенного аккаунта или только к выбранным публикациям.",
+    "privateReply": "Личный ответ (в директ)",
+    "privateReplyDescription": "Отправить личное сообщение автору комментария. Выберите ИИ-агента, фиксированный текстовый шаблон, сценарий чат-бота или отключите ответ.",
+    "publicReply": "Публичный ответ на комментарий",
+    "publicReplyDescription": "Публикует ответ прямо под комментарием. Поддерживаются до 10 текстовых шаблонов, ИИ-агент, сценарий чат-бота или отсутствие ответа. Каждое сообщение публикуется отдельным ответом. Поддерживается спинтакс.",
+    "replyMessage": "Текст ответа",
+    "replyMessagePlaceholder": "Введите текст ответа...",
+    "includeKeywordsType": "Отвечать на",
+    "includeKeywordsTypeDescription": "Выберите, на какие комментарии отвечает эта автоматизация.",
+    "includeKeywords": "Ключевые слова",
+    "excludeKeywords": "Исключить комментарии со словами",
+    "excludeKeywordsDescription": "Комментарии с любым из этих ключевых слов будут игнорироваться как личными, так и публичными автоответами.",
+    "keywordsPlaceholder": "Введите и нажмите Enter...",
+    "replyAfter": "Ответить через",
+    "replyAfterValue": "Значение",
     "schedule": {
-      "title": "Set active hours",
-      "description": "Choose a start and end time. If the end time is earlier than the start time, the schedule runs overnight.",
-      "startTime": "Start time",
-      "endTime": "End time",
-      "alwaysRun": "Always run",
-      "save": "Save",
-      "invalidTimeRange": "Start and end time must be different",
-      "timeRequired": "Please select both start and end time"
+      "title": "Часы работы",
+      "description": "Выберите время начала и окончания. Если время окончания раньше времени начала, расписание работает через полночь.",
+      "startTime": "Время начала",
+      "endTime": "Время окончания",
+      "alwaysRun": "Работать всегда",
+      "save": "Сохранить",
+      "invalidTimeRange": "Время начала и окончания должно различаться",
+      "timeRequired": "Выберите время начала и окончания"
     },
     "card": {
-      "targeting": "Targeting & Reply",
-      "filters": "Filters & Options",
-      "replyTiming": "Reply Timing",
-      "hideComments": "Hide Comments"
+      "targeting": "Охват и ответ",
+      "filters": "Фильтры и параметры",
+      "replyTiming": "Время ответа",
+      "hideComments": "Скрытие комментариев"
     },
     "postType": {
-      "all": "All posts",
-      "published": "Published posts",
+      "all": "Все публикации",
+      "published": "Обычные публикации",
       "reels": "Reels",
-      "specificPosts": "Specific posts"
+      "specificPosts": "Выбранные публикации"
     },
     "replyType": {
-      "text": "Text message",
-      "flow": "Flow",
-      "AIAgent": "AI Agent",
-      "none": "No reply"
+      "text": "Текстовое сообщение",
+      "flow": "Сценарий",
+      "AIAgent": "ИИ-агент",
+      "none": "Без ответа"
     },
     "keywordsType": {
-      "all": "All comments",
-      "equal": "Exact match",
-      "contain": "Contains"
+      "all": "Все комментарии",
+      "equal": "Точное совпадение",
+      "contain": "Содержит"
     },
     "replyAfterType": {
-      "immediately": "Immediately",
-      "seconds": "After X seconds",
-      "minutes": "After X minutes",
-      "hours": "After X hours",
-      "randomWithin3Minutes": "Random within 3 minutes",
-      "randomWithin5Minutes": "Random within 5 minutes",
-      "randomWithin10Minutes": "Random within 10 minutes",
-      "randomWithin20Minutes": "Random within 20 minutes",
-      "randomWithin30Minutes": "Random within 30 minutes",
-      "randomWithin60Minutes": "Random within 60 minutes"
+      "immediately": "Сразу",
+      "seconds": "Через X секунд",
+      "minutes": "Через X минут",
+      "hours": "Через X часов",
+      "randomWithin3Minutes": "Случайно в пределах 3 минут",
+      "randomWithin5Minutes": "Случайно в пределах 5 минут",
+      "randomWithin10Minutes": "Случайно в пределах 10 минут",
+      "randomWithin20Minutes": "Случайно в пределах 20 минут",
+      "randomWithin30Minutes": "Случайно в пределах 30 минут",
+      "randomWithin60Minutes": "Случайно в пределах 60 минут"
     },
     "options": {
-      "replyToNewContactsOnly": "Only reply to new contacts",
-      "replyToNewContactsOnlyDescription": "Only auto-reply to people who have never been a contact in your workspace before.",
-      "replyOncePerUserPerPost": "Reply only once to each user per post",
-      "replyOncePerUserPerPostDescription": "Each user will receive at most one automated reply per post.",
-      "likeUserComment": "Like the user comment",
-      "likeUserCommentDescription": "Automatically react with a like to the commenter's comment.",
-      "replyToUsersWhoCommentedOnOtherPosts": "Reply to users who commented on other posts",
-      "replyToUsersWhoCommentedOnOtherPostsDescription": "Continue replying to users who have already commented on your other posts.",
-      "ignoreCommentReplies": "Don't reply to replies to comments",
-      "ignoreCommentRepliesDescription": "Skip automation for comments that are replies to other comments, not top-level comments.",
-      "trackUserTags": "Track if a user tags other users",
-      "trackUserTagsDescription": "Counts the accounts tagged in each comment and adds them to the contact's running totals across all comments. Use '{{total_tagged}}' for every tagged account and '{{total_new_tagged}}' for accounts that have never messaged your page or been a contact."
+      "replyToNewContactsOnly": "Отвечать только новым контактам",
+      "replyToNewContactsOnlyDescription": "Автоответ только тем, кто ранее никогда не был контактом в вашем пространстве.",
+      "replyOncePerUserPerPost": "Отвечать каждому пользователю один раз на публикацию",
+      "replyOncePerUserPerPostDescription": "Каждый пользователь получит не более одного автоответа на публикацию.",
+      "likeUserComment": "Ставить лайк комментарию",
+      "likeUserCommentDescription": "Автоматически ставить лайк комментарию пользователя.",
+      "replyToUsersWhoCommentedOnOtherPosts": "Отвечать тем, кто комментировал другие публикации",
+      "replyToUsersWhoCommentedOnOtherPostsDescription": "Продолжать отвечать пользователям, которые уже комментировали другие ваши публикации.",
+      "ignoreCommentReplies": "Не отвечать на ответы к комментариям",
+      "ignoreCommentRepliesDescription": "Пропускать комментарии, которые являются ответами на другие комментарии, а не комментариями верхнего уровня.",
+      "trackUserTags": "Отслеживать отметки других пользователей",
+      "trackUserTagsDescription": "Считает аккаунты, отмеченные в каждом комментарии, и прибавляет их к накопительным итогам контакта по всем комментариям. Используйте '{{total_tagged}}' для всех отмеченных аккаунтов и '{{total_new_tagged}}' для аккаунтов, которые ни разу не писали вашей странице и не были контактами."
     },
     "hideComments": {
-      "all": "Hide all comments",
-      "hasPhoneNumber": "Contains phone number",
-      "hasLink": "Contains link",
-      "hasKeywords": "Contains keywords",
-      "keywords": "Keywords",
-      "showCommentsAfter": "Show comments after"
+      "all": "Скрывать все комментарии",
+      "hasPhoneNumber": "Содержит номер телефона",
+      "hasLink": "Содержит ссылку",
+      "hasKeywords": "Содержит ключевые слова",
+      "keywords": "Ключевые слова",
+      "showCommentsAfter": "Показать комментарии через"
     },
     "showCommentsAfter": {
-      "none": "Never"
+      "none": "Никогда"
     },
-    "selectPosts": "Select Posts",
-    "selectPageAll": "All accounts",
-    "chooseSpecificPosts": "Choose posts...",
-    "postIdTab": "Post ID",
-    "postIdPlaceholder": "Enter post IDs, one per line...",
-    "noPostsFound": "No posts found",
+    "selectPosts": "Выбрать публикации",
+    "selectPageAll": "Все аккаунты",
+    "chooseSpecificPosts": "Выберите публикации...",
+    "postIdTab": "ID публикации",
+    "postIdPlaceholder": "Введите ID публикаций, по одному в строке...",
+    "noPostsFound": "Публикации не найдены",
     "connectionType": {
-      "title": "Choose Instagram connection type",
+      "title": "Выберите тип подключения Instagram",
       "instagramTitle": "Instagram Business",
-      "instagramDescription": "Instagram Login connection. Supports public reply, private reply, and hiding comments. Liking comments is not supported.",
-      "instagramFacebookTitle": "Instagram Login with Facebook",
-      "instagramFacebookDescription": "Instagram connected via a Facebook Page. Supports public reply, private reply, hiding comments, and liking comments."
+      "instagramDescription": "Подключение через вход в Instagram. Поддерживаются публичные и личные ответы и скрытие комментариев. Лайки комментариев не поддерживаются.",
+      "instagramFacebookTitle": "Вход в Instagram через Facebook",
+      "instagramFacebookDescription": "Instagram подключен через страницу Facebook. Поддерживаются публичные и личные ответы, скрытие комментариев и лайки."
     },
     "postTypeDialog": {
-      "liveTitle": "Instagram Live",
-      "liveDescription": "Automate comments on Instagram Live streams. Sends a private reply to each commenter while you are live.",
-      "postsTitle": "Posts & Reels",
-      "postsDescription": "Automate comments on posts and reels. Supports public replies, private replies, and hiding comments."
+      "liveTitle": "Прямой эфир Instagram",
+      "liveDescription": "Автоматизация комментариев в прямых эфирах Instagram. Каждому автору комментария отправляется личный ответ, пока идет эфир.",
+      "postsTitle": "Публикации и Reels",
+      "postsDescription": "Автоматизация комментариев к публикациям и Reels. Поддерживаются публичные и личные ответы и скрытие комментариев."
     },
-    "liveReplyNote": "Instagram only allows a private reply to a Live comment, and only while you are live. Public replies, hiding, and liking are not available."
+    "liveReplyNote": "Instagram позволяет отправить на комментарий в эфире только личный ответ и только пока идет эфир. Публичные ответы, скрытие и лайки недоступны."
   },
   "threadsCommentAutomation": {
-    "title": "Threads Comment Automation",
-    "description": "Automate public Threads comment replies for your contacts.",
-    "create": "Create Automation",
-    "replies": "Replies",
-    "empty": "No Threads comment automations yet.",
-    "publicOnlyNote": "Threads currently supports public replies only.",
-    "trackCommentsOn": "Track comments on",
-    "publicReply": "Public reply to comment",
-    "publicReplyDescription": "Send a public reply to matching Threads comments. Up to 10 text messages (spintax supported), each posted as a separate reply.",
-    "replyMessage": "Reply message",
-    "replyFlow": "Reply flow",
-    "replyAIAgent": "Reply AI Agent",
-    "includeKeywordsType": "Reply to",
-    "includeKeywords": "Keywords to match",
-    "excludeKeywords": "Exclude comments containing",
-    "keywordsPlaceholder": "Type and press Enter...",
-    "replyAfter": "Reply after",
-    "replyAfterValue": "Value",
-    "specificPostIds": "Specific post IDs",
-    "postIdPlaceholder": "Enter numeric post IDs and press Enter (not the code in the link)...",
+    "title": "Автоответы на комментарии в Threads",
+    "description": "Автоматические публичные ответы на комментарии ваших контактов в Threads.",
+    "create": "Создать автоматизацию",
+    "replies": "Ответы",
+    "empty": "Автоответов на комментарии в Threads пока нет.",
+    "publicOnlyNote": "Сейчас Threads поддерживает только публичные ответы.",
+    "trackCommentsOn": "Отслеживать комментарии в",
+    "publicReply": "Публичный ответ на комментарий",
+    "publicReplyDescription": "Публичный ответ на подходящие комментарии в Threads. До 10 текстовых сообщений (поддерживается спинтакс), каждое публикуется отдельным ответом.",
+    "replyMessage": "Текст ответа",
+    "replyFlow": "Сценарий ответа",
+    "replyAIAgent": "ИИ-агент для ответа",
+    "includeKeywordsType": "Отвечать на",
+    "includeKeywords": "Ключевые слова",
+    "excludeKeywords": "Исключить комментарии со словами",
+    "keywordsPlaceholder": "Введите и нажмите Enter...",
+    "replyAfter": "Ответить через",
+    "replyAfterValue": "Значение",
+    "specificPostIds": "ID выбранных публикаций",
+    "postIdPlaceholder": "Введите числовые ID публикаций и нажмите Enter (не код из ссылки)...",
     "card": {
-      "targeting": "Targeting & Reply",
-      "filters": "Filters & Options",
-      "replyTiming": "Reply Timing",
-      "hideComments": "Hide Comments"
+      "targeting": "Охват и ответ",
+      "filters": "Фильтры и параметры",
+      "replyTiming": "Время ответа",
+      "hideComments": "Скрытие комментариев"
     },
     "postType": {
-      "all": "All posts",
-      "specificPosts": "Specific posts"
+      "all": "Все публикации",
+      "specificPosts": "Выбранные публикации"
     },
     "replyType": {
-      "text": "Text message",
-      "flow": "Flow",
-      "AIAgent": "AI Agent",
-      "none": "No reply"
+      "text": "Текстовое сообщение",
+      "flow": "Сценарий",
+      "AIAgent": "ИИ-агент",
+      "none": "Без ответа"
     },
     "keywordsType": {
-      "all": "All comments",
-      "equal": "Exact match",
-      "contain": "Contains"
+      "all": "Все комментарии",
+      "equal": "Точное совпадение",
+      "contain": "Содержит"
     },
     "replyAfterType": {
-      "immediately": "Immediately",
-      "seconds": "After X seconds",
-      "minutes": "After X minutes",
-      "hours": "After X hours",
-      "randomWithin3Minutes": "Random within 3 minutes",
-      "randomWithin5Minutes": "Random within 5 minutes",
-      "randomWithin10Minutes": "Random within 10 minutes",
-      "randomWithin20Minutes": "Random within 20 minutes",
-      "randomWithin30Minutes": "Random within 30 minutes",
-      "randomWithin60Minutes": "Random within 60 minutes"
+      "immediately": "Сразу",
+      "seconds": "Через X секунд",
+      "minutes": "Через X минут",
+      "hours": "Через X часов",
+      "randomWithin3Minutes": "Случайно в пределах 3 минут",
+      "randomWithin5Minutes": "Случайно в пределах 5 минут",
+      "randomWithin10Minutes": "Случайно в пределах 10 минут",
+      "randomWithin20Minutes": "Случайно в пределах 20 минут",
+      "randomWithin30Minutes": "Случайно в пределах 30 минут",
+      "randomWithin60Minutes": "Случайно в пределах 60 минут"
     },
     "options": {
-      "replyToNewContactsOnly": "Only reply to new contacts",
-      "replyOncePerUserPerPost": "Reply only once to each user per post",
-      "replyToUsersWhoCommentedOnOtherPosts": "Reply to users who commented on other posts",
-      "ignoreCommentReplies": "Don't reply to replies to comments"
+      "replyToNewContactsOnly": "Отвечать только новым контактам",
+      "replyOncePerUserPerPost": "Отвечать каждому пользователю один раз на публикацию",
+      "replyToUsersWhoCommentedOnOtherPosts": "Отвечать тем, кто комментировал другие публикации",
+      "ignoreCommentReplies": "Не отвечать на ответы к комментариям"
     },
     "validation": {
-      "postIdsMustBeEmptyForAll": "Post IDs must be empty when targeting all posts.",
-      "postIdsRequired": "Select at least one post ID when targeting specific posts.",
-      "keywordsMustBeEmptyForAll": "Keywords must be empty when matching all comments.",
-      "keywordsRequired": "Enter at least one keyword for the selected match type.",
-      "delayMustBePositive": "Delay value must be greater than zero.",
-      "delayMustBeZero": "Delay value must be zero for the selected timing option.",
-      "atLeastOneFieldRequired": "At least one field is required.",
-      "replyTextRequired": "Enter at least one reply message.",
-      "hideKeywordsRequired": "Enter at least one keyword to hide comments by keyword."
+      "postIdsMustBeEmptyForAll": "При выборе всех публикаций ID публикаций указывать не нужно.",
+      "postIdsRequired": "Выберите хотя бы один ID публикации для выбранных публикаций.",
+      "keywordsMustBeEmptyForAll": "При ответе на все комментарии ключевые слова указывать не нужно.",
+      "keywordsRequired": "Введите хотя бы одно ключевое слово для выбранного типа совпадения.",
+      "delayMustBePositive": "Задержка должна быть больше нуля.",
+      "delayMustBeZero": "Для выбранного варианта времени задержка должна быть равна нулю.",
+      "atLeastOneFieldRequired": "Заполните хотя бы одно поле.",
+      "replyTextRequired": "Введите хотя бы один текст ответа.",
+      "hideKeywordsRequired": "Введите хотя бы одно ключевое слово для скрытия комментариев."
     },
-    "hideCommentsDescription": "Only top-level replies to your posts can be hidden.",
+    "hideCommentsDescription": "Скрыть можно только ответы верхнего уровня к вашим публикациям.",
     "hideComments": {
-      "all": "Hide all comments",
-      "hasPhoneNumber": "Contains phone number",
-      "hasLink": "Contains link",
-      "hasKeywords": "Contains keywords",
-      "keywords": "Keywords",
-      "showCommentsAfter": "Show comments after"
+      "all": "Скрывать все комментарии",
+      "hasPhoneNumber": "Содержит номер телефона",
+      "hasLink": "Содержит ссылку",
+      "hasKeywords": "Содержит ключевые слова",
+      "keywords": "Ключевые слова",
+      "showCommentsAfter": "Показать комментарии через"
     },
     "showCommentsAfter": {
-      "none": "Never"
+      "none": "Никогда"
     },
-    "chooseSpecificPosts": "Choose posts...",
-    "selectPosts": "Select Posts",
-    "selectAccountAll": "All accounts",
-    "postsTab": "Posts",
-    "postIdTab": "Post ID",
-    "noPostsFound": "No posts found",
-    "loadPostsError": "Couldn't load posts. You can still enter IDs manually."
+    "chooseSpecificPosts": "Выберите публикации...",
+    "selectPosts": "Выбрать публикации",
+    "selectAccountAll": "Все аккаунты",
+    "postsTab": "Публикации",
+    "postIdTab": "ID публикации",
+    "noPostsFound": "Публикации не найдены",
+    "loadPostsError": "Не удалось загрузить публикации. ID можно ввести вручную."
   },
   "tiktokCommentAutomation": {
-    "title": "TikTok Comment Automation",
-    "description": "Automate replies, likes and hiding on comments under your TikTok videos.",
-    "create": "Create Automation",
-    "replies": "Replies",
-    "empty": "No TikTok comment automations yet.",
-    "deliveryDelayNote": "TikTok delivers comment events within five minutes, so replies are not instant. Any reply delay you set is added on top of that.",
-    "trackCommentsOn": "Track comments on",
-    "publicReply": "Public reply to comment",
-    "publicReplyDescription": "Send a public reply to matching TikTok comments. Up to 10 text messages (spintax supported), each posted as a separate reply.",
-    "replyMessage": "Reply message",
-    "replyFlow": "Reply flow",
-    "replyAIAgent": "Reply AI Agent",
-    "includeKeywordsType": "Reply to",
-    "includeKeywords": "Keywords to match",
-    "excludeKeywords": "Exclude comments containing",
-    "keywordsPlaceholder": "Type and press Enter...",
-    "replyAfter": "Reply after",
-    "replyAfterValue": "Value",
-    "specificPostIds": "Specific video IDs",
-    "postIdPlaceholder": "Enter video IDs and press Enter...",
-    "hideCommentsDescription": "Hidden comments stay visible to their author only.",
+    "title": "Автоответы на комментарии в TikTok",
+    "description": "Автоматические ответы, лайки и скрытие комментариев под вашими видео в TikTok.",
+    "create": "Создать автоматизацию",
+    "replies": "Ответы",
+    "empty": "Автоответов на комментарии в TikTok пока нет.",
+    "deliveryDelayNote": "TikTok передает события комментариев в течение пяти минут, поэтому ответы приходят не мгновенно. Заданная задержка ответа добавляется к этому времени.",
+    "trackCommentsOn": "Отслеживать комментарии в",
+    "publicReply": "Публичный ответ на комментарий",
+    "publicReplyDescription": "Публичный ответ на подходящие комментарии в TikTok. До 10 текстовых сообщений (поддерживается спинтакс), каждое публикуется отдельным ответом.",
+    "replyMessage": "Текст ответа",
+    "replyFlow": "Сценарий ответа",
+    "replyAIAgent": "ИИ-агент для ответа",
+    "includeKeywordsType": "Отвечать на",
+    "includeKeywords": "Ключевые слова",
+    "excludeKeywords": "Исключить комментарии со словами",
+    "keywordsPlaceholder": "Введите и нажмите Enter...",
+    "replyAfter": "Ответить через",
+    "replyAfterValue": "Значение",
+    "specificPostIds": "ID выбранных видео",
+    "postIdPlaceholder": "Введите ID видео и нажмите Enter...",
+    "hideCommentsDescription": "Скрытые комментарии остаются видны только их автору.",
     "card": {
-      "targeting": "Targeting & Reply",
-      "filters": "Filters & Options",
-      "hideComments": "Hide Comments",
-      "replyTiming": "Reply Timing"
+      "targeting": "Охват и ответ",
+      "filters": "Фильтры и параметры",
+      "hideComments": "Скрытие комментариев",
+      "replyTiming": "Время ответа"
     },
     "postType": {
-      "all": "All videos",
-      "specificPosts": "Specific videos"
+      "all": "Все видео",
+      "specificPosts": "Выбранные видео"
     },
     "replyType": {
-      "text": "Text message",
-      "flow": "Flow",
-      "AIAgent": "AI Agent",
-      "none": "No reply"
+      "text": "Текстовое сообщение",
+      "flow": "Сценарий",
+      "AIAgent": "ИИ-агент",
+      "none": "Без ответа"
     },
     "keywordsType": {
-      "all": "All comments",
-      "equal": "Exact match",
-      "contain": "Contains"
+      "all": "Все комментарии",
+      "equal": "Точное совпадение",
+      "contain": "Содержит"
     },
     "replyAfterType": {
-      "immediately": "Immediately",
-      "seconds": "After X seconds",
-      "minutes": "After X minutes",
-      "hours": "After X hours",
-      "randomWithin3Minutes": "Random within 3 minutes",
-      "randomWithin5Minutes": "Random within 5 minutes",
-      "randomWithin10Minutes": "Random within 10 minutes",
-      "randomWithin20Minutes": "Random within 20 minutes",
-      "randomWithin30Minutes": "Random within 30 minutes",
-      "randomWithin60Minutes": "Random within 60 minutes"
+      "immediately": "Сразу",
+      "seconds": "Через X секунд",
+      "minutes": "Через X минут",
+      "hours": "Через X часов",
+      "randomWithin3Minutes": "Случайно в пределах 3 минут",
+      "randomWithin5Minutes": "Случайно в пределах 5 минут",
+      "randomWithin10Minutes": "Случайно в пределах 10 минут",
+      "randomWithin20Minutes": "Случайно в пределах 20 минут",
+      "randomWithin30Minutes": "Случайно в пределах 30 минут",
+      "randomWithin60Minutes": "Случайно в пределах 60 минут"
     },
     "options": {
-      "replyToNewContactsOnly": "Only reply to new contacts",
-      "replyOncePerUserPerPost": "Reply only once to each user per video",
-      "replyToUsersWhoCommentedOnOtherPosts": "Reply to users who commented on other videos",
-      "ignoreCommentReplies": "Don't reply to replies to comments",
-      "likeUserComment": "Like the user's comment"
+      "replyToNewContactsOnly": "Отвечать только новым контактам",
+      "replyOncePerUserPerPost": "Отвечать каждому пользователю один раз на видео",
+      "replyToUsersWhoCommentedOnOtherPosts": "Отвечать тем, кто комментировал другие видео",
+      "ignoreCommentReplies": "Не отвечать на ответы к комментариям",
+      "likeUserComment": "Ставить лайк комментарию пользователя"
     },
     "hide": {
-      "all": "Hide every comment",
-      "hasPhoneNumber": "Hide comments containing a phone number",
-      "hasLink": "Hide comments containing a link",
-      "hasKeywords": "Hide comments containing keywords",
-      "keywords": "Keywords to hide",
-      "showCommentsAfter": "Show hidden comments again after"
+      "all": "Скрывать все комментарии",
+      "hasPhoneNumber": "Скрывать комментарии с номером телефона",
+      "hasLink": "Скрывать комментарии со ссылкой",
+      "hasKeywords": "Скрывать комментарии с ключевыми словами",
+      "keywords": "Ключевые слова для скрытия",
+      "showCommentsAfter": "Снова показать скрытые комментарии через"
     },
     "showCommentsAfter": {
-      "none": "Never",
-      "6h": "6 hours",
-      "12h": "12 hours",
-      "1d": "1 day",
-      "2d": "2 days",
-      "3d": "3 days",
-      "4d": "4 days",
-      "5d": "5 days",
-      "6d": "6 days",
-      "7d": "7 days",
-      "8d": "8 days",
-      "9d": "9 days",
-      "10d": "10 days"
+      "none": "Никогда",
+      "6h": "6 часов",
+      "12h": "12 часов",
+      "1d": "1 день",
+      "2d": "2 дня",
+      "3d": "3 дня",
+      "4d": "4 дня",
+      "5d": "5 дней",
+      "6d": "6 дней",
+      "7d": "7 дней",
+      "8d": "8 дней",
+      "9d": "9 дней",
+      "10d": "10 дней"
     },
     "validation": {
-      "postIdsMustBeEmptyForAll": "Video IDs must be empty when targeting all videos.",
-      "postIdsRequired": "Select at least one video ID when targeting specific videos.",
-      "keywordsMustBeEmptyForAll": "Keywords must be empty when matching all comments.",
-      "keywordsRequired": "Enter at least one keyword for the selected match type.",
-      "delayMustBePositive": "Delay value must be greater than zero.",
-      "delayMustBeZero": "Delay value must be zero for the selected timing option.",
-      "hideKeywordsRequired": "Enter at least one keyword to hide comments by keyword.",
-      "atLeastOneFieldRequired": "At least one field is required.",
-      "replyTextRequired": "Enter at least one reply message."
+      "postIdsMustBeEmptyForAll": "При выборе всех видео ID видео указывать не нужно.",
+      "postIdsRequired": "Выберите хотя бы один ID видео для выбранных видео.",
+      "keywordsMustBeEmptyForAll": "При ответе на все комментарии ключевые слова указывать не нужно.",
+      "keywordsRequired": "Введите хотя бы одно ключевое слово для выбранного типа совпадения.",
+      "delayMustBePositive": "Задержка должна быть больше нуля.",
+      "delayMustBeZero": "Для выбранного варианта времени задержка должна быть равна нулю.",
+      "hideKeywordsRequired": "Введите хотя бы одно ключевое слово для скрытия комментариев.",
+      "atLeastOneFieldRequired": "Заполните хотя бы одно поле.",
+      "replyTextRequired": "Введите хотя бы один текст ответа."
     },
-    "privateReply": "Private reply (Comment-to-Message)",
-    "privateReplyDescription": "Send a direct message to the commenter. TikTok only allows this for comments it flags as high intent, so it will not fire for every matching comment.",
-    "privateReplyMessage": "Private reply message",
-    "privateReplyHighIntentTitle": "TikTok decides which comments can be messaged",
-    "privateReplyHighIntentNotice": "Comment-to-Message must be enabled on the connected TikTok account, and the account must be a Business Account registered in Vietnam, Indonesia or Thailand. TikTok sends the direct message only for first-level comments it flags as high intent, within 48 hours, once per comment, and not if the commenter already messaged you in the past 24 hours."
+    "privateReply": "Личный ответ (Comment-to-Message)",
+    "privateReplyDescription": "Отправить личное сообщение автору комментария. TikTok разрешает это только для комментариев, которые он считает проявлением высокого интереса, поэтому ответ сработает не на каждый подходящий комментарий.",
+    "privateReplyMessage": "Текст личного ответа",
+    "privateReplyHighIntentTitle": "TikTok сам решает, каким авторам комментариев можно написать",
+    "privateReplyHighIntentNotice": "В подключенном аккаунте TikTok должна быть включена функция Comment-to-Message, а сам аккаунт должен быть бизнес-аккаунтом, зарегистрированным во Вьетнаме, Индонезии или Таиланде. TikTok отправляет личное сообщение только на комментарии первого уровня с высоким интересом, в течение 48 часов, один раз на комментарий и только если автор не писал вам за последние 24 часа."
   },
   "commentAutomationMissedComments": {
-    "action": "Process missed comments",
-    "processing": "Processing missed comments",
-    "title": "Process missed comments",
-    "description": "Scan this post's comments from the last 7 days and run them through this comment automation. Comments that were already processed are skipped. This sends real messages and replies.",
-    "success": "Scanned {scanned} comments: {skipped} already processed, {queued} queued for processing, {failed} failed.",
+    "action": "Обработать пропущенные комментарии",
+    "processing": "Обработка пропущенных комментариев",
+    "title": "Обработать пропущенные комментарии",
+    "description": "Проверить комментарии к этой публикации за последние 7 дней и обработать их этой автоматизацией. Уже обработанные комментарии будут пропущены. Будут отправлены реальные сообщения и ответы.",
+    "success": "Проверено комментариев: {scanned}. Уже обработано: {skipped}, в очереди на обработку: {queued}, ошибки: {failed}.",
     "errors": {
-      "notSinglePost": "Only available for an automation that targets exactly one specific post.",
-      "inactive": "Turn on this automation before processing missed comments.",
-      "outsideSchedule": "This automation is outside its active hours. Try again during its schedule.",
-      "workspaceInactive": "This workspace is turned off or outside its active hours, so no comment would be processed. Try again when the workspace is active.",
-      "alreadyRunning": "Missed comments are already being processed for this automation. Try again in a few minutes.",
-      "integrationNotFound": "No connected account for this channel was found.",
-      "fetchFailed": "Couldn't load the post's comments. Check the channel connection and try again."
+      "notSinglePost": "Доступно только для автоматизации, настроенной ровно на одну выбранную публикацию.",
+      "inactive": "Включите автоматизацию, прежде чем обрабатывать пропущенные комментарии.",
+      "outsideSchedule": "Сейчас нерабочие часы этой автоматизации. Повторите попытку в рабочее время по расписанию.",
+      "workspaceInactive": "Пространство выключено или сейчас нерабочие часы, поэтому комментарии не будут обработаны. Повторите попытку, когда пространство будет активно.",
+      "alreadyRunning": "Пропущенные комментарии для этой автоматизации уже обрабатываются. Повторите попытку через несколько минут.",
+      "integrationNotFound": "Подключенный аккаунт для этого канала не найден.",
+      "fetchFailed": "Не удалось загрузить комментарии к публикации. Проверьте подключение канала и повторите попытку."
     }
   },
   "instagramStoryAutomation": {
-    "title": "Instagram Story Automation",
-    "description": "Automate replies when contacts reply to your Instagram stories or mention you in theirs.",
-    "create": "Create Automation",
-    "replies": "Replies",
-    "activated": "Automation activated",
-    "deactivated": "Automation deactivated",
-    "trigger": "Trigger",
-    "triggerDescription": "Choose what starts this automation. It can't be changed after the automation is created.",
+    "title": "Автоответы на истории Instagram",
+    "description": "Автоматические ответы, когда контакты отвечают на ваши истории в Instagram или упоминают вас в своих.",
+    "create": "Создать автоматизацию",
+    "replies": "Ответы",
+    "activated": "Автоматизация включена",
+    "deactivated": "Автоматизация выключена",
+    "trigger": "Триггер",
+    "triggerDescription": "Выберите, что запускает автоматизацию. После создания изменить это нельзя.",
     "triggerType": {
-      "storyReply": "Replies to your story",
-      "storyMention": "Mentions you in their story"
+      "storyReply": "Ответ на вашу историю",
+      "storyMention": "Упоминание вас в своей истории"
     },
-    "trackStoryReplyOn": "Track Story reply on",
-    "trackStoryReplyOnDescription": "Apply this automation to replies on any of your Stories, or narrow it to specific Stories you select.",
-    "reply": "Reply",
-    "replyDescription": "Send a reply to the story replier's inbox. Choose AI Agent, a fixed text template (spintax supported), a chatbot flow, or disable.",
-    "replyMessage": "Reply message",
-    "replyMessagePlaceholder": "Enter reply message...",
-    "includeKeywordsType": "Reply to",
-    "includeKeywordsTypeDescription": "Choose which story replies this automation responds to.",
-    "includeKeywords": "Keywords to match",
-    "keywordsPlaceholder": "Type and press Enter...",
+    "trackStoryReplyOn": "Отслеживать ответы на истории",
+    "trackStoryReplyOnDescription": "Применяйте автоматизацию к ответам на любые ваши истории или только на выбранные.",
+    "reply": "Ответ",
+    "replyDescription": "Отправить ответ в личные сообщения тому, кто ответил на историю. Выберите ИИ-агента, фиксированный текстовый шаблон (поддерживается спинтакс), сценарий чат-бота или отключите ответ.",
+    "replyMessage": "Текст ответа",
+    "replyMessagePlaceholder": "Введите текст ответа...",
+    "includeKeywordsType": "Отвечать на",
+    "includeKeywordsTypeDescription": "Выберите, на какие ответы на истории реагирует эта автоматизация.",
+    "includeKeywords": "Ключевые слова",
+    "keywordsPlaceholder": "Введите и нажмите Enter...",
     "schedule": {
-      "title": "Set active hours",
-      "description": "Choose a start and end time. If the end time is earlier than the start time, the schedule runs overnight.",
-      "startTime": "Start time",
-      "endTime": "End time",
-      "alwaysRun": "Always run",
-      "save": "Save",
-      "invalidTimeRange": "Start and end time must be different",
-      "timeRequired": "Please select both start and end time"
+      "title": "Часы работы",
+      "description": "Выберите время начала и окончания. Если время окончания раньше времени начала, расписание работает через полночь.",
+      "startTime": "Время начала",
+      "endTime": "Время окончания",
+      "alwaysRun": "Работать всегда",
+      "save": "Сохранить",
+      "invalidTimeRange": "Время начала и окончания должно различаться",
+      "timeRequired": "Выберите время начала и окончания"
     },
     "card": {
-      "targeting": "Targeting & Reply"
+      "targeting": "Охват и ответ"
     },
     "storyType": {
-      "all": "All stories",
-      "specificStories": "Specific stories"
+      "all": "Все истории",
+      "specificStories": "Выбранные истории"
     },
     "replyType": {
-      "text": "Text message",
-      "flow": "Flow",
-      "AIAgent": "AI Agent",
-      "none": "No reply"
+      "text": "Текстовое сообщение",
+      "flow": "Сценарий",
+      "AIAgent": "ИИ-агент",
+      "none": "Без ответа"
     },
     "keywordsType": {
-      "all": "All replies",
-      "equal": "Exact match",
-      "contain": "Contains"
+      "all": "Все ответы",
+      "equal": "Точное совпадение",
+      "contain": "Содержит"
     },
-    "selectStories": "Select Stories",
-    "selectPageAll": "All accounts",
-    "chooseSpecificStories": "Choose stories...",
-    "activeStoriesTab": "Active stories",
-    "storyIdTab": "Story ID",
-    "storyIdPlaceholder": "Enter story IDs, one per line...",
-    "noStoriesFound": "No active stories found",
+    "selectStories": "Выбрать истории",
+    "selectPageAll": "Все аккаунты",
+    "chooseSpecificStories": "Выберите истории...",
+    "activeStoriesTab": "Активные истории",
+    "storyIdTab": "ID истории",
+    "storyIdPlaceholder": "Введите ID историй, по одному в строке...",
+    "noStoriesFound": "Активные истории не найдены",
     "connectionType": {
-      "title": "Choose Instagram connection type",
+      "title": "Выберите тип подключения Instagram",
       "instagramTitle": "Instagram Business",
-      "instagramDescription": "Instagram Login connection. Supports reply via text, flow, or AI agent.",
-      "instagramFacebookTitle": "Instagram Login with Facebook",
-      "instagramFacebookDescription": "Instagram connected via a Facebook Page. Supports reply via text, flow, or AI agent."
+      "instagramDescription": "Подключение через вход в Instagram. Поддерживается ответ текстом, сценарием или ИИ-агентом.",
+      "instagramFacebookTitle": "Вход в Instagram через Facebook",
+      "instagramFacebookDescription": "Instagram подключен через страницу Facebook. Поддерживается ответ текстом, сценарием или ИИ-агентом."
     }
   },
   "facebookLeadAdsAutomation": {
-    "title": "Facebook Lead Ads Automation",
-    "description": "Automate Facebook lead ads for your contacts.",
-    "create": "Create New",
-    "leads": "Leads",
-    "facebookPage": "Facebook Page",
-    "leadForm": "Lead Form",
-    "allForms": "All forms",
-    "allFormsNote": "Leads from every form on this page will be captured. Standard fields (email, phone, name, gender) are saved to matching contact fields automatically.",
-    "leadData": "Lead Data",
-    "addNewPage": "Add New",
-    "noEligiblePages": "No eligible pages. Use \"Add New\" to grant lead access.",
-    "duplicateError": "An automation already exists for this page and form.",
-    "subscribeError": "Could not subscribe this page to Facebook lead notifications, so the automation was not created. Reconnect the page with \"Add New\" and try again."
+    "title": "Автоматизация лид-форм Facebook",
+    "description": "Автоматическая обработка лидов из рекламы Facebook.",
+    "create": "Создать",
+    "leads": "Лиды",
+    "facebookPage": "Страница Facebook",
+    "leadForm": "Лид-форма",
+    "allForms": "Все формы",
+    "allFormsNote": "Будут собираться лиды из всех форм этой страницы. Стандартные поля (email, телефон, имя, пол) автоматически сохраняются в соответствующие поля контакта.",
+    "leadData": "Данные лида",
+    "addNewPage": "Добавить",
+    "noEligiblePages": "Нет подходящих страниц. Нажмите «Добавить», чтобы предоставить доступ к лидам.",
+    "duplicateError": "Автоматизация для этой страницы и формы уже существует.",
+    "subscribeError": "Не удалось подписать страницу на уведомления о лидах Facebook, поэтому автоматизация не создана. Переподключите страницу через «Добавить» и повторите попытку."
   },
   "clickToMessageAds": {
-    "title": "Click to Message Ads",
-    "description": "Ads send people directly into a conversation on Messenger, Instagram, or WhatsApp.",
+    "title": "Реклама с переходом в сообщения",
+    "description": "Объявления сразу открывают диалог в Messenger, Instagram или WhatsApp.",
     "empty": {
-      "title": "No account connected for this channel",
-      "description": "Connect a channel account first, then come back here to create ads.",
-      "cta": "Go to channel settings"
+      "title": "Для этого канала нет подключенного аккаунта",
+      "description": "Сначала подключите аккаунт канала, затем вернитесь сюда, чтобы создавать объявления.",
+      "cta": "Перейти к настройкам канала"
     },
-    "dashboardCta": "View on Ads dashboard"
+    "dashboardCta": "Открыть на дашборде рекламы"
   },
   "ecommerce": {
     "title": "Интернет-магазин",
@@ -7926,187 +7926,187 @@
     "uploadFailed": "Не удалось загрузить {name}"
   },
   "adsCampaign": {
-    "title": "Ads",
-    "createCta": "Create Ad",
+    "title": "Реклама",
+    "createCta": "Создать объявление",
     "prereq": {
-      "notConnected": "Connect Facebook Ads to create messaging ads for this channel.",
-      "connectCta": "Connect Facebook Ads"
+      "notConnected": "Подключите Facebook Ads, чтобы создавать рекламу с переходом в сообщения для этого канала.",
+      "connectCta": "Подключить Facebook Ads"
     },
     "specialAdCategory": {
-      "none": "None",
-      "housing": "Housing",
-      "employment": "Employment",
-      "credit": "Credit",
-      "issues": "Social issues, elections or politics",
-      "financialProducts": "Financial products and services",
-      "onlineGambling": "Online gambling and gaming"
+      "none": "Нет",
+      "housing": "Жилье",
+      "employment": "Трудоустройство",
+      "credit": "Кредиты",
+      "issues": "Социальные вопросы, выборы или политика",
+      "financialProducts": "Финансовые продукты и услуги",
+      "onlineGambling": "Онлайн-азартные игры"
     },
     "fields": {
       "objective": {
-        "label": "Objective",
-        "value": "Engagement (messaging)"
+        "label": "Цель",
+        "value": "Вовлеченность (сообщения)"
       },
       "specialAdCategory": {
-        "label": "Special ad category",
-        "description": "Selecting a restricted category removes age, gender, and other targeting Meta does not allow for that category.",
-        "restrictedNote": "Age and gender targeting are disabled because a restricted special ad category is selected."
+        "label": "Особая категория рекламы",
+        "description": "При выборе ограниченной категории отключается таргетинг по возрасту, полу и другим параметрам, которые Meta не разрешает для этой категории.",
+        "restrictedNote": "Таргетинг по возрасту и полу отключен, так как выбрана ограниченная особая категория рекламы."
       },
       "adAccount": {
-        "label": "Ad account"
+        "label": "Рекламный аккаунт"
       },
       "whatsappPage": {
-        "label": "Facebook Page",
-        "description": "WhatsApp ads still require a linked Facebook Page — select the connected Page to use."
+        "label": "Страница Facebook",
+        "description": "Для рекламы в WhatsApp по-прежнему нужна связанная страница Facebook — выберите подключенную страницу."
       },
       "dailyBudget": {
-        "label": "Daily budget",
-        "placeholder": "e.g. 2000",
-        "description": "Enter the amount in your ad account's smallest currency unit (e.g. cents for USD)."
+        "label": "Дневной бюджет",
+        "placeholder": "например, 2000",
+        "description": "Укажите сумму в наименьших единицах валюты рекламного аккаунта (например, в центах для USD)."
       },
       "countries": {
-        "label": "Countries"
+        "label": "Страны"
       },
       "ageRange": {
-        "min": "Minimum age",
-        "max": "Maximum age"
+        "min": "Минимальный возраст",
+        "max": "Максимальный возраст"
       },
       "gender": {
-        "label": "Gender",
-        "male": "Male",
-        "female": "Female"
+        "label": "Пол",
+        "male": "Мужской",
+        "female": "Женский"
       },
       "schedule": {
-        "start": "Start time",
-        "end": "End time"
+        "start": "Время начала",
+        "end": "Время окончания"
       },
       "destination": {
-        "label": "Destination"
+        "label": "Место назначения"
       },
       "callToAction": {
-        "label": "Call to action",
-        "derivedNote": "The call-to-action button ({type}) is derived automatically from the channel."
+        "label": "Призыв к действию",
+        "derivedNote": "Кнопка призыва к действию ({type}) определяется автоматически по каналу."
       },
       "specialAdCategoryCountry": {
-        "label": "Ad category country",
-        "description": "Required by Meta for the social issues, elections or politics category — the country you are authorized to run these ads in."
+        "label": "Страна для категории рекламы",
+        "description": "Meta требует ее для категории «Социальные вопросы, выборы или политика» — это страна, в которой вам разрешено показывать такую рекламу."
       }
     },
     "welcomeMessage": {
-      "title": "Welcome message",
-      "label": "Welcome message",
-      "description": "Sent automatically when someone starts a conversation from this ad.",
+      "title": "Приветственное сообщение",
+      "label": "Приветственное сообщение",
+      "description": "Отправляется автоматически, когда человек начинает диалог из этого объявления.",
       "mode": {
-        "default": "Use Meta's default message",
-        "single": "Single message",
-        "templates": "Test up to 5 message variants"
+        "default": "Стандартное сообщение Meta",
+        "single": "Одно сообщение",
+        "templates": "Протестировать до 5 вариантов сообщения"
       },
-      "messageLabel": "Message",
-      "templateLabel": "Variant {index}",
-      "headingPlaceholder": "Heading (optional)",
-      "addTemplate": "Add variant",
-      "templatesLimit": "Up to {max} variants can be tested."
+      "messageLabel": "Сообщение",
+      "templateLabel": "Вариант {index}",
+      "headingPlaceholder": "Заголовок (необязательно)",
+      "addTemplate": "Добавить вариант",
+      "templatesLimit": "Можно протестировать до {max} вариантов."
     },
     "creative": {
-      "mediaRequired": "Upload an image or video to continue.",
+      "mediaRequired": "Загрузите изображение или видео, чтобы продолжить.",
       "mediaType": {
-        "label": "Creative media",
-        "orVideo": "or video",
-        "selectAdAccountFirst": "Select an ad account before uploading media.",
-        "uploadImage": "Upload image",
-        "uploadVideo": "Upload video"
+        "label": "Медиа креатива",
+        "orVideo": "или видео",
+        "selectAdAccountFirst": "Перед загрузкой медиа выберите рекламный аккаунт.",
+        "uploadImage": "Загрузить изображение",
+        "uploadVideo": "Загрузить видео"
       },
-      "uploading": "Uploading...",
-      "imageUploadFailed": "Image upload failed. Please try again.",
-      "videoProcessing": "Processing video...",
-      "videoReady": "Video ready",
-      "videoProcessingFailed": "Video processing failed. Please try a different file.",
-      "previewAlt": "Creative preview",
-      "primaryText": "Primary text",
-      "headline": "Headline"
+      "uploading": "Загрузка...",
+      "imageUploadFailed": "Не удалось загрузить изображение. Повторите попытку.",
+      "videoProcessing": "Обработка видео...",
+      "videoReady": "Видео готово",
+      "videoProcessingFailed": "Не удалось обработать видео. Попробуйте другой файл.",
+      "previewAlt": "Предпросмотр креатива",
+      "primaryText": "Основной текст",
+      "headline": "Заголовок"
     },
     "wizard": {
-      "createDraft": "Create as paused draft",
+      "createDraft": "Создать приостановленный черновик",
       "campaignStep": {
-        "title": "Campaign",
-        "namePlaceholder": "Name this ad"
+        "title": "Кампания",
+        "namePlaceholder": "Название объявления"
       },
       "adSetStep": {
-        "title": "Ad set"
+        "title": "Группа объявлений"
       },
       "creativeStep": {
-        "title": "Ad creative"
+        "title": "Креатив"
       },
       "preflightStep": {
-        "title": "Review"
+        "title": "Проверка"
       },
       "errors": {
-        "nameRequired": "Enter a name for this ad.",
-        "adAccountRequired": "Select an ad account.",
-        "budgetRequired": "Enter a daily budget.",
-        "countryRequired": "Select at least one country.",
-        "mediaRequired": "Upload an image or video."
+        "nameRequired": "Введите название объявления.",
+        "adAccountRequired": "Выберите рекламный аккаунт.",
+        "budgetRequired": "Укажите дневной бюджет.",
+        "countryRequired": "Выберите хотя бы одну страну.",
+        "mediaRequired": "Загрузите изображение или видео."
       }
     },
     "preflight": {
-      "title": "Summary",
-      "pausedNote": "This ad is created as a paused draft. Nothing goes live, and no money is spent, until you publish it."
+      "title": "Сводка",
+      "pausedNote": "Объявление создается как приостановленный черновик. Пока вы его не опубликуете, оно не запустится и деньги не будут списаны."
     },
     "publishConfirm": {
-      "title": "Publish this ad?",
-      "description": "Publishing activates the campaign, ad set, and ad in order. Meta will start spending your budget once delivery begins.",
-      "confirm": "Publish"
+      "title": "Опубликовать объявление?",
+      "description": "При публикации по очереди активируются кампания, группа объявлений и объявление. Meta начнет расходовать бюджет, как только начнутся показы.",
+      "confirm": "Опубликовать"
     },
     "list": {
-      "viewOnMeta": "View on Meta",
-      "empty": "No messaging ads yet.",
-      "createState": "Draft status",
-      "actions": "Actions",
-      "notPublishedYet": "Not published yet",
-      "draftReady": "Draft ready",
-      "createFailed": "Creation failed",
-      "creating": "Creating...",
-      "publish": "Publish",
-      "pause": "Pause"
+      "viewOnMeta": "Открыть в Meta",
+      "empty": "Рекламы с переходом в сообщения пока нет.",
+      "createState": "Статус черновика",
+      "actions": "Действия",
+      "notPublishedYet": "Еще не опубликовано",
+      "draftReady": "Черновик готов",
+      "createFailed": "Не удалось создать",
+      "creating": "Создание...",
+      "publish": "Опубликовать",
+      "pause": "Приостановить"
     },
     "messages": {
-      "created": "Ad draft created.",
-      "actionSucceeded": "Done."
+      "created": "Черновик объявления создан.",
+      "actionSucceeded": "Готово."
     },
     "box": {
       "ctwa": {
         "title": "CTWA",
-        "description": "Create and manage Click-to-WhatsApp ads here."
+        "description": "Создавайте рекламу с переходом в WhatsApp и управляйте ею здесь."
       },
       "ctm": {
         "title": "CTM",
-        "description": "Create and manage Click-to-Messenger ads here."
+        "description": "Создавайте рекламу с переходом в Messenger и управляйте ею здесь."
       },
       "ctid": {
         "title": "CTID",
-        "description": "Create and manage Click-to-Instagram ads here."
+        "description": "Создавайте рекламу с переходом в Instagram и управляйте ею здесь."
       },
-      "connectCta": "Connect Facebook Ads",
-      "reconnectCta": "Reconnect",
-      "reconnectNeeded": "This connection needs to be reconnected.",
-      "refresh": "Refresh",
-      "whatsappPageRequiredNote": "Click-to-WhatsApp ads still require a linked Facebook Page (a Meta requirement) — you'll choose it when creating an ad.",
-      "emptyDashboardNote": "Ads created here now appear on this channel's Ads dashboard automatically — select this integration from its filter there to see its accounts and spend."
+      "connectCta": "Подключить Facebook Ads",
+      "reconnectCta": "Переподключить",
+      "reconnectNeeded": "Это подключение нужно переподключить.",
+      "refresh": "Обновить",
+      "whatsappPageRequiredNote": "Для рекламы с переходом в WhatsApp по-прежнему нужна связанная страница Facebook (требование Meta) — вы выберете ее при создании объявления.",
+      "emptyDashboardNote": "Созданные здесь объявления теперь автоматически появляются на дашборде рекламы этого канала — выберите там эту интеграцию в фильтре, чтобы увидеть ее аккаунты и расходы."
     },
     "insights": {
-      "title": "Performance",
-      "empty": "No data yet",
-      "impressions": "Impressions",
-      "reach": "Reach",
-      "spend": "Spend",
-      "clicks": "Clicks",
-      "conversations": "Conversations",
-      "costPerConversation": "Cost/conv.",
-      "costPerConversationTooltip": "Average cost per messaging conversation started.",
-      "datePresetLabel": "Period:",
+      "title": "Эффективность",
+      "empty": "Данных пока нет",
+      "impressions": "Показы",
+      "reach": "Охват",
+      "spend": "Расходы",
+      "clicks": "Клики",
+      "conversations": "Диалоги",
+      "costPerConversation": "Цена диалога",
+      "costPerConversationTooltip": "Средняя стоимость одного начатого диалога в сообщениях.",
+      "datePresetLabel": "Период:",
       "datePreset": {
-        "maximum": "All time",
-        "last_30d": "Last 30 days",
-        "last_7d": "Last 7 days"
+        "maximum": "За все время",
+        "last_30d": "Последние 30 дней",
+        "last_7d": "Последние 7 дней"
       }
     }
   },
