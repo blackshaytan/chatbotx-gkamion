@@ -65,6 +65,8 @@ export const errorLogProviders = z.enum([
   "deepseek",
   "openrouter",
   "openai-compatible",
+  // external agents
+  "hermes",
 ])
 
 export type ErrorLogProvider = z.infer<typeof errorLogProviders>
@@ -128,6 +130,7 @@ export const errorLogProviderLabels = {
   deepseek: "DeepSeek",
   openrouter: "OpenRouter",
   "openai-compatible": "OpenAI Compatible",
+  hermes: "Hermes",
 } as const satisfies Record<ErrorLogProvider, string>
 
 /**
