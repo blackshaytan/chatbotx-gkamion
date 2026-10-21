@@ -21,6 +21,7 @@ import type {
   MessageModel,
 } from "@chatbotx.io/database/types"
 import { encryptUtils } from "@chatbotx.io/encryption"
+import { ChatJobAction, chatQueue } from "@chatbotx.io/worker-config"
 import { RealtimeEventType } from "@chatbotx.io/partysocket-config"
 import { distributedStore, withCache } from "@chatbotx.io/redis"
 import { createId } from "@chatbotx.io/utils"
@@ -503,7 +504,8 @@ export class ExternalAgentService extends BaseService {
       throw notFoundException("Conversation not found")
     }
 
-    if (conversation.botEnabled) {
+    const wasBotEnabled = conversation.botEnabled
+    if (wasBotEnabled) {
       await conversationService.disableBotState({
         workspaceId,
         conversations: [
@@ -518,6 +520,25 @@ export class ExternalAgentService extends BaseService {
         workspaceId,
         contactId: conversation.contactId,
       })
+      // The agent's own run is stopped once the bot is off, so its reply
+      // never reaches the client; the platform confirms the handover instead.
+      if (contactInbox && wasBotEnabled) {
+        await chatQueue
+          .add(ChatJobAction.sendChatMessage, {
+            type: ChatJobAction.sendChatMessage,
+            data: {
+              conversation,
+              contactInbox,
+              text: EXTERNAL_AGENT_HANDOVER_CLIENT_TEXT,
+            },
+          })
+          .catch((err: unknown) => {
+            logger.error(
+              { err, conversationId },
+              "External agent: unable to send the handover confirmation",
+            )
+          })
+      }
       if (contactInbox) {
         await this.writeActivity({
           workspaceId,

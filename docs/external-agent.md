@@ -64,7 +64,7 @@ Hermes can take minutes on a task (a price estimate, a VIN lookup). The client i
 
 **Who hands over:**
 
-- **The agent**, by calling `externalAgent.handover` through the ChatbotX MCP server with a reason. It is in the default MCP tool set (`external_agent_handover`), so the agent calls it directly instead of through `search_tools`/`call_tool`. The reason is saved as a system note in the conversation timeline (the manager sees «The AI agent handed the conversation over to a manager: <reason>»), and the bot is turned off.
+- **The agent**, by calling `externalAgent.handover` through the ChatbotX MCP server with a reason. It is in the default MCP tool set (`external_agent_handover`), so the agent calls it directly instead of through `search_tools`/`call_tool`. The reason is saved as a system note in the conversation timeline (the manager sees «The AI agent handed the conversation over to a manager: <reason>»), and the bot is turned off. The run is then stopped, so the agent's own reply never reaches the client; instead ChatbotX sends the client «Передал ваш запрос менеджеру» once, on the call that turns the bot off (a repeat call sends nothing).
 - **A manager's reply** in the conversation turns the bot off, as before.
 - **The platform** on failure (see below), with a note saying the agent was unavailable or timed out.
 

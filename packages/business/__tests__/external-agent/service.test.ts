@@ -31,7 +31,14 @@ const mocks = vi.hoisted(() => ({
   publishToWorkspaceParty: vi.fn(),
   loggerWarn: vi.fn(),
   loggerError: vi.fn(),
+  chatQueueAdd: vi.fn(),
 }))
+
+vi.mock("@chatbotx.io/worker-config", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@chatbotx.io/worker-config")>()
+  return { ...actual, chatQueue: { add: mocks.chatQueueAdd } }
+})
 
 const TX = { tx: true }
 
@@ -174,6 +181,7 @@ beforeEach(() => {
   mocks.bulkUpdateTracking.mockResolvedValue(null)
   mocks.disableBotState.mockResolvedValue(undefined)
   mocks.logProviderError.mockResolvedValue(undefined)
+  mocks.chatQueueAdd.mockResolvedValue(undefined)
 })
 
 afterEach(() => {
@@ -546,6 +554,33 @@ describe("externalAgentService.handover", () => {
         data: expect.objectContaining({ attachments: [] }),
       }),
     )
+    expect(mocks.chatQueueAdd).toHaveBeenCalledWith("sendChatMessage", {
+      type: "sendChatMessage",
+      data: {
+        conversation: conversation(true),
+        contactInbox: { id: "ci-1" },
+        text: EXTERNAL_AGENT_HANDOVER_CLIENT_TEXT,
+      },
+    })
+  })
+
+  test("a failed confirmation send does not fail the handover", async () => {
+    mocks.findByUncached.mockResolvedValue(conversation(true))
+    mocks.chatQueueAdd.mockRejectedValue(new Error("redis down"))
+
+    await expect(
+      externalAgentService.handover({
+        workspaceId: WORKSPACE_ID,
+        conversationId: "conv-1",
+        reason: "Client asks for a manager",
+      }),
+    ).resolves.toEqual({ conversationId: "conv-1", botEnabled: false })
+
+    expect(mocks.loggerError).toHaveBeenCalledWith(
+      expect.objectContaining({ conversationId: "conv-1" }),
+      "External agent: unable to send the handover confirmation",
+    )
+    expect(mocks.createOrUpdate).toHaveBeenCalled()
   })
 
   test("a repeat on a disabled bot does not disable again nor duplicate the note", async () => {
@@ -563,6 +598,7 @@ describe("externalAgentService.handover", () => {
     ).resolves.toEqual({ conversationId: "conv-1", botEnabled: false })
 
     expect(mocks.disableBotState).not.toHaveBeenCalled()
+    expect(mocks.chatQueueAdd).not.toHaveBeenCalled()
     expect(mocks.createOrUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         sourceId: `externalAgent:handover:conv-1:${MINUTE_BUCKET}`,
