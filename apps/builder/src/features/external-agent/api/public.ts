@@ -1,4 +1,5 @@
 import { externalAgentService } from "@chatbotx.io/business"
+import { mcpSpec } from "@/lib/orpc/mcp-annotations"
 import {
   possibleErrorsOnListingResource,
   possibleErrorsOnMutatingResource,
@@ -77,6 +78,7 @@ export const externalAgentPublicRouter = {
       description:
         "Called by the external agent to give a conversation to a human manager with a reason. The reason is saved as a note in the conversation, and the bot is paused for it (`botEnabled` becomes false). Conversation ids come from `conversations.list`, or from the run context the platform sent to the agent.",
       tags: ["External Agent"],
+      spec: mcpSpec({ visibility: "default" }),
     })
     .input(externalAgentHandoverInputSchema)
     .output(externalAgentHandoverOutputSchema)

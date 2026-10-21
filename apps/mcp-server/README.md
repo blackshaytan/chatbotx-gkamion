@@ -45,7 +45,7 @@ Use `search_tools` when the task needs something outside the default set (e.g. d
 
 ## Available tools
 
-Tool names are derived from the OpenAPI `operationId` converted to `snake_case` (e.g. `tags.list` → `tags_list`). The current default set has 45 tools:
+Tool names are derived from the OpenAPI `operationId` converted to `snake_case` (e.g. `tags.list` → `tags_list`). The current default set has 46 tools:
 
 ### Capabilities
 
@@ -113,6 +113,12 @@ Tool names are derived from the OpenAPI `operationId` converted to `snake_case` 
 | Tool | Description |
 |---|---|
 | `error_logs_list` | List error logs |
+
+### External Agent
+
+| Tool | Description |
+|---|---|
+| `external_agent_handover` | Hand a conversation over to a human manager with a reason |
 
 ### Flows
 
