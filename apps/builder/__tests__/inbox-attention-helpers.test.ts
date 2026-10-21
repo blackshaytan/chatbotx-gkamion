@@ -163,13 +163,13 @@ describe("bot state helpers", () => {
   })
 
   test("turning the bot back on clears the handover and the pause", () => {
-    const resumed = {
+    const handedOver: Record<string, unknown> = {
       botEnabled: false,
       botResumeAt: new Date(Date.now() + HOUR_MS),
-      handoverCategory: "urgent" as const,
+      handoverCategory: "urgent",
       handedOverAt: new Date(),
-      ...BOT_RESUMED_PATCH,
     }
+    const resumed = { ...handedOver, ...BOT_RESUMED_PATCH }
 
     expect(resumed).toMatchObject({
       botEnabled: true,

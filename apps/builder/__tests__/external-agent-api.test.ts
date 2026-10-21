@@ -204,7 +204,7 @@ describe("external agent public API", () => {
         {
           conversationId: "42",
           reason: "Customer asked for a manager",
-          category: "refund",
+          category: "refund" as never,
         },
         { context: { headers: TOKEN_HEADERS } },
       ),
