@@ -24,6 +24,20 @@ export const conversationStatuses = z.enum([
 ])
 export type ConversationStatus = z.infer<typeof conversationStatuses>
 
+/** Why the external AI agent handed a conversation to a manager. */
+export const conversationHandoverCategories = z.enum([
+  "urgent",
+  "return",
+  "payment",
+  "orderStatus",
+  "delivery",
+  "priceAndTerm",
+  "other",
+])
+export type ConversationHandoverCategory = z.infer<
+  typeof conversationHandoverCategories
+>
+
 export const assignerFilterTypes = z.enum(["all", "unassigned"])
 export type AssignerFilterType =
   (typeof assignerFilterTypes)[keyof typeof assignerFilterTypes]

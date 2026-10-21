@@ -8,6 +8,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core"
+import type { ConversationHandoverCategory } from "../partials/conversation"
 import {
   bigintAsString,
   sharedColumns,
@@ -58,6 +59,10 @@ export const conversationModel = pgTable(
     currentStep: text(),
     adminRepliedAt: timestamp(timestampConfig),
     contactRepliedAt: timestamp(timestampConfig),
+    /** Inbox sort and unread anchor: client messages and manager replies only, never bot sends. */
+    inboxActivityAt: timestamp(timestampConfig),
+    handoverCategory: text().$type<ConversationHandoverCategory>(),
+    handedOverAt: timestamp(timestampConfig),
   },
   (table) => [
     uniqueIndex("Conversation_contactId_sourceId_key")
@@ -74,6 +79,12 @@ export const conversationModel = pgTable(
       "btree",
       table.workspaceId.asc().nullsLast(),
       table.lastActivityAt.desc().nullsLast(),
+      table.id.desc(),
+    ),
+    index("Conversation_workspaceId_inboxActivityAt_id_idx").using(
+      "btree",
+      table.workspaceId.asc().nullsLast(),
+      table.inboxActivityAt.desc().nullsLast(),
       table.id.desc(),
     ),
   ],
