@@ -104,6 +104,7 @@ export const ruBatches = {
     "openrouter",
     "openaiCompatible",
     "decision",
+    "externalAgent",
     "googleSheets",
     "activeCampaign",
     "getResponse",

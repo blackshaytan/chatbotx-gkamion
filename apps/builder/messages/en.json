@@ -4810,6 +4810,33 @@
     "contactContext": "Contact context",
     "contextProviderWarning": "Selected contact-field values are sent to the AI Router provider."
   },
+  "externalAgent": {
+    "title": "External AI agent",
+    "description": "Replies to customers through the external Hermes agent. The agent replies while the bot is enabled in the conversation.",
+    "enabled": "Enabled",
+    "baseUrl": "Hermes address",
+    "baseUrlHint": "For example, http://127.0.0.1:8647",
+    "apiKey": "API key",
+    "apiKeySaved": "Saved. Leave empty to keep it unchanged",
+    "inboxes": "Channels where the agent replies",
+    "resumeAfter": "Return to the bot after handing over to a manager",
+    "resumeNever": "Never (only with the \"Return to bot\" button)",
+    "resumeHours": "After hours",
+    "maxRunMinutes": "Maximum per task, minutes",
+    "progressMessage": "Message for long tasks",
+    "progressMessageHint": "Sent once if the agent stays silent for 90 seconds. Empty means no message is sent",
+    "test": "Test connection",
+    "testOk": "Connection works",
+    "testError": "Connection error: {error}",
+    "lastChecked": "Last check: {date}",
+    "saved": "Settings saved",
+    "activity": {
+      "handover": "The AI agent handed the conversation over to a manager: {reason}",
+      "handoverNoReason": "The AI agent handed the conversation over to a manager",
+      "unavailable": "The AI agent is unavailable, the conversation was handed over to a manager",
+      "timeout": "The AI agent did not finish in time, the conversation was handed over to a manager"
+    }
+  },
   "openrouter": {
     "autoReply": {
       "description": "Enable AI auto reply powered by OpenRouter.",

@@ -6,11 +6,11 @@ import {
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import { z } from "zod"
 
-const BASE_URL_MAX_LENGTH = 2048
-const PROGRESS_MESSAGE_MAX_LENGTH = 500
-const RESUME_AFTER_HOURS_MIN = 1
-const RESUME_AFTER_HOURS_MAX = 720
-const MAX_RUN_MINUTES_MIN = 1
+export const BASE_URL_MAX_LENGTH = 2048
+export const PROGRESS_MESSAGE_MAX_LENGTH = 500
+export const RESUME_AFTER_HOURS_MIN = 1
+export const RESUME_AFTER_HOURS_MAX = 720
+export const MAX_RUN_MINUTES_MIN = 1
 const REASON_MAX_LENGTH = 500
 
 export const externalAgentOutputSchema = z.object({

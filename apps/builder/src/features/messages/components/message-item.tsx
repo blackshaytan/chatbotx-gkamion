@@ -54,6 +54,8 @@ import { useTranslations } from "next-intl"
 import { useState } from "react"
 import type { AttachmentResource } from "@/features/attachments/schema/resource"
 import { useAttachmentSource } from "@/features/attachments/utils"
+import { ExternalAgentActivityDivider } from "@/features/external-agent/components/external-agent-activity"
+import { getExternalAgentActivity } from "@/features/external-agent/lib/activity"
 import {
   getThreadControlActivity,
   getThreadControlContextCard,
@@ -839,6 +841,13 @@ const RenderContentAttributes = (props: MessageItemProps) => {
   )
   if (threadControlActivity) {
     return <ThreadControlDivider activity={threadControlActivity} />
+  }
+
+  const externalAgentActivity = getExternalAgentActivity(
+    message.contentAttributes,
+  )
+  if (externalAgentActivity) {
+    return <ExternalAgentActivityDivider activity={externalAgentActivity} />
   }
 
   const threadControlContext = getThreadControlContextCard(
