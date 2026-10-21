@@ -20,6 +20,8 @@ import {
   assignUserIfUnassigned,
   contactInboxOperationalColumns,
   createMessageRepository,
+  externalAgentRepository,
+  externalAgentStateRepository,
   getSafeSinceTime,
 } from "@chatbotx.io/database/repositories"
 import { conversationModel, inboxModel } from "@chatbotx.io/database/schema"
@@ -64,6 +66,7 @@ import type {
 import { contactInboxService } from "../contact-inbox/service"
 import { inboxTeamService } from "../enterprise/inbox-team/service"
 import { ChatbotXException, notFoundException } from "../errors"
+import { resolveExternalAgentResumeAt } from "../external-agent/progress"
 import { logger } from "../logger"
 import { publishToWorkspaceParty } from "../platform/realtime-broadcast"
 import { smartDelayService } from "../smart-delay/service"
@@ -1346,29 +1349,30 @@ class ConversationService extends BaseService {
     tx?: DatabaseClient
   }): Promise<void> {
     const { workspaceId, ids, botEnabled, tx = db } = props
-    let botResumeAt: Date | null
-    if (props.botResumeAt !== undefined) {
-      botResumeAt = props.botResumeAt
-    } else if (botEnabled) {
-      botResumeAt = null
-    } else {
-      botResumeAt = new Date(Date.now() + BOT_DISABLE_DURATION_MS)
+    const resumeGroups = await this.resolveBotResumeGroups({
+      workspaceId,
+      ids,
+      botEnabled,
+      botResumeAt: props.botResumeAt,
+      tx,
+    })
+    for (const group of resumeGroups) {
+      await tx
+        .update(conversationModel)
+        .set({
+          botEnabled,
+          botResumeAt: group.botResumeAt,
+          ...(botEnabled
+            ? {}
+            : { additionalAttributes: sqlDropQuickReplyChallenge() }),
+        })
+        .where(
+          and(
+            eq(conversationModel.workspaceId, workspaceId),
+            inArray(conversationModel.id, group.ids),
+          ),
+        )
     }
-    await tx
-      .update(conversationModel)
-      .set({
-        botEnabled,
-        botResumeAt,
-        ...(botEnabled
-          ? {}
-          : { additionalAttributes: sqlDropQuickReplyChallenge() }),
-      })
-      .where(
-        and(
-          eq(conversationModel.workspaceId, workspaceId),
-          inArray(conversationModel.id, ids),
-        ),
-      )
     if (!botEnabled) {
       // Best-effort: fire-time `ensureActive` already skips a follow-up on a
       // paused conversation, so a failed cancel must never fail the pause (or
@@ -1394,6 +1398,97 @@ class ConversationService extends BaseService {
       }
     }
     await this.invalidate({ workspaceId, ids })
+  }
+
+  private async resolveBotResumeGroups(props: {
+    workspaceId: string
+    ids: string[]
+    botEnabled: boolean
+    botResumeAt: Date | null | undefined
+    tx: DatabaseClient
+  }): Promise<{ botResumeAt: Date | null; ids: string[] }[]> {
+    const { workspaceId, ids, botEnabled, tx } = props
+    if (props.botResumeAt !== undefined) {
+      return [{ botResumeAt: props.botResumeAt, ids }]
+    }
+    if (botEnabled) {
+      return [{ botResumeAt: null, ids }]
+    }
+    const now = new Date()
+    const defaultResumeAt = new Date(now.getTime() + BOT_DISABLE_DURATION_MS)
+    const policies =
+      await externalAgentRepository.findResumePolicyForConversations(
+        { workspaceId, conversationIds: ids },
+        tx,
+      )
+    if (policies.length === 0) {
+      return [{ botResumeAt: defaultResumeAt, ids }]
+    }
+    const resumeAfterHoursById = new Map(
+      policies.map((policy) => [
+        policy.conversationId,
+        policy.resumeAfterHours,
+      ]),
+    )
+    const groups = new Map<
+      number | null,
+      { botResumeAt: Date | null; ids: string[] }
+    >()
+    for (const id of ids) {
+      const resumeAfterHours = resumeAfterHoursById.get(id)
+      const botResumeAt =
+        resumeAfterHours === undefined
+          ? defaultResumeAt
+          : resolveExternalAgentResumeAt(resumeAfterHours, now)
+      const key = botResumeAt?.getTime() ?? null
+      const group = groups.get(key)
+      if (group) {
+        group.ids.push(id)
+      } else {
+        groups.set(key, { botResumeAt, ids: [id] })
+      }
+    }
+    return [...groups.values()]
+  }
+
+  private async resetExternalAgentStateOnResume(props: {
+    workspaceId: string
+    conversationIds: string[]
+    tx?: DatabaseClient
+  }): Promise<void> {
+    const { workspaceId, conversationIds } = props
+    // Runs behind a SAVEPOINT inside a caller's tx so a failed statement
+    // cannot poison the outer transaction that re-enabled the bot.
+    const reset = async (client: DatabaseClient) => {
+      const policies =
+        await externalAgentRepository.findResumePolicyForConversations(
+          { workspaceId, conversationIds },
+          client,
+        )
+      if (policies.length === 0) {
+        return
+      }
+      await externalAgentStateRepository.resetForResume(
+        {
+          workspaceId,
+          conversationIds: policies.map((policy) => policy.conversationId),
+          at: new Date(),
+        },
+        client,
+      )
+    }
+    try {
+      if (props.tx) {
+        await props.tx.transaction(reset)
+      } else {
+        await reset(db)
+      }
+    } catch (err) {
+      logger.error(
+        { err, workspaceId, conversationIds },
+        "external agent state reset on bot resume failed",
+      )
+    }
   }
 
   async updateFollowed(props: {
@@ -1836,6 +1931,11 @@ class ConversationService extends BaseService {
       ids: props.conversations.map((c) => c.id),
       botEnabled: true,
       botResumeAt: null,
+      tx: props.tx,
+    })
+    await this.resetExternalAgentStateOnResume({
+      workspaceId: props.workspaceId,
+      conversationIds: props.conversations.map((c) => c.id),
       tx: props.tx,
     })
 

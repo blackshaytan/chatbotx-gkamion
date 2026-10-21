@@ -91,6 +91,12 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
   createMessageRepository: mocks.createMessageRepository,
   getSafeSinceTime: mocks.getSafeSinceTime,
   assignUserIfUnassigned: mocks.assignUserIfUnassigned,
+  externalAgentRepository: {
+    findResumePolicyForConversations: vi.fn(async () => []),
+  },
+  externalAgentStateRepository: {
+    resetForResume: vi.fn(async () => undefined),
+  },
 }))
 
 vi.mock("@chatbotx.io/worker-config", async (importOriginal) => {
