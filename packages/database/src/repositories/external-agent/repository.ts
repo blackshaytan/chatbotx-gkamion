@@ -136,10 +136,7 @@ export const externalAgentRepository = {
       .from(conversationModel)
       .innerJoin(
         contactInboxModel,
-        and(
-          eq(contactInboxModel.contactId, conversationModel.contactId),
-          eq(contactInboxModel.workspaceId, workspaceId),
-        ),
+        eq(contactInboxModel.contactId, conversationModel.contactId),
       )
       .innerJoin(
         externalAgentInboxModel,
@@ -226,12 +223,23 @@ export const externalAgentStateRepository = {
     input: { workspaceId: string; conversationId: string },
     tx: DatabaseClient = db,
   ): Promise<ExternalAgentConversationStateModel | undefined> {
-    return await tx.query.externalAgentConversationStateModel.findFirst({
-      where: {
-        conversationId: input.conversationId,
-        workspaceId: input.workspaceId,
-      },
-    })
+    const [row] = await tx
+      .select()
+      .from(externalAgentConversationStateModel)
+      .where(
+        and(
+          eq(
+            externalAgentConversationStateModel.conversationId,
+            input.conversationId,
+          ),
+          eq(
+            externalAgentConversationStateModel.workspaceId,
+            input.workspaceId,
+          ),
+        ),
+      )
+      .limit(1)
+    return row
   },
 
   async upsert(
