@@ -104,10 +104,11 @@ export const updateExternalAgentInputSchema = z.object({
   progressMessage: z
     .string()
     .trim()
-    .min(1)
     .max(PROGRESS_MESSAGE_MAX_LENGTH)
     .optional()
-    .describe("Message sent to the customer while the agent is still working."),
+    .describe(
+      "Message sent once to the customer when the agent has been silent for 90 seconds during a run. An empty string turns it off.",
+    ),
 })
 
 export const externalAgentTestOutputSchema = z.object({
