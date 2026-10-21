@@ -54,6 +54,9 @@ jobs:
       - working-directory: packages/business
         run: pnpm exec vitest run __tests__/external-agent
 
+      - working-directory: apps/worker
+        run: pnpm exec vitest run __tests__/external-agent-routing.test.ts __tests__/external-agent-reply.test.ts __tests__/external-agent-watch.test.ts
+
   check-types:
     name: Types
     runs-on: ubuntu-latest
