@@ -8,6 +8,7 @@ import { resolveGoogleAdsClick } from "@chatbotx.io/business/google-ads/click-fi
 import {
   contactInboxOperationalColumns,
   createMessageRepository,
+  type IMessageRepository,
 } from "@chatbotx.io/database/repositories"
 import type {
   ContactInboxOperationalModel,
@@ -24,7 +25,10 @@ import type {
   FindConversationResponse,
   ListConversationsResponse,
 } from "../schema/resource"
-import { buildConversationWhere } from "./build-conversation-where"
+import {
+  buildConversationWhere,
+  type ConversationCursor,
+} from "./build-conversation-where"
 import { resolveLastMessageSinceTime } from "./last-message-window"
 
 const DEFAULT_PER_PAGE = 20
@@ -90,11 +94,39 @@ const resolveConversationContact = async <T extends { avatar: string | null }>(
   }
 }
 
+// Cursors minted before the switch to `inboxActivityAt` fail to decode and
+// restart from the first page.
 const conversationCursorSchema = z.object({
-  lastActivityAt: z.coerce.date().nullable(),
+  inboxActivityAt: z.coerce.date().nullable(),
   id: zodBigintAsString(),
 })
-type ConversationCursor = z.infer<typeof conversationCursorSchema>
+
+/** `unreadCount` saturates here; the UI renders it as "99+". */
+export const UNREAD_COUNT_CAP = 100
+
+type UnreadCountCandidate = {
+  id: string
+  agentLastReadAt: Date | null
+  inboxActivityAt: Date | null
+}
+
+// A conversation without `inboxActivityAt` is never unread (see
+// `conversationUnreadWhere`), so it must not show a count either: imported
+// conversations with incoming messages but no activity stamp would otherwise
+// report "99+" while not flagged unread. Such ids are left out of the lookup
+// and therefore absent from the returned map (count 0).
+const countUnreadIncoming = (
+  messageRepository: IMessageRepository,
+  workspaceId: string,
+  conversations: readonly UnreadCountCandidate[],
+): Promise<Map<string, number>> =>
+  messageRepository.countUnreadIncomingByConversations({
+    workspaceId,
+    conversations: conversations
+      .filter(({ inboxActivityAt }) => inboxActivityAt !== null)
+      .map(({ id, agentLastReadAt }) => ({ id, agentLastReadAt })),
+    limit: UNREAD_COUNT_CAP,
+  })
 
 export const listConversations = async (
   data: ListConversationsRequest,
@@ -117,9 +149,10 @@ export const listConversations = async (
 
   const conversations = await conversationService.findManyQuery({
     where,
+    // Matches `Conversation_workspaceId_inboxActivityAt_id_idx` and the cursor
+    // in `buildConversationWhere`.
     orderBy: (table, { sql: orderSql, desc }) => [
-      orderSql`${table.lastActivityAt} IS NULL`,
-      desc(table.lastActivityAt),
+      orderSql`${table.inboxActivityAt} DESC NULLS LAST`,
       desc(table.id),
     ],
     limit: limit + 1,
@@ -139,25 +172,28 @@ export const listConversations = async (
 
   // ── Shard-aware message lookups (parallelized) ──────────────────────────
   const messageRepository = await createMessageRepository()
-  const lastMessagesResults = await Promise.all(
-    page.map((c) => {
-      // Anchor on this conversation's own lastActivityAt, not a contactInbox's
-      // lastMessageAt — a contact's ContactInbox is shared across their DM and
-      // every comment-thread conversation, so its lastMessageAt reflects
-      // whichever of those was most recently active, not this specific one.
-      // Using the wrong (later) anchor excludes this conversation's real last
-      // message from the sharded time window, returning an empty preview.
-      // Don't bail when lastActivityAt is missing: historical imports populate
-      // messages but never set it, so bailing hid the last-message preview.
-      // resolveLastMessageSinceTime falls back to a full-history scan instead.
-      return messageRepository.findLastByConversation(c.id, {
-        attachmentCountOnly: true,
-        limit: 1,
-        sinceTime: resolveLastMessageSinceTime(c.lastActivityAt),
-        workspaceId,
-      })
-    }),
-  )
+  const [lastMessagesResults, unreadCounts] = await Promise.all([
+    Promise.all(
+      page.map((c) => {
+        // Anchor on this conversation's own lastActivityAt, not a contactInbox's
+        // lastMessageAt — a contact's ContactInbox is shared across their DM and
+        // every comment-thread conversation, so its lastMessageAt reflects
+        // whichever of those was most recently active, not this specific one.
+        // Using the wrong (later) anchor excludes this conversation's real last
+        // message from the sharded time window, returning an empty preview.
+        // Don't bail when lastActivityAt is missing: historical imports populate
+        // messages but never set it, so bailing hid the last-message preview.
+        // resolveLastMessageSinceTime falls back to a full-history scan instead.
+        return messageRepository.findLastByConversation(c.id, {
+          attachmentCountOnly: true,
+          limit: 1,
+          sinceTime: resolveLastMessageSinceTime(c.lastActivityAt),
+          workspaceId,
+        })
+      }),
+    ),
+    countUnreadIncoming(messageRepository, workspaceId, page),
+  ])
 
   const lastMessagesByConversationId = new Map(
     page.map((c, index) => [c.id, lastMessagesResults[index]?.[0] ?? null]),
@@ -168,14 +204,14 @@ export const listConversations = async (
   const nextCursor =
     hasMore && lastItem
       ? encodeCursor({
-          lastActivityAt: lastItem.lastActivityAt,
+          inboxActivityAt: lastItem.inboxActivityAt,
           id: lastItem.id,
         } satisfies ConversationCursor)
       : null
 
   const prevCursor = cursor
     ? encodeCursor({
-        lastActivityAt: page[0]?.lastActivityAt ?? new Date(),
+        inboxActivityAt: page[0]?.inboxActivityAt ?? new Date(),
         id: page[0]?.id ?? "0",
       } satisfies ConversationCursor)
     : null
@@ -195,6 +231,7 @@ export const listConversations = async (
           assignedUser: c.assignedUser ?? null,
           assignedInboxTeam: c.assignedInboxTeam ?? null,
           messages: lastMessage ? [lastMessage] : [],
+          unreadCount: unreadCounts.get(c.id) ?? 0,
         }
       }),
     ),
@@ -216,9 +253,8 @@ export const findConversation = async (
   }
 
   const messageRepository = await createMessageRepository()
-  const lastMessages = await messageRepository.findLastByConversation(
-    conversation.id,
-    {
+  const [lastMessages, unreadCounts] = await Promise.all([
+    messageRepository.findLastByConversation(conversation.id, {
       attachmentCountOnly: true,
       messageTypes: ["incoming", "outgoing"],
       limit: 1,
@@ -232,8 +268,9 @@ export const findConversation = async (
         endOfHour,
       ),
       workspaceId: input.workspaceId,
-    },
-  )
+    }),
+    countUnreadIncoming(messageRepository, input.workspaceId, [conversation]),
+  ])
 
   return {
     data: {
@@ -247,6 +284,7 @@ export const findConversation = async (
         conversation.contactInboxes,
       ),
       messages: lastMessages.length > 0 ? [lastMessages[0]] : [],
+      unreadCount: unreadCounts.get(conversation.id) ?? 0,
     },
   }
 }

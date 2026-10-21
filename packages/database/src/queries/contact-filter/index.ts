@@ -720,7 +720,7 @@ function buildConditionWhere(
     case "unread":
       return buildExistsBooleanWhere(
         conversationExists,
-        sql`${conversationModel.lastActivityAt} IS NOT NULL AND (${conversationModel.agentLastReadAt} IS NULL OR ${conversationModel.lastActivityAt} > ${conversationModel.agentLastReadAt})`,
+        sql`${conversationModel.inboxActivityAt} IS NOT NULL AND (${conversationModel.agentLastReadAt} IS NULL OR ${conversationModel.inboxActivityAt} > ${conversationModel.agentLastReadAt})`,
         operator,
         value,
       )

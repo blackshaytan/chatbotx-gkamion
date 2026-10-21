@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 const mocks = vi.hoisted(() => {
   const repo = {
     findLastByConversation: vi.fn().mockResolvedValue([]),
+    countUnreadIncomingByConversations: vi.fn().mockResolvedValue(new Map()),
   }
   return {
     assertCurrentUserCanAccessChatbot: vi.fn().mockResolvedValue(undefined),

@@ -1,12 +1,13 @@
 import { isAfter } from "date-fns"
 import type { ListConversationItemResource } from "../schema/resource"
 
+// Client mirror of `conversationUnreadWhere` (@chatbotx.io/database/queries).
 export const isConversationUnread = (
   conversation: Pick<
     ListConversationItemResource,
-    "lastActivityAt" | "agentLastReadAt"
+    "inboxActivityAt" | "agentLastReadAt"
   >,
 ): boolean =>
-  conversation.lastActivityAt !== null &&
+  conversation.inboxActivityAt !== null &&
   (conversation.agentLastReadAt === null ||
-    isAfter(conversation.lastActivityAt, conversation.agentLastReadAt))
+    isAfter(conversation.inboxActivityAt, conversation.agentLastReadAt))

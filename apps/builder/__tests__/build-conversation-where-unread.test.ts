@@ -5,7 +5,7 @@ import { describe, expect, test } from "vitest"
 import { buildConversationWhere } from "@/features/conversations/queries/build-conversation-where"
 
 describe("buildConversationWhere — unread tag", () => {
-  test("filters on the shared lastActivityAt > agentLastReadAt predicate", () => {
+  test("filters on the shared inboxActivityAt > agentLastReadAt predicate", () => {
     const where = buildConversationWhere("ws-1", { tags: ["unread"] }, null)
 
     expect(where.AND).toEqual([conversationUnreadWhere])

@@ -10,8 +10,8 @@ import {
 } from "@chatbotx.io/database/queries"
 import type { ListConversationsRequest } from "@/features/conversations/schema/query"
 
-type ConversationCursor = {
-  lastActivityAt: Date | null
+export type ConversationCursor = {
+  inboxActivityAt: Date | null
   id: string
 }
 
@@ -105,23 +105,28 @@ export function buildConversationWhere(
     where.contact = { blockedAt: { isNull: true } }
   }
 
-  // ── Cursor condition ──────────────────────────────────────────────────────
+  // ── Cursor condition (inboxActivityAt DESC NULLS LAST, id DESC) ──────────
   if (cursor) {
-    where.OR = cursor.lastActivityAt
+    where.OR = cursor.inboxActivityAt
       ? [
-          { lastActivityAt: { lt: cursor.lastActivityAt } },
-          { lastActivityAt: { isNull: true } },
+          { inboxActivityAt: { lt: cursor.inboxActivityAt } },
+          { inboxActivityAt: { isNull: true } },
           {
-            lastActivityAt: cursor.lastActivityAt,
+            inboxActivityAt: cursor.inboxActivityAt,
             id: { lt: cursor.id },
           },
         ]
       : [
           {
-            lastActivityAt: { isNull: true },
+            inboxActivityAt: { isNull: true },
             id: { lt: cursor.id },
           },
         ]
+  }
+
+  // ── handoverCategory ─────────────────────────────────────────────────────
+  if (input.handoverCategory && input.handoverCategory.length > 0) {
+    where.handoverCategory = { in: input.handoverCategory }
   }
 
   // ── botCategory ──────────────────────────────────────────────────────────

@@ -151,6 +151,14 @@ export interface ListIncomingTextsByContactInboxParams {
   workspaceId: string
 }
 
+export interface CountUnreadIncomingByConversationsParams {
+  /** `agentLastReadAt` null counts every incoming message of that conversation. */
+  conversations: { id: string; agentLastReadAt: Date | null }[]
+  /** Per-conversation cap; a conversation with more unread rows reports `limit`. */
+  limit: number
+  workspaceId: string
+}
+
 export type MessageSourceRow = Pick<
   MessageModel,
   "id" | "conversationId" | "contactInboxId" | "sourceId" | "createdAt"
@@ -239,6 +247,16 @@ export interface IMessageRepository {
     guardKey: string
     overlay: Record<string, unknown>
   }): Promise<{ id: string } | null>
+
+  /**
+   * Unread client messages per conversation: incoming, `type = message`, not
+   * deleted, newer than the conversation's `agentLastReadAt`. Conversations
+   * with none are absent from the map. A shard that fails is logged and
+   * skipped, so the counts are advisory, never an error.
+   */
+  countUnreadIncomingByConversations(
+    params: CountUnreadIncomingByConversationsParams,
+  ): Promise<Map<string, number>>
 
   create(message: CreateMessageInput): Promise<MessageModel>
 

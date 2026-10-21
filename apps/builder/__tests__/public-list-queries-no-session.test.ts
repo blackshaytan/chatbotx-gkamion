@@ -169,6 +169,7 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
   contactInboxOperationalColumns: { sourceIdentityHistory: false },
   createMessageRepository: vi.fn().mockResolvedValue({
     findLastByConversation: mocks.findLastByConversation,
+    countUnreadIncomingByConversations: vi.fn().mockResolvedValue(new Map()),
   }),
   broadcastRepository: {
     listWithRelations: mocks.broadcastListWithRelations,

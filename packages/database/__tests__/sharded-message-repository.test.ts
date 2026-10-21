@@ -1,4 +1,5 @@
 import { endOfHour, startOfHour } from "date-fns"
+import { PgDialect } from "drizzle-orm/pg-core"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { MessageShardUnavailableError } from "../src/errors"
 import type {
@@ -2298,5 +2299,151 @@ describe("ShardedMessageRepository primary-key recovery after a transport retry"
     expect(ids[0]).toBe("original")
     expect(ids[1]).not.toBe("original")
     expect(ids[2]).toBe(ids[1])
+  })
+})
+
+describe("ShardedMessageRepository.countUnreadIncomingByConversations", () => {
+  const rangeShard = makeShardInfo("tr:range", "range")
+  const writeShard = makeShardInfo("tr:write", "write")
+
+  const makeExecuteClient = (
+    rows: { conversationId: string; count: number }[],
+  ) => ({
+    execute: vi.fn().mockResolvedValue({ rows }),
+  })
+
+  const makeRepo = (
+    clients: Map<string, { execute: ReturnType<typeof vi.fn> }>,
+  ) => {
+    const shardManager = {
+      getShardsForTimeRange: vi.fn().mockResolvedValue([rangeShard]),
+      getWriteShardInfo: vi.fn().mockResolvedValue(writeShard),
+      withShardClientForRead: vi.fn(
+        (shard: { id: string }, fn: (value: unknown) => Promise<unknown>) =>
+          fn(clients.get(shard.id)),
+      ),
+    }
+    return {
+      shardManager,
+      repo: new ShardedMessageRepository(shardManager as never),
+    }
+  }
+
+  test("returns an empty map without touching shards when there are no conversations", async () => {
+    const { repo, shardManager } = makeRepo(new Map())
+
+    const counts = await repo.countUnreadIncomingByConversations({
+      workspaceId: "ws-1",
+      conversations: [],
+      limit: 100,
+    })
+
+    expect(counts.size).toBe(0)
+    expect(shardManager.withShardClientForRead).not.toHaveBeenCalled()
+  })
+
+  test("sums counts across shards, caps at the limit and omits zero counts", async () => {
+    const clients = new Map([
+      [
+        "range",
+        makeExecuteClient([
+          { conversationId: "conv-1", count: 3 },
+          { conversationId: "conv-2", count: 60 },
+          { conversationId: "conv-3", count: 0 },
+        ]),
+      ],
+      [
+        "write",
+        makeExecuteClient([
+          { conversationId: "conv-1", count: 2 },
+          { conversationId: "conv-2", count: 60 },
+        ]),
+      ],
+    ])
+    const { repo } = makeRepo(clients)
+
+    const counts = await repo.countUnreadIncomingByConversations({
+      workspaceId: "ws-1",
+      conversations: [
+        { id: "conv-1", agentLastReadAt: new Date("2026-01-02T00:00:00Z") },
+        { id: "conv-2", agentLastReadAt: null },
+        { id: "conv-3", agentLastReadAt: new Date("2026-01-03T00:00:00Z") },
+      ],
+      limit: 100,
+    })
+
+    expect(Object.fromEntries(counts)).toEqual({ "conv-1": 5, "conv-2": 100 })
+  })
+
+  test("counts only live incoming client messages after agentLastReadAt, limited per conversation", async () => {
+    const client = makeExecuteClient([])
+    const { repo } = makeRepo(
+      new Map([
+        ["range", client],
+        ["write", client],
+      ]),
+    )
+
+    await repo.countUnreadIncomingByConversations({
+      workspaceId: "ws-1",
+      conversations: [
+        { id: "conv-1", agentLastReadAt: new Date("2026-01-02T00:00:00Z") },
+      ],
+      limit: 100,
+    })
+
+    const query = new PgDialect().sqlToQuery(client.execute.mock.calls[0][0])
+    expect(query.sql).toContain(`"Message"."messageType" = 'incoming'`)
+    expect(query.sql).toContain(`"Message"."type" = 'message'`)
+    expect(query.sql).toContain(`"Message"."deletedAt" IS NULL`)
+    expect(query.sql).toContain(
+      `(c."agentLastReadAt" IS NULL OR "Message"."createdAt" > c."agentLastReadAt")`,
+    )
+    expect(query.sql).toContain(`"Message"."conversationId" = c."id"`)
+    expect(query.params).toEqual(
+      expect.arrayContaining(["ws-1", "conv-1", 100]),
+    )
+  })
+
+  test("scans from the epoch when any conversation was never read", async () => {
+    const client = makeExecuteClient([])
+    const { repo, shardManager } = makeRepo(
+      new Map([
+        ["range", client],
+        ["write", client],
+      ]),
+    )
+
+    await repo.countUnreadIncomingByConversations({
+      workspaceId: "ws-1",
+      conversations: [
+        { id: "conv-1", agentLastReadAt: new Date("2026-01-02T00:00:00Z") },
+        { id: "conv-2", agentLastReadAt: null },
+      ],
+      limit: 100,
+    })
+
+    expect(shardManager.getShardsForTimeRange.mock.calls[0][0]).toEqual(
+      startOfHour(new Date(0)),
+    )
+  })
+
+  test("skips a failing shard instead of throwing", async () => {
+    const clients = new Map([
+      [
+        "range",
+        { execute: vi.fn().mockRejectedValue(new Error("shard down")) },
+      ],
+      ["write", makeExecuteClient([{ conversationId: "conv-1", count: 4 }])],
+    ])
+    const { repo } = makeRepo(clients)
+
+    const counts = await repo.countUnreadIncomingByConversations({
+      workspaceId: "ws-1",
+      conversations: [{ id: "conv-1", agentLastReadAt: null }],
+      limit: 100,
+    })
+
+    expect(counts.get("conv-1")).toBe(4)
   })
 })

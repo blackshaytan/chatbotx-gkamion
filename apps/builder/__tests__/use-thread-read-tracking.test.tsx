@@ -29,6 +29,7 @@ const unread = (id = "conversation-1"): Tracked => ({
   id,
   workspaceId: "workspace-1",
   lastActivityAt: new Date("2026-09-24T10:00:00Z"),
+  inboxActivityAt: new Date("2026-09-24T10:00:00Z"),
   agentLastReadAt: new Date("2026-09-24T09:00:00Z"),
 })
 

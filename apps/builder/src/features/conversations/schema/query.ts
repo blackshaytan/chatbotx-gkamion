@@ -1,6 +1,7 @@
 import {
   channelTypes,
   conversationBotCategories,
+  conversationHandoverCategories,
   conversationStatuses,
 } from "@chatbotx.io/database/partials"
 import { zodBigintAsString } from "@chatbotx.io/utils"
@@ -21,6 +22,7 @@ export const listConversationsRequest = z.object({
       z.enum(["noAdminReply", "unread", "followUp", "archived", "blocked"]),
     )
     .optional(),
+  handoverCategory: z.array(conversationHandoverCategories).optional(),
   contactFilter: contactFilterRequest.shape.contactFilter.optional(),
   ...cursorPaginationRequest.shape,
 })

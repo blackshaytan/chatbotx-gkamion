@@ -62,6 +62,7 @@ vi.mock("@chatbotx.io/business", () => ({
 vi.mock("@chatbotx.io/database/repositories", () => ({
   createMessageRepository: vi.fn().mockResolvedValue({
     findLastByConversation: vi.fn().mockResolvedValue([]),
+    countUnreadIncomingByConversations: vi.fn().mockResolvedValue(new Map()),
   }),
 }))
 
@@ -140,6 +141,9 @@ const buildConversationFixture = () => ({
   adminRepliedAt: null,
   contactRepliedAt: null,
   lastActivityAt: null,
+  inboxActivityAt: null,
+  handoverCategory: null,
+  handedOverAt: null,
   contactInboxes: [],
   messages: [],
   contact: null,

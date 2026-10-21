@@ -27,6 +27,7 @@ import type {
   AttachmentLookupRow,
   BulkCreateAttachmentInput,
   BulkPatchContentAttributesParams,
+  CountUnreadIncomingByConversationsParams,
   CreateAttachmentInput,
   CreateMessageInput,
   CreateMessageResult,
@@ -2370,6 +2371,95 @@ export class ShardedMessageRepository implements IMessageRepository {
     )
 
     return shardResults.flat().sort(compareMessageDesc).slice(0, limit)
+  }
+
+  async countUnreadIncomingByConversations({
+    conversations,
+    limit,
+    workspaceId,
+  }: CountUnreadIncomingByConversationsParams): Promise<Map<string, number>> {
+    const counts = new Map<string, number>()
+    if (conversations.length === 0) {
+      return counts
+    }
+
+    const sinceTime = new Date(
+      Math.min(
+        ...conversations.map((conversation) =>
+          conversation.agentLastReadAt
+            ? new Date(conversation.agentLastReadAt).getTime()
+            : 0,
+        ),
+      ),
+    )
+
+    let shards: MessageShardTimeRangeInfo[]
+    try {
+      shards = await this.getConversationReadShards(sinceTime, workspaceId)
+    } catch (error) {
+      logger.warn(
+        { err: error },
+        "Shard selection failed in countUnreadIncomingByConversations",
+      )
+      return counts
+    }
+
+    const conversationRows = sql.join(
+      conversations.map(
+        (conversation) =>
+          sql`(${conversation.id}::bigint, ${conversation.agentLastReadAt ? new Date(conversation.agentLastReadAt) : null}::timestamptz)`,
+      ),
+      sql`, `,
+    )
+
+    const shardResults = await Promise.all(
+      shards.map(async (shardInfo) => {
+        try {
+          return await this.shardManager.withShardClientForRead(
+            shardInfo.shard,
+            async (shardClient) => {
+              const result = await shardClient.execute<{
+                conversationId: string
+                count: number
+              }>(sql`
+                SELECT c."id"::text AS "conversationId", (
+                  SELECT count(*)::int FROM (
+                    SELECT 1 FROM ${messageModel}
+                    WHERE ${messageModel.conversationId} = c."id"
+                      AND ${messageModel.workspaceId} = ${workspaceId}
+                      AND ${messageModel.messageType} = 'incoming'
+                      AND ${messageModel.type} = 'message'
+                      AND ${messageModel.deletedAt} IS NULL
+                      AND ${messageModel.createdAt} >= ${sinceTime}
+                      AND (c."agentLastReadAt" IS NULL OR ${messageModel.createdAt} > c."agentLastReadAt")
+                    LIMIT ${limit}
+                  ) AS unread
+                ) AS "count"
+                FROM (VALUES ${conversationRows}) AS c("id", "agentLastReadAt")
+              `)
+              return result.rows
+            },
+          )
+        } catch (error) {
+          logger.warn(
+            { err: error, shardId: shardInfo.shard.id },
+            "Shard query failed in countUnreadIncomingByConversations",
+          )
+          return []
+        }
+      }),
+    )
+
+    for (const row of shardResults.flat()) {
+      const count = Number(row.count)
+      if (count > 0) {
+        counts.set(
+          row.conversationId,
+          Math.min(limit, (counts.get(row.conversationId) ?? 0) + count),
+        )
+      }
+    }
+    return counts
   }
 
   async findManyByConversation(

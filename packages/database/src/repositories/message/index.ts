@@ -2,6 +2,7 @@ export type {
   AttachmentLookupRow,
   BulkCreateAttachmentInput,
   BulkPatchContentAttributesParams,
+  CountUnreadIncomingByConversationsParams,
   CreateAttachmentInput,
   CreateMessageInput,
   CreateMessageResult,

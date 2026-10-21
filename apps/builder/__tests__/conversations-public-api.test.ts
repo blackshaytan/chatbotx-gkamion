@@ -10,6 +10,7 @@ type RouteConfig = {
 
 type CapturedProcedure = {
   route: RouteConfig
+  input?: { parse: (value: unknown) => Record<string, unknown> }
   handler?: (...args: any[]) => any
 }
 
@@ -21,7 +22,10 @@ const { workspaceTokenAuthAPIForScope, capturedProcedures } = vi.hoisted(() => {
     capturedProcedures.push(record)
 
     const chain = {
-      input: vi.fn(() => chain),
+      input: vi.fn((schema: CapturedProcedure["input"]) => {
+        record.input = schema
+        return chain
+      }),
       output: vi.fn(() => chain),
       errors: vi.fn(() => chain),
       handler: vi.fn((fn: (...args: any[]) => any) => {
@@ -104,6 +108,42 @@ beforeEach(() => {
 
 test("registers the conversations public router under the inbox scope", () => {
   expect(scopeArgAtImport).toBe("inbox")
+})
+
+describe("GET /v1/conversations", () => {
+  const procedure = findProcedure("GET", "/v1/conversations")
+
+  test("parses a JSON-encoded handoverCategory array", () => {
+    const input = procedure.input?.parse({
+      handoverCategory: encodeURIComponent('["urgent","payment"]'),
+    })
+
+    expect(input?.handoverCategory).toEqual(["urgent", "payment"])
+  })
+
+  test("rejects an unknown handover category", () => {
+    expect(() =>
+      procedure.input?.parse({ handoverCategory: '["refund"]' }),
+    ).toThrow()
+  })
+
+  test("forwards the handoverCategory filter to listConversations", async () => {
+    listConversations.mockResolvedValueOnce({
+      data: [],
+      nextCursor: null,
+      prevCursor: null,
+    })
+
+    await procedure.handler?.({
+      context,
+      input: { handoverCategory: ["delivery"] },
+    })
+
+    expect(listConversations).toHaveBeenCalledWith(
+      { handoverCategory: ["delivery"], workspaceId: "ws-1" },
+      { includeEmailAndPhone: true },
+    )
+  })
 })
 
 describe("GET /v1/conversations/{id}", () => {

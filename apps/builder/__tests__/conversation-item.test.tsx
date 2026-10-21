@@ -88,6 +88,7 @@ const makeConversation = (
     agentLastReadAt: null,
     contactLastReadAt: null,
     lastActivityAt: null,
+    inboxActivityAt: null,
     assignedUserId: null,
     assignedInboxTeamId: null,
     ...overrides,
@@ -319,6 +320,7 @@ describe("ConversationItem", () => {
     await render(
       makeConversation({
         lastActivityAt: new Date("2026-01-02T00:00:00Z"),
+        inboxActivityAt: new Date("2026-01-02T00:00:00Z"),
         agentLastReadAt: null,
       }),
     )
@@ -340,6 +342,7 @@ describe("ConversationItem", () => {
     await render(
       makeConversation({
         lastActivityAt: new Date("2026-01-02T00:00:00Z"),
+        inboxActivityAt: new Date("2026-01-02T00:00:00Z"),
         agentLastReadAt: null,
       }),
     )
@@ -352,6 +355,7 @@ describe("ConversationItem", () => {
     await render(
       makeConversation({
         lastActivityAt: new Date("2026-01-02T00:00:00Z"),
+        inboxActivityAt: new Date("2026-01-02T00:00:00Z"),
         agentLastReadAt: null,
       }),
     )
@@ -371,6 +375,7 @@ describe("ConversationItem", () => {
     await render(
       makeConversation({
         lastActivityAt: new Date("2026-01-02T00:00:00Z"),
+        inboxActivityAt: new Date("2026-01-02T00:00:00Z"),
         agentLastReadAt: null,
       }),
     )
@@ -387,6 +392,7 @@ describe("ConversationItem", () => {
     await render(
       makeConversation({
         lastActivityAt: new Date("2026-01-02T00:00:00Z"),
+        inboxActivityAt: new Date("2026-01-02T00:00:00Z"),
         agentLastReadAt: null,
       }),
     )
@@ -403,6 +409,7 @@ describe("ConversationItem", () => {
     await render(
       makeConversation({
         lastActivityAt: new Date("2026-01-01T00:00:00Z"),
+        inboxActivityAt: new Date("2026-01-01T00:00:00Z"),
         agentLastReadAt: new Date("2026-01-02T00:00:00Z"),
       }),
     )

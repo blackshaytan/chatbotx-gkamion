@@ -1,4 +1,5 @@
 import {
+  conversationHandoverCategories,
   threadControlEvents,
   threadControlStates,
 } from "@chatbotx.io/database/partials"
@@ -18,6 +19,23 @@ export const conversationResource = createSelectSchema(conversationModel, {
   id: z.string(),
   contactId: z.string(),
   workspaceId: z.string(),
+  inboxActivityAt: z
+    .date()
+    .nullable()
+    .describe(
+      "Last client message or manager reply (bot sends do not move it). The conversation list is sorted by it, newest first, and a conversation is unread when it is later than `agentLastReadAt`.",
+    ),
+  handoverCategory: conversationHandoverCategories
+    .nullable()
+    .describe(
+      "Why the external AI agent handed the conversation to a manager. Cleared when the bot is re-enabled; null when it was never handed over.",
+    ),
+  handedOverAt: z
+    .date()
+    .nullable()
+    .describe(
+      "When the external AI agent last handed the conversation to a manager. Cleared when the bot is re-enabled.",
+    ),
 })
 export type ConversationResource = z.infer<typeof conversationResource>
 
@@ -83,6 +101,14 @@ export const listConversationsItemResource = conversationResource.and(
     contact: contactResource.nullable(),
     assignedUser: userResource.nullable(),
     assignedInboxTeam: inboxTeamResource.nullable(),
+    unreadCount: z
+      .number()
+      .int()
+      .min(0)
+      .max(100)
+      .describe(
+        "Client messages received after `agentLastReadAt` (all of them when it is null), capped at 100.",
+      ),
   }),
 )
 export type ListConversationItemResource = z.infer<
