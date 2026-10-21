@@ -21,10 +21,10 @@ import type {
   MessageModel,
 } from "@chatbotx.io/database/types"
 import { encryptUtils } from "@chatbotx.io/encryption"
-import { ChatJobAction, chatQueue } from "@chatbotx.io/worker-config"
 import { RealtimeEventType } from "@chatbotx.io/partysocket-config"
 import { distributedStore, withCache } from "@chatbotx.io/redis"
 import { createId } from "@chatbotx.io/utils"
+import { ChatJobAction, chatQueue } from "@chatbotx.io/worker-config"
 import type { z } from "zod"
 import { BaseService } from "../base.service"
 import { contactInboxService } from "../contact-inbox/service"
