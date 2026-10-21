@@ -29,9 +29,12 @@ import { closeChatQueueEvents } from "../integration/utils/message"
 import { ensureBootstrapped } from "../lib/bootstrap"
 import { isBlockedWorkspace } from "../lib/is-blocked-workspace"
 import { isFinalAttempt } from "../lib/job-attempts"
+import { deferOnLockContention } from "../lib/lock-contention-deferral"
 import { logger } from "../lib/logger"
 import { resolveWorkspaceId } from "../lib/resolve-workspace-id"
 import { runJobWithAuditContext } from "../lib/run-job-with-audit-context"
+import { processExternalAgentReply } from "./handlers/external-agent-reply"
+import { processExternalAgentWatch } from "./handlers/external-agent-watch"
 import { processConversationSource } from "./handlers/process-conversation-source"
 import { processConversationSourceEmbedding } from "./handlers/process-conversation-source-embedding"
 import { processPendingEmbedding } from "./handlers/process-pending-embeddings"
@@ -73,7 +76,7 @@ async function startAIAgentWorker() {
 
   const worker = new Worker(
     queueNames.enum.aiAgent,
-    async (job: Job<AIJobData>) => {
+    async (job: Job<AIJobData>, token?: string) => {
       logger.info(job.data, `Worker received job: ${job.id}`)
 
       const jobData = aiJobDataSchema.parse(job.data)
@@ -127,6 +130,20 @@ async function startAIAgentWorker() {
               return
             case AIJobAction.processStoryMentionAutomation:
               await processStoryMentionAutomation(jobData.data)
+              return
+            case AIJobAction.externalAgentReply:
+              await deferOnLockContention(job, token, () =>
+                processExternalAgentReply(jobData.data, {
+                  isFinalAttempt: isFinalAttempt(job),
+                }),
+              )
+              return
+            case AIJobAction.externalAgentWatch:
+              await deferOnLockContention(job, token, () =>
+                processExternalAgentWatch(jobData.data, {
+                  isFinalAttempt: isFinalAttempt(job),
+                }),
+              )
               return
             default: {
               const _exhaustive: never = jobData

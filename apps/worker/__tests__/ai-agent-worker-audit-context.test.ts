@@ -117,6 +117,12 @@ vi.mock("../src/ai-agent/handlers/process-pending-embeddings", () => ({
 vi.mock("../src/ai-agent/handlers/summarize-conversation", () => ({
   handleSummarizeConversation: vi.fn(),
 }))
+vi.mock("../src/ai-agent/handlers/external-agent-reply", () => ({
+  processExternalAgentReply: vi.fn(),
+}))
+vi.mock("../src/ai-agent/handlers/external-agent-watch", () => ({
+  processExternalAgentWatch: vi.fn(),
+}))
 
 beforeAll(async () => {
   mocks.ensureBootstrapped.mockResolvedValue(undefined)
