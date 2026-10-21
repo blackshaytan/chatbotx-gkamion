@@ -37,7 +37,7 @@ export const externalAgentOutputSchema = z.object({
     .int()
     .nullable()
     .describe(
-      "Hours after which a handed-over conversation resumes the bot automatically, or null when it never resumes automatically.",
+      "Hours after which a conversation paused by a manager reply or an agent failure resumes the bot automatically, or null when it never resumes automatically. A handover by the agent never resumes automatically.",
     ),
   maxRunMinutes: z
     .number()
@@ -91,7 +91,7 @@ export const updateExternalAgentInputSchema = z.object({
     .nullable()
     .optional()
     .describe(
-      `Hours after which a handed-over conversation resumes the bot automatically, from ${RESUME_AFTER_HOURS_MIN} to ${RESUME_AFTER_HOURS_MAX}; null turns automatic resume off.`,
+      `Hours after which a conversation paused by a manager reply or an agent failure resumes the bot automatically, from ${RESUME_AFTER_HOURS_MIN} to ${RESUME_AFTER_HOURS_MAX}; null turns automatic resume off. A handover by the agent never resumes automatically.`,
     ),
   maxRunMinutes: z
     .number()

@@ -15,7 +15,7 @@ Three tables, all scoped by `workspaceId`:
 
 | Table | One row per | Holds |
 |---|---|---|
-| `ExternalAgent` | workspace | `provider` (`hermes`), `baseUrl`, `apiKey` (encrypted, never returned), `enabled`, `resumeAfterHours` (null = never), `maxRunMinutes` (default 30, 1–240), `progressMessage` (default «Работаю над вашим запросом, это займёт несколько минут»; empty = off, up to 500 characters), last connection check |
+| `ExternalAgent` | workspace | `provider` (`hermes`), `baseUrl`, `apiKey` (encrypted, never returned), `enabled`, `resumeAfterHours` (null = never; applies to manager pauses, not agent handovers), `maxRunMinutes` (default 30, 1–240), `progressMessage` (default «Работаю над вашим запросом, это займёт несколько минут»; empty = off, up to 500 characters), last connection check |
 | `ExternalAgentInbox` | (agent, inbox) pair | Which channels the agent answers in. No rows = the agent answers nowhere. |
 | `ExternalAgentConversationState` | conversation | The cursor and the current run: `cursorAt` / `cursorMessageId`, `includeHistory`, `runId`, `runStartedAt`, `lastEventAt`, `lastEventSeq`, progress bookkeeping (`lastProgressSentAt`, `lastProgressText`, `lastClientSendAt`, `progressFallbackSentAt`), `failureCount`, `lastError`. Deleted with its conversation. |
 
@@ -46,7 +46,7 @@ Final and interim sends carry deterministic job ids (`externalAgentSend-<convers
 
 - **First turn** (no cursor yet): the agent receives the client messages after the last outgoing message, at most 10, plus up to 10 earlier messages as history.
 - **Later turns:** the agent receives only client messages after the cursor. Earlier messages are not resent. The Hermes session keeps its own memory of what it said.
-- **Resume resets the cursor** (`enableBotState`, from «Return to bot», a manager action, or an automatic resume): the cursor moves to the resume time, `runId` is cleared, `failureCount` and `lastError` reset, and `includeHistory` is set again. Client messages written while a human owned the conversation are not replayed to Hermes. The first run after a resume gets the last 10 messages of the conversation (client and manager) as history.
+- **Resume resets the cursor** (`enableBotState`, from «Return to bot», a manager action, or an automatic resume): the cursor moves to the resume time, `runId` is cleared, `failureCount` and `lastError` reset, `includeHistory` is set again, and `handoverCategory` and `handedOverAt` are cleared. Client messages written while a human owned the conversation are not replayed to Hermes. The first run after a resume gets the last 10 messages of the conversation (client and manager) as history.
 - **Auto-resume trigger:** when the conversation resumes automatically because the client wrote after `botResumeAt`, the triggering message is included even though it was saved before the reset (a 60 s grace window).
 - **Auto-resume is lazy:** `botResumeAt` is checked when the next client message arrives. There is no timer that turns the bot back on.
 
@@ -64,7 +64,7 @@ Hermes can take minutes on a task (a price estimate, a VIN lookup). The client i
 
 **Who hands over:**
 
-- **The agent**, by calling `externalAgent.handover` through the ChatbotX MCP server with a reason. It is in the default MCP tool set (`external_agent_handover`), so the agent calls it directly instead of through `search_tools`/`call_tool`. The reason is saved as a system note in the conversation timeline (the manager sees «The AI agent handed the conversation over to a manager: <reason>»), and the bot is turned off. The run is then stopped, so the agent's own reply never reaches the client; instead ChatbotX sends the client «Передал ваш запрос менеджеру» once, on the call that turns the bot off (a repeat call sends nothing).
+- **The agent**, by calling `externalAgent.handover` through the ChatbotX MCP server with a reason and a `category` (`urgent`, `return`, `payment`, `orderStatus`, `delivery`, `priceAndTerm` or `other`; default `other`). It is in the default MCP tool set (`external_agent_handover`), so the agent calls it directly instead of through `search_tools`/`call_tool`. The reason is saved as a system note in the conversation timeline (the manager sees «The AI agent handed the conversation over to a manager · <category>: <reason>»). The category and the handover time are stored on the conversation, and the bot is turned off with `botResumeAt` null, so the conversation does not resume on its own. The run is then stopped, so the agent's own reply never reaches the client; instead ChatbotX sends the client «Передал ваш запрос менеджеру» once, on the call that turns the bot off (a repeat call sends nothing). That first call also sends the managers one push (see [Inbox and notifications](#inbox-and-notifications)).
 - **A manager's reply** in the conversation turns the bot off, as before.
 - **The platform** on failure (see below), with a note saying the agent was unavailable or timed out.
 
@@ -73,9 +73,11 @@ Every pause goes through `conversationService.updateBotEnabled`, which picks the
 - For a conversation reachable through an enabled agent inbox: `resumeAfterHours` (null = `botResumeAt` null, only the button), or `now + N hours`.
 - Otherwise: 24 hours, as before.
 
+An agent handover is the exception: it always passes `noAutoResume`, so the resume time is null whatever `resumeAfterHours` says, and the conversation stays with managers until someone presses «Return to bot». `resumeAfterHours` applies only to pauses that a manager starts by writing in the conversation.
+
 A paused conversation does not receive agent replies, and interim or final text from a run that is still going is not sent once the bot is off. The run is stopped by the next watch window (at most about 15 s later).
 
-**Return:** the «Return to bot» button (the existing enable-bot action) turns the bot on, resets the cursor as described above, and the next client message starts a fresh run.
+**Return:** the «Return to bot» button (Вернуть боту in Russian; the existing enable-bot action) turns the bot on, resets the cursor as described above, clears the handover category and time, and the next client message starts a fresh run.
 
 ## Failures
 
@@ -96,11 +98,26 @@ A paused conversation does not receive agent replies, and interim or final text 
 **What the handover does (failure path):**
 
 1. If the bot is on, the client receives «Передал ваш запрос менеджеру» (the text is fixed in Russian for every workspace, see [Known differences](#known-differences-from-the-design)). If the bot was already off, the client receives nothing.
-2. The bot is turned off with the failure trigger (resume time from the same policy as above).
+2. The bot is turned off with the failure trigger (resume time from the same policy as above). No handover category is set and no handover push is sent.
 3. A note is written to the timeline: «The AI agent is unavailable, the conversation was handed over to a manager» or «The AI agent did not finish in time, the conversation was handed over to a manager». The manager sees these as translated dividers. Repeated notes within the same minute are not duplicated.
 4. The failure is written to the error log with provider `hermes` (`logProviderError`), and `failureCount` / `lastError` are saved on the conversation state.
 
 The client never sees technical details.
+
+## Inbox and notifications
+
+Managers see in the conversation list which conversations wait for them, and push notifications follow the same state. The list is sorted and counted by `inboxActivityAt` (a `Conversation` column), not by `lastActivityAt`.
+
+- **Sorting.** The list is sorted by `inboxActivityAt`, newest first. Only client messages and manager replies sent from ChatbotX move a conversation up. Bot messages, broadcasts and system notes do not, and neither do echoes of messages a manager sent from the channel's own app. `lastActivityAt` is unchanged and still serves the other features.
+- **Unread.** A conversation is unread when `inboxActivityAt` is later than `agentLastReadAt`, or when `agentLastReadAt` is null. A manager's own reply sets both, so it never makes the conversation unread. `unreadCount` counts the unread client messages (`messageType` incoming, `type` message) and is capped at 100. Reading the conversation sets `agentLastReadAt`, so the count drops to 0. The contact filter's `unread` condition uses the same definition.
+- **Badge.** Each row shows `unreadCount` as a round badge, hidden at 0 and shown as «99+» at 100. It is red when the bot is off or paused (a manager is needed) and gray when the bot is active. The blue ring around the avatar is gone; unread conversations are shown by the badge and the bold name.
+- **Handover category.** After an agent handover, while the bot is off, the row shows a pill with the category (for example «🔥 Срочно»). The chat header then shows «Ждёт менеджера · <category>» with a «Вернуть боту» button. A manager pause with a resume time still in the future shows «Бот на паузе до ЧЧ:ММ» with the same button. Failure handovers set no category (see [Failures](#failures)).
+- **Filter.** The conversation filter has a «Категория» multi-select. `conversations.list` takes the same choice as `handoverCategory`.
+- **Push to managers.**
+  - While the bot answers in an agent inbox, incoming client messages send no push. Other inboxes are unchanged.
+  - While the bot is off, or paused until a time still in the future, incoming client messages push as before.
+  - On an agent handover while the bot was on, one `notifyAgentHandover` push goes out: title «ИИ-агент передал диалог: <contact name> · <category>», body the reason cut to 150 characters. The recipient is the assigned user, or all workspace members when the conversation is unassigned. A repeat handover on a bot that is already off sends no push and does not change the category.
+  - The push title and the category labels are Russian for every workspace, like the client handover text. A contact without a name is shown as «Клиент».
 
 ## Keywords and built-in AI
 
@@ -115,7 +132,7 @@ These steps are done on the Hermes host, not in this repository. They come from 
 - **`api_server`** in the `assistant` profile (`/opt/hermes-data/profiles/assistant/config.yaml`): `enabled: true`, `extra.host: 127.0.0.1`, a free port (the design uses 8647), and `extra.key` set to a new key. The key lives in Hermes' secrets and in ChatbotX's encrypted settings; never print it.
 - **Toolsets** for `api_server`: `gkamion`, `memory`, `chatbotx`. No `terminal`.
 - **MCP server `chatbotx`** with its own workspace token. Give it only the scopes it needs: `inbox` for `externalAgent.handover`, plus the inbox and contact scopes that Hermes needs to read context. It must not carry `settings`, and it cannot create tokens (invariant 23).
-- **Instructions (`SOUL.md` or a profile skill):** reply to the client in text; for work longer than about 30 s, say first what is happening and roughly how long it takes; on long tasks report progress now and then (these become the interim messages); when a manager is needed, call the handover tool with a short reason and tell the client a manager will join.
+- **Instructions (`SOUL.md` or a profile skill):** reply to the client in text; for work longer than about 30 s, say first what is happening and roughly how long it takes; on long tasks report progress now and then (these become the interim messages); when a manager is needed, call the handover tool with a short reason and the `category` that fits best, and tell the client a manager will join.
 - The ChatbotX worker runs with host networking (`deploy/gkamion/docker-compose.prod.yml`), so `http://127.0.0.1:<port>` is reachable from it. Restart the profile service after the change (a short Telegram outage); do this only with the owner's approval.
 - Check that the port listens only on loopback (`ss -ltnp`).
 
@@ -133,9 +150,10 @@ These steps are done on the Hermes host, not in this repository. They come from 
 | `externalAgent.get` | `GET /v1/external-agent` | `settings` | `chatbotx external-agent list` | Returns the settings object, or `null` until configured. The CLI name is derived as `list` because the route is not a singleton; the response is one object. |
 | `externalAgent.update` | `PATCH /v1/external-agent` | `settings` | `chatbotx external-agent update --enabled --baseUrl --apiKey --inboxIds --resumeAfterHours --maxRunMinutes --progressMessage` | Only the fields you send change. `inboxIds` is a JSON array of ids from `inboxes.list`; `[]` stops every channel. `resumeAfterHours: null` turns automatic resume off. |
 | `externalAgent.test` | `POST /v1/external-agent/test` | `settings` | `chatbotx external-agent test` | Returns `status`, `error`, `checkedAt`. |
-| `externalAgent.handover` | `POST /v1/conversations/{conversationId}/external-agent-handover` | `inbox` | `chatbotx conversations external-agent-handover add <conversationId> --reason "<text>"` | Pauses the bot and writes the reason as a note. Conversation ids come from `conversations.list` or from the run context. |
+| `externalAgent.handover` | `POST /v1/conversations/{conversationId}/external-agent-handover` | `inbox` | `chatbotx conversations external-agent-handover add <conversationId> --reason "<text>" [--category <category>]` | Pauses the bot without an automatic resume and writes the reason and category as a note. `category` is one of `urgent`, `return`, `payment`, `orderStatus`, `delivery`, `priceAndTerm`, `other` (default `other`). Conversation ids come from `conversations.list` or from the run context. |
 
-- MCP tools: `external_agent_get`, `external_agent_update`, `external_agent_test`, `external_agent_handover`. None is in the default MCP set; agents reach them through `search_tools` / `call_tool`.
+- MCP tools: `external_agent_get`, `external_agent_update`, `external_agent_test`, `external_agent_handover`. Only `external_agent_handover` is in the default MCP set; the others are reached through `search_tools` / `call_tool`.
+- Conversation reads: `conversations.list` and `conversations.get` return `unreadCount`, `inboxActivityAt`, `handoverCategory` and `handedOverAt`. `conversations.list` also filters by `handoverCategory` (a JSON array). See [Inbox and notifications](#inbox-and-notifications).
 - The white-label test (`apps/builder/__tests__/public-spec-operations.test.ts`) forbids the product name in operation and schema `summary` / `description` copy. The new copy avoids it; keep that in mind when editing these descriptions.
 - The CLI command reference for these operations is in `apps/cli/README.md` (section `external-agent`, and the handover command under `conversations`).
 
@@ -167,3 +185,4 @@ These are the places where the code differs from `docs/superpowers/specs/2026-10
 ## Verification notes
 
 - Unit and integration tests for this feature live in `packages/business/__tests__/external-agent/`, `apps/worker/__tests__/external-agent-*.test.ts` and `apps/builder/__tests__/external-agent-api.test.ts`. They run in CI, not on the VPS.
+- Inbox attention (no-auto-resume handover, push policy, `notifyAgentHandover`, unread count and store updates) is covered by `packages/business/__tests__/external-agent/bot-resume.test.ts`, `apps/worker/__tests__/incoming-push-policy.test.ts`, `apps/worker/__tests__/notification/agent-handover-push.test.ts` and `apps/builder/__tests__/chat-store-inbox-attention.test.ts`.

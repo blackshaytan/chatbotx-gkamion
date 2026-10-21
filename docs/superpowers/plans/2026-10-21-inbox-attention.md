@@ -42,8 +42,8 @@
 
 ## Task 1: Database — columns, category enum, migration
 
-- [ ] **1.1** `partials/conversation.ts`: `conversationHandoverCategories = ["urgent","return","payment","orderStatus","delivery","priceAndTerm","other"] as const`, `conversationHandoverCategorySchema = z.enum(...)`, тип `ConversationHandoverCategory`. Экспорт через `@chatbotx.io/database/partials`.
-- [ ] **1.2** `schema/conversation.ts`: `inboxActivityAt: timestamp(timestampConfig)`, `handoverCategory: text().$type<ConversationHandoverCategory>()`, `handedOverAt: timestamp(timestampConfig)`; индекс `Conversation_workspaceId_inboxActivityAt_id_idx` на `(workspaceId, inboxActivityAt DESC NULLS LAST, id DESC)` по образцу существующего `Conversation_workspaceId_lastActivityAt_id_idx`.
+- [x] **1.1** `partials/conversation.ts`: `conversationHandoverCategories = ["urgent","return","payment","orderStatus","delivery","priceAndTerm","other"] as const`, `conversationHandoverCategorySchema = z.enum(...)`, тип `ConversationHandoverCategory`. Экспорт через `@chatbotx.io/database/partials`.
+- [x] **1.2** `schema/conversation.ts`: `inboxActivityAt: timestamp(timestampConfig)`, `handoverCategory: text().$type<ConversationHandoverCategory>()`, `handedOverAt: timestamp(timestampConfig)`; индекс `Conversation_workspaceId_inboxActivityAt_id_idx` на `(workspaceId, inboxActivityAt DESC NULLS LAST, id DESC)` по образцу существующего `Conversation_workspaceId_lastActivityAt_id_idx`.
 - [ ] **1.3** `pnpm --filter @chatbotx.io/database make:migration inbox_attention`; в конец `migration.sql` дописать `UPDATE "Conversation" SET "inboxActivityAt" = "lastActivityAt" WHERE "inboxActivityAt" IS NULL;`. `db:check-drift` — чисто.
 - [ ] **1.4** `pnpm --filter @chatbotx.io/database db:check-drift`, `ultracite check`, коммит `feat(database): add inbox attention columns to conversation`.
 

@@ -249,8 +249,9 @@ chatbotx contacts coupons list <identifier>          # List coupons issued to co
 
 ```bash
 chatbotx conversations list                          # [--botCategory --assignedId --channel --status --keyword
-                                                     #  --botEnabled --tags --contactFilter --cursor --perPage --sort]
-chatbotx conversations get <id>
+                                                     #  --botEnabled --tags --handoverCategory --contactFilter --cursor --perPage --sort]
+                                                     # --handoverCategory: JSON array, e.g. '["urgent","payment"]'
+chatbotx conversations get <id>                      # Includes unreadCount, inboxActivityAt, handoverCategory, handedOverAt
 chatbotx conversations assign add <id> --assignedId <assignedId>  # null clears the assignee
 chatbotx conversations archive add <id>
 chatbotx conversations unarchive add <id>
@@ -905,8 +906,8 @@ chatbotx conversations thread-control add <id> --contactInboxId <id> --action ta
 ### Conversation hand-over by the external agent (scope `inbox`)
 
 ```bash
-chatbotx conversations external-agent-handover add <conversationId> --reason "<text>"
-# Pauses the bot and saves the reason as a note in the conversation. Called by the external AI agent; see docs/external-agent.md
+chatbotx conversations external-agent-handover add <conversationId> --reason "<text>" [--category <category>]
+# Pauses the bot without automatic resume and saves the reason and category as a note. --category: urgent|return|payment|orderStatus|delivery|priceAndTerm|other (default other). Called by the external AI agent; see docs/external-agent.md
 ```
 
 ### `workspace` settings (scope `settings`)
