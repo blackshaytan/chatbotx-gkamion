@@ -42,6 +42,7 @@ jobs:
           __tests__/i18n-hardcoded-scanner.test.ts
           __tests__/i18n-language-names.test.ts
           __tests__/lang-selector.test.tsx
+          __tests__/external-agent-api.test.ts
 
       - working-directory: apps/worker
         run: pnpm exec vitest run __tests__/notification

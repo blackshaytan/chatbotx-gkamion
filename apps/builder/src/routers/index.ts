@@ -365,4 +365,9 @@ export const router = {
       default: m.mediaLibraryAPI,
     })),
   ),
+  externalAgent: lazy(() =>
+    import("@/features/external-agent/api").then((m) => ({
+      default: m.externalAgentAPI,
+    })),
+  ),
 }

@@ -985,3 +985,31 @@ export const possibleErrorsOnCreatingInFolder = {
   ...possibleErrorsOnCreatingResource,
   notFound,
 } satisfies ErrorMap
+
+/** External agent settings write: each refusal is a 400 with its own code. */
+const externalAgentRefusal = (message: string) => ({ message, status: 400 })
+
+export const possibleErrorsOnUpdatingExternalAgent = {
+  ...possibleErrorsOnMutatingResource,
+  invalidExternalAgentUrl: externalAgentRefusal(
+    "Base URL must be an http or https URL without credentials",
+  ),
+  externalAgentBaseUrlRequired: externalAgentRefusal("Base URL is required"),
+  externalAgentApiKeyRequired: externalAgentRefusal("API key is required"),
+  invalidExternalAgentSettings: externalAgentRefusal(
+    "External agent settings are out of range",
+  ),
+  invalidExternalAgentInbox: externalAgentRefusal(
+    "Some inboxes do not belong to this workspace",
+  ),
+} satisfies ErrorMap
+
+/** External agent health check: a repeat within the throttle window is a 429. */
+export const possibleErrorsOnTestingExternalAgent = {
+  ...possibleErrorsOnMutatingResource,
+  externalAgentTestThrottled: {
+    message:
+      "External agent check was run recently, try again in a few seconds",
+    status: 429,
+  },
+} satisfies ErrorMap

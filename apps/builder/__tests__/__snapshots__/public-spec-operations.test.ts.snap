@@ -1358,6 +1358,26 @@ exports[`public API spec — operation naming guard > operation list (operationI
     "path": "/v1/error-logs",
   },
   {
+    "method": "GET",
+    "operationId": "externalAgent.get",
+    "path": "/v1/external-agent",
+  },
+  {
+    "method": "POST",
+    "operationId": "externalAgent.handover",
+    "path": "/v1/conversations/{conversationId}/external-agent-handover",
+  },
+  {
+    "method": "POST",
+    "operationId": "externalAgent.test",
+    "path": "/v1/external-agent/test",
+  },
+  {
+    "method": "PATCH",
+    "operationId": "externalAgent.update",
+    "path": "/v1/external-agent",
+  },
+  {
     "method": "POST",
     "operationId": "externalWebhooks.create",
     "path": "/v1/external-webhooks",
