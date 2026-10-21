@@ -48,11 +48,38 @@ jobs:
           __tests__/public-spec-mcp.test.ts
           __tests__/external-agent-api.test.ts
 
+      - working-directory: apps/builder
+        run: >-
+          pnpm exec vitest run
+          __tests__/build-conversation-where-unread.test.ts
+          __tests__/build-conversation-where-inbox-attention.test.ts
+          __tests__/list-conversations-inbox-attention.test.ts
+          __tests__/list-conversations-query.test.ts
+          __tests__/list-conversations-ad-referral.test.ts
+          __tests__/conversations-public-api.test.ts
+          __tests__/conversations-public-scope.test.ts
+          __tests__/public-list-queries-no-session.test.ts
+          __tests__/use-thread-read-tracking.test.tsx
+          __tests__/conversation-item.test.tsx
+          __tests__/conversation-item-inbox-attention.test.tsx
+          __tests__/bot-state-bar.test.tsx
+          __tests__/chat-store-inbox-attention.test.ts
+          __tests__/inbox-attention-helpers.test.ts
+          __tests__/message-thread-pane-scroll.test.tsx
+          src/features/conversations
+
+      - working-directory: packages/database
+        run: >-
+          pnpm exec vitest run
+          __tests__/conversation-unread.test.ts
+          __tests__/contact-filter.test.ts
+          __tests__/sharded-message-repository.test.ts
+
       - working-directory: apps/worker
-        run: pnpm exec vitest run __tests__/notification
+        run: pnpm exec vitest run __tests__/notification __tests__/incoming-push-policy.test.ts __tests__/received-message.test.ts
 
       - working-directory: packages/business
-        run: pnpm exec vitest run __tests__/external-agent
+        run: pnpm exec vitest run __tests__/external-agent src/conversation/__tests__/conversation.service.test.ts
 
       - working-directory: apps/worker
         run: pnpm exec vitest run __tests__/external-agent-routing.test.ts __tests__/external-agent-reply.test.ts __tests__/external-agent-watch.test.ts
