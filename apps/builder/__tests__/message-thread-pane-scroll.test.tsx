@@ -14,6 +14,12 @@ vi.mock("@/features/conversations/actions/disable-bot.action", () => ({
   disableBotAction: { bind: () => vi.fn() },
 }))
 
+// The bar's "Return to bot" dialog imports the enable-bot server action; it is
+// covered in bot-state-bar.test.tsx, not here.
+vi.mock("@/features/conversations/components/bot-state-bar", () => ({
+  BotStateBar: () => null,
+}))
+
 // Read-tracking rules are covered in use-thread-read-tracking.test.tsx; here
 // only the wiring (handlers land on the thread column) is asserted.
 const threadClickCaptureMock = vi.fn()

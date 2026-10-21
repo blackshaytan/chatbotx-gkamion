@@ -1959,7 +1959,9 @@
       "handover": "The AI agent handed the conversation over to a manager: {reason}",
       "handoverNoReason": "The AI agent handed the conversation over to a manager",
       "unavailable": "The AI agent is unavailable, the conversation was handed over to a manager",
-      "timeout": "The AI agent did not finish in time, the conversation was handed over to a manager"
+      "timeout": "The AI agent did not finish in time, the conversation was handed over to a manager",
+      "handoverWithCategory": "The AI agent handed the conversation over to a manager · {category}: {reason}",
+      "handoverWithCategoryNoReason": "The AI agent handed the conversation over to a manager · {category}"
     }
   },
   "openrouter": {
@@ -9124,5 +9126,21 @@
     "uploadFile": "Upload File",
     "uploadFailed": "Upload failed",
     "uploadUnexpectedError": "An unexpected error occurred during upload"
+  },
+  "inboxAttention": {
+    "handoverCategory": {
+      "urgent": "Urgent",
+      "return": "Return",
+      "payment": "Payment",
+      "orderStatus": "Order status",
+      "delivery": "Delivery",
+      "priceAndTerm": "Price and terms",
+      "other": "Other"
+    },
+    "waitingManager": "Waiting for a manager",
+    "waitingManagerWithCategory": "Waiting for a manager · {category}",
+    "botPausedUntil": "Bot paused until {time}",
+    "returnToBot": "Return to bot",
+    "unreadCount": "{count} unread"
   }
 }

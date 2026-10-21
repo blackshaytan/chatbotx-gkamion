@@ -4834,7 +4834,9 @@
       "handover": "ИИ-агент передал разговор менеджеру: {reason}",
       "handoverNoReason": "ИИ-агент передал разговор менеджеру",
       "unavailable": "ИИ-агент недоступен — разговор передан менеджеру",
-      "timeout": "ИИ-агент не уложился во время — разговор передан менеджеру"
+      "timeout": "ИИ-агент не уложился во время — разговор передан менеджеру",
+      "handoverWithCategory": "ИИ-агент передал разговор менеджеру · {category}: {reason}",
+      "handoverWithCategoryNoReason": "ИИ-агент передал разговор менеджеру · {category}"
     }
   },
   "openrouter": {
@@ -9124,5 +9126,21 @@
     "uploadFile": "Загрузить файл",
     "uploadFailed": "Не удалось загрузить",
     "uploadUnexpectedError": "При загрузке произошла непредвиденная ошибка"
+  },
+  "inboxAttention": {
+    "handoverCategory": {
+      "urgent": "Срочно",
+      "return": "Возврат",
+      "payment": "Оплата",
+      "orderStatus": "Статус заказа",
+      "delivery": "Доставка",
+      "priceAndTerm": "Цена и срок",
+      "other": "Прочее"
+    },
+    "waitingManager": "Ждёт менеджера",
+    "waitingManagerWithCategory": "Ждёт менеджера · {category}",
+    "botPausedUntil": "Бот на паузе до {time}",
+    "returnToBot": "Вернуть боту",
+    "unreadCount": "Непрочитанных: {count}"
   }
 }

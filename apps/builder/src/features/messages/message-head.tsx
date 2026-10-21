@@ -18,7 +18,10 @@ import { ThreadControlPassButton } from "../conversations/components/thread-cont
 import { ThreadControlReleaseButton } from "../conversations/components/thread-control-release-button"
 import { UpdateConversationAssignee } from "../conversations/components/update-conversation-assignee"
 import { ConversationAction } from "../conversations/conversation-action"
-import { isConversationActive } from "../conversations/utils/bot-state"
+import {
+  BOT_RESUMED_PATCH,
+  isConversationActive,
+} from "../conversations/utils/bot-state"
 import { findContactInboxByChannel } from "../conversations/utils/contact-inbox"
 import { useOutboundCallMode } from "../integration-whatsapp/calling/voip/use-outbound-call-mode"
 import { WhatsappVoipCallButton } from "../integration-whatsapp/calling/voip/whatsapp-voip-call-button"
@@ -76,10 +79,7 @@ export default function MessageHead({
     {
       onSuccess: () => {
         if (activeConversation) {
-          updateConversation(activeConversation.id, {
-            botEnabled: true,
-            botResumeAt: null,
-          })
+          updateConversation(activeConversation.id, BOT_RESUMED_PATCH)
         }
       },
       onError: ({ error }) => {

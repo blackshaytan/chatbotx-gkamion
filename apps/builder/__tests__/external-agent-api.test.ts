@@ -173,6 +173,45 @@ describe("external agent public API", () => {
     expect(externalAgentService.handover).not.toHaveBeenCalled()
   })
 
+  test("handover passes the optional category to the service", async () => {
+    findWorkspaceByTokenHash.mockResolvedValue(authResult(["inbox"]))
+    externalAgentService.handover.mockResolvedValue({
+      conversationId: "42",
+      botEnabled: false,
+    })
+
+    await call(
+      externalAgentPublicRouter.handover,
+      {
+        conversationId: "42",
+        reason: "Customer is waiting for a refund",
+        category: "return",
+      },
+      { context: { headers: TOKEN_HEADERS } },
+    )
+
+    expect(externalAgentService.handover).toHaveBeenCalledWith(
+      expect.objectContaining({ workspaceId: "ws-1", category: "return" }),
+    )
+  })
+
+  test("handover refuses a category outside the list", async () => {
+    findWorkspaceByTokenHash.mockResolvedValue(authResult(["inbox"]))
+
+    await expect(
+      call(
+        externalAgentPublicRouter.handover,
+        {
+          conversationId: "42",
+          reason: "Customer asked for a manager",
+          category: "refund",
+        },
+        { context: { headers: TOKEN_HEADERS } },
+      ),
+    ).rejects.toThrow()
+    expect(externalAgentService.handover).not.toHaveBeenCalled()
+  })
+
   test("get returns the settings without an API key", async () => {
     findWorkspaceByTokenHash.mockResolvedValue(authResult(["settings"]))
     externalAgentService.get.mockResolvedValue(settings)

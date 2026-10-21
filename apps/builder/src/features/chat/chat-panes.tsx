@@ -13,6 +13,7 @@ import type { ReactNode } from "react"
 import { toast } from "sonner"
 import { ContactInboxPanel } from "../contacts/contact-inbox-panel"
 import { disableBotAction } from "../conversations/actions/disable-bot.action"
+import { BotStateBar } from "../conversations/components/bot-state-bar"
 import ConversationList from "../conversations/conversation-list"
 import { useThreadControl } from "../conversations/hooks/use-thread-control"
 import { useThreadReadTracking } from "../conversations/hooks/use-thread-read-tracking"
@@ -149,6 +150,7 @@ export function MessageThreadPane({
               {t("messages.botIsActive")}
             </Button>
           )}
+          <BotStateBar conversation={activeConversation} />
           <MessageList />
           <MessageInput />
         </div>

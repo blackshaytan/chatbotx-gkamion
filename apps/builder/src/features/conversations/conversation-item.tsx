@@ -35,7 +35,9 @@ import { InboxIcon } from "../inboxes/components/inbox-icon"
 import { useWhatsappVoipCallStore } from "../integration-whatsapp/calling/voip/voip-call-store"
 import { useOptionalWhatsappVoipCallContext } from "../integration-whatsapp/calling/voip/whatsapp-voip-call-context"
 import { useTenantSettings } from "../tenant/tenant-settings-provider"
+import { HandoverCategoryPill } from "./components/handover-category-pill"
 import { ThreadControlPill } from "./components/thread-control-pill"
+import { UnreadCountBadge } from "./components/unread-count-badge"
 import { useMarkConversationRead } from "./hooks/use-mark-conversation-read"
 import { isConversationUnread } from "./lib/is-conversation-unread"
 import { type ShortTimeUnit, shortTimeAgo } from "./lib/short-time-ago"
@@ -51,6 +53,7 @@ import {
   selectAdBadge,
   selectGoogleAdsBadge,
 } from "./utils/ad-badge"
+import { isAwaitingManager, isConversationActive } from "./utils/bot-state"
 
 // Icon shown next to a call preview snippet. Mirrors whatsapp-call-card.tsx's
 // icon choices so the preview and the card agree per call outcome.
@@ -249,6 +252,11 @@ export default function ConversationItem({
     ? CALL_PREVIEW_ICON_BY_KIND[callPreviewKind]
     : undefined
   const isUnread = isConversationUnread(conversation)
+  const isBotActive = isConversationActive(conversation)
+  // Only while the bot is off: the category explains why a manager is needed.
+  const handoverCategory = isAwaitingManager(conversation)
+    ? conversation.handoverCategory
+    : null
   // Show one "Ads" badge if ANY of this conversation's contactInboxes came
   // from a Meta ad (WhatsApp CTWA or Messenger/Instagram CTM/CTID) — mirrors
   // WATI's "CTWA" tag. `adReferral` is computed server-side per contactInbox
@@ -266,9 +274,7 @@ export default function ConversationItem({
 
   const contactAvatar = useMemo(
     () => (
-      <Avatar
-        className={cn("h-12 w-12", isUnread && "border-2 border-primary")}
-      >
+      <Avatar className="h-12 w-12">
         <AvatarImage
           alt={conversation.contact?.fullName ?? ""}
           className="object-cover"
@@ -279,7 +285,7 @@ export default function ConversationItem({
         </AvatarFallback>
       </Avatar>
     ),
-    [conversation.contact, avatarUrl, isUnread],
+    [conversation.contact, avatarUrl],
   )
 
   // Opening a conversation is read by the thread pane (`useThreadReadTracking`),
@@ -346,16 +352,21 @@ export default function ConversationItem({
 
         <div className="flex-1 overflow-hidden">
           <div className="flex items-center justify-between gap-1">
-            <span
-              className={cn(
-                "truncate text-start",
-                isUnread
-                  ? "font-semibold text-foreground"
-                  : "font-medium text-muted-foreground",
+            <div className="flex min-w-0 items-center gap-1">
+              <span
+                className={cn(
+                  "truncate text-start",
+                  isUnread
+                    ? "font-semibold text-foreground"
+                    : "font-medium text-muted-foreground",
+                )}
+              >
+                {conversation.contact?.fullName}
+              </span>
+              {handoverCategory && (
+                <HandoverCategoryPill category={handoverCategory} />
               )}
-            >
-              {conversation.contact?.fullName}
-            </span>
+            </div>
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -411,6 +422,10 @@ export default function ConversationItem({
             </span>
           </div>
         </div>
+        <UnreadCountBadge
+          count={conversation.unreadCount}
+          isBotActive={isBotActive}
+        />
       </Button>
       {isRinging && voipCallContext && (
         // Overlay sibling of the row <Button>, never a descendant — a <button>

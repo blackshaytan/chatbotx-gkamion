@@ -1,4 +1,5 @@
 import {
+  conversationHandoverCategories,
   EXTERNAL_AGENT_MAX_RUN_MINUTES_LIMIT,
   externalAgentCheckStatuses,
   externalAgentProviders,
@@ -132,6 +133,11 @@ export const externalAgentHandoverInputSchema = z.object({
     .max(REASON_MAX_LENGTH)
     .describe(
       "Why the conversation goes to a human manager. Saved as a note in the conversation.",
+    ),
+  category: conversationHandoverCategories
+    .optional()
+    .describe(
+      "Category of the handover, shown to managers in the conversation list. Pick the one that fits best. Values: `urgent` (urgent, needs a manager now), `return` (the customer wants to return or refund an item), `payment` (a payment problem or question), `orderStatus` (asks where the order is or about its status), `delivery` (a delivery problem or question), `priceAndTerm` (asks about the price, discounts or terms), `other` (anything else). Defaults to `other`.",
     ),
 })
 

@@ -2,6 +2,7 @@
 
 import {
   contactFilterFields,
+  conversationHandoverCategories,
   conversationStatuses,
 } from "@chatbotx.io/database/partials"
 import { ComboboxField } from "@chatbotx.io/ui/components/form/combobox-field"
@@ -30,6 +31,7 @@ import { ContactFilterDialog } from "../contact-filter"
 import { EMAIL_PHONE_RESTRICTED_FILTER_FIELDS } from "../contact-filter/lib/restricted-fields"
 import { useConfiguredInboxTypeOptions } from "../inboxes/provider/inbox-hook"
 import { useContactAssigneeOptions } from "../users/provider/user-hook"
+import { HANDOVER_CATEGORY_META } from "./lib/handover-category"
 
 // Channel is picked in the top-level filter above, so the contact filter's own
 // "Channel" condition is redundant here; the Inbox condition is scoped to that
@@ -95,6 +97,13 @@ export function ConversationFilter({
     },
   ]
 
+  const handoverCategoryOptions = conversationHandoverCategories.options.map(
+    (category) => ({
+      label: `${HANDOVER_CATEGORY_META[category].emoji} ${t(HANDOVER_CATEGORY_META[category].labelKey)}`,
+      value: category,
+    }),
+  )
+
   return (
     <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger
@@ -133,6 +142,13 @@ export function ConversationFilter({
             options={conversationStatusOptions}
             placeholder={`${t("condition.fields.unread")}, ${t("condition.fields.followUp")}, ... `}
             required
+          />
+
+          <MultiSelectField
+            label={t("fields.category.label")}
+            name="handoverCategory"
+            options={handoverCategoryOptions}
+            placeholder={t("actions.pleaseSelect")}
           />
 
           <ContactFilterDialog

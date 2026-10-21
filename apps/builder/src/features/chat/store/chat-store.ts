@@ -1,6 +1,7 @@
 import type {
   ChannelType,
   ConversationBotCategory,
+  ConversationHandoverCategory,
   ConversationStatus,
 } from "@chatbotx.io/database/partials"
 import { resolveMessagingWindowOpenedAt } from "@chatbotx.io/sdk"
@@ -8,6 +9,7 @@ import { createStore } from "zustand/vanilla"
 import type { ContactFilterRequest } from "@/features/contact-filter/schema"
 import type { GetContactResponse } from "@/features/contacts/schema/query"
 import type { ContactResource } from "@/features/contacts/schema/resource"
+import { UNREAD_BADGE_CAP } from "@/features/conversations/lib/unread-badge"
 import {
   type PostDetails,
   supportsPostDetails,
@@ -80,15 +82,73 @@ const conversationPatchForMessage = (
   return Object.keys(patch).length > 0 ? patch : null
 }
 
+/**
+ * A reply a manager (or an API caller acting for the workspace) sent, not the
+ * bot, a flow or a channel echo. Mirrors the server's `markAgentReplied` rule.
+ */
+const isHumanOutgoingMessage = (message: MessageResource): boolean =>
+  message.messageType === "outgoing" &&
+  ((message.senderType === "user" && message.senderId !== null) ||
+    message.senderType === "api")
+
+/**
+ * Only client messages and human replies move a conversation up the list and
+ * advance its attention timestamp. Bot sends and system notes never do.
+ */
+const isInboxActivityMessage = (message: MessageResource): boolean =>
+  message.messageType === "incoming" || isHumanOutgoingMessage(message)
+
+/**
+ * `inboxActivityAt` and the unread count a message adds to its conversation.
+ * Only `type: message` client messages count as unread, the same rule the
+ * server's unread count uses, so comments never inflate the badge.
+ */
+const inboxAttentionPatchForMessage = (
+  conversation: ListConversationItemResource,
+  message: MessageResource,
+): Partial<ListConversationItemResource> => {
+  if (!isInboxActivityMessage(message)) {
+    return {}
+  }
+  const inboxActivityAt = latestDate(
+    conversation.inboxActivityAt,
+    new Date(message.createdAt),
+  )
+  const isUnreadClientMessage =
+    message.messageType === "incoming" && message.type === "message"
+  const isAlreadyCounted = conversation.messages?.[0]?.id === message.id
+  if (!isUnreadClientMessage || isAlreadyCounted) {
+    return { inboxActivityAt }
+  }
+  return {
+    inboxActivityAt,
+    unreadCount: Math.min(
+      (conversation.unreadCount ?? 0) + 1,
+      UNREAD_BADGE_CAP,
+    ),
+  }
+}
+
+/**
+ * Moves the read point forward to `readAt`, never back. Advancing it clears the
+ * unread count, since everything before the read point is read now.
+ */
+const readThroughPatch = (
+  conversation: Pick<ListConversationItemResource, "agentLastReadAt">,
+  readAt: Date,
+): Partial<ListConversationItemResource> => {
+  const current = conversation.agentLastReadAt
+  if (current && new Date(current) >= readAt) {
+    return {}
+  }
+  return { agentLastReadAt: readAt, unreadCount: 0 }
+}
+
 const readStatePatchForMessage = (
-  conversation: ListConversationsResponse["data"][number],
-  message: MessageResourceWithRelations,
-): Partial<ConversationResource> => {
-  const isAgentReply =
-    message.messageType === "outgoing" &&
-    ((message.senderType === "user" && message.senderId !== null) ||
-      message.senderType === "api")
-  if (!isAgentReply) {
+  conversation: ListConversationItemResource,
+  message: MessageResource,
+): Partial<ListConversationItemResource> => {
+  if (!isHumanOutgoingMessage(message)) {
     return {}
   }
   const readAt = latestDate(
@@ -97,7 +157,7 @@ const readStatePatchForMessage = (
   )
   return {
     adminRepliedAt: readAt,
-    agentLastReadAt: readAt,
+    ...readThroughPatch(conversation, readAt),
   }
 }
 
@@ -108,6 +168,7 @@ export type ConversationFilters = {
   status?: ConversationStatus[]
   keyword?: string
   tags?: ("noAdminReply" | "unread" | "followUp" | "archived" | "blocked")[]
+  handoverCategory?: ConversationHandoverCategory[]
   contactFilter?: ContactFilterRequest["contactFilter"]
 }
 
@@ -861,7 +922,7 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
               return conversation
             }
             changed = true
-            return { ...conversation, agentLastReadAt }
+            return { ...conversation, agentLastReadAt, unreadCount: 0 }
           })
           return changed ? { conversations } : state
         })
@@ -1164,6 +1225,8 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
           const currentConversation = state.conversations[conversationIndex]
           const conversation = {
             ...currentConversation,
+            ...inboxAttentionPatchForMessage(currentConversation, message),
+            ...readStatePatchForMessage(currentConversation, message),
             messages: [message],
             lastActivityAt: latestActivityAt(
               currentConversation.lastActivityAt,
@@ -1287,7 +1350,10 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
               (conversation) => [conversation.id, conversation] as const,
             ),
           )
-          const lastMessageIndexByConversationId = new Map<string, number>()
+          // Conversation id → batch index of its last message that moves it up
+          // the list. Bot sends refresh the preview but leave the order alone.
+          const liftIndexByConversationId = new Map<string, number>()
+          const touchedConversationIds = new Set<string>()
           let messages: MessageResourceWithRelations[] | null = null
           let messageIndexById = new Map<string, number>()
           let messageIndexByClientId = new Map<string, number>()
@@ -1301,24 +1367,24 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
                 currentConversation,
                 message,
               )
-              const readStatePatch = readStatePatchForMessage(
-                currentConversation,
-                message,
-              )
               conversationsById.set(message.conversationId, {
                 ...currentConversation,
                 ...(conversationPatch ?? {}),
-                ...readStatePatch,
+                ...inboxAttentionPatchForMessage(currentConversation, message),
+                ...readStatePatchForMessage(currentConversation, message),
                 messages: [message],
                 lastActivityAt: latestActivityAt(
                   currentConversation.lastActivityAt,
                   message.createdAt,
                 ),
               })
-              lastMessageIndexByConversationId.set(
-                message.conversationId,
-                messageIndex,
-              )
+              touchedConversationIds.add(message.conversationId)
+              if (isInboxActivityMessage(message)) {
+                liftIndexByConversationId.set(
+                  message.conversationId,
+                  messageIndex,
+                )
+              }
             } else {
               unmatchedWorkspaceId ??= message.workspaceId
             }
@@ -1373,24 +1439,27 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
             }
           }
 
-          if (lastMessageIndexByConversationId.size === 0 && !messages) {
+          if (touchedConversationIds.size === 0 && !messages) {
             return state
           }
 
-          const movedConversationIds = [
-            ...lastMessageIndexByConversationId.entries(),
-          ]
+          const liftedConversationIds = [...liftIndexByConversationId.entries()]
             .sort(([, leftIndex], [, rightIndex]) => rightIndex - leftIndex)
             .map(([conversationId]) => conversationId)
-          const movedConversationIdSet = new Set(movedConversationIds)
+          const liftedConversationIdSet = new Set(liftedConversationIds)
           const conversations = [
-            ...movedConversationIds.flatMap((conversationId) => {
+            ...liftedConversationIds.flatMap((conversationId) => {
               const conversation = conversationsById.get(conversationId)
               return conversation ? [conversation] : []
             }),
-            ...state.conversations.filter(
-              (conversation) => !movedConversationIdSet.has(conversation.id),
-            ),
+            ...state.conversations
+              .filter(
+                (conversation) => !liftedConversationIdSet.has(conversation.id),
+              )
+              .map(
+                (conversation) =>
+                  conversationsById.get(conversation.id) ?? conversation,
+              ),
           ]
           return {
             conversations,

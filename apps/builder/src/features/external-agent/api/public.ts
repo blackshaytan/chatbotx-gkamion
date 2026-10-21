@@ -76,7 +76,7 @@ export const externalAgentPublicRouter = {
       path: "/v1/conversations/{conversationId}/external-agent-handover",
       summary: "Hand conversation over to human manager",
       description:
-        "Called by the external agent to give a conversation to a human manager with a reason. The reason is saved as a note in the conversation, and the bot is paused for it (`botEnabled` becomes false). Conversation ids come from `conversations.list`, or from the run context the platform sent to the agent.",
+        "Called by the external agent to give a conversation to a human manager with a reason and an optional `category` (`urgent`, `return`, `payment`, `orderStatus`, `delivery`, `priceAndTerm` or `other`, default `other`). The reason and category are saved as a note in the conversation, and the bot is paused for it (`botEnabled` becomes false) without resuming on its own. Conversation ids come from `conversations.list`, or from the run context the platform sent to the agent.",
       tags: ["External Agent"],
       spec: mcpSpec({ visibility: "default" }),
     })
@@ -89,6 +89,7 @@ export const externalAgentPublicRouter = {
           workspaceId: context.workspace.id,
           conversationId: input.conversationId,
           reason: input.reason,
+          category: input.category,
         }),
     ),
 }

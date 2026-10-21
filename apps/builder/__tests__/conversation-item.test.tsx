@@ -388,7 +388,7 @@ describe("ConversationItem", () => {
     expect(executeReadActionMock).not.toHaveBeenCalled()
   })
 
-  test("renders an unread row with a bold preview and avatar ring", async () => {
+  test("renders an unread row with a bold preview and no avatar ring", async () => {
     await render(
       makeConversation({
         lastActivityAt: new Date("2026-01-02T00:00:00Z"),
@@ -402,7 +402,7 @@ describe("ConversationItem", () => {
     )
     expect(contactName?.classList.contains("font-semibold")).toBe(true)
     expect(contactName?.classList.contains("text-muted-foreground")).toBe(false)
-    expect(container.querySelector(".border-primary")).not.toBeNull()
+    expect(container.querySelector(".border-primary")).toBeNull()
   })
 
   test("renders a read row without the unread preview and avatar styles", async () => {
