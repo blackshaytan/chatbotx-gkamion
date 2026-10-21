@@ -276,6 +276,7 @@ export async function handleCreateWebchatMessage({
         contactLastReadAt: now,
         lastActivityAt: message.createdAt,
         contactRepliedAt: message.createdAt,
+        inboxActivityAt: message.createdAt,
       })
       .where(eq(conversationModel.id, conversation.id))
 

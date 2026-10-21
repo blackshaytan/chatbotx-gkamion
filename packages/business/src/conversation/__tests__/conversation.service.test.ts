@@ -246,6 +246,59 @@ describe("ConversationService.updateFlowStepState lastActivityAt monotonicity", 
     })
     expect(mocks.sql).not.toHaveBeenCalled()
   })
+
+  test("a contact reply advances contactRepliedAt and inboxActivityAt without regressing", async () => {
+    const at = new Date("2024-01-02T00:00:00Z")
+
+    await conversationService.updateFlowStepState({
+      workspaceId: WORKSPACE_ID,
+      conversationId: "conv-1",
+      lastActivityAt: at,
+      contactRepliedAt: at,
+    })
+
+    const [data] = mocks.updateSet.mock.calls.at(-1) as [
+      Record<
+        "contactRepliedAt" | "inboxActivityAt",
+        { strings: string[]; values: unknown[] }
+      >,
+    ]
+    for (const column of ["contactRepliedAt", "inboxActivityAt"] as const) {
+      expect(data[column].strings.join("")).toContain("GREATEST")
+      expect(data[column].values).toEqual([undefined, at, at])
+    }
+  })
+
+  test("bot activity without a contact reply leaves inboxActivityAt alone", async () => {
+    await conversationService.updateFlowStepState({
+      workspaceId: WORKSPACE_ID,
+      conversationId: "conv-1",
+      lastActivityAt: new Date("2024-01-02T00:00:00Z"),
+    })
+
+    expect(mocks.updateSet.mock.calls.at(-1)?.[0]).not.toHaveProperty(
+      "inboxActivityAt",
+    )
+  })
+})
+
+describe("ConversationService.markAgentReplied", () => {
+  test("moves inboxActivityAt together with the read and reply marks", async () => {
+    const at = new Date("2024-01-02T00:00:00Z")
+
+    await conversationService.markAgentReplied({
+      id: "conv-1",
+      workspaceId: WORKSPACE_ID,
+      at,
+    })
+
+    expect(mocks.updateSet).toHaveBeenCalledWith({
+      agentLastReadAt: at,
+      lastActivityAt: at,
+      inboxActivityAt: at,
+      adminRepliedAt: at,
+    })
+  })
 })
 
 describe("ConversationService.findDMByContactIds", () => {

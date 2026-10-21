@@ -13,6 +13,7 @@ import {
 } from "@chatbotx.io/database/client"
 import type {
   ConversationAttributes,
+  ConversationHandoverCategory,
   ConversationQuickReplyChallenge,
 } from "@chatbotx.io/database/partials"
 import {
@@ -160,6 +161,7 @@ class ConversationService extends BaseService {
       .set({
         agentLastReadAt: input.at,
         lastActivityAt: input.at,
+        inboxActivityAt: input.at,
         adminRepliedAt: input.at,
       })
       .where(
@@ -1346,16 +1348,21 @@ class ConversationService extends BaseService {
     ids: string[]
     botEnabled: boolean
     botResumeAt?: Date | null
+    /** Keeps the bot off until a manager returns it, whatever the inbox resume policy. */
+    noAutoResume?: boolean
+    /** Set only when the external agent hands the conversation over. */
+    handoverCategory?: ConversationHandoverCategory
     tx?: DatabaseClient
   }): Promise<void> {
-    const { workspaceId, ids, botEnabled, tx = db } = props
+    const { workspaceId, ids, botEnabled, handoverCategory, tx = db } = props
     const resumeGroups = await this.resolveBotResumeGroups({
       workspaceId,
       ids,
       botEnabled,
-      botResumeAt: props.botResumeAt,
+      botResumeAt: props.noAutoResume ? null : props.botResumeAt,
       tx,
     })
+    const handedOverAt = new Date()
     for (const group of resumeGroups) {
       await tx
         .update(conversationModel)
@@ -1363,8 +1370,11 @@ class ConversationService extends BaseService {
           botEnabled,
           botResumeAt: group.botResumeAt,
           ...(botEnabled
-            ? {}
-            : { additionalAttributes: sqlDropQuickReplyChallenge() }),
+            ? { handoverCategory: null, handedOverAt: null }
+            : {
+                additionalAttributes: sqlDropQuickReplyChallenge(),
+                ...(handoverCategory ? { handoverCategory, handedOverAt } : {}),
+              }),
         })
         .where(
           and(
@@ -1862,6 +1872,7 @@ class ConversationService extends BaseService {
       // an already-seen unread message). Postgres GREATEST ignores NULLs;
       // the COALESCE is kept only for readability.
       data.contactRepliedAt = sql`GREATEST(COALESCE(${conversationModel.contactRepliedAt}, ${props.contactRepliedAt}), ${props.contactRepliedAt})`
+      data.inboxActivityAt = sql`GREATEST(COALESCE(${conversationModel.inboxActivityAt}, ${props.contactRepliedAt}), ${props.contactRepliedAt})`
     }
     if ("lastStep" in props) {
       data.lastStep = props.lastStep
@@ -1892,12 +1903,16 @@ class ConversationService extends BaseService {
     conversations: { id: string; contactId: string }[]
     userId?: string
     triggerContext: TriggerContext
+    noAutoResume?: boolean
+    handoverCategory?: ConversationHandoverCategory
     tx?: DatabaseClient
   }): Promise<void> {
     await this.updateBotEnabled({
       workspaceId: props.workspaceId,
       ids: props.conversations.map((c) => c.id),
       botEnabled: false,
+      noAutoResume: props.noAutoResume,
+      handoverCategory: props.handoverCategory,
       tx: props.tx,
     })
 

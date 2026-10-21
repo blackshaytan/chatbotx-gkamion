@@ -1,5 +1,6 @@
 import { db } from "@chatbotx.io/database/client"
 import {
+  type ConversationHandoverCategory,
   EXTERNAL_AGENT_ACTIVITY_TYPE,
   EXTERNAL_AGENT_DEFAULT_MAX_RUN_MINUTES,
   EXTERNAL_AGENT_DEFAULT_PROGRESS_MESSAGE,
@@ -24,7 +25,12 @@ import { encryptUtils } from "@chatbotx.io/encryption"
 import { RealtimeEventType } from "@chatbotx.io/partysocket-config"
 import { distributedStore, withCache } from "@chatbotx.io/redis"
 import { createId } from "@chatbotx.io/utils"
-import { ChatJobAction, chatQueue } from "@chatbotx.io/worker-config"
+import {
+  ChatJobAction,
+  chatQueue,
+  NotificationJobAction,
+  notificationQueue,
+} from "@chatbotx.io/worker-config"
 import type { z } from "zod"
 import { BaseService } from "../base.service"
 import { contactInboxService } from "../contact-inbox/service"
@@ -128,6 +134,7 @@ export type WriteExternalAgentActivityInput = {
   contactInboxId: string
   event: ExternalAgentActivityEvent
   reason?: string
+  category?: ConversationHandoverCategory
   /** When set, `ContactInbox.lastMessageAt` is moved forward so the note is visible. */
   contactId?: string
 }
@@ -136,6 +143,8 @@ export type ExternalAgentHandoverInput = {
   workspaceId: string
   conversationId: string
   reason: string
+  /** Defaults to `other`. */
+  category?: ConversationHandoverCategory
 }
 
 export type ExternalAgentHandoverResult = {
@@ -464,6 +473,7 @@ export class ExternalAgentService extends BaseService {
         type: EXTERNAL_AGENT_ACTIVITY_TYPE,
         event,
         ...(reason ? { reason } : {}),
+        ...(input.category ? { category: input.category } : {}),
       },
       createdAt: now,
     })
@@ -496,7 +506,7 @@ export class ExternalAgentService extends BaseService {
   async handover(
     input: ExternalAgentHandoverInput,
   ): Promise<ExternalAgentHandoverResult> {
-    const { workspaceId, conversationId } = input
+    const { workspaceId, conversationId, category = "other" } = input
     const conversation = await conversationService.findByUncached({
       where: { id: conversationId, workspaceId },
     })
@@ -512,6 +522,8 @@ export class ExternalAgentService extends BaseService {
           { id: conversation.id, contactId: conversation.contactId },
         ],
         triggerContext: HANDOVER_TRIGGER_CONTEXT,
+        noAutoResume: true,
+        handoverCategory: category,
       })
     }
 
@@ -547,6 +559,7 @@ export class ExternalAgentService extends BaseService {
           contactId: conversation.contactId,
           event: "handover",
           reason: input.reason,
+          category,
         })
       } else {
         logger.warn(
@@ -559,6 +572,25 @@ export class ExternalAgentService extends BaseService {
         { err, conversationId },
         "External agent: unable to write the handover note",
       )
+    }
+
+    if (wasBotEnabled) {
+      await notificationQueue
+        .add(NotificationJobAction.notifyAgentHandover, {
+          type: NotificationJobAction.notifyAgentHandover,
+          data: {
+            workspaceId,
+            conversationId,
+            category,
+            reason: normalizeReason(input.reason) ?? "",
+          },
+        })
+        .catch((err: unknown) => {
+          logger.error(
+            { err, conversationId },
+            "External agent: unable to enqueue the handover notification",
+          )
+        })
     }
 
     return { conversationId, botEnabled: false }

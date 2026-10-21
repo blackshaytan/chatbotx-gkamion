@@ -251,6 +251,56 @@ describe("conversationService.updateBotEnabled resume policy", () => {
     expect(updatesByConversation().get("a")).toEqual(explicit)
   })
 
+  test("noAutoResume keeps the bot off with botResumeAt null despite the policy", async () => {
+    mocks.findResumePolicyForConversations.mockResolvedValue([
+      { conversationId: "a", resumeAfterHours: 6 },
+    ])
+
+    await conversationService.updateBotEnabled({
+      workspaceId: WORKSPACE_ID,
+      ids: ["a", "b"],
+      botEnabled: false,
+      noAutoResume: true,
+    })
+
+    expect(mocks.findResumePolicyForConversations).not.toHaveBeenCalled()
+    expect(mocks.updateSet).toHaveBeenCalledTimes(1)
+    const byId = updatesByConversation()
+    expect(byId.get("a")).toBeNull()
+    expect(byId.get("b")).toBeNull()
+  })
+
+  test("a handover category is written with the handover time", async () => {
+    await conversationService.disableBotState({
+      workspaceId: WORKSPACE_ID,
+      conversations: [{ id: "a", contactId: "contact-a" }],
+      triggerContext: TRIGGER_CONTEXT,
+      noAutoResume: true,
+      handoverCategory: "payment",
+    })
+
+    expect(mocks.updateSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        botEnabled: false,
+        botResumeAt: null,
+        handoverCategory: "payment",
+        handedOverAt: NOW,
+      }),
+    )
+  })
+
+  test("a pause without a handover category leaves the handover columns alone", async () => {
+    await conversationService.updateBotEnabled({
+      workspaceId: WORKSPACE_ID,
+      ids: ["a"],
+      botEnabled: false,
+    })
+
+    const values = mocks.updateSet.mock.calls[0]?.[0] as object
+    expect(values).not.toHaveProperty("handoverCategory")
+    expect(values).not.toHaveProperty("handedOverAt")
+  })
+
   test("enabling the bot skips the policy lookup", async () => {
     await conversationService.updateBotEnabled({
       workspaceId: WORKSPACE_ID,
@@ -264,6 +314,23 @@ describe("conversationService.updateBotEnabled resume policy", () => {
 })
 
 describe("conversationService.enableBotState external agent reset", () => {
+  test("clears the handover category and time", async () => {
+    await conversationService.enableBotState({
+      workspaceId: WORKSPACE_ID,
+      conversations: [{ id: "a", contactId: "contact-a" }],
+      triggerContext: TRIGGER_CONTEXT,
+    })
+
+    expect(mocks.updateSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        botEnabled: true,
+        botResumeAt: null,
+        handoverCategory: null,
+        handedOverAt: null,
+      }),
+    )
+  })
+
   test("resets only conversations covered by the agent policy", async () => {
     mocks.findResumePolicyForConversations.mockResolvedValue([
       { conversationId: "a", resumeAfterHours: 6 },

@@ -32,12 +32,17 @@ const mocks = vi.hoisted(() => ({
   loggerWarn: vi.fn(),
   loggerError: vi.fn(),
   chatQueueAdd: vi.fn(),
+  notificationQueueAdd: vi.fn(),
 }))
 
 vi.mock("@chatbotx.io/worker-config", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("@chatbotx.io/worker-config")>()
-  return { ...actual, chatQueue: { add: mocks.chatQueueAdd } }
+  return {
+    ...actual,
+    chatQueue: { add: mocks.chatQueueAdd },
+    notificationQueue: { add: mocks.notificationQueueAdd },
+  }
 })
 
 const TX = { tx: true }
@@ -182,6 +187,7 @@ beforeEach(() => {
   mocks.disableBotState.mockResolvedValue(undefined)
   mocks.logProviderError.mockResolvedValue(undefined)
   mocks.chatQueueAdd.mockResolvedValue(undefined)
+  mocks.notificationQueueAdd.mockResolvedValue(undefined)
 })
 
 afterEach(() => {
@@ -531,6 +537,8 @@ describe("externalAgentService.handover", () => {
         triggerHandler: "externalAgent",
         triggerType: "external_agent_handover",
       },
+      noAutoResume: true,
+      handoverCategory: "other",
     })
     expect(mocks.createOrUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -545,6 +553,7 @@ describe("externalAgentService.handover", () => {
           type: EXTERNAL_AGENT_ACTIVITY_TYPE,
           event: "handover",
           reason: "Client asks for a manager",
+          category: "other",
         },
       }),
     )
@@ -562,6 +571,69 @@ describe("externalAgentService.handover", () => {
         text: EXTERNAL_AGENT_HANDOVER_CLIENT_TEXT,
       },
     })
+    expect(mocks.notificationQueueAdd).toHaveBeenCalledOnce()
+    expect(mocks.notificationQueueAdd).toHaveBeenCalledWith(
+      "notifyAgentHandover",
+      {
+        type: "notifyAgentHandover",
+        data: {
+          workspaceId: WORKSPACE_ID,
+          conversationId: "conv-1",
+          category: "other",
+          reason: "Client asks for a manager",
+        },
+      },
+    )
+  })
+
+  test("passes the given category to the bot pause, the note and the push", async () => {
+    mocks.findByUncached.mockResolvedValue(conversation(true))
+
+    await externalAgentService.handover({
+      workspaceId: WORKSPACE_ID,
+      conversationId: "conv-1",
+      reason: "Wants a refund",
+      category: "return",
+    })
+
+    expect(mocks.disableBotState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        noAutoResume: true,
+        handoverCategory: "return",
+      }),
+    )
+    expect(mocks.createOrUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contentAttributes: expect.objectContaining({ category: "return" }),
+      }),
+    )
+    expect(mocks.notificationQueueAdd).toHaveBeenCalledWith(
+      "notifyAgentHandover",
+      expect.objectContaining({
+        data: expect.objectContaining({ category: "return" }),
+      }),
+    )
+  })
+
+  test("a failed handover notification does not fail the handover", async () => {
+    mocks.findByUncached.mockResolvedValue(conversation(true))
+    mocks.notificationQueueAdd.mockRejectedValue(new Error("redis down"))
+
+    await expect(
+      externalAgentService.handover({
+        workspaceId: WORKSPACE_ID,
+        conversationId: "conv-1",
+        reason: "Client asks for a manager",
+      }),
+    ).resolves.toEqual({ conversationId: "conv-1", botEnabled: false })
+
+    expect(mocks.loggerError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        err: expect.any(Error),
+        conversationId: "conv-1",
+      }),
+      "External agent: unable to enqueue the handover notification",
+    )
   })
 
   test("a failed confirmation send does not fail the handover", async () => {
@@ -599,6 +671,7 @@ describe("externalAgentService.handover", () => {
 
     expect(mocks.disableBotState).not.toHaveBeenCalled()
     expect(mocks.chatQueueAdd).not.toHaveBeenCalled()
+    expect(mocks.notificationQueueAdd).not.toHaveBeenCalled()
     expect(mocks.createOrUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         sourceId: `externalAgent:handover:conv-1:${MINUTE_BUCKET}`,

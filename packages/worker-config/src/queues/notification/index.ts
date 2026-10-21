@@ -1,5 +1,9 @@
-import type { ContentType } from "@chatbotx.io/database/partials"
+import {
+  type ContentType,
+  conversationHandoverCategories,
+} from "@chatbotx.io/database/partials"
 import { Queue } from "bullmq"
+import { z } from "zod"
 import {
   defaultJobOptions,
   fakeQueue,
@@ -11,6 +15,7 @@ import { queueNames } from "../../lib/types"
 export const NotificationJobAction = {
   notifyIncomingMessage: "notifyIncomingMessage",
   notifyConversationAssigned: "notifyConversationAssigned",
+  notifyAgentHandover: "notifyAgentHandover",
 } as const
 
 export type NotificationJobNotifyIncomingMessage = {
@@ -40,9 +45,25 @@ export type NotificationJobNotifyConversationAssigned = {
   }
 }
 
+export const notificationJobNotifyAgentHandoverDataSchema = z.object({
+  workspaceId: z.string(),
+  conversationId: z.string(),
+  category: conversationHandoverCategories,
+  reason: z.string(),
+})
+export type NotificationJobNotifyAgentHandoverData = z.infer<
+  typeof notificationJobNotifyAgentHandoverDataSchema
+>
+
+export type NotificationJobNotifyAgentHandover = {
+  type: typeof NotificationJobAction.notifyAgentHandover
+  data: NotificationJobNotifyAgentHandoverData
+}
+
 export type NotificationJobData =
   | NotificationJobNotifyIncomingMessage
   | NotificationJobNotifyConversationAssigned
+  | NotificationJobNotifyAgentHandover
 
 export const notificationQueue = isNoRedisEnv()
   ? fakeQueue
