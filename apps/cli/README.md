@@ -902,12 +902,30 @@ chatbotx conversations thread-control add <id> --contactInboxId <id> --action ta
 # --action sync only refreshes the stored thread owner from the channel
 ```
 
+### Conversation hand-over by the external agent (scope `inbox`)
+
+```bash
+chatbotx conversations external-agent-handover add <conversationId> --reason "<text>"
+# Pauses the bot and saves the reason as a note in the conversation. Called by the external AI agent; see docs/external-agent.md
+```
+
 ### `workspace` settings (scope `settings`)
 
 ```bash
 chatbotx workspace settings get                       # Get workspace settings
 chatbotx workspace settings update --defaultReply --defaultReplyFrequency --smartResponseDelaySeconds --capiLimitedDataUse --logo
                                                     # also --targetCountry --language --timezone --brandColor --developmentMode
+```
+
+### `external-agent` (scope `settings`)
+
+The external AI agent (Hermes) that answers client chats. See `docs/external-agent.md`.
+
+```bash
+chatbotx external-agent list                          # Get settings; null until configured. The name is derived as "list" but it returns one object
+chatbotx external-agent update --enabled <true|false> --baseUrl <url> --apiKey <key> --inboxIds '["<inboxId>"]' --resumeAfterHours <1-720> --maxRunMinutes <1-240> --progressMessage <text>
+                                                    # Only the flags you pass change; --inboxIds replaces the list ('[]' = no channels). Get inbox ids from `chatbotx inboxes list`
+chatbotx external-agent test                          # Health check of the Hermes address; stored as the last check
 ```
 
 ### `whatsapp` calls (scope `integrations`)
