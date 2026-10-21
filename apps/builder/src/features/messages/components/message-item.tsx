@@ -167,6 +167,9 @@ export const MessageItem = (props: MessageItemProps) => {
   const threadControlContext = getThreadControlContextCard(
     message.contentAttributes,
   )
+  const externalAgentActivity = getExternalAgentActivity(
+    message.contentAttributes,
+  )
   // A partner's reply seen on the standby feed: outgoing side, but in the
   // muted bubble and captioned, so it never reads as the agent's own message.
   const isPartnerEcho = isThreadControlEcho(message.contentAttributes)
@@ -178,7 +181,8 @@ export const MessageItem = (props: MessageItemProps) => {
       whatsappCall ||
       callPermissionReply ||
       threadControlActivity ||
-      threadControlContext,
+      threadControlContext ||
+      externalAgentActivity,
   )
 
   // A call card defaults to the centered `full` variant, but a call still has
