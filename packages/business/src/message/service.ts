@@ -138,6 +138,26 @@ class MessageService extends BaseService {
     return [...messages].reverse()
   }
 
+  /** Oldest first, with attachments; incoming and outgoing messages only. */
+  async listLastMessagesWithAttachments(props: {
+    tx?: DatabaseClient
+    conversationId: string
+    limit: number
+    sinceTime: Date
+    workspaceId: string
+  }): Promise<MessageWithAttachments[]> {
+    const { tx = db, conversationId, limit, sinceTime, workspaceId } = props
+    const repo = await createMessageRepository(tx)
+    const messages = await repo.findLastByConversation(conversationId, {
+      messageTypes: [messageTypes.enum.incoming, messageTypes.enum.outgoing],
+      limit,
+      sinceTime,
+      withAttachments: true,
+      workspaceId,
+    })
+    return [...messages].reverse()
+  }
+
   async listIncomingTextsByContactInbox(props: {
     tx?: DatabaseClient
     contactInboxId: string

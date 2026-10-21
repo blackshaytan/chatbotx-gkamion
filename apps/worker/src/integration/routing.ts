@@ -10,6 +10,7 @@ type IncomingRoutingDecision =
     }
   | { type: "automatedResponse"; conversation: ConversationModel }
   | { type: "handoffReentry"; conversation: ConversationModel }
+  | { type: "externalAgent"; conversation: ConversationModel }
 
 function getPendingChallenge(conversation: ConversationModel) {
   return (
@@ -38,6 +39,9 @@ export async function resolveIncomingTextRouting(props: {
   hasActionableInput: boolean
   // Automated (AI) responses stay text-driven only.
   hasText: boolean
+  // The inbox is answered by the workspace's external agent (Hermes), which
+  // also receives attachments and locations.
+  isExternalAgentInbox?: boolean
   isConversationActive: (conversation: ConversationModel) => Promise<boolean>
 }): Promise<IncomingRoutingDecision> {
   if (!props.hasActionableInput) {
@@ -57,6 +61,10 @@ export async function resolveIncomingTextRouting(props: {
   const challenge = getPendingChallenge(conversation)
   if (challenge) {
     return { type: "challenge", conversation, challenge }
+  }
+
+  if (props.isExternalAgentInbox) {
+    return { type: "externalAgent", conversation }
   }
 
   if (!props.hasText) {

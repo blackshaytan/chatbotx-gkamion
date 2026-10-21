@@ -170,6 +170,25 @@ export const resolveAttachmentFallbackUrl = async (
   )
 }
 
+/** Signed media-proxy URL of one attachment, valid for `ttlMs`, on any channel. */
+export const buildAttachmentProxyUrl = async (
+  ref: {
+    workspaceId: string
+    attachmentId: string
+    messageCreatedAt?: Date
+  },
+  ttlMs: number,
+): Promise<string> =>
+  await buildProxyUrl(
+    {
+      kind: "attachment",
+      refId: ref.attachmentId,
+      workspaceId: ref.workspaceId,
+      messageCreatedAt: ref.messageCreatedAt?.getTime(),
+    },
+    ttlMs,
+  )
+
 const resolveAvatarUrl = async (
   ref: AvatarMediaRef,
   finalize: FinalizeMediaUrl,

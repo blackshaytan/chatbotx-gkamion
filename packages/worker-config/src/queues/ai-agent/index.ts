@@ -22,7 +22,11 @@ export const AIJobAction = {
   commentAIReply: "commentAIReply",
   processStoryReplyAutomation: "processStoryReplyAutomation",
   processStoryMentionAutomation: "processStoryMentionAutomation",
+  externalAgentReply: "externalAgentReply",
+  externalAgentWatch: "externalAgentWatch",
 } as const
+
+const EXTERNAL_AGENT_REPLY_DELAY_MS = 5000
 
 export const aiJobSummarizeConversationDataSchema = z.object({
   conversationId: z.string().min(1),
@@ -133,6 +137,26 @@ const aiJobProcessStoryMentionAutomationSchema = z.object({
   }),
 })
 
+const externalAgentJobDataSchema = z.object({
+  workspaceId: z.string().min(1),
+  conversationId: z.string().min(1),
+  contactInboxId: z.string().min(1),
+})
+
+const aiJobExternalAgentReplySchema = z.object({
+  type: z.literal(AIJobAction.externalAgentReply),
+  data: externalAgentJobDataSchema.extend({
+    messageId: z.string().min(1),
+  }),
+})
+
+const aiJobExternalAgentWatchSchema = z.object({
+  type: z.literal(AIJobAction.externalAgentWatch),
+  data: externalAgentJobDataSchema.extend({
+    runId: z.string().min(1),
+  }),
+})
+
 export const aiJobDataSchema = z.discriminatedUnion("type", [
   aiJobProcessFileSchema,
   aiJobProcessPendingEmbeddingSchema,
@@ -144,6 +168,8 @@ export const aiJobDataSchema = z.discriminatedUnion("type", [
   aiJobCommentAIReplySchema,
   aiJobProcessStoryReplyAutomationSchema,
   aiJobProcessStoryMentionAutomationSchema,
+  aiJobExternalAgentReplySchema,
+  aiJobExternalAgentWatchSchema,
 ])
 
 export type AIJobData = z.infer<typeof aiJobDataSchema>
@@ -174,9 +200,62 @@ export type AIJobProcessStoryMentionAutomation = z.infer<
   typeof aiJobProcessStoryMentionAutomationSchema
 >
 
+export type AIJobExternalAgentReply = z.infer<
+  typeof aiJobExternalAgentReplySchema
+>
+export type AIJobExternalAgentWatch = z.infer<
+  typeof aiJobExternalAgentWatchSchema
+>
+export type ExternalAgentReplyData = AIJobExternalAgentReply["data"]
+export type ExternalAgentWatchData = AIJobExternalAgentWatch["data"]
+
 export const aiAgentQueue = isNoRedisEnv()
   ? fakeQueue
   : new Queue<AIJobData>(queueNames.enum.aiAgent, {
       connection: getQueueConnection(queueNames.enum.aiAgent),
       defaultJobOptions,
     })
+
+/**
+ * One pending reply per conversation, debounced by 5 s (the latest message
+ * wins). No custom `jobId`: BullMQ checks an existing id before deduplication,
+ * so a fixed id would swallow every add instead of replacing the delayed job.
+ * `keepLastIfActive` keeps one follow-up while a reply is running, so an add
+ * from inside a running reply (or while it runs) is not dropped.
+ */
+export const enqueueExternalAgentReply = (data: ExternalAgentReplyData) =>
+  aiAgentQueue.add(
+    AIJobAction.externalAgentReply,
+    { type: AIJobAction.externalAgentReply, data },
+    {
+      delay: EXTERNAL_AGENT_REPLY_DELAY_MS,
+      deduplication: {
+        id: `externalAgentReply-${data.conversationId}`,
+        ttl: EXTERNAL_AGENT_REPLY_DELAY_MS,
+        extend: true,
+        replace: true,
+        keepLastIfActive: true,
+      },
+      attempts: 4,
+      backoff: { type: "exponential", delay: 30_000 },
+      removeOnComplete: true,
+      removeOnFail: 100,
+    },
+  )
+
+export const enqueueExternalAgentWatch = (
+  data: ExternalAgentWatchData,
+  delay = 0,
+) =>
+  aiAgentQueue.add(
+    AIJobAction.externalAgentWatch,
+    { type: AIJobAction.externalAgentWatch, data },
+    {
+      jobId: `externalAgentWatch-${data.conversationId}-${data.runId}-${Date.now()}`,
+      delay,
+      attempts: 3,
+      backoff: { type: "exponential", delay: 10_000 },
+      removeOnComplete: true,
+      removeOnFail: 100,
+    },
+  )

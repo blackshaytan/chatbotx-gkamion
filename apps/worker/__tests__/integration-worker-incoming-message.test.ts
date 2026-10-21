@@ -162,6 +162,10 @@ vi.mock("../src/integration/routing", async (importOriginal) => ({
   resolveIncomingTextRouting: mockResolveIncomingTextRouting,
 }))
 
+vi.mock("../src/integration/external-agent-inbox", () => ({
+  isExternalAgentInbox: vi.fn().mockResolvedValue(false),
+}))
+
 vi.mock("../src/integration/utils/message", () => ({
   closeChatQueueEvents: vi.fn().mockResolvedValue(undefined),
 }))

@@ -14,6 +14,7 @@ import {
   closeHeavyQueueEvents,
   closeIntegrationQueueEvents,
   defaultWorkerOptions,
+  enqueueExternalAgentReply,
   getHeavyJobCompletionWaitTimeoutMs,
   getQueueConnection,
   HeavyJobAction,
@@ -34,6 +35,7 @@ import { logger } from "../lib/logger"
 import { resolveWorkspaceId } from "../lib/resolve-workspace-id"
 import { runJobWithAuditContext } from "../lib/run-job-with-audit-context"
 import { integrationService } from "../services/integrations"
+import { isExternalAgentInbox } from "./external-agent-inbox"
 import { mintRandomFlowExecutionKey } from "./flow-execution-key"
 import { handleAdsAutomaticEvent } from "./handlers/ads-automatic-event"
 import { dispatchAdsConversionJob } from "./handlers/ads-conversion/registry"
@@ -239,13 +241,19 @@ async function startIntegrationWorker() {
                 return
               }
 
+              const hasActionableInput = Boolean(
+                isFromContact && (message.text || hasAttachment || isLocation),
+              )
               const routing = await resolveIncomingTextRouting({
                 conversation,
-                hasActionableInput: Boolean(
-                  isFromContact &&
-                    (message.text || hasAttachment || isLocation),
-                ),
+                hasActionableInput,
                 hasText: Boolean(isFromContact && message.text),
+                isExternalAgentInbox:
+                  hasActionableInput &&
+                  (await isExternalAgentInbox({
+                    conversation,
+                    contactInboxId: message.contactInboxId,
+                  })),
                 isConversationActive: (conversation) =>
                   conversationService.ensureActive(conversation),
               })
@@ -281,6 +289,13 @@ async function startIntegrationWorker() {
                   contactInboxId: message.contactInboxId,
                   messageId: message.id,
                   workspaceId: routing.conversation.workspaceId,
+                })
+              } else if (routing.type === "externalAgent") {
+                await enqueueExternalAgentReply({
+                  workspaceId: routing.conversation.workspaceId,
+                  conversationId: routing.conversation.id,
+                  contactInboxId: message.contactInboxId,
+                  messageId: message.id,
                 })
               } else if (isNotPostbackOrQuickReply) {
                 // Track no response for messages without content or not from contact

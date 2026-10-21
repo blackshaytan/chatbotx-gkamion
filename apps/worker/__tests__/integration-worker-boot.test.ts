@@ -272,6 +272,9 @@ vi.mock("../src/integration/routing", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../src/integration/routing")>()),
   resolveIncomingTextRouting: vi.fn(),
 }))
+vi.mock("../src/integration/external-agent-inbox", () => ({
+  isExternalAgentInbox: vi.fn(async () => false),
+}))
 vi.mock("../src/integration/utils/message", () => ({
   closeChatQueueEvents: vi.fn(async () => undefined),
 }))

@@ -11,9 +11,12 @@ import {
 } from "@chatbotx.io/database/partials"
 import {
   createMessageRepository,
+  type ExternalAgentConversationStatePatch,
   externalAgentRepository,
+  externalAgentStateRepository,
 } from "@chatbotx.io/database/repositories"
 import type {
+  ExternalAgentConversationStateModel,
   ExternalAgentModel,
   MessageModel,
 } from "@chatbotx.io/database/types"
@@ -406,6 +409,32 @@ export class ExternalAgentService extends BaseService {
       return null
     }
     return { agent, client: await this.createClient(agent) }
+  }
+
+  async findConversationState(input: {
+    workspaceId: string
+    conversationId: string
+  }): Promise<ExternalAgentConversationStateModel | undefined> {
+    return await externalAgentStateRepository.find(input)
+  }
+
+  async saveConversationState(
+    values: ExternalAgentConversationStatePatch & {
+      workspaceId: string
+      conversationId: string
+    },
+  ): Promise<void> {
+    await externalAgentStateRepository.upsert(values)
+  }
+
+  /** Returns the number of updated rows; `0` when `expectedRunId` no longer matches. */
+  async patchConversationState(input: {
+    workspaceId: string
+    conversationId: string
+    values: ExternalAgentConversationStatePatch
+    expectedRunId?: string
+  }): Promise<number> {
+    return await externalAgentStateRepository.patch(input)
   }
 
   /** Writes the inbox note; `true` when new (a repeat within the same minute is not duplicated). */
