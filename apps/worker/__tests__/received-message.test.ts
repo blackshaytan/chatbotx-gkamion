@@ -497,6 +497,9 @@ vi.mock("@chatbotx.io/encryption", () => ({
 vi.mock("@chatbotx.io/worker-config", () => ({
   // `logProviderError` short-circuits on this, as `defaultQueue` does.
   isNoRedisEnv: () => true,
+  notificationQueue: {
+    add: mockNotificationQueueAdd,
+  },
   ChatJobAction: {
     sendChatMessage: "sendChatMessage",
     checkOutboundAutomatedResponse: "checkOutboundAutomatedResponse",
@@ -611,6 +614,11 @@ vi.mock("../src/integration/handlers/comment-automation", async () => {
 
 const mockAwardCommentLeaderboard = vi.fn().mockResolvedValue(undefined)
 const mockAwardInboundMessageLeaderboard = vi.fn().mockResolvedValue(undefined)
+const mockNotificationQueueAdd = vi.fn().mockResolvedValue(undefined)
+const mockIsExternalAgentInbox = vi.fn().mockResolvedValue(false)
+vi.mock("../src/integration/external-agent-inbox", () => ({
+  isExternalAgentInbox: mockIsExternalAgentInbox,
+}))
 const mockAwardReactionLeaderboard = vi.fn().mockResolvedValue(undefined)
 vi.mock("../src/integration/handlers/leaderboard-sources", () => ({
   awardCommentLeaderboard: mockAwardCommentLeaderboard,
@@ -866,6 +874,71 @@ describe("receiveMessage — message repository branch", () => {
     await receiveMessage(baseProps)
 
     expect(mockAwardInboundMessageLeaderboard).not.toHaveBeenCalled()
+  })
+
+  describe("incoming message push for external agent inboxes", () => {
+    const incomingPushJobs = () =>
+      mockNotificationQueueAdd.mock.calls.filter(
+        ([jobName]) => jobName === "notifyIncomingMessage",
+      )
+
+    beforeEach(() => {
+      mockRunChannelHandler.mockResolvedValue({
+        message: { ...baseIncomingMessage, attachments: [] },
+        contact: { sourceId: "psid-123", firstName: "Test" },
+        postbackAction: null,
+        quickReplyAction: null,
+        ref: null,
+      })
+    })
+
+    afterEach(() => {
+      mockIsExternalAgentInbox.mockResolvedValue(false)
+    })
+
+    test("skips the incoming push while the agent inbox's bot is active", async () => {
+      mockIsExternalAgentInbox.mockResolvedValue(true)
+      mockConversationFindOrCreate.mockResolvedValue({
+        ...fakeConversation,
+        botEnabled: true,
+        botResumeAt: null,
+      })
+
+      await receiveMessage(baseProps)
+
+      expect(mockIsExternalAgentInbox).toHaveBeenCalledWith({
+        conversation: expect.objectContaining({ id: "conv-1" }),
+        contactInboxId: "ci-1",
+      })
+      expect(incomingPushJobs()).toHaveLength(0)
+    })
+
+    test("sends the incoming push once the bot is off", async () => {
+      mockIsExternalAgentInbox.mockResolvedValue(true)
+      mockConversationFindOrCreate.mockResolvedValue({
+        ...fakeConversation,
+        botEnabled: false,
+        botResumeAt: null,
+      })
+
+      await receiveMessage(baseProps)
+
+      expect(mockIsExternalAgentInbox).not.toHaveBeenCalled()
+      expect(incomingPushJobs()).toHaveLength(1)
+    })
+
+    test("keeps the incoming push for an inbox without an external agent", async () => {
+      mockIsExternalAgentInbox.mockResolvedValue(false)
+      mockConversationFindOrCreate.mockResolvedValue({
+        ...fakeConversation,
+        botEnabled: true,
+        botResumeAt: null,
+      })
+
+      await receiveMessage(baseProps)
+
+      expect(incomingPushJobs()).toHaveLength(1)
+    })
   })
 
   describe("Google click referral persistence", () => {

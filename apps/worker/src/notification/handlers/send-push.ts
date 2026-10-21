@@ -25,7 +25,10 @@ const resolveRecipientUserIds = async (
     return [job.data.assignedUserId]
   }
 
-  const excludeUserId = job.data.excludeUserId
+  // Only incoming messages can echo back from the acting user; the handover
+  // push goes to the same recipients as any other message.
+  const excludeUserId =
+    job.type === "notifyIncomingMessage" ? job.data.excludeUserId : undefined
   const recipientUserIds = conversation.assignedUserId
     ? [conversation.assignedUserId]
     : await workspaceMemberService.listUserIdsByWorkspaceId({

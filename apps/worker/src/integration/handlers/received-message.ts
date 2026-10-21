@@ -127,6 +127,11 @@ import {
   isInstagramViaFacebook,
   resolveIntegrationContextFromContactInbox,
 } from "../../services/integrations"
+import { isExternalAgentInbox } from "../external-agent-inbox"
+import {
+  isBotActiveForConversation,
+  shouldSendIncomingMessagePush,
+} from "../incoming-push-policy"
 import { isCommentReply, processCommentAutomation } from "./comment-automation"
 import { resolveLiveComment } from "./comment-automation/live-comment"
 import { runAsMissedCommentReplay } from "./comment-automation/replay-priority"
@@ -1303,11 +1308,27 @@ const persistMessage = async (
   }
 
   if (isNew && inbound) {
-    await enqueueIncomingNotification({
-      workspaceId: inbox.workspaceId,
-      conversationId: conversation.id,
-      message,
-    })
+    // The agent lookup only matters while the bot is active, so skip the query
+    // otherwise: the push is sent either way in that case.
+    const isAgentInbox =
+      isBotActiveForConversation(conversation) &&
+      (await isExternalAgentInbox({
+        conversation,
+        contactInboxId: contactInbox.id,
+      }))
+
+    if (
+      shouldSendIncomingMessagePush({
+        conversation,
+        isExternalAgentInbox: isAgentInbox,
+      })
+    ) {
+      await enqueueIncomingNotification({
+        workspaceId: inbox.workspaceId,
+        conversationId: conversation.id,
+        message,
+      })
+    }
   }
 
   if (isNew) {

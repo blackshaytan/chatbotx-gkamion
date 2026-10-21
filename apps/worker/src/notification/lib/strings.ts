@@ -1,3 +1,5 @@
+import type { ConversationHandoverCategory } from "@chatbotx.io/database/partials"
+
 const russianPluralRules = new Intl.PluralRules("ru")
 const russianAttachmentWords: Record<Intl.LDMLPluralRule, string> = {
   zero: "вложений",
@@ -188,3 +190,23 @@ const resolveLocale = (language: string | undefined): Locale =>
 
 export const t = (language: string | undefined) =>
   strings[resolveLocale(language)]
+
+export const HANDOVER_REASON_MAX_LENGTH = 150
+
+/**
+ * Agent-handover push copy, in Russian regardless of the workspace language.
+ * Unlike the per-locale strings above, this copy is not localized.
+ */
+export const agentHandoverStrings = {
+  titlePrefix: "ИИ-агент передал диалог",
+  unknownContactName: "Клиент",
+  categoryLabels: {
+    urgent: "Срочно",
+    return: "Возврат",
+    payment: "Оплата",
+    orderStatus: "Статус заказа",
+    delivery: "Доставка",
+    priceAndTerm: "Цена и срок",
+    other: "Прочее",
+  } satisfies Record<ConversationHandoverCategory, string>,
+} as const

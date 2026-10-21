@@ -1,6 +1,9 @@
 import type { ContentType } from "@chatbotx.io/database/partials"
-import type { NotificationJobData } from "@chatbotx.io/worker-config"
-import { t } from "./strings"
+import type {
+  NotificationJobData,
+  NotificationJobNotifyAgentHandoverData,
+} from "@chatbotx.io/worker-config"
+import { agentHandoverStrings, HANDOVER_REASON_MAX_LENGTH, t } from "./strings"
 
 const resolveIncomingMessageBody = (
   strings: ReturnType<typeof t>,
@@ -28,6 +31,20 @@ const resolveIncomingMessageBody = (
   return ""
 }
 
+const buildAgentHandoverContent = (
+  data: NotificationJobNotifyAgentHandoverData,
+  contactFullName: string | null | undefined,
+): { title: string; body: string } => {
+  const contactName =
+    contactFullName?.trim() || agentHandoverStrings.unknownContactName
+  const categoryLabel = agentHandoverStrings.categoryLabels[data.category]
+
+  return {
+    title: `${agentHandoverStrings.titlePrefix}: ${contactName} · ${categoryLabel}`,
+    body: Array.from(data.reason).slice(0, HANDOVER_REASON_MAX_LENGTH).join(""),
+  }
+}
+
 export const buildNotificationContent = (props: {
   job: NotificationJobData
   contactFullName: string | null | undefined
@@ -41,6 +58,10 @@ export const buildNotificationContent = (props: {
       title: contactFullName ?? strings.newMessage,
       body: strings.assignedConversation,
     }
+  }
+
+  if (job.type === "notifyAgentHandover") {
+    return buildAgentHandoverContent(job.data, contactFullName)
   }
 
   return {
