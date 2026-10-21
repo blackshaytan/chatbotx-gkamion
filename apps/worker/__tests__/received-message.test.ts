@@ -500,6 +500,9 @@ vi.mock("@chatbotx.io/worker-config", () => ({
   notificationQueue: {
     add: mockNotificationQueueAdd,
   },
+  NotificationJobAction: {
+    notifyIncomingMessage: "notifyIncomingMessage",
+  },
   ChatJobAction: {
     sendChatMessage: "sendChatMessage",
     checkOutboundAutomatedResponse: "checkOutboundAutomatedResponse",
