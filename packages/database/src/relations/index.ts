@@ -64,6 +64,7 @@ import { tenantHelpItemRelations } from "./enterprise/tenant-help-item"
 import { userQuotaRelations } from "./enterprise/user-quota"
 import { workspaceUsageRelations } from "./enterprise/workspace-usage"
 import { errorLogRelations } from "./error-log"
+import { externalAgentRelations } from "./external-agent"
 import { externalWebhookRelations } from "./external-webhook"
 import { facebookLeadAdsAutomationRelations } from "./facebook-lead-ads-automation"
 import { facebookLeadAdsLeadRelations } from "./facebook-lead-ads-lead"
@@ -290,6 +291,7 @@ export const relations = {
   ...triggerRelations,
   ...webhookRelations,
   ...webhookExecutionRelations,
+  ...externalAgentRelations,
   ...externalWebhookRelations,
   ...conditionRelations,
   ...triggerStatsRelations,
