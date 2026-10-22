@@ -225,7 +225,7 @@ const normalizeReason = (reason: string | undefined): string | undefined => {
 }
 
 const normalizeBotName = (value: string | null): string | null => {
-  const name = value.trim()
+  const name = value?.trim()
   if (!name) {
     return null
   }

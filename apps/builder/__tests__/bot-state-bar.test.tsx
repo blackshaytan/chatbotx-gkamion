@@ -152,6 +152,7 @@ describe("BotStateBar", () => {
       botResumeAt: null,
       handoverCategory: null,
       handedOverAt: null,
+      managerJoinedAt: null,
     })
     expect(invalidateContactsMock).toHaveBeenCalledTimes(1)
   })
