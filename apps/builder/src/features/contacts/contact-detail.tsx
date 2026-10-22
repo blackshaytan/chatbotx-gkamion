@@ -1,11 +1,5 @@
 "use client"
 
-import {
-  contactLanguageOptions,
-  contactTimezoneOptions,
-  normalizeStoredTimezone,
-  offsetFromStoredTimezone,
-} from "@chatbotx.io/business/contact-locale"
 import type {
   ChannelType,
   CustomFieldType,
@@ -36,18 +30,15 @@ import {
 } from "@chatbotx.io/utils/datetime"
 import {
   AtSignIcon,
-  ClockIcon,
   FingerprintIcon,
   IdCardIcon,
-  LanguagesIcon,
   type LucideIcon,
   MegaphoneIcon,
   PhoneIcon,
   TextIcon,
-  UserRoundIcon,
 } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { RequestCallPermissionDialog } from "@/features/integration-whatsapp/calling/request-call-permission-dialog"
 import { useOutboundCallMode } from "@/features/integration-whatsapp/calling/voip/use-outbound-call-mode"
@@ -100,56 +91,6 @@ function ReadOnlyFieldValue({
       {children}
     </div>
   )
-}
-
-const formatGender = (
-  gender: string | null | undefined,
-  t: (key: string) => string,
-) => {
-  switch (gender) {
-    case "male":
-    case "female":
-    case "unknown":
-      return t(`fields.gender.${gender}`)
-    default:
-      return gender
-  }
-}
-
-const formatTimezoneOffset = (timezone: string | null | undefined) => {
-  const offset = offsetFromStoredTimezone(timezone)
-  if (!offset) {
-    return null
-  }
-
-  return offset.startsWith("-") || offset.startsWith("+")
-    ? `UTC${offset}`
-    : `UTC+${offset}`
-}
-
-const formatTimezoneLabel = (timezone: string | null | undefined) => {
-  const normalizedTimezone = normalizeStoredTimezone(timezone)
-  if (!normalizedTimezone) {
-    return normalizedTimezone
-  }
-
-  const offsetLabel = formatTimezoneOffset(normalizedTimezone)
-  return offsetLabel
-    ? `${normalizedTimezone} (${offsetLabel})`
-    : normalizedTimezone
-}
-
-const timezoneOptions = contactTimezoneOptions.map((option) => ({
-  label: formatTimezoneLabel(option.value) ?? option.label,
-  value: option.value,
-}))
-
-const getLanguageLabel = (
-  language: string | null | undefined,
-  t: (key: string) => string,
-) => {
-  const option = contactLanguageOptions.find((item) => item.value === language)
-  return option ? t(option.labelKey) : language
 }
 
 type ScopedIdentityRowConfig = {
@@ -458,43 +399,11 @@ export const ContactDetail = ({
     setTimezone(getBrowserTimezone())
   }, [])
 
-  const genderOptions = useMemo(
-    () => [
-      { label: t("fields.gender.male"), value: "male" },
-      { label: t("fields.gender.female"), value: "female" },
-      { label: t("fields.gender.unknown"), value: "unknown" },
-    ],
-    [t],
-  )
-
-  const languageOptions = useMemo(
-    () =>
-      contactLanguageOptions.map((option) => ({
-        label: t(option.labelKey),
-        value: option.value,
-      })),
-    [t],
-  )
-
-  const getContactFieldDisplayValue = (
-    key: string,
-    value: string,
-    type: CustomFieldType,
-  ) => {
-    switch (key) {
-      case "language":
-        return getLanguageLabel(value, t)
-      case "gender":
-        return formatGender(value, t)
-      case "timezone":
-        return formatTimezoneLabel(value)
-      default:
-        return formatCustomFieldDisplayValue(type, value, timezone, {
-          false: t("fields.boolean.false"),
-          true: t("fields.boolean.true"),
-        })
-    }
-  }
+  const getContactFieldDisplayValue = (value: string, type: CustomFieldType) =>
+    formatCustomFieldDisplayValue(type, value, timezone, {
+      false: t("fields.boolean.false"),
+      true: t("fields.boolean.true"),
+    })
 
   const handleCustomFieldDeleted = (customFieldId: string) => {
     setContactFields((previous) =>
@@ -522,7 +431,7 @@ export const ContactDetail = ({
               formValue: value,
               value: isTemporalCustomFieldType(field.type)
                 ? formatCustomFieldValueInTimeZone(field.type, value, timezone)
-                : getContactFieldDisplayValue(fieldKey, value, field.type),
+                : getContactFieldDisplayValue(value, field.type),
             }
           : field,
       ),
@@ -601,36 +510,6 @@ export const ContactDetail = ({
               ]
             : []),
           {
-            key: "language",
-            icon: LanguagesIcon,
-            label: t("fields.language.label"),
-            value: getLanguageLabel(activeContactInbox?.language, t),
-            formValue: activeContactInbox?.language,
-            contactInboxId: activeContactInbox?.id,
-            options: languageOptions,
-            type: "shortText",
-          },
-          {
-            key: "gender",
-            icon: UserRoundIcon,
-            label: t("fields.gender.label"),
-            value: formatGender(conversation.contact.gender, t),
-            formValue: conversation.contact.gender,
-            options: genderOptions,
-            type: "shortText",
-          },
-          {
-            key: "timezone",
-            icon: ClockIcon,
-            label: t("fields.timezone.label"),
-            value: formatTimezoneLabel(conversation.contact.timezone),
-            formValue:
-              normalizeStoredTimezone(conversation.contact.timezone) ??
-              conversation.contact.timezone,
-            options: timezoneOptions,
-            type: "shortText",
-          },
-          {
             key: "email",
             icon: AtSignIcon,
             label: t("fields.email.label"),
@@ -697,15 +576,7 @@ export const ContactDetail = ({
     } else {
       setContactFields([])
     }
-  }, [
-    activeConversationId,
-    conversations,
-    contact,
-    genderOptions,
-    languageOptions,
-    timezone,
-    t,
-  ])
+  }, [activeConversationId, conversations, contact, timezone, t])
 
   return contact ? (
     <div className="flex flex-col">
