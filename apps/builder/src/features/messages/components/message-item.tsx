@@ -56,6 +56,7 @@ import type { AttachmentResource } from "@/features/attachments/schema/resource"
 import { useAttachmentSource } from "@/features/attachments/utils"
 import { ExternalAgentActivityDivider } from "@/features/external-agent/components/external-agent-activity"
 import { getExternalAgentActivity } from "@/features/external-agent/lib/activity"
+import { formatMessageTime } from "../lib/format-message-time"
 import {
   getThreadControlActivity,
   getThreadControlContextCard,
@@ -198,6 +199,16 @@ export const MessageItem = (props: MessageItemProps) => {
   }
 
   const createdAt = new Date(message.createdAt)
+  // A plain text bubble holds the time at its bottom-right. Media, cards,
+  // comments and rich messages have no text box that can hold it, so the time
+  // closes the message below its content instead.
+  const hasTextBubble =
+    !isComment && (isDeleted || Boolean(message.text)) && !suppressRawText
+  const isTimeInTextBubble =
+    variant !== "full" &&
+    hasTextBubble &&
+    !hasAttachments &&
+    !message.contentAttributes
 
   return (
     <MessageBubble className="group" variant={variant}>
@@ -266,6 +277,7 @@ export const MessageItem = (props: MessageItemProps) => {
                 <div
                   className={cn(
                     "text-sm",
+                    isTimeInTextBubble && "flex flex-col gap-1",
                     isPartnerEcho ? variants.left : variants[variant],
                     isDeleted && "opacity-50",
                   )}
@@ -279,6 +291,7 @@ export const MessageItem = (props: MessageItemProps) => {
                       message.text
                     )}
                   </pre>
+                  {isTimeInTextBubble && <MessageTime createdAt={createdAt} />}
                 </div>
               )}
             {!isDeleted && hasAttachments && !whatsappCall && (
@@ -287,6 +300,9 @@ export const MessageItem = (props: MessageItemProps) => {
           </>
         )}
         {RenderContentAttributes(props)}
+        {variant !== "full" && !isTimeInTextBubble && (
+          <MessageTime createdAt={createdAt} />
+        )}
       </div>
 
       <div className="flex">
@@ -378,29 +394,34 @@ export const MessageItem = (props: MessageItemProps) => {
           />
         )}
       </div>
-      {variant !== "full" && (
-        // Sits beside the bubble (after it for incoming, before it for
-        // outgoing via the reversed row) and appears the moment the bubble
-        // is hovered, or when one of its action buttons has keyboard focus —
-        // an OS `title` tooltip waits about a second.
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <time
-                className="self-center whitespace-nowrap text-muted-foreground text-xs opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
-                dateTime={createdAt.toISOString()}
-                suppressHydrationWarning
-              >
-                {format(createdAt, "HH:mm")}
-              </time>
-            }
-          />
-          <TooltipContent side="top">
-            {format(createdAt, "yyyy/MM/dd HH:mm:ss")}
-          </TooltipContent>
-        </Tooltip>
-      )}
     </MessageBubble>
+  )
+}
+
+/**
+ * Always-visible send time of a chat message, bottom-right of its bubble. The
+ * tooltip keeps the full timestamp with seconds.
+ */
+const MessageTime = (props: { createdAt: Date }) => {
+  const { createdAt } = props
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <time
+            className="self-end whitespace-nowrap text-xs opacity-70"
+            dateTime={createdAt.toISOString()}
+            suppressHydrationWarning
+          >
+            {formatMessageTime(createdAt, new Date())}
+          </time>
+        }
+      />
+      <TooltipContent side="top">
+        {format(createdAt, "yyyy/MM/dd HH:mm:ss")}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 

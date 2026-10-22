@@ -85,6 +85,9 @@ type CopyableMediaLibraryFile = {
   size: number
 }
 
+/** Lets the "manager joined" notice reach the client before the manager's first reply. */
+const MANAGER_JOIN_REPLY_DELAY_MS = 2000
+
 const copyMediaLibraryFileToConversationAttachment = async (props: {
   mediaLibraryFile: CopyableMediaLibraryFile
   workspaceId: string
@@ -318,6 +321,21 @@ export const createOutgoing = async (props: {
     },
   })
 
+  // The chat queue has no ordering guarantee across concurrent workers, so the
+  // reply is delayed when a join notice was enqueued, letting the notice reach
+  // the client first. Public comment replies are skipped: the notice is a
+  // direct-message text, not a comment.
+  const isPublicCommentReply =
+    messageInput.type === "comment" && parsedInput.isPrivateReply !== true
+  const announcedManagerJoin =
+    user && !isPublicCommentReply
+      ? await conversationService.announceManagerJoined({
+          workspaceId: conversation.workspaceId,
+          conversationId: targetConversation.id,
+          userId: user.id,
+        })
+      : false
+
   const attachments =
     "attachments" in message && Array.isArray(message.attachments)
       ? message.attachments
@@ -361,7 +379,9 @@ export const createOutgoing = async (props: {
         },
         ...(contactInbox.channel === "threads" && message.type === "comment"
           ? [{ attempts: 1 }]
-          : []),
+          : announcedManagerJoin
+            ? [{ delay: MANAGER_JOIN_REPLY_DELAY_MS }]
+            : []),
       ),
     },
     ...(user && messageInput.text && !productMessage

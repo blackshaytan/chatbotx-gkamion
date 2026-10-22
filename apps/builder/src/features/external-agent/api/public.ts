@@ -27,7 +27,7 @@ export const externalAgentPublicRouter = {
       path: "/v1/external-agent",
       summary: "Get external agent settings",
       description:
-        "Returns the external AI agent (Hermes) settings of the workspace: whether it is enabled, its base URL, the inboxes where it answers, and its run limits. `apiKey` is write-only and is never returned; `hasApiKey` says whether one is stored. Returns null until the agent is configured with `externalAgent.update`. Inbox ids come from `inboxes.list`.",
+        "Returns the external AI agent (Hermes) settings of the workspace: whether it is enabled, its base URL, the inboxes where it answers, its run limits, and the client-facing signature (`botName`, `signMessages`) and manager notice (`announceManager`). `apiKey` is write-only and is never returned; `hasApiKey` says whether one is stored. Returns null until the agent is configured with `externalAgent.update`. Inbox ids come from `inboxes.list`.",
       tags: ["External Agent"],
     })
     .output(externalAgentOutputSchema.nullable())
@@ -43,7 +43,7 @@ export const externalAgentPublicRouter = {
       path: "/v1/external-agent",
       summary: "Update external agent settings",
       description:
-        "Changes the external AI agent (Hermes) settings. Only the fields you send change. Send `apiKey` to store or replace the key; it is write-only and never returned. Inbox ids come from `inboxes.list`. Read the current values with `externalAgent.get` first.",
+        "Changes the external AI agent (Hermes) settings. Only the fields you send change. Send `apiKey` to store or replace the key; it is write-only and never returned. Set `botName` with `signMessages` to sign client replies with the agent's name, and `announceManager` to tell the client once which manager took over. Inbox ids come from `inboxes.list`. Read the current values with `externalAgent.get` first.",
       tags: ["External Agent"],
     })
     .input(updateExternalAgentInputSchema)

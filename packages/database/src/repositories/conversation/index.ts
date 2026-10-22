@@ -1,1 +1,5 @@
-export { assignTargetIfUnassigned, assignUserIfUnassigned } from "./repository"
+export {
+  assignTargetIfUnassigned,
+  assignUserIfUnassigned,
+  claimManagerJoinedAt,
+} from "./repository"

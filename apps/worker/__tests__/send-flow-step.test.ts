@@ -1879,6 +1879,35 @@ describe("sendChatMessage", () => {
     })
   })
 
+  test("forwards the external agent sign marker to the channel send", async () => {
+    await sendChatMessage({
+      conversation: fakeConversation as never,
+      contactInbox: fakeContactInbox as never,
+      text: "agent reply",
+      signAs: "externalAgent",
+    })
+
+    expect(mockSendMessageToChannel).toHaveBeenCalledWith(
+      expect.objectContaining({ signAs: "externalAgent" }),
+      0,
+      expect.any(Boolean),
+    )
+  })
+
+  test("sends without a sign marker when the chat job has none", async () => {
+    await sendChatMessage({
+      conversation: fakeConversation as never,
+      contactInbox: fakeContactInbox as never,
+      text: "plain chat message",
+    })
+
+    expect(mockSendMessageToChannel).toHaveBeenCalledWith(
+      expect.objectContaining({ signAs: undefined }),
+      0,
+      expect.any(Boolean),
+    )
+  })
+
   test("keeps a broadcast continuation visible in realtime and the inbox sort", async () => {
     await sendChatMessage({
       conversation: fakeConversation as never,

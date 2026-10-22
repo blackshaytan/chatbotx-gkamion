@@ -56,6 +56,7 @@ import {
   allIntegrations,
   resolveIntegrationContextFromContactInbox,
 } from "../../services/integrations"
+import { resolveSignedMessage } from "../lib/resolve-sender-signature"
 import {
   shouldSuppressRetryableChannelError,
   willSendRetry,
@@ -197,6 +198,7 @@ export async function sendMessageToChannel(
     metadata,
     isBulkBroadcast,
     sendFrom,
+    signAs,
   } = data
   const isBulkOutbound =
     isBulkOutboundMetadata(metadata, isBulkBroadcast) ||
@@ -273,6 +275,14 @@ export async function sendMessageToChannel(
       }
     }
 
+    // The channel gets the signed text; the stored row keeps the original.
+    const signedHandlerMessage = await resolveSignedMessage({
+      workspaceId: conversation.workspaceId,
+      inboxId: contactInbox.inboxId,
+      message: handlerMessage,
+      signAs,
+    })
+
     const handlerData = {
       ctx,
       data: {
@@ -280,7 +290,7 @@ export async function sendMessageToChannel(
           ...contactInbox,
           sourceConversationId: resolveChannelConversationId(conversation),
         },
-        message: handlerMessage,
+        message: signedHandlerMessage,
         quickReplies: isComment ? undefined : quickReplies,
         metadata,
         sendFrom,

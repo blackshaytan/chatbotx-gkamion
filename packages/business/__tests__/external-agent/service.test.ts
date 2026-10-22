@@ -135,6 +135,9 @@ const makeAgent = (
     baseUrl: "http://127.0.0.1:8647/v1",
     apiKey: storedKey,
     enabled: true,
+    botName: null,
+    signMessages: false,
+    announceManager: false,
     resumeAfterHours: null,
     maxRunMinutes: 30,
     progressMessage: "Working on it",
@@ -207,6 +210,9 @@ describe("externalAgentService.get", () => {
       provider: "hermes",
       baseUrl: "http://127.0.0.1:8647/v1",
       hasApiKey: true,
+      botName: null,
+      signMessages: false,
+      announceManager: false,
       inboxIds: ["inbox-1"],
       resumeAfterHours: null,
       maxRunMinutes: 30,
@@ -277,6 +283,9 @@ describe("externalAgentService.update", () => {
           baseUrl: "https://hermes.example.com/v1",
           apiKey: freshKey,
           enabled: false,
+          botName: null,
+          signMessages: false,
+          announceManager: false,
           resumeAfterHours: null,
           maxRunMinutes: EXTERNAL_AGENT_DEFAULT_MAX_RUN_MINUTES,
           progressMessage: EXTERNAL_AGENT_DEFAULT_PROGRESS_MESSAGE,
@@ -347,6 +356,40 @@ describe("externalAgentService.update", () => {
 
     expect(mocks.listLabelsByIds).not.toHaveBeenCalled()
     expect(upsertedValues()).toMatchObject({ inboxIds: [] })
+  })
+
+  test("round-trips sender presentation settings and normalizes botName", async () => {
+    mocks.findByWorkspace.mockResolvedValue(makeAgent())
+
+    const settings = await externalAgentService.update(WORKSPACE_ID, {
+      botName: "  Гека  ",
+      signMessages: true,
+      announceManager: true,
+    })
+
+    expect(upsertedValues()).toMatchObject({
+      values: {
+        botName: "Гека",
+        signMessages: true,
+        announceManager: true,
+      },
+    })
+    expect(settings).toMatchObject({
+      botName: "Гека",
+      signMessages: true,
+      announceManager: true,
+    })
+  })
+
+  test("clears a blank botName and rejects names over 40 characters", async () => {
+    mocks.findByWorkspace.mockResolvedValue(makeAgent({ botName: "Гека" }))
+
+    await externalAgentService.update(WORKSPACE_ID, { botName: "   " })
+    expect(upsertedValues()).toMatchObject({ values: { botName: null } })
+
+    await expect(
+      externalAgentService.update(WORKSPACE_ID, { botName: "a".repeat(41) }),
+    ).rejects.toMatchObject({ code: "invalidExternalAgentSettings" })
   })
 
   test.each([0, 241, 1.5])("rejects maxRunMinutes %s", async (value) => {
@@ -469,7 +512,11 @@ describe("externalAgentService.test", () => {
 
 describe("externalAgentService.getRuntime", () => {
   test("returns the agent and a client for a linked inbox", async () => {
-    const agent = makeAgent()
+    const agent = makeAgent({
+      botName: "Гека",
+      signMessages: true,
+      announceManager: true,
+    })
     mocks.findActiveForInbox.mockResolvedValue(agent)
 
     const runtime = await externalAgentService.getRuntime({
@@ -482,6 +529,11 @@ describe("externalAgentService.getRuntime", () => {
       inboxId: "inbox-1",
     })
     expect(runtime).toEqual({ agent, client: { health: mocks.health } })
+    expect(runtime?.agent).toMatchObject({
+      botName: "Гека",
+      signMessages: true,
+      announceManager: true,
+    })
   })
 
   test("returns null when the agent is disabled or the inbox is not linked", async () => {

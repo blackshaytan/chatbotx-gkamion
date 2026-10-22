@@ -1162,6 +1162,7 @@ export const sendChatMessage = async (
     trackingContext,
     metadata,
     isBulkBroadcast,
+    signAs,
   } = props
   const isBulkOutbound = isBulkOutboundMetadata(metadata, isBulkBroadcast)
 
@@ -1272,6 +1273,7 @@ export const sendChatMessage = async (
           message,
           quickReplies,
           metadata,
+          signAs,
         },
         0,
         willRetryOnThrow,

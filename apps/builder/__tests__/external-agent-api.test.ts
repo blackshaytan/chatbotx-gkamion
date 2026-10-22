@@ -6,7 +6,10 @@ import { call } from "@orpc/server"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { externalAgentAPI } from "@/features/external-agent/api"
 import { externalAgentPublicRouter } from "@/features/external-agent/api/public"
-import { externalAgentOutputSchema } from "@/features/external-agent/schema"
+import {
+  externalAgentOutputSchema,
+  updateExternalAgentInputSchema,
+} from "@/features/external-agent/schema"
 
 const {
   externalAgentService,
@@ -92,6 +95,9 @@ const settings = {
   resumeAfterHours: null,
   maxRunMinutes: 30,
   progressMessage: "Working on it",
+  botName: "Гека",
+  signMessages: true,
+  announceManager: false,
   lastCheckedAt: new Date("2026-10-21T00:00:00Z"),
   lastCheckStatus: "ok" as const,
   lastCheckError: null,
@@ -233,6 +239,110 @@ describe("external agent public API", () => {
 
     expect(parsed).not.toHaveProperty("apiKey")
   })
+
+  test("get returns the signature fields", async () => {
+    findWorkspaceByTokenHash.mockResolvedValue(authResult(["settings"]))
+    externalAgentService.get.mockResolvedValue(settings)
+
+    const result = await call(externalAgentPublicRouter.get, undefined, {
+      context: { headers: TOKEN_HEADERS },
+    })
+
+    expect(result).toMatchObject({
+      botName: "Гека",
+      signMessages: true,
+      announceManager: false,
+    })
+  })
+
+  test("the output schema requires the signature fields", () => {
+    const { signMessages: _omitted, ...withoutSignMessages } = settings
+
+    expect(
+      externalAgentOutputSchema.safeParse(withoutSignMessages).success,
+    ).toBe(false)
+    expect(
+      externalAgentOutputSchema.safeParse({ ...settings, botName: null })
+        .success,
+    ).toBe(true)
+  })
+
+  test("update passes the signature fields to the service", async () => {
+    findWorkspaceByTokenHash.mockResolvedValue(authResult(["settings"]))
+    externalAgentService.update.mockResolvedValue(settings)
+
+    await call(
+      externalAgentPublicRouter.update,
+      { botName: "Гека", signMessages: true, announceManager: true },
+      { context: { headers: TOKEN_HEADERS } },
+    )
+
+    expect(externalAgentService.update).toHaveBeenCalledWith(
+      "ws-1",
+      expect.objectContaining({
+        botName: "Гека",
+        signMessages: true,
+        announceManager: true,
+      }),
+    )
+  })
+
+  test("update trims botName and accepts null to clear it", async () => {
+    findWorkspaceByTokenHash.mockResolvedValue(authResult(["settings"]))
+    externalAgentService.update.mockResolvedValue(settings)
+
+    await call(
+      externalAgentPublicRouter.update,
+      { botName: "  Гека  " },
+      { context: { headers: TOKEN_HEADERS } },
+    )
+    await call(
+      externalAgentPublicRouter.update,
+      { botName: null },
+      { context: { headers: TOKEN_HEADERS } },
+    )
+
+    expect(externalAgentService.update).toHaveBeenNthCalledWith(
+      1,
+      "ws-1",
+      expect.objectContaining({ botName: "Гека" }),
+    )
+    expect(externalAgentService.update).toHaveBeenNthCalledWith(
+      2,
+      "ws-1",
+      expect.objectContaining({ botName: null }),
+    )
+  })
+
+  test("update refuses a botName longer than 40 characters", async () => {
+    findWorkspaceByTokenHash.mockResolvedValue(authResult(["settings"]))
+
+    await expect(
+      call(
+        externalAgentPublicRouter.update,
+        { botName: "я".repeat(41) },
+        { context: { headers: TOKEN_HEADERS } },
+      ),
+    ).rejects.toThrow()
+    expect(externalAgentService.update).not.toHaveBeenCalled()
+  })
+})
+
+describe("external agent update input schema", () => {
+  test("accepts a botName of exactly 40 characters", () => {
+    expect(
+      updateExternalAgentInputSchema.safeParse({ botName: "a".repeat(40) })
+        .success,
+    ).toBe(true)
+  })
+
+  test("leaves the signature fields out when they are not sent", () => {
+    const parsed = updateExternalAgentInputSchema.parse({ enabled: true })
+
+    expect(parsed).not.toHaveProperty("botName")
+    expect(parsed).not.toHaveProperty("signMessages")
+    expect(parsed).not.toHaveProperty("announceManager")
+  })
 })
 
 describe("external agent private API", () => {
@@ -263,5 +373,27 @@ describe("external agent private API", () => {
       enabled: true,
     })
     expect(result).not.toHaveProperty("apiKey")
+  })
+
+  test("update passes the signature fields to the service for a super admin", async () => {
+    memberPermissions.current = { superAdmin: true }
+    externalAgentService.update.mockResolvedValue(settings)
+
+    await call(
+      externalAgentAPI.update,
+      {
+        workspaceId: "1",
+        botName: "Гека",
+        signMessages: false,
+        announceManager: true,
+      },
+      { context: { headers: TOKEN_HEADERS } },
+    )
+
+    expect(externalAgentService.update).toHaveBeenCalledWith("1", {
+      botName: "Гека",
+      signMessages: false,
+      announceManager: true,
+    })
   })
 })

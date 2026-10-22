@@ -68,6 +68,8 @@ export type ChatJobSendChannelMessage = {
     metadata?: MetadataPayload
     isBulkBroadcast?: boolean
     sendFrom?: "inbox"
+    /** Set by the chat worker when an AI agent's reply is sent through `sendChatMessage`. */
+    signAs?: "externalAgent"
   }
 }
 
@@ -128,6 +130,11 @@ export type ChatJobSendChatMessage = {
     metadata?: MetadataPayload
     /** Marks an automatic bulk-broadcast delivery, including a flow's first prompt. */
     isBulkBroadcast?: boolean
+    /**
+     * Prefixes the channel text with the AI agent's name (`ExternalAgent.botName`)
+     * when the agent signs its messages. Only the AI agent's replies set it.
+     */
+    signAs?: "externalAgent"
   }
 }
 

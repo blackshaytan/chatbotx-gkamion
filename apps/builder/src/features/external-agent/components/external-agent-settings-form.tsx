@@ -26,6 +26,7 @@ import { useWorkspaceId } from "@/hooks/routing"
 import { orpc } from "@/lib/orpc/query"
 import {
   BASE_URL_MAX_LENGTH,
+  BOT_NAME_MAX_LENGTH,
   type externalAgentOutputSchema,
   MAX_RUN_MINUTES_MIN,
   PROGRESS_MESSAGE_MAX_LENGTH,
@@ -54,6 +55,9 @@ const externalAgentFormSchema = z
       .min(MAX_RUN_MINUTES_MIN)
       .max(EXTERNAL_AGENT_MAX_RUN_MINUTES_LIMIT),
     progressMessage: z.string().trim().max(PROGRESS_MESSAGE_MAX_LENGTH),
+    botName: z.string().trim().max(BOT_NAME_MAX_LENGTH),
+    signMessages: z.boolean(),
+    announceManager: z.boolean(),
   })
   .superRefine((values, ctx) => {
     if (values.resumeMode !== "afterHours") {
@@ -85,6 +89,9 @@ const toFormValues = (
     settings?.maxRunMinutes ?? EXTERNAL_AGENT_DEFAULT_MAX_RUN_MINUTES,
   progressMessage:
     settings?.progressMessage ?? EXTERNAL_AGENT_DEFAULT_PROGRESS_MESSAGE,
+  botName: settings?.botName ?? "",
+  signMessages: settings?.signMessages ?? false,
+  announceManager: settings?.announceManager ?? false,
 })
 
 /** A blank API key keeps the stored one, so it is left out of the request. */
@@ -101,6 +108,9 @@ const toUpdateInput = (
       : null,
   maxRunMinutes: values.maxRunMinutes,
   progressMessage: values.progressMessage,
+  botName: values.botName || null,
+  signMessages: values.signMessages,
+  announceManager: values.announceManager,
 })
 
 const ExternalAgentLastCheck = ({
@@ -261,6 +271,22 @@ const ExternalAgentSettingsEditor = ({
           label={t("externalAgent.progressMessage")}
           name="progressMessage"
           rows={3}
+        />
+        <InputField
+          description={t("externalAgent.botNameHint")}
+          label={t("externalAgent.botName")}
+          maxLength={BOT_NAME_MAX_LENGTH}
+          name="botName"
+        />
+        <SwitchField
+          description={t("externalAgent.signMessagesHint")}
+          label={t("externalAgent.signMessages")}
+          name="signMessages"
+        />
+        <SwitchField
+          description={t("externalAgent.announceManagerHint")}
+          label={t("externalAgent.announceManager")}
+          name="announceManager"
         />
 
         <div className="flex flex-wrap items-center gap-2">

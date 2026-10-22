@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
 const mockMarkAgentReplied = vi.fn()
+const mockAnnounceManagerJoined = vi.fn()
 const mockUpdateTracking = vi.fn()
 const mockRepositoryCreate = vi.fn()
 const mockCreateMessageRepository = vi.fn()
@@ -38,6 +39,7 @@ vi.mock("@chatbotx.io/utils", async (importOriginal) => {
 vi.mock("@chatbotx.io/worker-config", () => ({
   ChatJobAction: {
     broadcastEvent: "broadcastEvent",
+    sendChatMessage: "sendChatMessage",
     sendChannelMessage: "sendChannelMessage",
     checkOutboundAutomatedResponse: "checkOutboundAutomatedResponse",
   },
@@ -53,6 +55,7 @@ vi.mock("../src/contact-inbox/service", () => ({
 vi.mock("../src/conversation/service", () => ({
   conversationService: {
     markAgentReplied: mockMarkAgentReplied,
+    announceManagerJoined: mockAnnounceManagerJoined,
     findOrCreate: mockFindOrCreate,
   },
 }))
@@ -100,6 +103,7 @@ describe("messageService.createOutgoing", () => {
       storageUrl: "https://storage.example.com",
     })
     mockMarkAgentReplied.mockResolvedValue(undefined)
+    mockAnnounceManagerJoined.mockResolvedValue(undefined)
     mockUpdateTracking.mockResolvedValue(null)
     mockRepositoryCreate.mockImplementation((input) =>
       Promise.resolve({
@@ -133,6 +137,44 @@ describe("messageService.createOutgoing", () => {
       workspaceId: conversation.workspaceId,
       at: messageInput.createdAt,
     })
+  })
+
+  test("announces a manager before queuing their channel reply", async () => {
+    await createOutgoing({
+      conversation: conversation as never,
+      contactInbox: contactInbox as never,
+      input: { text: "hello" },
+      user: { id: "user-1" } as never,
+    })
+
+    expect(mockAnnounceManagerJoined).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      conversationId: "conv-1",
+      userId: "user-1",
+    })
+    expect(mockAnnounceManagerJoined.mock.invocationCallOrder[0]).toBeLessThan(
+      mockChatQueueAdd.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY,
+    )
+    const replyJob = mockChatQueueAdd.mock.calls.find(
+      ([jobName]) => jobName === "sendChannelMessage",
+    )
+    expect(replyJob?.[2]).toBeUndefined()
+  })
+
+  test("delays the reply when the join notice was just enqueued", async () => {
+    mockAnnounceManagerJoined.mockResolvedValue(true)
+
+    await createOutgoing({
+      conversation: conversation as never,
+      contactInbox: contactInbox as never,
+      input: { text: "hello" },
+      user: { id: "user-1" } as never,
+    })
+
+    const replyJob = mockChatQueueAdd.mock.calls.find(
+      ([jobName]) => jobName === "sendChannelMessage",
+    )
+    expect(replyJob?.[2]).toEqual({ delay: 2000 })
   })
 
   test("updates contact inbox lastMessageAt from the created message timestamp", async () => {

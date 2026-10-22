@@ -1,3 +1,4 @@
+import { format } from "date-fns"
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, describe, expect, test, vi } from "vitest"
@@ -41,7 +42,9 @@ afterEach(() => {
   root = null
 })
 
+// Far enough in the past that the bubble shows the full date.
 const CREATED_AT = new Date("2024-01-01T00:00:00Z")
+const EXPECTED_TEXT = format(CREATED_AT, "dd.MM.yyyy HH:mm")
 
 const makeMessage = (overrides: Partial<MessageResourceWithRelations> = {}) =>
   ({
@@ -59,11 +62,11 @@ const makeMessage = (overrides: Partial<MessageResourceWithRelations> = {}) =>
     ...overrides,
   }) as unknown as MessageResourceWithRelations
 
-describe("MessageItem timestamp", () => {
+describe("MessageItem time", () => {
   test.each([
     "incoming",
     "outgoing",
-  ] as const)("renders the %s message time as a hover-revealed <time> instead of a native title", (messageType) => {
+  ] as const)("shows the %s message time inside its text bubble, always visible", (messageType) => {
     const el = renderComponent(
       <MessageItem message={makeMessage({ messageType })} />,
     )
@@ -71,11 +74,30 @@ describe("MessageItem timestamp", () => {
     const time = el.querySelector("time")
     expect(time).not.toBeNull()
     expect(time?.getAttribute("dateTime")).toBe(CREATED_AT.toISOString())
-    // Revealed by the bubble's hover/focus, not an OS tooltip with its own
-    // delay.
-    expect(time?.className).toContain("group-hover:opacity-100")
-    expect(time?.className).toContain("group-focus-within:opacity-100")
+    expect(time?.textContent).toBe(EXPECTED_TEXT)
+    // Visible at rest: no hover or focus gating on the time.
+    expect(time?.className).not.toContain("opacity-0")
+    expect(time?.className).not.toContain("group-hover")
+    // Same box as the text, so the time sits inside the bubble.
+    expect(time?.parentElement?.querySelector("pre")?.textContent).toBe("Hello")
     expect(el.querySelector("[title]")).toBeNull()
+  })
+
+  test("closes a message without a text bubble below its content", () => {
+    // An unknown content type renders no card, so the text bubble stays and
+    // the time falls back to the end of the message column.
+    const el = renderComponent(
+      <MessageItem
+        message={makeMessage({
+          messageType: "incoming",
+          contentAttributes: { type: "unknown" },
+        })}
+      />,
+    )
+
+    const time = el.querySelector("time")
+    expect(time?.textContent).toBe(EXPECTED_TEXT)
+    expect(time?.previousElementSibling?.querySelector("pre")).not.toBeNull()
   })
 
   test("renders no timestamp on a full-width activity row", () => {

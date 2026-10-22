@@ -133,7 +133,7 @@ export const conversationsPublicRouter = {
       path: "/v1/conversations",
       summary: "List conversations",
       description:
-        "Use this to find conversations by status, channel, assignee, tags, handover category, or contact filter before inspecting one with `conversations.get`. Returns cursor-paginated workspace conversations sorted by `inboxActivityAt` (last client message or manager reply), newest first. Each item carries `unreadCount` (client messages since `agentLastReadAt`, capped at 100) and, for conversations the external AI agent handed to a manager, `handoverCategory` and `handedOverAt`.",
+        "Use this to find conversations by status, channel, assignee, tags, handover category, or contact filter before inspecting one with `conversations.get`. Returns cursor-paginated workspace conversations sorted by `inboxActivityAt` (last client message or manager reply), newest first. Each item carries `unreadCount` (client messages since `agentLastReadAt`, capped at 100) and, for conversations the external AI agent handed to a manager, `handoverCategory`, `handedOverAt` and `managerJoinedAt` (when a manager joined after the handover, or null).",
       tags: ["Conversations"],
       spec: mcpSpec({ visibility: "default" }),
     })
@@ -159,7 +159,7 @@ export const conversationsPublicRouter = {
       path: "/v1/conversations/{id}",
       summary: "Get conversation",
       description:
-        "Use this to inspect one conversation's contact, channel, assignee, status, `unreadCount`, and handover state (`handoverCategory`, `handedOverAt`) after locating it with `conversations.list`. Call `conversations.assign` to change its assignee.",
+        "Use this to inspect one conversation's contact, channel, assignee, status, `unreadCount`, and handover state (`handoverCategory`, `handedOverAt`, `managerJoinedAt`) after locating it with `conversations.list`. Call `conversations.assign` to change its assignee.",
       tags: ["Conversations"],
       spec: mcpSpec({ visibility: "default" }),
     })

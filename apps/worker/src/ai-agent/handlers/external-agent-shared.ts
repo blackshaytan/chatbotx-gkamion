@@ -181,6 +181,8 @@ export const sendClientText = async (input: {
   context: ExternalAgentConversationContext
   text: string
   jobId?: string
+  /** Handover confirmations are platform messages, not agent replies. */
+  signAsExternalAgent?: boolean
 }): Promise<void> => {
   await chatQueue.add(
     ChatJobAction.sendChatMessage,
@@ -190,6 +192,9 @@ export const sendClientText = async (input: {
         conversation: input.context.conversation,
         contactInbox: input.context.contactInbox,
         text: input.text,
+        ...(input.signAsExternalAgent === false
+          ? {}
+          : { signAs: "externalAgent" as const }),
       },
     },
     input.jobId ? { jobId: toJobIdPart(input.jobId) } : undefined,
@@ -208,7 +213,12 @@ export const handOverToHuman = async (input: {
     contactInboxId: input.ref.contactInboxId,
     event: input.event,
     error: input.error,
-    sendText: (text) => sendClientText({ context: input.context, text }),
+    sendText: (text) =>
+      sendClientText({
+        context: input.context,
+        text,
+        signAsExternalAgent: false,
+      }),
   })
 }
 

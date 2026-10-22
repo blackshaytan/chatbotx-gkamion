@@ -1,6 +1,41 @@
-import { and, type DatabaseClient, db, eq, isNull } from "../../client"
+import {
+  and,
+  type DatabaseClient,
+  db,
+  eq,
+  isNotNull,
+  isNull,
+} from "../../client"
 import { conversationModel } from "../../schema"
 import type { ConversationModel } from "../../types"
+
+/**
+ * Claims the one-time manager-join notice of a handed-over conversation. The
+ * `managerJoinedAt IS NULL` guard makes concurrent claims safe: only the caller
+ * that wins gets the row back, every other claim returns nothing.
+ */
+export async function claimManagerJoinedAt(
+  params: {
+    workspaceId: string
+    conversationId: string
+    at: Date
+  },
+  tx: DatabaseClient = db,
+): Promise<ConversationModel[]> {
+  const { workspaceId, conversationId, at } = params
+  return await tx
+    .update(conversationModel)
+    .set({ managerJoinedAt: at })
+    .where(
+      and(
+        eq(conversationModel.workspaceId, workspaceId),
+        eq(conversationModel.id, conversationId),
+        isNotNull(conversationModel.handedOverAt),
+        isNull(conversationModel.managerJoinedAt),
+      ),
+    )
+    .returning()
+}
 
 /**
  * Claims an unassigned conversation for a user — used by the call-answer and

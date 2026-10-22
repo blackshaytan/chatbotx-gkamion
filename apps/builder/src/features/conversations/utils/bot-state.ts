@@ -9,6 +9,7 @@ export const BOT_RESUMED_PATCH = {
   botResumeAt: null,
   handoverCategory: null,
   handedOverAt: null,
+  managerJoinedAt: null,
 } as const
 
 export function isConversationActive(

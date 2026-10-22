@@ -19,6 +19,7 @@ import type {
 import {
   assignTargetIfUnassigned,
   assignUserIfUnassigned,
+  claimManagerJoinedAt,
   contactInboxOperationalColumns,
   createMessageRepository,
   externalAgentRepository,
@@ -54,6 +55,8 @@ import { RealtimeEventType } from "@chatbotx.io/partysocket-config"
 import { withCache } from "@chatbotx.io/redis"
 import { createId } from "@chatbotx.io/utils"
 import {
+  ChatJobAction,
+  chatQueue,
   NotificationJobAction,
   notificationQueue,
 } from "@chatbotx.io/worker-config"
@@ -67,11 +70,13 @@ import type {
 import { contactInboxService } from "../contact-inbox/service"
 import { inboxTeamService } from "../enterprise/inbox-team/service"
 import { ChatbotXException, notFoundException } from "../errors"
+import { buildManagerJoinClientText } from "../external-agent/client-messages"
 import { resolveExternalAgentResumeAt } from "../external-agent/progress"
 import { logger } from "../logger"
 import { publishToWorkspaceParty } from "../platform/realtime-broadcast"
 import { smartDelayService } from "../smart-delay/service"
 import { threadControlService } from "../thread-control/service"
+import { userService } from "../user/service"
 import { workspaceMemberService } from "../workspace-member/service"
 
 export const BOT_DISABLE_DURATION_MS = 24 * 60 * 60 * 1000
@@ -1053,7 +1058,7 @@ class ConversationService extends BaseService {
       return
     }
 
-    await this.updateAssignment({
+    const updated = await this.updateAssignment({
       workspaceId,
       conversations,
       assignedUserId: updatedData.assignedUserId,
@@ -1068,6 +1073,18 @@ class ConversationService extends BaseService {
       },
       tx,
     })
+    const assignedUserId = updatedData.assignedUserId
+    if (assignedUserId) {
+      await Promise.all(
+        updated.map(async (conversation) => {
+          await this.announceManagerJoined({
+            workspaceId,
+            conversationId: conversation.id,
+            userId: assignedUserId,
+          })
+        }),
+      )
+    }
   }
 
   // Single-conversation, path-addressed variant for the public API — assigns
@@ -1089,7 +1106,7 @@ class ConversationService extends BaseService {
       assignedId,
     )
 
-    await this.updateAssignment({
+    const updated = await this.updateAssignment({
       workspaceId,
       conversations: [conversation],
       assignedUserId: updatedData.assignedUserId,
@@ -1104,6 +1121,82 @@ class ConversationService extends BaseService {
       },
       tx,
     })
+    const assignedUserId = updatedData.assignedUserId
+    if (assignedUserId) {
+      await Promise.all(
+        updated.map(async (updatedConversation) => {
+          await this.announceManagerJoined({
+            workspaceId,
+            conversationId: updatedConversation.id,
+            userId: assignedUserId,
+          })
+        }),
+      )
+    }
+  }
+
+  /**
+   * Best-effort, one-time notice that a human took a conversation handed over
+   * by an enabled external agent. The repository claim is the concurrency
+   * boundary: only its winner can enqueue a notice. Returns `true` when the
+   * notice was enqueued.
+   */
+  async announceManagerJoined(input: {
+    workspaceId: string
+    conversationId: string
+    userId: string
+  }): Promise<boolean> {
+    const { workspaceId, conversationId, userId } = input
+    try {
+      const conversation = await this.findByUncached({
+        where: { id: conversationId, workspaceId },
+      })
+      if (!conversation?.handedOverAt || conversation.managerJoinedAt) {
+        return false
+      }
+
+      const contactInbox = await contactInboxService.findRecentByContactId({
+        workspaceId,
+        contactId: conversation.contactId,
+      })
+      if (!contactInbox) {
+        return false
+      }
+
+      const agent = await externalAgentRepository.findActiveForInbox({
+        workspaceId,
+        inboxId: contactInbox.inboxId,
+      })
+      if (!agent?.announceManager) {
+        return false
+      }
+
+      const [claimed] = await claimManagerJoinedAt({
+        workspaceId,
+        conversationId,
+        at: new Date(),
+      })
+      if (!claimed) {
+        return false
+      }
+
+      const manager = await userService.findNameAndEmail(userId)
+      await chatQueue.add(ChatJobAction.sendChatMessage, {
+        type: ChatJobAction.sendChatMessage,
+        data: {
+          conversation: claimed,
+          contactInbox,
+          text: buildManagerJoinClientText(manager?.name),
+        },
+      })
+      return true
+    } catch (err) {
+      logger.error(
+        { err, workspaceId, conversationId },
+        "External agent: unable to announce the manager",
+      )
+      return false
+    }
   }
 
   // Worker trigger-action/flow-step variant: an unrecognized or stale
@@ -1370,10 +1463,20 @@ class ConversationService extends BaseService {
           botEnabled,
           botResumeAt: group.botResumeAt,
           ...(botEnabled
-            ? { handoverCategory: null, handedOverAt: null }
+            ? {
+                handoverCategory: null,
+                handedOverAt: null,
+                managerJoinedAt: null,
+              }
             : {
                 additionalAttributes: sqlDropQuickReplyChallenge(),
-                ...(handoverCategory ? { handoverCategory, handedOverAt } : {}),
+                ...(handoverCategory
+                  ? {
+                      handoverCategory,
+                      handedOverAt,
+                      managerJoinedAt: null,
+                    }
+                  : {}),
               }),
         })
         .where(

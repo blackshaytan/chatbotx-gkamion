@@ -12,6 +12,7 @@ export const PROGRESS_MESSAGE_MAX_LENGTH = 500
 export const RESUME_AFTER_HOURS_MIN = 1
 export const RESUME_AFTER_HOURS_MAX = 720
 export const MAX_RUN_MINUTES_MIN = 1
+export const BOT_NAME_MAX_LENGTH = 40
 const REASON_MAX_LENGTH = 500
 
 export const externalAgentOutputSchema = z.object({
@@ -46,6 +47,22 @@ export const externalAgentOutputSchema = z.object({
   progressMessage: z
     .string()
     .describe("Message sent to the customer while the agent is still working."),
+  botName: z
+    .string()
+    .nullable()
+    .describe(
+      "Agent name used in the client-facing signature (`Name: text`) when `signMessages` is on, or null when no name is set.",
+    ),
+  signMessages: z
+    .boolean()
+    .describe(
+      "Whether replies sent to the client are prefixed with the sender's name: `botName` for agent replies, the manager's profile name for manager replies.",
+    ),
+  announceManager: z
+    .boolean()
+    .describe(
+      "Whether the client gets a one-time notice naming the manager after a handover, when a manager is assigned to the conversation or sends the first reply.",
+    ),
   lastCheckedAt: z
     .date()
     .nullable()
@@ -109,6 +126,27 @@ export const updateExternalAgentInputSchema = z.object({
     .optional()
     .describe(
       "Message sent once to the customer when the agent has been silent for 90 seconds during a run. An empty string turns it off.",
+    ),
+  botName: z
+    .string()
+    .trim()
+    .max(BOT_NAME_MAX_LENGTH)
+    .nullable()
+    .optional()
+    .describe(
+      `Agent name used in the client-facing signature, up to ${BOT_NAME_MAX_LENGTH} characters, e.g. "Support Bot" gives "Support Bot: text". Send an empty string or null to clear it. Used only when \`signMessages\` is on.`,
+    ),
+  signMessages: z
+    .boolean()
+    .optional()
+    .describe(
+      "Prefix replies sent to the client with the sender's name: `botName` for agent replies, the manager's profile name for manager replies. Flow messages and messages sent through the public API are not prefixed.",
+    ),
+  announceManager: z
+    .boolean()
+    .optional()
+    .describe(
+      'After a handover, send the client one notice naming the manager ("Вам отвечает менеджер <name>"), when a manager is assigned to the conversation or sends the first reply. Sent once per handover.',
     ),
 })
 

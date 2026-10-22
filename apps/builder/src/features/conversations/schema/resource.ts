@@ -36,6 +36,12 @@ export const conversationResource = createSelectSchema(conversationModel, {
     .describe(
       "When the external AI agent last handed the conversation to a manager. Cleared when the bot is re-enabled.",
     ),
+  managerJoinedAt: z
+    .date()
+    .nullable()
+    .describe(
+      "When a manager joined the conversation after the last handover and the client was told so. Null when no manager has joined since the handover. Cleared when the bot is re-enabled or a new handover starts.",
+    ),
 })
 export type ConversationResource = z.infer<typeof conversationResource>
 

@@ -195,7 +195,12 @@ export const externalAgentRepository = {
     const { workspaceId, values, inboxIds } = input
     const [agent] = await tx
       .insert(externalAgentModel)
-      .values({ ...values, workspaceId })
+      .values({
+        ...values,
+        workspaceId,
+        signMessages: values.signMessages ?? false,
+        announceManager: values.announceManager ?? false,
+      })
       .onConflictDoUpdate({
         target: externalAgentModel.workspaceId,
         set: { ...values, updatedAt: new Date() },

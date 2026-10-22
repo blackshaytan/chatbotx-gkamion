@@ -56,6 +56,7 @@ const RESUME_AFTER_HOURS_MIN = 1
 const RESUME_AFTER_HOURS_MAX = 720
 const MAX_RUN_MINUTES_MIN = 1
 const REASON_MAX_LENGTH = 500
+const BOT_NAME_MAX_LENGTH = 40
 const MINUTE_MS = 60_000
 const TRAILING_SLASHES = /\/+$/
 const ALLOWED_PROTOCOLS = new Set(["http:", "https:"])
@@ -97,6 +98,9 @@ export type ExternalAgentSettings = {
   provider: ExternalAgentProvider
   baseUrl: string
   hasApiKey: boolean
+  botName: string | null
+  signMessages: boolean
+  announceManager: boolean
   inboxIds: string[]
   resumeAfterHours: number | null
   maxRunMinutes: number
@@ -111,6 +115,10 @@ export type UpdateExternalAgentInput = {
   baseUrl?: string
   /** Write-only; blank or omitted keeps the stored key. */
   apiKey?: string
+  /** Blank becomes null; used only when signing external-agent replies. */
+  botName?: string | null
+  signMessages?: boolean
+  announceManager?: boolean
   inboxIds?: string[]
   resumeAfterHours?: number | null
   maxRunMinutes?: number
@@ -216,6 +224,20 @@ const normalizeReason = (reason: string | undefined): string | undefined => {
   return trimmed ? trimmed.slice(0, REASON_MAX_LENGTH) : undefined
 }
 
+const normalizeBotName = (value: string | null): string | null => {
+  const name = value.trim()
+  if (!name) {
+    return null
+  }
+  if (name.length > BOT_NAME_MAX_LENGTH) {
+    throw badRequest(
+      `botName must be at most ${BOT_NAME_MAX_LENGTH} characters`,
+      "invalidExternalAgentSettings",
+    )
+  }
+  return name
+}
+
 /** Hermes errors carry no secrets; anything else is reported generically. */
 const describeCheckError = (error: unknown): string => {
   if (
@@ -239,6 +261,9 @@ const toSettings = (
     provider: agent.provider,
     baseUrl: agent.baseUrl,
     hasApiKey: Boolean(agent.apiKey),
+    botName: agent.botName,
+    signMessages: agent.signMessages,
+    announceManager: agent.announceManager,
     inboxIds: agent.inboxIds,
     resumeAfterHours: agent.resumeAfterHours,
     maxRunMinutes: agent.maxRunMinutes,
@@ -290,6 +315,10 @@ export class ExternalAgentService extends BaseService {
       throw badRequest("Base URL is required", "externalAgentBaseUrlRequired")
     }
     const apiKey = input.apiKey?.trim()
+    const botName =
+      input.botName === undefined
+        ? (existing?.botName ?? null)
+        : normalizeBotName(input.botName)
     if (input.maxRunMinutes !== undefined) {
       assertIntegerInRange(
         input.maxRunMinutes,
@@ -336,6 +365,11 @@ export class ExternalAgentService extends BaseService {
               baseUrl,
               apiKey: encryptedApiKey,
               enabled: input.enabled ?? existing?.enabled ?? false,
+              botName,
+              signMessages:
+                input.signMessages ?? existing?.signMessages ?? false,
+              announceManager:
+                input.announceManager ?? existing?.announceManager ?? false,
               resumeAfterHours:
                 input.resumeAfterHours === undefined
                   ? (existing?.resumeAfterHours ?? null)
