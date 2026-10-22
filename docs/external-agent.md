@@ -15,7 +15,7 @@ Three tables, all scoped by `workspaceId`:
 
 | Table | One row per | Holds |
 |---|---|---|
-| `ExternalAgent` | workspace | `provider` (`hermes`), `baseUrl`, `apiKey` (encrypted, never returned), `enabled`, `resumeAfterHours` (null = never; applies to manager pauses, not agent handovers), `maxRunMinutes` (default 30, 1–240), `progressMessage` (default «Работаю над вашим запросом, это займёт несколько минут»; empty = off, up to 500 characters), last connection check |
+| `ExternalAgent` | workspace | `provider` (`hermes`), `baseUrl`, `apiKey` (encrypted, never returned), `enabled`, `resumeAfterHours` (null = never; applies to manager pauses, not agent handovers), `maxRunMinutes` (default 30, 1–240), `progressMessage` (default «Работаю над вашим запросом, это займёт несколько минут»; empty = off, up to 500 characters), `botName` (agent name for the signature, up to 40 characters, null = no agent prefix), `signMessages` and `announceManager` (both default false; see [Manager join notice, signatures and message time](#manager-join-notice-signatures-and-message-time)), last connection check |
 | `ExternalAgentInbox` | (agent, inbox) pair | Which channels the agent answers in. No rows = the agent answers nowhere. |
 | `ExternalAgentConversationState` | conversation | The cursor and the current run: `cursorAt` / `cursorMessageId`, `includeHistory`, `runId`, `runStartedAt`, `lastEventAt`, `lastEventSeq`, progress bookkeeping (`lastProgressSentAt`, `lastProgressText`, `lastClientSendAt`, `progressFallbackSentAt`), `failureCount`, `lastError`. Deleted with its conversation. |
 
@@ -77,7 +77,53 @@ An agent handover is the exception: it always passes `noAutoResume`, so the resu
 
 A paused conversation does not receive agent replies, and interim or final text from a run that is still going is not sent once the bot is off. The run is stopped by the next watch window (at most about 15 s later).
 
-**Return:** the «Return to bot» button (Вернуть боту in Russian; the existing enable-bot action) turns the bot on, resets the cursor as described above, clears the handover category and time, and the next client message starts a fresh run.
+**Return:** the «Return to bot» button (Вернуть боту in Russian; the existing enable-bot action) turns the bot on, resets the cursor as described above, clears the handover category, the handover time and the join-notice time (see [Manager join notice, signatures and message time](#manager-join-notice-signatures-and-message-time)), and the next client message starts a fresh run.
+
+## Manager join notice, signatures and message time
+
+Three settings on `ExternalAgent` control what the client sees once a manager takes over. They apply only to inboxes the agent answers in (the agent is enabled and the inbox is in `ExternalAgentInbox`). Other inboxes and flow-only bots behave as before.
+
+- **`botName`**: the agent's name, used in the signature. Up to 40 characters; an empty value or null clears it. Without a name, agent replies get no prefix.
+- **`signMessages`** (default off): prefix replies with the sender's name.
+- **`announceManager`** (default off): send the client the join notice.
+
+They are in **Settings → Integrations → External AI agent** (the «Bot name», «Sign replies with the sender's name» and «Announce the manager after a handover» fields) and in `externalAgent.update`.
+
+### Join notice
+
+After a handover, the client gets «Вам отвечает менеджер {имя}», or «Вам отвечает менеджер» when the manager has no name in the profile. The name is the manager's `User.name`. The text is fixed in Russian for every workspace, like the handover text.
+
+The notice is sent at most once per handover:
+
+- **When it is sent.** Whichever comes first after an agent handover:
+  - The conversation is assigned to a user, from the UI or through `conversations.assign`. Assigning to a team does not send it.
+  - A manager sends the first reply from ChatbotX. A public comment reply does not count. When this reply is the one that sends the notice, the reply job is delayed by 2 seconds so the notice reaches the client first.
+- **Conditions.** `announceManager` is on, the conversation has a handover time (`handedOverAt`), and no notice has been sent for this handover. Only a manager's action counts: flow steps, trigger actions and AI actions never send it.
+- **Handovers without a handover time.** `handedOverAt` is set only by an agent handover with a category. A failure handover (see [Failures](#failures)) and a manager pause do not set it, so they never send a notice.
+- **One notice.** The notice time (`managerJoinedAt`) is claimed with a conditional update, so two managers acting at the same time send one notice.
+- **Reset.** `managerJoinedAt` is cleared when the bot is turned on again («Return to bot») and when a new agent handover starts, so the next handover can send its own notice.
+- The notice is sent as a bot message on the channel and is not signed.
+
+### Sender signature
+
+When `signMessages` is on, the text sent to the channel is prefixed with the sender's name: `Гека: <text>` for agent replies, `Анна: <text>` for manager replies.
+
+- **Agent replies** (the final reply, progress messages and the fallback progress message) use `botName`. Without `botName`, the reply is sent unsigned.
+- **Manager replies** (messages a user sends from ChatbotX) use the manager's `User.name`. Without a name, the reply is sent unsigned; the e-mail address is never used.
+- **Only the text is prefixed.** An attachment without text is not signed; a caption is. Comment replies and channel templates (for example WhatsApp templates) are not signed.
+- **Never signed:** flow-step messages, messages sent through the public API, the join notice, and the handover texts («Передал ваш запрос менеджеру» and the failure text).
+- **Stored text is unchanged.** The prefix is added only to the copy sent to the channel. The message saved in ChatbotX, and shown in the inbox, is the original text. If the sender's name cannot be read, the reply is sent unsigned and a warning is logged.
+
+### `Conversation.managerJoinedAt`
+
+`Conversation.managerJoinedAt` holds the time the join notice was queued, or `null` when no notice has been sent for the current handover. `conversations.list` and `conversations.get` return it as `managerJoinedAt`.
+
+### Message time in the chat
+
+In the ChatbotX chat, every message shows its send time in the bottom-right corner of the bubble, always visible. This applies to the client's messages, the bot's and the manager's. The time used to appear only on hover.
+
+- **Format:** `HH:mm` for today, `dd.MM HH:mm` for the current year, `dd.MM.yyyy HH:mm` for older messages. The tooltip shows the full date and time with seconds.
+- **Scope:** the time is shown in the ChatbotX chat only. Messages sent to the client carry no timestamp. System and activity rows keep their current look.
 
 ## Failures
 
@@ -141,19 +187,20 @@ These steps are done on the Hermes host, not in this repository. They come from 
 - **Hermes address** is the origin of the `api_server`, for example `http://127.0.0.1:8647`, with no path. ChatbotX appends `/v1/runs`, `/v1/runs/{id}/events` and `/health`. An address ending in `/v1` produces `/v1/v1/...` and fails. Credentials in the URL and non-http(s) schemes are rejected.
 - **API key** is write-only. Leave it empty to keep the stored key.
 - **Channels** are opt-in: by default the agent answers nowhere.
+- **Bot name, signature and manager notice** are set in the same form: «Bot name» (up to 40 characters), «Sign replies with the sender's name» and «Announce the manager after a handover». The two switches are off by default. See [Manager join notice, signatures and message time](#manager-join-notice-signatures-and-message-time).
 - **Test connection** calls `GET {baseUrl}/health` with the key, stores the result (`lastCheckStatus`, `lastCheckedAt`, `lastCheckError`) and is throttled to one check per 10 s (HTTP 429 when repeated).
 
 ## Public API, CLI and MCP
 
 | Operation | HTTP | Scope | CLI | Notes |
 |---|---|---|---|---|
-| `externalAgent.get` | `GET /v1/external-agent` | `settings` | `chatbotx external-agent list` | Returns the settings object, or `null` until configured. The CLI name is derived as `list` because the route is not a singleton; the response is one object. |
-| `externalAgent.update` | `PATCH /v1/external-agent` | `settings` | `chatbotx external-agent update --enabled --baseUrl --apiKey --inboxIds --resumeAfterHours --maxRunMinutes --progressMessage` | Only the fields you send change. `inboxIds` is a JSON array of ids from `inboxes.list`; `[]` stops every channel. `resumeAfterHours: null` turns automatic resume off. |
+| `externalAgent.get` | `GET /v1/external-agent` | `settings` | `chatbotx external-agent list` | Returns the settings object, or `null` until configured. The CLI name is derived as `list` because the route is not a singleton; the response is one object. Includes `botName`, `signMessages` and `announceManager`. |
+| `externalAgent.update` | `PATCH /v1/external-agent` | `settings` | `chatbotx external-agent update --enabled --baseUrl --apiKey --inboxIds --resumeAfterHours --maxRunMinutes --progressMessage --botName --signMessages --announceManager` | Only the fields you send change. `inboxIds` is a JSON array of ids from `inboxes.list`; `[]` stops every channel. `resumeAfterHours: null` turns automatic resume off. `botName` is up to 40 characters; empty or null clears it. `signMessages` and `announceManager` are booleans; see [Manager join notice, signatures and message time](#manager-join-notice-signatures-and-message-time). |
 | `externalAgent.test` | `POST /v1/external-agent/test` | `settings` | `chatbotx external-agent test` | Returns `status`, `error`, `checkedAt`. |
 | `externalAgent.handover` | `POST /v1/conversations/{conversationId}/external-agent-handover` | `inbox` | `chatbotx conversations external-agent-handover add <conversationId> --reason "<text>" [--category <category>]` | Pauses the bot without an automatic resume and writes the reason and category as a note. `category` is one of `urgent`, `return`, `payment`, `orderStatus`, `delivery`, `priceAndTerm`, `other` (default `other`). Conversation ids come from `conversations.list` or from the run context. |
 
 - MCP tools: `external_agent_get`, `external_agent_update`, `external_agent_test`, `external_agent_handover`. Only `external_agent_handover` is in the default MCP set; the others are reached through `search_tools` / `call_tool`.
-- Conversation reads: `conversations.list` and `conversations.get` return `unreadCount`, `inboxActivityAt`, `handoverCategory` and `handedOverAt`. `conversations.list` also filters by `handoverCategory` (a JSON array). See [Inbox and notifications](#inbox-and-notifications).
+- Conversation reads: `conversations.list` and `conversations.get` return `unreadCount`, `inboxActivityAt`, `handoverCategory`, `handedOverAt` and `managerJoinedAt`. `conversations.list` also filters by `handoverCategory` (a JSON array). See [Inbox and notifications](#inbox-and-notifications).
 - The white-label test (`apps/builder/__tests__/public-spec-operations.test.ts`) forbids the product name in operation and schema `summary` / `description` copy. The new copy avoids it; keep that in mind when editing these descriptions.
 - The CLI command reference for these operations is in `apps/cli/README.md` (section `external-agent`, and the handover command under `conversations`).
 
@@ -186,3 +233,4 @@ These are the places where the code differs from `docs/superpowers/specs/2026-10
 
 - Unit and integration tests for this feature live in `packages/business/__tests__/external-agent/`, `apps/worker/__tests__/external-agent-*.test.ts` and `apps/builder/__tests__/external-agent-api.test.ts`. They run in CI, not on the VPS.
 - Inbox attention (no-auto-resume handover, push policy, `notifyAgentHandover`, unread count and store updates) is covered by `packages/business/__tests__/external-agent/bot-resume.test.ts`, `apps/worker/__tests__/incoming-push-policy.test.ts`, `apps/worker/__tests__/notification/agent-handover-push.test.ts` and `apps/builder/__tests__/chat-store-inbox-attention.test.ts`.
+- Manager join notice (once per handover, claim, reset), sender signature (agent and manager, skipped cases, stored text unchanged) and message time format are covered by `packages/business/__tests__/external-agent/manager-join.test.ts`, `apps/worker/__tests__/sender-signature*.test.ts`, `apps/builder/__tests__/format-message-time.test.ts` and `apps/builder/__tests__/message-item-timestamp.test.tsx`.

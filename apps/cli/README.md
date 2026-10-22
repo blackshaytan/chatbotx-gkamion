@@ -251,7 +251,7 @@ chatbotx contacts coupons list <identifier>          # List coupons issued to co
 chatbotx conversations list                          # [--botCategory --assignedId --channel --status --keyword
                                                      #  --botEnabled --tags --handoverCategory --contactFilter --cursor --perPage --sort]
                                                      # --handoverCategory: JSON array, e.g. '["urgent","payment"]'
-chatbotx conversations get <id>                      # Includes unreadCount, inboxActivityAt, handoverCategory, handedOverAt
+chatbotx conversations get <id>                      # Includes unreadCount, inboxActivityAt, handoverCategory, handedOverAt, managerJoinedAt
 chatbotx conversations assign add <id> --assignedId <assignedId>  # null clears the assignee
 chatbotx conversations archive add <id>
 chatbotx conversations unarchive add <id>
@@ -924,8 +924,8 @@ The external AI agent (Hermes) that answers client chats. See `docs/external-age
 
 ```bash
 chatbotx external-agent list                          # Get settings; null until configured. The name is derived as "list" but it returns one object
-chatbotx external-agent update --enabled <true|false> --baseUrl <url> --apiKey <key> --inboxIds '["<inboxId>"]' --resumeAfterHours <1-720> --maxRunMinutes <1-240> --progressMessage <text>
-                                                    # Only the flags you pass change; --inboxIds replaces the list ('[]' = no channels). Get inbox ids from `chatbotx inboxes list`
+chatbotx external-agent update --enabled <true|false> --baseUrl <url> --apiKey <key> --inboxIds '["<inboxId>"]' --resumeAfterHours <1-720> --maxRunMinutes <1-240> --progressMessage <text> --botName <name> --signMessages <true|false> --announceManager <true|false>
+                                                    # Only the flags you pass change; --inboxIds replaces the list ('[]' = no channels). Get inbox ids from `chatbotx inboxes list`. --botName is up to 40 characters (empty clears it). See docs/external-agent.md
 chatbotx external-agent test                          # Health check of the Hermes address; stored as the last check
 ```
 
