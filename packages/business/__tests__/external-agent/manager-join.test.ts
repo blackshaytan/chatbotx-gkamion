@@ -91,6 +91,8 @@ vi.mock("@chatbotx.io/redis", () => ({
 }))
 
 vi.mock("@chatbotx.io/worker-config", () => ({
+  // Transitive service imports read other job actions at module load.
+  IntegrationJobAction: new Proxy({}, { get: (_target, key) => String(key) }),
   ChatJobAction: { sendChatMessage: "sendChatMessage" },
   NotificationJobAction: {
     notifyConversationAssigned: "notifyConversationAssigned",
