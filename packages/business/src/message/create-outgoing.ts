@@ -88,6 +88,19 @@ type CopyableMediaLibraryFile = {
 /** Lets the "manager joined" notice reach the client before the manager's first reply. */
 const MANAGER_JOIN_REPLY_DELAY_MS = 2000
 
+const resolveReplyJobOptions = (props: {
+  isThreadsComment: boolean
+  announcedManagerJoin: boolean
+}): [{ attempts: number }] | [{ delay: number }] | [] => {
+  if (props.isThreadsComment) {
+    return [{ attempts: 1 }]
+  }
+  if (props.announcedManagerJoin) {
+    return [{ delay: MANAGER_JOIN_REPLY_DELAY_MS }]
+  }
+  return []
+}
+
 const copyMediaLibraryFileToConversationAttachment = async (props: {
   mediaLibraryFile: CopyableMediaLibraryFile
   workspaceId: string
@@ -377,11 +390,11 @@ export const createOutgoing = async (props: {
             sendFrom: "inbox",
           },
         },
-        ...(contactInbox.channel === "threads" && message.type === "comment"
-          ? [{ attempts: 1 }]
-          : announcedManagerJoin
-            ? [{ delay: MANAGER_JOIN_REPLY_DELAY_MS }]
-            : []),
+        ...resolveReplyJobOptions({
+          isThreadsComment:
+            contactInbox.channel === "threads" && message.type === "comment",
+          announcedManagerJoin,
+        }),
       ),
     },
     ...(user && messageInput.text && !productMessage
