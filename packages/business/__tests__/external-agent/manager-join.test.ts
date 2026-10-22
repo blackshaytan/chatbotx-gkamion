@@ -330,7 +330,7 @@ describe("conversationService.announceManagerJoined", () => {
 
     await expect(
       conversationService.announceManagerJoined(announceInput),
-    ).resolves.toBeUndefined()
+    ).resolves.toBe(false)
 
     expect(mocks.loggerError).toHaveBeenCalledWith(
       {
