@@ -94,8 +94,8 @@ describe("unread predicate is anchored on inboxActivityAt", () => {
       isConversationUnread({
         inboxActivityAt: new Date("2026-10-21T09:00:00Z"),
         agentLastReadAt: new Date("2026-10-21T10:00:00Z"),
-        lastActivityAt: new Date("2026-10-21T11:00:00Z"),
-      } as Parameters<typeof isConversationUnread>[0]),
+        handedOverAt: null,
+      }),
     ).toBe(false)
   })
 
