@@ -1361,7 +1361,7 @@
     "linkCopied": "链接已拷贝到剪贴板",
     "title": "联系人",
     "gkamionCabinet": {
-      "open": "Open customer cabinet",
+      "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",
       "missingIdentifiers": "Add a phone number or email to open the customer cabinet.",
       "notConfigured": "gKamion cabinet integration is not configured.",

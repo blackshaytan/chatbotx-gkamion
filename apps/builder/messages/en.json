@@ -6023,7 +6023,7 @@
     "exportTakingLong": "Export is taking longer than expected",
     "exportTakingLongDescription": "The export is still processing. You can close this dialog and check back in a few minutes from the export history.",
     "gkamionCabinet": {
-      "open": "Open customer cabinet",
+      "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",
       "missingIdentifiers": "Add a phone number or email to open the customer cabinet.",
       "notConfigured": "gKamion cabinet integration is not configured.",

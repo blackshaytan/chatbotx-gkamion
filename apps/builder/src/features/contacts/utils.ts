@@ -17,6 +17,22 @@ export function getLatestContactLastReadAt(
   )
 }
 
+const ABSOLUTE_URL_RE = /^https?:\/\//i
+const AVATAR_PROXY_PATH_RE = /\/media\/avatar\//i
+
+/**
+ * Provider CDN URLs (Telegram `api.telegram.org/file/…`, Graph lookaside, …)
+ * expire and/or send `Content-Disposition: attachment`, so `<img>` cannot
+ * display them. Only durable storage keys and our `/media/avatar/` proxy are
+ * safe as an image `src`.
+ */
+const isBrowserSafeAvatarSrc = (avatar: string): boolean => {
+  if (!ABSOLUTE_URL_RE.test(avatar)) {
+    return true
+  }
+  return AVATAR_PROXY_PATH_RE.test(avatar)
+}
+
 export function useAvatarUrl(
   contact?: { avatar?: string | null } | null,
 ): string | undefined {
@@ -28,7 +44,10 @@ export function useAvatarUrl(
   // A no-avatar sentinel (`no_avatar.jpg?time=…`) is a "we tried and there is no
   // avatar" marker, not a real key — finalizing it would render a broken image,
   // so fall back to the initials avatar instead.
-  return hasRealAvatar(contact.avatar)
-    ? getPublicFileUrl(contact.avatar, storageUrl)
-    : undefined
+  if (
+    !(hasRealAvatar(contact.avatar) && isBrowserSafeAvatarSrc(contact.avatar))
+  ) {
+    return
+  }
+  return getPublicFileUrl(contact.avatar, storageUrl)
 }

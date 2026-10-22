@@ -20,6 +20,98 @@ import {
 
 type RouteContext = { params: Promise<{ token: string }> }
 
+const AVATAR_FETCH_TIMEOUT_MS = 15_000
+const JPEG_MAGIC = [0xff, 0xd8, 0xff] as const
+const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47] as const
+const GIF_MAGIC = [0x47, 0x49, 0x46] as const
+const WEBP_RIFF = [0x52, 0x49, 0x46, 0x46] as const
+
+const sniffImageMimeType = (
+  bytes: Uint8Array,
+  declared: string | null,
+): string => {
+  if (
+    declared?.startsWith("image/") &&
+    declared !== "application/octet-stream"
+  ) {
+    return declared
+  }
+  if (
+    bytes.length >= 3 &&
+    bytes[0] === JPEG_MAGIC[0] &&
+    bytes[1] === JPEG_MAGIC[1] &&
+    bytes[2] === JPEG_MAGIC[2]
+  ) {
+    return "image/jpeg"
+  }
+  if (
+    bytes.length >= 4 &&
+    bytes[0] === PNG_MAGIC[0] &&
+    bytes[1] === PNG_MAGIC[1] &&
+    bytes[2] === PNG_MAGIC[2] &&
+    bytes[3] === PNG_MAGIC[3]
+  ) {
+    return "image/png"
+  }
+  if (
+    bytes.length >= 3 &&
+    bytes[0] === GIF_MAGIC[0] &&
+    bytes[1] === GIF_MAGIC[1] &&
+    bytes[2] === GIF_MAGIC[2]
+  ) {
+    return "image/gif"
+  }
+  if (
+    bytes.length >= 12 &&
+    bytes[0] === WEBP_RIFF[0] &&
+    bytes[1] === WEBP_RIFF[1] &&
+    bytes[2] === WEBP_RIFF[2] &&
+    bytes[3] === WEBP_RIFF[3]
+  ) {
+    return "image/webp"
+  }
+  return "image/jpeg"
+}
+
+/**
+ * Telegram (and some other providers) serve profile photos with
+ * `Content-Disposition: attachment` / `application/octet-stream`. A 302 to
+ * that URL makes `<img>` fail in the browser — stream the bytes ourselves
+ * with an image Content-Type instead.
+ */
+const respondWithExternalAvatar = async (
+  freshAvatarUrl: string,
+  placeholder: () => NextResponse,
+): Promise<NextResponse> => {
+  try {
+    const upstream = await fetch(freshAvatarUrl, {
+      signal: AbortSignal.timeout(AVATAR_FETCH_TIMEOUT_MS),
+      headers: { "User-Agent": "node" },
+      redirect: "follow",
+    })
+    if (!upstream.ok) {
+      return placeholder()
+    }
+    const buffer = new Uint8Array(await upstream.arrayBuffer())
+    if (buffer.byteLength === 0) {
+      return placeholder()
+    }
+    const mimeType = sniffImageMimeType(
+      buffer,
+      upstream.headers.get("content-type"),
+    )
+    return new NextResponse(Buffer.from(buffer), {
+      status: 200,
+      headers: {
+        "Content-Type": mimeType,
+        "Cache-Control": "public, max-age=300",
+      },
+    })
+  } catch {
+    return placeholder()
+  }
+}
+
 export const GET = async (request: NextRequest, context: RouteContext) => {
   const { token } = await context.params
   const resolvedRequest = await resolveMediaRequest({
@@ -84,9 +176,10 @@ export const GET = async (request: NextRequest, context: RouteContext) => {
       workspaceId: resolvedRequest.workspaceId,
     })
     mirror()
-    return freshAvatarUrl
-      ? NextResponse.redirect(freshAvatarUrl, 302)
-      : placeholder()
+    if (!freshAvatarUrl) {
+      return placeholder()
+    }
+    return await respondWithExternalAvatar(freshAvatarUrl, placeholder)
   } catch (err) {
     // Terminal (the fetch will keep failing) or a transient provider/network
     // blip — either way degrade to the placeholder instead of a 502 and mirror

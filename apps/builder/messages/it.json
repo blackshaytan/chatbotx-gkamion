@@ -5341,7 +5341,7 @@
     "exportTakingLong": "L'esportazione sta richiedendo più tempo del previsto",
     "exportTakingLongDescription": "L'esportazione è ancora in corso. Puoi chiudere questa finestra e ricontrollare tra qualche minuto nella cronologia delle esportazioni.",
     "gkamionCabinet": {
-      "open": "Open customer cabinet",
+      "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",
       "missingIdentifiers": "Add a phone number or email to open the customer cabinet.",
       "notConfigured": "gKamion cabinet integration is not configured.",

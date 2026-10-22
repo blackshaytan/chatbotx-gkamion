@@ -87,6 +87,17 @@ describe("ContactNameCell avatar rendering", () => {
     expect(el.querySelector("img")?.getAttribute("src")).toBe(proxyUrl)
   })
 
+  test("skips expired provider CDN URLs so initials show instead of a broken image", () => {
+    const el = renderContact(
+      "https://api.telegram.org/file/botTOKEN/photos/file_1.jpg",
+    )
+
+    expect(el.querySelector("img")).toBeNull()
+    expect(el.querySelector('[data-slot="avatar-fallback"]')?.textContent).toBe(
+      "Ad",
+    )
+  })
+
   test("renders initials when the server avatar value is null", () => {
     const el = renderContact(null)
 

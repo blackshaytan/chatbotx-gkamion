@@ -610,6 +610,7 @@ describe("attachment media proxy", () => {
 describe("avatar media proxy", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.unstubAllGlobals()
     mocks.checkGuestRateLimit.mockResolvedValue({
       limited: false,
       retryAfter: 10,
@@ -656,7 +657,7 @@ describe("avatar media proxy", () => {
     expect(mocks.resolveFreshContactAvatarUrl).not.toHaveBeenCalled()
   })
 
-  test("refetches a pending provider avatar URL instead of redirecting to it", async () => {
+  test("streams a pending provider avatar instead of redirecting to it", async () => {
     mocks.findContact.mockResolvedValue({
       id: "contact-1",
       avatar: "https://api.telegram.org/file/botTOKEN/photos/file_1.jpg",
@@ -664,16 +665,26 @@ describe("avatar media proxy", () => {
     mocks.resolveFreshContactAvatarUrl.mockResolvedValue(
       "https://api.telegram.org/file/botTOKEN/photos/file_fresh.jpg",
     )
+    // JPEG magic bytes — Telegram serves these as application/octet-stream
+    // with Content-Disposition: attachment, which `<img>` cannot display.
+    const jpegBytes = new Uint8Array([0xff, 0xd8, 0xff, 0xd9])
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => jpegBytes.buffer,
+        headers: { get: () => "application/octet-stream" },
+      }),
+    )
 
     const response = await getAvatar(
       new Request("http://localhost/media/avatar/signed-token") as never,
       tokenContext(),
     )
 
-    expect(response.status).toBe(302)
-    expect(response.headers.get("location")).toBe(
-      "https://api.telegram.org/file/botTOKEN/photos/file_fresh.jpg",
-    )
+    expect(response.status).toBe(200)
+    expect(response.headers.get("content-type")).toBe("image/jpeg")
+    expect(response.headers.get("location")).toBeNull()
     expect(mocks.getPublicFileUrl).not.toHaveBeenCalled()
     expect(mocks.resolveFreshContactAvatarUrl).toHaveBeenCalledWith({
       contactInboxId: "contact-inbox-1",
@@ -701,7 +712,7 @@ describe("avatar media proxy", () => {
     expect(mocks.resolveFreshContactAvatarUrl).not.toHaveBeenCalled()
   })
 
-  test("refetches a stale no-avatar sentinel and enqueues mirroring", async () => {
+  test("refetches a stale no-avatar sentinel and streams the image", async () => {
     mocks.findContact.mockResolvedValue({
       id: "contact-1",
       avatar: "public/img/no_avatar.jpg?time=0",
@@ -709,16 +720,23 @@ describe("avatar media proxy", () => {
     mocks.resolveFreshContactAvatarUrl.mockResolvedValue(
       "https://cdn.example/profile-pic.jpg",
     )
+    const jpegBytes = new Uint8Array([0xff, 0xd8, 0xff, 0xd9])
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => jpegBytes.buffer,
+        headers: { get: () => "image/jpeg" },
+      }),
+    )
 
     const response = await getAvatar(
       new Request("http://localhost/media/avatar/signed-token") as never,
       tokenContext(),
     )
 
-    expect(response.status).toBe(302)
-    expect(response.headers.get("location")).toBe(
-      "https://cdn.example/profile-pic.jpg",
-    )
+    expect(response.status).toBe(200)
+    expect(response.headers.get("content-type")).toBe("image/jpeg")
     expect(mocks.getPublicFileUrl).not.toHaveBeenCalled()
     expect(mocks.resolveFreshContactAvatarUrl).toHaveBeenCalledWith({
       contactInboxId: "contact-inbox-1",
@@ -727,9 +745,18 @@ describe("avatar media proxy", () => {
     expect(mocks.lowQueueAdd).toHaveBeenCalledTimes(1)
   })
 
-  test("redirects a pending avatar to profile_pic and enqueues mirroring", async () => {
+  test("streams a pending avatar and enqueues mirroring", async () => {
     mocks.resolveFreshContactAvatarUrl.mockResolvedValue(
       "https://cdn.example/profile-pic.jpg",
+    )
+    const jpegBytes = new Uint8Array([0xff, 0xd8, 0xff, 0xd9])
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => jpegBytes.buffer,
+        headers: { get: () => "image/jpeg" },
+      }),
     )
 
     const response = await getAvatar(
@@ -737,10 +764,8 @@ describe("avatar media proxy", () => {
       tokenContext(),
     )
 
-    expect(response.status).toBe(302)
-    expect(response.headers.get("location")).toBe(
-      "https://cdn.example/profile-pic.jpg",
-    )
+    expect(response.status).toBe(200)
+    expect(response.headers.get("content-type")).toBe("image/jpeg")
     expect(mocks.lowQueueAdd).toHaveBeenCalledWith(
       "updateContactAvatar",
       {

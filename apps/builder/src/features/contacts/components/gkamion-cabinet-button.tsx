@@ -66,9 +66,13 @@ export const GkamionCabinetButton = ({
     return null
   }
 
+  // gKamion-specific control: keep the Russian product label regardless of the
+  // operator's UI locale (inbox may be English while the rest of the stack is RU).
+  const label = t("contacts.gkamionCabinet.open")
+
   return (
     <Button
-      aria-label={t("contacts.gkamionCabinet.open")}
+      aria-label={label}
       className="gap-2"
       disabled={isPending}
       onClick={() => {
@@ -83,7 +87,7 @@ export const GkamionCabinetButton = ({
       ) : (
         <ExternalLinkIcon aria-hidden className="size-4" />
       )}
-      {t("contacts.gkamionCabinet.open")}
+      {label}
     </Button>
   )
 }
