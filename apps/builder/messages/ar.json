@@ -5339,7 +5339,14 @@
     "countCapped": "أكثر من {count} جهة اتصال",
     "exportAllNotice": "سيتم تصدير جميع جهات الاتصال المطابقة لعامل التصفية الحالي.",
     "exportTakingLong": "يستغرق التصدير وقتًا أطول من المتوقع",
-    "exportTakingLongDescription": "لا تزال عملية التصدير جارية. يمكنك إغلاق مربع الحوار هذا والتحقق مرة أخرى بعد بضع دقائق من سجل التصدير."
+    "exportTakingLongDescription": "لا تزال عملية التصدير جارية. يمكنك إغلاق مربع الحوار هذا والتحقق مرة أخرى بعد بضع دقائق من سجل التصدير.",
+    "gkamionCabinet": {
+      "open": "Open customer cabinet",
+      "notFound": "No gKamion customer found for this phone or email.",
+      "missingIdentifiers": "Add a phone number or email to open the customer cabinet.",
+      "notConfigured": "gKamion cabinet integration is not configured.",
+      "error": "Could not open the customer cabinet. Try again."
+    }
   },
   "contactScan": {
     "menu": {

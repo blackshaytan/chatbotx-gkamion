@@ -1,4 +1,8 @@
-import type { Context, IncomingContact } from "@chatbotx.io/sdk"
+import type {
+  ContactHandlers,
+  Context,
+  IncomingContact,
+} from "@chatbotx.io/sdk"
 import { getTelegramFileUrl } from "../apis/bot"
 import { rescue } from "../exception"
 import { createTelegramClient } from "../lib/http-client"
@@ -29,15 +33,26 @@ export const getUserProfile = ({
       lastName: chat.last_name,
     }
 
-    if (chat.username) {
-      const photoFileId = await getProfilePhotoFileId(ctx.auth, psid)
-      if (photoFileId) {
-        contact.avatar = await getTelegramFileUrl(ctx.auth, photoFileId)
-      }
+    // Profile photos are keyed by user_id — username is unrelated. Skipping
+    // when username is missing left many 1:1 chats without an avatar.
+    const photoFileId = await getProfilePhotoFileId(ctx.auth, psid)
+    if (photoFileId) {
+      contact.avatar = await getTelegramFileUrl(ctx.auth, photoFileId)
     }
 
     return contact
   })
+
+export const getContactProfilePicUrl: ContactHandlers<TelegramAuthValue>["getContactProfilePicUrl"] =
+  ({ ctx, data: { sourceId } }) =>
+    rescue("getUserProfilePhotos", async () => {
+      const photoFileId = await getProfilePhotoFileId(ctx.auth, sourceId)
+      if (!photoFileId) {
+        return null
+      }
+      const url = await getTelegramFileUrl(ctx.auth, photoFileId)
+      return url ?? null
+    })
 
 const getProfilePhotoFileId = async (
   auth: TelegramAuthValue,

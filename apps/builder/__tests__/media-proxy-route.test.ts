@@ -656,6 +656,32 @@ describe("avatar media proxy", () => {
     expect(mocks.resolveFreshContactAvatarUrl).not.toHaveBeenCalled()
   })
 
+  test("refetches a pending provider avatar URL instead of redirecting to it", async () => {
+    mocks.findContact.mockResolvedValue({
+      id: "contact-1",
+      avatar: "https://api.telegram.org/file/botTOKEN/photos/file_1.jpg",
+    })
+    mocks.resolveFreshContactAvatarUrl.mockResolvedValue(
+      "https://api.telegram.org/file/botTOKEN/photos/file_fresh.jpg",
+    )
+
+    const response = await getAvatar(
+      new Request("http://localhost/media/avatar/signed-token") as never,
+      tokenContext(),
+    )
+
+    expect(response.status).toBe(302)
+    expect(response.headers.get("location")).toBe(
+      "https://api.telegram.org/file/botTOKEN/photos/file_fresh.jpg",
+    )
+    expect(mocks.getPublicFileUrl).not.toHaveBeenCalled()
+    expect(mocks.resolveFreshContactAvatarUrl).toHaveBeenCalledWith({
+      contactInboxId: "contact-inbox-1",
+      workspaceId: "workspace-1",
+    })
+    expect(mocks.lowQueueAdd).toHaveBeenCalledTimes(1)
+  })
+
   test("redirects a fresh no-avatar sentinel to the default placeholder", async () => {
     const avatar = `public/img/no_avatar.jpg?time=${Date.now()}`
     mocks.findContact.mockResolvedValue({ id: "contact-1", avatar })

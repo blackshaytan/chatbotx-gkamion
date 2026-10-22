@@ -228,6 +228,7 @@ chatbotx contacts sequence delete <identifier> --sequenceIds <sequenceIds>
 # Channel identities
 chatbotx contacts inboxes list <identifier>          # List per-channel contact-inbox connections
 chatbotx contacts refresh-profile add <identifier> --contactInboxId <contactInboxId>
+chatbotx contacts cabinet-link get <identifier>     # gKamion admin cabinet URL (by phone/email)
 
 # Messaging & Automation
 chatbotx contacts messages list <identifier>         # [--perPage --cursor]

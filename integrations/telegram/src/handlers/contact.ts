@@ -1,5 +1,5 @@
 import type { ContactHandlers } from "@chatbotx.io/sdk"
-import { getUserProfile } from "../apis/user"
+import { getContactProfilePicUrl, getUserProfile } from "../apis/user"
 import type { TelegramAuthValue } from "../schema"
 
 const getProfile: ContactHandlers<TelegramAuthValue>["getProfile"] = async ({
@@ -9,4 +9,5 @@ const getProfile: ContactHandlers<TelegramAuthValue>["getProfile"] = async ({
 
 export const contactHandlers: Partial<ContactHandlers<TelegramAuthValue>> = {
   getProfile,
+  getContactProfilePicUrl,
 }

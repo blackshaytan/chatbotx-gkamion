@@ -1171,7 +1171,14 @@
     "exportTakingLong": "Exporten tar längre tid än väntat",
     "exportTakingLongDescription": "Exporten bearbetas fortfarande. Du kan stänga den här dialogrutan och kontrollera exporthistoriken igen om några minuter.",
     "linkCopied": "Länken har kopierats till urklipp",
-    "title": "Kontakter"
+    "title": "Kontakter",
+    "gkamionCabinet": {
+      "open": "Open customer cabinet",
+      "notFound": "No gKamion customer found for this phone or email.",
+      "missingIdentifiers": "Add a phone number or email to open the customer cabinet.",
+      "notConfigured": "gKamion cabinet integration is not configured.",
+      "error": "Could not open the customer cabinet. Try again."
+    }
   },
   "contactScan": {
     "menu": {

@@ -5335,7 +5335,14 @@
     "countCapped": "Mais de {count} contactos",
     "exportAllNotice": "Todos os contactos que correspondem ao filtro atual serão exportados.",
     "exportTakingLong": "A exportação está a demorar mais do que o esperado",
-    "exportTakingLongDescription": "A exportação continua a ser processada. Pode fechar esta caixa de diálogo e voltar a consultar o histórico de exportações dentro de alguns minutos."
+    "exportTakingLongDescription": "A exportação continua a ser processada. Pode fechar esta caixa de diálogo e voltar a consultar o histórico de exportações dentro de alguns minutos.",
+    "gkamionCabinet": {
+      "open": "Open customer cabinet",
+      "notFound": "No gKamion customer found for this phone or email.",
+      "missingIdentifiers": "Add a phone number or email to open the customer cabinet.",
+      "notConfigured": "gKamion cabinet integration is not configured.",
+      "error": "Could not open the customer cabinet. Try again."
+    }
   },
   "contactScan": {
     "menu": {

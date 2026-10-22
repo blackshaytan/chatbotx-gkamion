@@ -1359,7 +1359,14 @@
     "exportTakingLong": "导出花费的时间比预期长",
     "exportTakingLongDescription": "导出仍在处理中。您可以关闭此对话框，并在几分钟后返回查看导出历史记录。",
     "linkCopied": "链接已拷贝到剪贴板",
-    "title": "联系人"
+    "title": "联系人",
+    "gkamionCabinet": {
+      "open": "Open customer cabinet",
+      "notFound": "No gKamion customer found for this phone or email.",
+      "missingIdentifiers": "Add a phone number or email to open the customer cabinet.",
+      "notConfigured": "gKamion cabinet integration is not configured.",
+      "error": "Could not open the customer cabinet. Try again."
+    }
   },
   "contactScan": {
     "menu": {

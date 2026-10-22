@@ -4,6 +4,7 @@ import { contactsNotesPublicRouter } from "@/features/contact-notes/api/public"
 import { contactsSequencesPublicRouter } from "@/features/contact-sequences/api/public"
 import { importPublicRouter } from "@/features/import/api/public"
 import { contactsBulkPublicRouter } from "./public/bulk"
+import { contactsCabinetLinkPublicRouter } from "./public/cabinet-link"
 import { contactsCrudPublicRouter } from "./public/crud"
 import { contactsCustomFieldsPublicRouter } from "./public/custom-fields"
 import { contactsExportPublicRouter } from "./public/export"
@@ -24,4 +25,5 @@ export const contactsPublicRouter = {
   ...contactsBulkPublicRouter,
   ...contactsExportPublicRouter,
   ...contactsRefreshProfilePublicRouter,
+  ...contactsCabinetLinkPublicRouter,
 }

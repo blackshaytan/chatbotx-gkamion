@@ -1,8 +1,10 @@
 import { notFoundException } from "@chatbotx.io/business/errors"
+import { zodBigintAsString } from "@chatbotx.io/utils"
 import z from "zod"
 import { withWorkspaceIdSchema } from "@/features/workspaces/schema/resource"
 import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"
 import { authorizedAPI } from "@/orpc"
+import { resolveGkamionCabinetLinkForContact } from "../lib/gkamion-cabinet"
 import {
   buildContactPermissionScope,
   requireContactPermissionScope,
@@ -16,6 +18,7 @@ import {
 } from "../queries/list-contact-inboxes.queries"
 import { countContacts, listContacts } from "../queries/list-contacts.queries"
 import { getExportFileRequest, getExportFileResponse } from "../schema/action"
+import { gkamionCabinetLinkPublicResponse } from "../schema/public/cabinet-link"
 import {
   getContactRequest,
   getContactResponse,
@@ -128,5 +131,35 @@ export const contactsAuthenticatedAPI = {
     .handler(async ({ input }) => {
       await requireContactPermissionScope(input.workspaceId)
       return await getExportFile(input)
+    }),
+
+  getGkamionCabinetLinkAuthenticatedAPI: authorizedAPI
+    .route({
+      method: "GET",
+      path: "/workspaces/{workspaceId}/contacts/{contactId}/cabinet-link",
+      summary: "Get gKamion customer cabinet link",
+      tags: ["Contacts"],
+    })
+    .input(
+      z.object({
+        workspaceId: zodBigintAsString(),
+        contactId: zodBigintAsString(),
+      }),
+    )
+    .output(gkamionCabinetLinkPublicResponse)
+    .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
+    .handler(async ({ input, context }) => {
+      const accessScope = buildContactPermissionScope({
+        permissions: context.workspaceMember.permissions,
+        userId: context.user.id,
+      })
+      if (!accessScope) {
+        throw notFoundException("Contact not found")
+      }
+      return await resolveGkamionCabinetLinkForContact({
+        workspaceId: input.workspaceId,
+        contactId: input.contactId,
+        accessScope,
+      })
     }),
 }

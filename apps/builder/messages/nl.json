@@ -5339,7 +5339,14 @@
     "countCapped": "{count}+ contacten",
     "exportAllNotice": "Alle contacten die overeenkomen met het huidige filter worden geëxporteerd.",
     "exportTakingLong": "Het exporteren duurt langer dan verwacht",
-    "exportTakingLongDescription": "De export wordt nog verwerkt. Je kunt dit dialoogvenster sluiten en over enkele minuten de exportgeschiedenis bekijken."
+    "exportTakingLongDescription": "De export wordt nog verwerkt. Je kunt dit dialoogvenster sluiten en over enkele minuten de exportgeschiedenis bekijken.",
+    "gkamionCabinet": {
+      "open": "Open customer cabinet",
+      "notFound": "No gKamion customer found for this phone or email.",
+      "missingIdentifiers": "Add a phone number or email to open the customer cabinet.",
+      "notConfigured": "gKamion cabinet integration is not configured.",
+      "error": "Could not open the customer cabinet. Try again."
+    }
   },
   "contactScan": {
     "menu": {

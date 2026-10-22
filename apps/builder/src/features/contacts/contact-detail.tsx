@@ -51,6 +51,8 @@ import type { ContactInboxResource } from "../contact-inboxes/schema/resource"
 import { ContactCustomFieldManage } from "../custom-fields/contact-custom-field-manage"
 import { formatCustomFieldDisplayValue } from "../custom-fields/lib/format-custom-field-display-value"
 import { customFieldIconsMap } from "../custom-fields/provider/custom-field-hook"
+import { GkamionCabinetButton } from "./components/gkamion-cabinet-button"
+import { SHOW_CONTACT_CUSTOM_FIELD_ACTIONS } from "./contact-panel-visibility"
 import { EditContactField } from "./edit-contact-field"
 import { resolveSourceIdentity } from "./lib/channel-identity"
 import { ResetContactCustomFieldsDialog } from "./reset-contact-custom-fields-dialog"
@@ -343,6 +345,8 @@ export const ContactDetail = ({
   const workspaceId = useWorkspaceId()
   const { conversations, updateContact } = useChatStore((state) => state)
   const avatarUrl = useAvatarUrl(contact)
+  const avatarFallback =
+    (contact?.fullName ?? contact?.firstName ?? "?").slice(0, 2) || "?"
   const [timezone, setTimezone] = useState("UTC")
 
   // The contact panel's call control: every contactInbox of this conversation's
@@ -587,7 +591,7 @@ export const ContactDetail = ({
             className="object-cover"
             src={avatarUrl}
           />
-          <AvatarFallback>NA</AvatarFallback>
+          <AvatarFallback>{avatarFallback}</AvatarFallback>
         </Avatar>
         {instagramUsername && (
           <a
@@ -599,6 +603,12 @@ export const ContactDetail = ({
             @{instagramUsername}
           </a>
         )}
+        <GkamionCabinetButton
+          contactId={contact.id}
+          email={contact.email}
+          phoneNumber={contact.phoneNumber}
+          workspaceId={workspaceId}
+        />
       </div>
       {activeConversationForCall && soleCallableContactInbox && (
         <div className="mb-3 flex justify-center">
@@ -697,19 +707,21 @@ export const ContactDetail = ({
             </div>
           )
         })}
-        <div className="flex items-center justify-between gap-6">
-          <ContactCustomFieldManage
-            disabledIds={contactFields.map((field) => field.key)}
-            onChooseCustomField={handleChooseCustomField}
-            workspaceId={workspaceId}
-          />
-          <ResetContactCustomFieldsDialog
-            contactId={contact.id}
-            disabled={!contactFields.some((field) => field.isCustomField)}
-            onSuccess={handleCustomFieldsReset}
-            workspaceId={workspaceId}
-          />
-        </div>
+        {SHOW_CONTACT_CUSTOM_FIELD_ACTIONS ? (
+          <div className="flex items-center justify-between gap-6">
+            <ContactCustomFieldManage
+              disabledIds={contactFields.map((field) => field.key)}
+              onChooseCustomField={handleChooseCustomField}
+              workspaceId={workspaceId}
+            />
+            <ResetContactCustomFieldsDialog
+              contactId={contact.id}
+              disabled={!contactFields.some((field) => field.isCustomField)}
+              onSuccess={handleCustomFieldsReset}
+              workspaceId={workspaceId}
+            />
+          </div>
+        ) : null}
       </div>
 
       <EditContactField

@@ -424,6 +424,52 @@ describe("resolveMediaUrl", () => {
     expect(finalize).not.toHaveBeenCalled()
     expect(mocks.signMediaToken).not.toHaveBeenCalled()
   })
+
+  test("proxies a pending Telegram file URL instead of finalizing it", async () => {
+    const finalize = vi.fn(async (key: string) => key)
+    const pending = "https://api.telegram.org/file/botTOKEN/photos/file_1.jpg"
+
+    const result = await resolveMediaUrl(
+      {
+        kind: "avatar",
+        workspaceId: "workspace-1",
+        contactInboxId: "telegram-contact-inbox",
+        channel: "telegram",
+        avatar: pending,
+      },
+      finalize,
+    )
+
+    expect(result).toBe(
+      "https://builder.example.com/media/avatar/signed-media-token",
+    )
+    expect(mocks.signMediaToken).toHaveBeenCalledWith({
+      workspaceId: "workspace-1",
+      kind: "avatar",
+      refId: "telegram-contact-inbox",
+    })
+    expect(finalize).not.toHaveBeenCalled()
+  })
+
+  test("returns a signed proxy URL for an unresolved Telegram avatar", async () => {
+    const finalize = vi.fn(async (key: string) => key)
+
+    const result = await resolveMediaUrl(
+      {
+        kind: "avatar",
+        workspaceId: "workspace-1",
+        contactInboxId: "telegram-contact-inbox",
+        channel: "telegram",
+        avatar: null,
+      },
+      finalize,
+    )
+
+    expect(result).toBe(
+      "https://builder.example.com/media/avatar/signed-media-token",
+    )
+    expect(finalize).not.toHaveBeenCalled()
+  })
 })
 
 describe("resolveContactAvatarUrl", () => {
@@ -583,5 +629,53 @@ describe("resolveContactAvatarUrl", () => {
     expect(result).toBeNull()
     expect(finalize).not.toHaveBeenCalled()
     expect(mocks.signMediaToken).not.toHaveBeenCalled()
+  })
+
+  test("drops a pending provider URL when there is no inbox to rehydrate from", async () => {
+    const finalize = vi.fn(async (key: string) => key)
+
+    const result = await resolveContactAvatarUrl(
+      {
+        workspaceId: "workspace-1",
+        contact: {
+          avatar: "https://api.telegram.org/file/botTOKEN/photos/file_1.jpg",
+        },
+        contactInboxes: [],
+      },
+      finalize,
+    )
+
+    expect(result).toBeNull()
+    expect(finalize).not.toHaveBeenCalled()
+  })
+
+  test("proxies a pending Telegram avatar via the selected contact inbox", async () => {
+    const finalize = vi.fn(async (key: string) => key)
+
+    const result = await resolveContactAvatarUrl(
+      {
+        workspaceId: "workspace-1",
+        contact: {
+          avatar: "https://api.telegram.org/file/botTOKEN/photos/file_1.jpg",
+        },
+        contactInboxes: [
+          {
+            id: "telegram-contact-inbox",
+            channel: "telegram",
+          },
+        ],
+      },
+      finalize,
+    )
+
+    expect(result).toBe(
+      "https://builder.example.com/media/avatar/signed-media-token",
+    )
+    expect(mocks.signMediaToken).toHaveBeenCalledWith({
+      workspaceId: "workspace-1",
+      kind: "avatar",
+      refId: "telegram-contact-inbox",
+    })
+    expect(finalize).not.toHaveBeenCalled()
   })
 })

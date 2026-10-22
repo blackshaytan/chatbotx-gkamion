@@ -6021,7 +6021,14 @@
     "countCapped": "{count}+ kontakt",
     "exportAllNotice": "Cari süzgəcə uyğun bütün kontaktlar ixrac ediləcək.",
     "exportTakingLong": "İxrac gözləniləndən uzun çəkir",
-    "exportTakingLongDescription": "İxrac hələ davam edir. Bu pəncərəni bağlayıb bir neçə dəqiqədən sonra ixrac tarixçəsindən yenidən yoxlaya bilərsiniz."
+    "exportTakingLongDescription": "İxrac hələ davam edir. Bu pəncərəni bağlayıb bir neçə dəqiqədən sonra ixrac tarixçəsindən yenidən yoxlaya bilərsiniz.",
+    "gkamionCabinet": {
+      "open": "Open customer cabinet",
+      "notFound": "No gKamion customer found for this phone or email.",
+      "missingIdentifiers": "Add a phone number or email to open the customer cabinet.",
+      "notConfigured": "gKamion cabinet integration is not configured.",
+      "error": "Could not open the customer cabinet. Try again."
+    }
   },
   "contactScan": {
     "menu": {

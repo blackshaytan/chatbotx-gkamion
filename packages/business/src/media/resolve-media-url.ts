@@ -14,7 +14,15 @@ export const HYDRATION_CHANNELS = new Set([
   "whatsapp",
 ])
 
-export const AVATAR_HYDRATION_CHANNELS = new Set(["messenger", "instagram"])
+// Channels that can mint a fresh profile-pic URL on demand (see each
+// integration's `contact.getContactProfilePicUrl`). Transient provider URLs
+// (Telegram `api.telegram.org/file/...`, Graph lookaside, …) expire — treat
+// them as pending and route through the avatar proxy so we re-fetch.
+export const AVATAR_HYDRATION_CHANNELS = new Set([
+  "messenger",
+  "instagram",
+  "telegram",
+])
 export const FAILED_PREFIX = "failed:"
 export const WA_MEDIA_PREFIX = "wa-media:"
 
@@ -196,12 +204,16 @@ const resolveAvatarUrl = async (
 ): Promise<string | null> => {
   if (ref.avatar) {
     const sentinel = parseNoAvatarSentinel(ref.avatar)
-    if (!sentinel) {
+    if (sentinel) {
+      if (isNoAvatarSentinelFresh(sentinel.failedAtMs)) {
+        return await resolveDefaultAvatarUrl(ref.workspaceId)
+      }
+      // Stale sentinel → fall through and try to rehydrate.
+    } else if (!isPendingOriginPath(ref.avatar)) {
+      // Durable storage key (mirrored avatar) — serve it directly.
       return await finalize(ref.avatar)
     }
-    if (isNoAvatarSentinelFresh(sentinel.failedAtMs)) {
-      return await resolveDefaultAvatarUrl(ref.workspaceId)
-    }
+    // Pending provider URL (http(s) / wa-media:) → rehydrate via proxy.
   }
   if (!AVATAR_HYDRATION_CHANNELS.has(ref.channel)) {
     return null
@@ -273,9 +285,10 @@ export const resolveContactAvatarUrl = async (
   const contactInbox = selectAvatarContactInbox(contactInboxes)
 
   if (!contactInbox) {
-    // No inbox to rehydrate from: a real key finalizes, a sentinel (fresh or
-    // stale) resolves to the placeholder rather than a maybe-missing key.
-    if (!input.contact.avatar) {
+    // No inbox to rehydrate from: a durable key finalizes, a sentinel (fresh
+    // or stale) resolves to the placeholder, and a pending provider URL is
+    // treated as missing (cannot refresh without a contact inbox).
+    if (!input.contact.avatar || isPendingOriginPath(input.contact.avatar)) {
       return null
     }
     return await finalizeAvatarOrPlaceholder(

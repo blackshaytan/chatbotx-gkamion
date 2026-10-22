@@ -2,6 +2,7 @@ import {
   contactInboxService,
   contactService,
   isNoAvatarSentinelFresh,
+  isPendingOriginPath,
   parseNoAvatarSentinel,
   resolveTenantSettings,
 } from "@chatbotx.io/business"
@@ -59,17 +60,20 @@ export const GET = async (request: NextRequest, context: RouteContext) => {
   if (contact.avatar) {
     const sentinel = parseNoAvatarSentinel(contact.avatar)
     if (!sentinel) {
-      const { storageUrl } = await resolveTenantSettings({
-        workspaceId: resolvedRequest.workspaceId,
-      })
-      return NextResponse.redirect(
-        getPublicFileUrl(contact.avatar, storageUrl),
-        302,
-      )
-    }
-    // Fresh no-avatar: serve the guaranteed placeholder, not the stored sentinel
-    // key which may be absent from the tenant's bucket.
-    if (isNoAvatarSentinelFresh(sentinel.failedAtMs)) {
+      // Durable mirrored key → storage. Transient provider URLs (Telegram
+      // file links, Graph lookaside, …) expire — re-fetch a fresh one below.
+      if (!isPendingOriginPath(contact.avatar)) {
+        const { storageUrl } = await resolveTenantSettings({
+          workspaceId: resolvedRequest.workspaceId,
+        })
+        return NextResponse.redirect(
+          getPublicFileUrl(contact.avatar, storageUrl),
+          302,
+        )
+      }
+    } else if (isNoAvatarSentinelFresh(sentinel.failedAtMs)) {
+      // Fresh no-avatar: serve the guaranteed placeholder, not the stored
+      // sentinel key which may be absent from the tenant's bucket.
       return placeholder()
     }
   }

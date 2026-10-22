@@ -23,6 +23,7 @@ import { ContactAppointmentsList } from "./components/contact-appointments-list"
 import { ContactThreadControlSection } from "./components/contact-thread-control-section"
 import UpdateContactTagField from "./components/update-contact-tag-field"
 import { ContactDetail } from "./contact-detail"
+import { SHOW_CONTACT_SIDE_PANEL_MODULES } from "./contact-panel-visibility"
 import { useAutoRefreshContactProfile } from "./hooks/use-auto-refresh-contact-profile"
 import type { GetContactResponse } from "./schema/query"
 
@@ -176,54 +177,57 @@ export const ContactInboxPanel = ({
           ]
         : []
 
-    return [
-      ...routingModules,
-      {
-        keyName: t("coupons.title"),
-        content: (
-          <ContactCouponsSection
-            contactId={contactData.id}
-            workspaceId={workspaceId}
-          />
-        ),
-      },
-      {
-        keyName: t("appointments.title"),
-        content: (
-          <ContactAppointmentsSection
-            contactId={contactData.id}
-            workspaceId={workspaceId}
-          />
-        ),
-      },
-      {
-        keyName: t("fields.tags.label"),
-        content: (
-          <UpdateContactTagField
-            contact={contactData}
-            onSuccess={(updatedTags: TagResource[]) => {
-              setContactData((previousContact) =>
-                previousContact
-                  ? { ...previousContact, tags: updatedTags }
-                  : null,
-              )
-            }}
-            tags={contactData.tags}
-            workspaceId={workspaceId}
-          />
-        ),
-      },
-      {
-        keyName: t("sequences.title"),
-        content: (
-          <ContactSequencesSection
-            contact={contactData}
-            contactId={contactData.id}
-            workspaceId={workspaceId}
-          />
-        ),
-      },
-    ]
+    const sidePanelModules: AccordionModule[] = SHOW_CONTACT_SIDE_PANEL_MODULES
+      ? [
+          {
+            keyName: t("coupons.title"),
+            content: (
+              <ContactCouponsSection
+                contactId={contactData.id}
+                workspaceId={workspaceId}
+              />
+            ),
+          },
+          {
+            keyName: t("appointments.title"),
+            content: (
+              <ContactAppointmentsSection
+                contactId={contactData.id}
+                workspaceId={workspaceId}
+              />
+            ),
+          },
+          {
+            keyName: t("fields.tags.label"),
+            content: (
+              <UpdateContactTagField
+                contact={contactData}
+                onSuccess={(updatedTags: TagResource[]) => {
+                  setContactData((previousContact) =>
+                    previousContact
+                      ? { ...previousContact, tags: updatedTags }
+                      : null,
+                  )
+                }}
+                tags={contactData.tags}
+                workspaceId={workspaceId}
+              />
+            ),
+          },
+          {
+            keyName: t("sequences.title"),
+            content: (
+              <ContactSequencesSection
+                contact={contactData}
+                contactId={contactData.id}
+                workspaceId={workspaceId}
+              />
+            ),
+          },
+        ]
+      : []
+
+    return [...routingModules, ...sidePanelModules]
   }, [
     contactData,
     workspaceId,
@@ -251,37 +255,39 @@ export const ContactInboxPanel = ({
         }
       />
 
-      {contactData?.id ? (
+      {SHOW_CONTACT_SIDE_PANEL_MODULES && contactData?.id ? (
         <ContactNotesSection
           contactId={contactData.id}
           workspaceId={workspaceId}
         />
       ) : null}
 
-      <Accordion
-        className="w-full"
-        onValueChange={(value) => setOpenAccordionItems(value as string[])}
-        value={openAccordionItems}
-      >
-        {accordionModules.map((module, index) => (
-          <AccordionItem
-            className="transition-all hover:data-[state=open]:rounded-none"
-            key={module.keyName}
-            value={module.keyName}
-          >
-            <AccordionTrigger
-              className={`rounded-none p-2 transition-all ${index === 0 ? "border-t" : ""}`}
+      {accordionModules.length > 0 ? (
+        <Accordion
+          className="w-full"
+          onValueChange={(value) => setOpenAccordionItems(value as string[])}
+          value={openAccordionItems}
+        >
+          {accordionModules.map((module, index) => (
+            <AccordionItem
+              className="transition-all hover:data-[state=open]:rounded-none"
+              key={module.keyName}
+              value={module.keyName}
             >
-              <div className="flex items-center gap-2">{module.keyName}</div>
-            </AccordionTrigger>
-            <AccordionContent>
-              {openAccordionItems.includes(module.keyName)
-                ? module.content
-                : null}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+              <AccordionTrigger
+                className={`rounded-none p-2 transition-all ${index === 0 ? "border-t" : ""}`}
+              >
+                <div className="flex items-center gap-2">{module.keyName}</div>
+              </AccordionTrigger>
+              <AccordionContent>
+                {openAccordionItems.includes(module.keyName)
+                  ? module.content
+                  : null}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      ) : null}
     </div>
   )
 }
