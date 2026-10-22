@@ -24,6 +24,7 @@ import {
   parseThreadControlEvent,
   type ThreadControlSnapshotPatch,
 } from "@/features/conversations/utils/thread-control"
+import { getExternalAgentActivity } from "@/features/external-agent/lib/activity"
 import type {
   MessageResource,
   MessageResourceWithRelations,
@@ -142,6 +143,31 @@ const readThroughPatch = (
     return {}
   }
   return { agentLastReadAt: readAt, unreadCount: 0 }
+}
+
+/**
+ * The state an external agent handover note leaves on its conversation: the
+ * bot is off and a manager is awaited. Mirrors the server, which stamps the
+ * handover only when it turns a running bot off, so a note for a conversation
+ * whose bot is already off changes nothing. Never marks the conversation read.
+ */
+const handoverPatchForMessage = (
+  conversation: ListConversationItemResource,
+  message: MessageResource,
+): Partial<ListConversationItemResource> => {
+  if (!conversation.botEnabled) {
+    return {}
+  }
+  const activity = getExternalAgentActivity(message.contentAttributes)
+  if (activity?.event !== "handover") {
+    return {}
+  }
+  return {
+    botEnabled: false,
+    botResumeAt: null,
+    handoverCategory: activity.category ?? "other",
+    handedOverAt: new Date(message.createdAt),
+  }
 }
 
 const readStatePatchForMessage = (
@@ -1372,6 +1398,7 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
                 ...(conversationPatch ?? {}),
                 ...inboxAttentionPatchForMessage(currentConversation, message),
                 ...readStatePatchForMessage(currentConversation, message),
+                ...handoverPatchForMessage(currentConversation, message),
                 messages: [message],
                 lastActivityAt: latestActivityAt(
                   currentConversation.lastActivityAt,

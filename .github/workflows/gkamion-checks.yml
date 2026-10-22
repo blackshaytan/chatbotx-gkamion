@@ -79,7 +79,7 @@ jobs:
         run: pnpm exec vitest run __tests__/notification __tests__/incoming-push-policy.test.ts __tests__/received-message.test.ts
 
       - working-directory: packages/business
-        run: pnpm exec vitest run __tests__/external-agent src/conversation/__tests__/conversation.service.test.ts
+        run: pnpm exec vitest run __tests__/external-agent __tests__/conversation-service.test.ts src/conversation/__tests__/conversation.service.test.ts
 
       - working-directory: apps/worker
         run: pnpm exec vitest run __tests__/external-agent-routing.test.ts __tests__/external-agent-reply.test.ts __tests__/external-agent-watch.test.ts

@@ -108,10 +108,11 @@ type UnreadCountCandidate = {
   id: string
   agentLastReadAt: Date | null
   inboxActivityAt: Date | null
+  handedOverAt: Date | null
 }
 
-// A conversation without `inboxActivityAt` is never unread (see
-// `conversationUnreadWhere`), so it must not show a count either: imported
+// A conversation with neither `inboxActivityAt` nor a handover is never unread
+// (see `conversationUnreadWhere`), so it must not show a count either: imported
 // conversations with incoming messages but no activity stamp would otherwise
 // report "99+" while not flagged unread. Such ids are left out of the lookup
 // and therefore absent from the returned map (count 0).
@@ -123,7 +124,10 @@ const countUnreadIncoming = (
   messageRepository.countUnreadIncomingByConversations({
     workspaceId,
     conversations: conversations
-      .filter(({ inboxActivityAt }) => inboxActivityAt !== null)
+      .filter(
+        ({ inboxActivityAt, handedOverAt }) =>
+          inboxActivityAt !== null || handedOverAt !== null,
+      )
       .map(({ id, agentLastReadAt }) => ({ id, agentLastReadAt })),
     limit: UNREAD_COUNT_CAP,
   })

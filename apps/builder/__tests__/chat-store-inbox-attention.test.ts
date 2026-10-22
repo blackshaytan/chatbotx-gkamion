@@ -41,6 +41,7 @@ type TestMessage = {
   senderType: "bot" | "contact" | "user" | "api" | "system"
   senderId: string | null
   type: "message" | "comment"
+  contentAttributes: Record<string, unknown> | null
 }
 
 const READ_AT = new Date("2026-01-01T00:00:00Z")
@@ -70,8 +71,26 @@ const makeMessage = (
   senderType: "contact",
   senderId: null,
   type: "message",
+  contentAttributes: null,
   ...overrides,
 })
+
+const makeHandoverNote = (
+  conversationId: string,
+  createdAt: Date,
+  { category }: { category?: string },
+): TestMessage =>
+  makeMessage(conversationId, createdAt, {
+    messageType: "activity",
+    senderType: "system",
+    senderId: null,
+    contentAttributes: {
+      type: "externalAgent",
+      event: "handover",
+      reason: "Customer asks for a refund",
+      ...(category ? { category } : {}),
+    },
+  })
 
 const OLDER = new Date("2026-01-01T01:00:00Z")
 const OTHER_OLDER = new Date("2026-01-01T00:30:00Z")
@@ -199,6 +218,99 @@ describe("chat store inbox attention", () => {
     const [updated] = store.getState().conversations
     expect(updated?.agentLastReadAt).toEqual(NEW_AT)
     expect(updated?.unreadCount).toBe(0)
+  })
+
+  test("a handover note turns the bot off and awaits a manager without marking the conversation read", () => {
+    const store = createChatStore()
+    const target = {
+      ...makeConversation("conv-target", OTHER_OLDER),
+      botEnabled: true,
+      botResumeAt: null,
+      handoverCategory: null,
+      handedOverAt: null,
+    }
+    store.setState({ conversations: [target] as never })
+
+    store.getState().handleNewMessages([
+      makeHandoverNote("conv-target", NEW_AT, {
+        category: "payment",
+      }) as never,
+    ])
+
+    const [updated] = store.getState().conversations
+    expect(updated?.botEnabled).toBe(false)
+    expect(updated?.botResumeAt).toBeNull()
+    expect(updated?.handoverCategory).toBe("payment")
+    expect(updated?.handedOverAt).toEqual(NEW_AT)
+    expect(updated?.agentLastReadAt).toBe(READ_AT)
+    expect(updated?.inboxActivityAt).toBe(OTHER_OLDER)
+    expect(updated?.unreadCount).toBe(0)
+  })
+
+  test("a handover note without a category is filed under other", () => {
+    const store = createChatStore()
+    const target = {
+      ...makeConversation("conv-target", OTHER_OLDER),
+      botEnabled: true,
+      botResumeAt: null,
+      handoverCategory: null,
+      handedOverAt: null,
+    }
+    store.setState({ conversations: [target] as never })
+
+    store.getState().handleNewMessages([
+      makeHandoverNote("conv-target", NEW_AT, {
+        category: undefined,
+      }) as never,
+    ])
+
+    expect(store.getState().conversations[0]?.handoverCategory).toBe("other")
+  })
+
+  test("a handover note for a conversation whose bot is already off changes nothing", () => {
+    const store = createChatStore()
+    const target = {
+      ...makeConversation("conv-target", OTHER_OLDER),
+      botEnabled: false,
+      botResumeAt: null,
+      handoverCategory: "urgent",
+      handedOverAt: OTHER_OLDER,
+    }
+    store.setState({ conversations: [target] as never })
+
+    store.getState().handleNewMessages([
+      makeHandoverNote("conv-target", NEW_AT, {
+        category: "payment",
+      }) as never,
+    ])
+
+    const [updated] = store.getState().conversations
+    expect(updated?.handoverCategory).toBe("urgent")
+    expect(updated?.handedOverAt).toBe(OTHER_OLDER)
+  })
+
+  test("a non-handover activity note leaves the bot state alone", () => {
+    const store = createChatStore()
+    const target = {
+      ...makeConversation("conv-target", OTHER_OLDER),
+      botEnabled: true,
+    }
+    store.setState({ conversations: [target] as never })
+
+    store.getState().handleNewMessages([
+      makeMessage("conv-target", NEW_AT, {
+        messageType: "activity",
+        senderType: "system",
+        contentAttributes: {
+          type: "externalAgent",
+          event: "timeout",
+        },
+      }) as never,
+    ])
+
+    const [updated] = store.getState().conversations
+    expect(updated?.botEnabled).toBe(true)
+    expect(updated?.handedOverAt).toBeUndefined()
   })
 
   test("an optimistic manager reply lifts the conversation and advances attention", () => {

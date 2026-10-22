@@ -188,4 +188,70 @@ describe("ConversationItem inbox attention", () => {
       "inboxAttention.handoverCategory",
     )
   })
+
+  test("shows a red waiting-for-manager dot when a handover is unread with no client message to count", () => {
+    render(
+      makeConversation({
+        botEnabled: false,
+        handedOverAt: new Date("2026-01-02T00:00:00Z"),
+        handoverCategory: "urgent",
+        inboxActivityAt: null,
+        agentLastReadAt: new Date("2026-01-01T00:00:00Z"),
+        unreadCount: 0,
+      }),
+    )
+
+    const dot = getBadge(container)
+    expect(dot?.getAttribute("aria-label")).toBe(
+      "inboxAttention.waitingManager",
+    )
+    expect(dot?.textContent).toBe("")
+    expect(dot?.classList.contains("bg-red-600")).toBe(true)
+  })
+
+  test("hides the dot once the manager has read after the handover", () => {
+    render(
+      makeConversation({
+        botEnabled: false,
+        handedOverAt: new Date("2026-01-02T00:00:00Z"),
+        handoverCategory: "urgent",
+        inboxActivityAt: null,
+        agentLastReadAt: new Date("2026-01-03T00:00:00Z"),
+        unreadCount: 0,
+      }),
+    )
+
+    expect(getBadge(container)).toBeNull()
+  })
+
+  test("hides the dot while the bot is active", () => {
+    render(
+      makeConversation({
+        botEnabled: true,
+        handedOverAt: new Date("2026-01-02T00:00:00Z"),
+        inboxActivityAt: null,
+        agentLastReadAt: null,
+        unreadCount: 0,
+      }),
+    )
+
+    expect(getBadge(container)).toBeNull()
+  })
+
+  test("prefers the count over the dot when client messages are unread", () => {
+    render(
+      makeConversation({
+        botEnabled: false,
+        handedOverAt: new Date("2026-01-02T00:00:00Z"),
+        handoverCategory: "urgent",
+        unreadCount: 2,
+      }),
+    )
+
+    const badge = getBadge(container)
+    expect(badge?.textContent).toBe("2")
+    expect(badge?.getAttribute("aria-label")).toBe(
+      "inboxAttention.unreadCount:2",
+    )
+  })
 })

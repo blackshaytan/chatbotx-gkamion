@@ -1678,7 +1678,9 @@ class ConversationService extends BaseService {
    * Advances agent read state only, so retries and delayed outbound events
    * cannot overwrite a newer read. The inbox preference is checked inside the
    * same statement to avoid racing a separate gate read; successful advances
-   * broadcast the same best-effort realtime update as manual reads.
+   * broadcast the same best-effort realtime update as manual reads. A
+   * conversation waiting for a manager (`handedOverAt` set) is never advanced,
+   * so the bot confirmation of a handover cannot mark it read.
    */
   async markReadByOutbound(props: {
     workspaceId: string
@@ -1699,6 +1701,7 @@ class ConversationService extends BaseService {
             isNull(conversationModel.agentLastReadAt),
             lt(conversationModel.agentLastReadAt, readAt),
           ),
+          isNull(conversationModel.handedOverAt),
           exists(
             db
               .select({ value: sql<number>`1` })

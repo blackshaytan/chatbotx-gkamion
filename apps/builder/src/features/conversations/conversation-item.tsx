@@ -253,8 +253,9 @@ export default function ConversationItem({
     : undefined
   const isUnread = isConversationUnread(conversation)
   const isBotActive = isConversationActive(conversation)
+  const isWaitingForManager = isAwaitingManager(conversation)
   // Only while the bot is off: the category explains why a manager is needed.
-  const handoverCategory = isAwaitingManager(conversation)
+  const handoverCategory = isWaitingForManager
     ? conversation.handoverCategory
     : null
   // Show one "Ads" badge if ANY of this conversation's contactInboxes came
@@ -424,6 +425,7 @@ export default function ConversationItem({
         </div>
         <UnreadCountBadge
           count={conversation.unreadCount}
+          isAwaitingManagerUnread={isUnread && isWaitingForManager}
           isBotActive={isBotActive}
         />
       </Button>

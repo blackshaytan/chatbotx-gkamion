@@ -604,6 +604,25 @@ describe("conversationService.markReadByOutbound", () => {
     })
   })
 
+  test("never advances the read while the conversation waits for a manager", async () => {
+    const readAt = new Date("2026-09-23T12:00:00.000Z")
+
+    await expect(
+      conversationService.markReadByOutbound({
+        workspaceId: "ws-1",
+        conversationId: "conv-1",
+        inboxId: "inbox-1",
+        readAt,
+      }),
+    ).resolves.toBe(false)
+
+    // Two `is null` predicates: the never-read check and the handover gate.
+    const whereSqlText = collectSqlText(where.mock.calls[0][0]).toLowerCase()
+    expect(whereSqlText.split("is null")).toHaveLength(3)
+    expect(invalidateCacheByTags).not.toHaveBeenCalled()
+    expect(broadcastToWorkspaceParty).not.toHaveBeenCalled()
+  })
+
   // With a single incoming message, anchoring the cursor on that message would
   // make `lastActivityAt > agentLastReadAt` false and leave the row read.
   // The only value that keeps it unread is "never read".

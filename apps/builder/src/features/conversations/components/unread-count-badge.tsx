@@ -6,20 +6,33 @@ import { formatUnreadBadge } from "../lib/unread-badge"
 
 /**
  * Unread client messages on a conversation row. Red while the bot is off (a
- * manager is needed), gray while the bot answers. Hidden at zero.
+ * manager is needed), gray while the bot answers. Hidden at zero, except a
+ * small red dot when a handover left the row unread with no client message to
+ * count (`isAwaitingManagerUnread`).
  */
 export function UnreadCountBadge({
   count,
   isBotActive,
+  isAwaitingManagerUnread,
 }: {
   count: number
   isBotActive: boolean
+  isAwaitingManagerUnread: boolean
 }) {
   const t = useTranslations()
 
   // `!(count > 0)` also hides rows that predate the field (undefined).
   if (!(count > 0)) {
-    return null
+    if (!isAwaitingManagerUnread) {
+      return null
+    }
+    return (
+      <span
+        aria-label={t("inboxAttention.waitingManager")}
+        className="size-2.5 shrink-0 rounded-full bg-red-600"
+        role="img"
+      />
+    )
   }
 
   const label = formatUnreadBadge(count)

@@ -727,6 +727,10 @@ describe("applyContactFilter", () => {
     expect(unread.sql).toContain(
       '"Conversation"."inboxActivityAt" > "Conversation"."agentLastReadAt"',
     )
+    expect(unread.sql).toContain('"Conversation"."handedOverAt" IS NOT NULL')
+    expect(unread.sql).toContain(
+      '"Conversation"."handedOverAt" > "Conversation"."agentLastReadAt"',
+    )
 
     const unreplied = renderContactWhere(
       applyContactFilter({

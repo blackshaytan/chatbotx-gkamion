@@ -30,6 +30,7 @@ const unread = (id = "conversation-1"): Tracked => ({
   workspaceId: "workspace-1",
   lastActivityAt: new Date("2026-09-24T10:00:00Z"),
   inboxActivityAt: new Date("2026-09-24T10:00:00Z"),
+  handedOverAt: null,
   agentLastReadAt: new Date("2026-09-24T09:00:00Z"),
 })
 

@@ -104,6 +104,7 @@ describe("unread predicate is anchored on inboxActivityAt", () => {
       isConversationUnread({
         inboxActivityAt: new Date("2026-10-21T11:00:00Z"),
         agentLastReadAt: new Date("2026-10-21T10:00:00Z"),
+        handedOverAt: null,
       }),
     ).toBe(true)
   })
@@ -113,10 +114,15 @@ describe("unread predicate is anchored on inboxActivityAt", () => {
       isConversationUnread({
         inboxActivityAt: new Date("2026-10-21T11:00:00Z"),
         agentLastReadAt: null,
+        handedOverAt: null,
       }),
     ).toBe(true)
     expect(
-      isConversationUnread({ inboxActivityAt: null, agentLastReadAt: null }),
+      isConversationUnread({
+        inboxActivityAt: null,
+        agentLastReadAt: null,
+        handedOverAt: null,
+      }),
     ).toBe(false)
   })
 })
