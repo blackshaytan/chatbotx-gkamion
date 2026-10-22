@@ -144,6 +144,7 @@ const buildConversationFixture = () => ({
   inboxActivityAt: null,
   handoverCategory: null,
   handedOverAt: null,
+  managerJoinedAt: null,
   contactInboxes: [],
   messages: [],
   contact: null,
