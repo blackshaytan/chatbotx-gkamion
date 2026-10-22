@@ -54,7 +54,7 @@ One migration; every insert path writes the boolean defaults explicitly (see AGE
 
 ### Message time in the chat
 
-- `message-item.tsx`: the hover-only time beside the bubble is replaced by a small muted time inside the bubble, bottom-right, always visible.
+- `message-item.tsx`: the hover-only time beside the bubble is replaced by a small muted time inside the bubble, bottom-right, always visible — on every message: the client's, the bot's and the manager's.
 - Format: today `HH:mm`; this year `dd.MM HH:mm`; older `dd.MM.yyyy HH:mm`. The tooltip keeps the full timestamp.
 - Activity/system rows (`full` variant) keep their current look.
 

@@ -63,6 +63,8 @@ export const conversationModel = pgTable(
     inboxActivityAt: timestamp(timestampConfig),
     handoverCategory: text().$type<ConversationHandoverCategory>(),
     handedOverAt: timestamp(timestampConfig),
+    /** When the client was told a manager joined after the handover; at most one notice per handover. */
+    managerJoinedAt: timestamp(timestampConfig),
   },
   (table) => [
     uniqueIndex("Conversation_contactId_sourceId_key")

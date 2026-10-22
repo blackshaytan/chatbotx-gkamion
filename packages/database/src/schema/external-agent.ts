@@ -49,6 +49,10 @@ export const externalAgentModel = pgTable(
     progressMessage: text()
       .notNull()
       .default(EXTERNAL_AGENT_DEFAULT_PROGRESS_MESSAGE),
+    /** Agent name in the client-facing signature; null sends agent replies unsigned. */
+    botName: text(),
+    signMessages: boolean().notNull().default(false),
+    announceManager: boolean().notNull().default(false),
     lastCheckedAt: timestamp(timestampConfig),
     lastCheckStatus: text(),
     lastCheckError: text(),
