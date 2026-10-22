@@ -90,24 +90,15 @@ vi.mock("@chatbotx.io/redis", () => ({
   invalidateCacheByTags: mocks.invalidateCacheByTags,
 }))
 
-vi.mock("@chatbotx.io/worker-config", () => ({
-  // Transitive service imports read other job actions at module load.
-  IntegrationJobAction: new Proxy({}, { get: (_target, key) => String(key) }),
-  ChatJobAction: { sendChatMessage: "sendChatMessage" },
-  NotificationJobAction: {
-    notifyConversationAssigned: "notifyConversationAssigned",
-  },
-  chatQueue: { add: mocks.chatQueueAdd },
-  notificationQueue: { addBulk: mocks.notificationQueueAddBulk },
-}))
-
-vi.mock("@chatbotx.io/partysocket-config", () => ({
-  RealtimeEventType: {
-    conversationCreated: "conversationCreated",
-    conversationUpdated: "conversationUpdated",
-    conversationAssigned: "conversationAssigned",
-  },
-}))
+vi.mock("@chatbotx.io/worker-config", async (importOriginal) => {
+  const original =
+    await importOriginal<typeof import("@chatbotx.io/worker-config")>()
+  return {
+    ...original,
+    chatQueue: { add: mocks.chatQueueAdd },
+    notificationQueue: { addBulk: mocks.notificationQueueAddBulk },
+  }
+})
 
 vi.mock("@chatbotx.io/analytics", () => ({
   macAnalyticsService: {},
@@ -117,7 +108,8 @@ vi.mock("@chatbotx.io/event-bus", () => ({
   emit: mocks.emit,
 }))
 
-vi.mock("@chatbotx.io/events", () => ({
+vi.mock("@chatbotx.io/events", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@chatbotx.io/events")>()),
   emitConversationArchived: vi.fn(),
   emitConversationAssigned: vi.fn(),
   emitConversationFollowUp: vi.fn(),
