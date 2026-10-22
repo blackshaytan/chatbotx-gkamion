@@ -234,7 +234,12 @@ describe("processExternalAgentWatch", () => {
       "sendChatMessage",
       {
         type: "sendChatMessage",
-        data: { conversation, contactInbox, text: "Ищу запчасть" },
+        data: {
+          conversation,
+          contactInbox,
+          text: "Ищу запчасть",
+          signAs: "externalAgent",
+        },
       },
       { jobId: "externalAgentSend-conv-1-run-1-interim-3" },
     )
@@ -347,7 +352,12 @@ describe("processExternalAgentWatch", () => {
       "sendChatMessage",
       {
         type: "sendChatMessage",
-        data: { conversation, contactInbox, text: "Готово: 3 позиции" },
+        data: {
+          conversation,
+          contactInbox,
+          text: "Готово: 3 позиции",
+          signAs: "externalAgent",
+        },
       },
       { jobId: "externalAgentSend-conv-1-run-1-final" },
     )
@@ -485,7 +495,12 @@ describe("processExternalAgentWatch", () => {
       "sendChatMessage",
       {
         type: "sendChatMessage",
-        data: { conversation, contactInbox, text: "Работаю над запросом" },
+        data: {
+          conversation,
+          contactInbox,
+          text: "Работаю над запросом",
+          signAs: "externalAgent",
+        },
       },
       { jobId: "externalAgentSend-conv-1-run-1-fallback" },
     )

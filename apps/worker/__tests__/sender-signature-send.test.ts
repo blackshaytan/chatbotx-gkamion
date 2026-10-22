@@ -74,7 +74,8 @@ vi.mock("@chatbotx.io/event-bus", () => ({
   emit: vi.fn().mockResolvedValue(undefined),
 }))
 
-vi.mock("@chatbotx.io/sdk", () => ({
+vi.mock("@chatbotx.io/sdk", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@chatbotx.io/sdk")>()),
   ChannelError: class ChannelError extends Error {},
   ChannelErrorCategory: { PERMISSION_DENIED: "permission_denied" },
   parseSdkError: vi.fn().mockResolvedValue({ message: "sdk error" }),
