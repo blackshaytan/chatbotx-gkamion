@@ -9219,6 +9219,19 @@
     "feed": {
       "placeholder": "Напишите комментарий...",
       "empty": "Комментариев пока нет",
+      "attach": "Прикрепить файл",
+      "removeAttachment": "Удалить {name}",
+      "downloadAttachment": "Скачать {name}",
+      "download": "Скачать",
+      "uploading": "Загрузка...",
+      "edited": "Изменено",
+      "deleted": "Комментарий удалён",
+      "deleteCommentConfirm": "Удалить этот комментарий?",
+      "unread": "Непрочитанных: {count}",
+      "toasts": {
+        "maxFiles": "Можно прикрепить не более 10 файлов.",
+        "fileTooLarge": "Размер каждого файла не должен превышать 25 МБ."
+      },
       "system": {
         "created": "Задача создана",
         "status": "Статус изменён с {from} на {to}",
@@ -9232,7 +9245,9 @@
       "updated": "Задача обновлена",
       "deleted": "Задача удалена",
       "taken": "Задача взята",
-      "commented": "Комментарий добавлен"
+      "commented": "Комментарий добавлен",
+      "commentUpdated": "Комментарий обновлён",
+      "commentDeleted": "Комментарий удалён"
     },
     "hidden": "Скрыто",
     "createdByApi": "Создано через API: {name}",

@@ -9,13 +9,14 @@ import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 import type { z } from "zod"
-import type { taskPublicResource } from "../schema/public"
+import type { taskPrivateResource } from "../schema/public"
 import { TaskAssigneeLabel } from "./task-assignee-label"
 import { TaskDueLabel } from "./task-due-label"
 import { TaskPriorityBadge } from "./task-priority-badge"
 import { TaskStatusSelect } from "./task-status-select"
+import { TaskUnreadBadge } from "./task-unread-badge"
 
-type Task = z.infer<typeof taskPublicResource>
+type Task = z.infer<typeof taskPrivateResource>
 
 type TasksTableProps = {
   workspaceId: string
@@ -55,7 +56,10 @@ export const TasksTable = ({
             onClick={() => onTaskSelect(row.original.id)}
             variant="link"
           >
-            {row.original.title}
+            <span className="flex items-center gap-2">
+              {row.original.title}
+              <TaskUnreadBadge count={row.original.unreadCount} />
+            </span>
           </Button>
         ),
         enableSorting: false,

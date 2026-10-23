@@ -9225,6 +9225,19 @@
         "due": "Due date changed from {from} to {to}",
         "assignee": "Assignee changed from {from} to {to}",
         "priority": "Priority changed from {from} to {to}"
+      },
+      "attach": "Attach file",
+      "removeAttachment": "Remove {name}",
+      "downloadAttachment": "Download {name}",
+      "download": "Download",
+      "uploading": "Uploading...",
+      "edited": "Edited",
+      "deleted": "Comment deleted",
+      "deleteCommentConfirm": "Are you sure you want to delete this comment?",
+      "unread": "{count} unread",
+      "toasts": {
+        "maxFiles": "You can attach up to 10 files.",
+        "fileTooLarge": "Each file must be 25 MB or smaller."
       }
     },
     "toasts": {
@@ -9232,7 +9245,9 @@
       "updated": "Task updated",
       "deleted": "Task deleted",
       "taken": "Task taken",
-      "commented": "Comment added"
+      "commented": "Comment added",
+      "commentUpdated": "Comment updated",
+      "commentDeleted": "Comment deleted"
     },
     "hidden": "Hidden",
     "createdByApi": "Created via API: {name}",

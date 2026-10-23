@@ -9,6 +9,7 @@ import { orpc } from "@/lib/orpc/query"
 import { CreateTaskDialog } from "./create-task-dialog"
 import { TaskDueLabel } from "./task-due-label"
 import { TaskStatusSelect } from "./task-status-select"
+import { TaskUnreadBadge } from "./task-unread-badge"
 
 type ContactTasksSectionProps = {
   workspaceId: string
@@ -81,6 +82,7 @@ export const ContactTasksSection = ({
                 >
                   {task.title}
                 </Button>
+                <TaskUnreadBadge count={task.unreadCount} />
                 <div className="text-muted-foreground text-xs">
                   <TaskDueLabel dueAt={task.dueAt} status={task.status} />
                 </div>

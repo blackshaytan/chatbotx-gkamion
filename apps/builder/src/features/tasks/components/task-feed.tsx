@@ -7,22 +7,20 @@ import {
   taskPriorities,
   taskStatusValues,
 } from "@chatbotx.io/database/partials"
-import { Button } from "@chatbotx.io/ui/components/ui/button"
 import { Separator } from "@chatbotx.io/ui/components/ui/separator"
-import { Textarea } from "@chatbotx.io/ui/components/ui/textarea"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { isValid } from "date-fns"
 import { useFormatter, useTranslations } from "next-intl"
-import { type KeyboardEvent, useMemo, useState } from "react"
-import { toast } from "sonner"
+import { useEffect, useMemo, useRef } from "react"
 import {
   useInboxTeams,
   useWorkspaceMembers,
 } from "@/features/users/provider/user-hook"
 import { orpc } from "@/lib/orpc/query"
 import { PUBLIC_LIST_MAX_PER_PAGE } from "@/lib/public-api/list"
-import { useInvalidateTasks } from "../hooks/use-invalidate-tasks"
 import { extractApiErrorMessage } from "../lib/extract-api-error-message"
+import { CommentComposer } from "./comment-composer"
+import { CommentItem } from "./comment-item"
 
 type TaskFeedProps = {
   taskId: string
@@ -61,8 +59,6 @@ export const TaskFeed = ({ taskId, workspaceId }: TaskFeedProps) => {
   const t = useTranslations("tasks")
   const commonT = useTranslations()
   const formatter = useFormatter()
-  const [comment, setComment] = useState("")
-  const invalidateTasks = useInvalidateTasks()
   const { data: workspaceMembers = [] } = useWorkspaceMembers(workspaceId)
   const { data: inboxTeams = [] } = useInboxTeams(workspaceId)
   const { data, error, isError, isPending } = useQuery(
@@ -75,23 +71,8 @@ export const TaskFeed = ({ taskId, workspaceId }: TaskFeedProps) => {
       },
     }),
   )
-  const createCommentMutation = useMutation(
-    orpc.tasksAPI.comments.create.mutationOptions({
-      onError: (mutationError) => {
-        toast.error(
-          extractApiErrorMessage(
-            mutationError,
-            commonT("messages.unknownError"),
-          ),
-        )
-      },
-      onSuccess: async () => {
-        setComment("")
-        toast.success(t("toasts.commented"))
-        await invalidateTasks()
-      },
-    }),
-  )
+  const markReadMutation = useMutation(orpc.tasksAPI.markRead.mutationOptions())
+  const lastMarkedReadAt = useRef(0)
 
   const comments = useMemo(() => [...(data?.data ?? [])].reverse(), [data])
 
@@ -127,24 +108,26 @@ export const TaskFeed = ({ taskId, workspaceId }: TaskFeedProps) => {
       : value
   }
 
-  const handleCommentSubmit = () => {
-    const text = comment.trim()
-
-    if (!text || createCommentMutation.isPending) {
+  useEffect(() => {
+    if (!data) {
       return
     }
-
-    createCommentMutation.mutate({ id: taskId, text, workspaceId })
-  }
-
-  const handleCommentKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (!(event.key === "Enter" && (event.ctrlKey || event.metaKey))) {
+    const now = Date.now()
+    const delay = Math.max(0, 2000 - (now - lastMarkedReadAt.current))
+    const markRead = () => {
+      if (markReadMutation.isPending) {
+        return
+      }
+      lastMarkedReadAt.current = Date.now()
+      markReadMutation.mutate({ id: taskId, workspaceId })
+    }
+    if (delay === 0) {
+      markRead()
       return
     }
-
-    event.preventDefault()
-    handleCommentSubmit()
-  }
+    const timeout = setTimeout(markRead, delay)
+    return () => clearTimeout(timeout)
+  }, [data, markReadMutation, taskId, workspaceId])
 
   return (
     <section className="flex min-h-0 flex-col gap-3">
@@ -183,20 +166,11 @@ export const TaskFeed = ({ taskId, workspaceId }: TaskFeedProps) => {
                       })}
                     </p>
                   ) : (
-                    <>
-                      <div className="flex items-center justify-between gap-2 text-sm">
-                        <span className="font-medium">{author}</span>
-                        <time className="text-muted-foreground">
-                          {formatter.dateTime(item.createdAt, {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          })}
-                        </time>
-                      </div>
-                      <p className="whitespace-pre-wrap text-sm">
-                        {item.deleted ? "—" : item.text}
-                      </p>
-                    </>
+                    <CommentItem
+                      comment={{ ...item, authorLabel: author }}
+                      taskId={taskId}
+                      workspaceId={workspaceId}
+                    />
                   )}
                   <Separator />
                 </div>
@@ -204,22 +178,7 @@ export const TaskFeed = ({ taskId, workspaceId }: TaskFeedProps) => {
             })
           : null}
       </div>
-      <div className="space-y-2">
-        <Textarea
-          aria-label={t("feed.placeholder")}
-          onChange={(event) => setComment(event.target.value)}
-          onKeyDown={handleCommentKeyDown}
-          placeholder={t("feed.placeholder")}
-          value={comment}
-        />
-        <Button
-          disabled={!comment.trim() || createCommentMutation.isPending}
-          onClick={handleCommentSubmit}
-          type="button"
-        >
-          {t("actions.comment")}
-        </Button>
-      </div>
+      <CommentComposer taskId={taskId} workspaceId={workspaceId} />
     </section>
   )
 }
