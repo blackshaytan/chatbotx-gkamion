@@ -226,6 +226,7 @@ See **`.agents/rules/git.md`** for the full canonical rules (commit format, bran
 - Inbound Webhooks (external systems POST JSON to a tokenised URL → find/create a contact on a chosen inbox, map payload values, run trigger actions; outbox/claim/lease processing, per-channel inbox identifiers, request log, public API): `docs/inbound-webhooks.md`
 - Messenger welcome message flows (publish/rename/delete sync of a flow's starting step to Meta Click-to-Messenger welcome flows, ad-locked behavior, table/jobs/lock): `docs/messenger-welcome-message-flows.md`
 - External AI agent (Hermes answers client chats: run flow, cursor and history, progress messages, handover, failures, settings, Hermes setup): `docs/external-agent.md`
+- Staff tasks (assign tasks to members/teams, task feed, owner hand-over, public `tasks.*` API): `docs/tasks.md`
 
 When unsure, search the codebase for an existing feature that resembles the request and mirror its structure, imports, and error-handling style.
 

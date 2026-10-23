@@ -47,6 +47,8 @@ exports[`default tool set > operation ids match the curated snapshot 1`] = `
   "sequences.get",
   "sequences.list",
   "sequences.update",
+  "tasks.create",
+  "tasks.list",
   "token.get",
 ]
 `;

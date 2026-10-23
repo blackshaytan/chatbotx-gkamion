@@ -690,6 +690,10 @@ Two invariants specific to this scope:
   `features/coupons/api/public.ts`. Never resolve it from a session that
   does not exist on this path.
 
+### Tasks scope
+
+`tasks` covers `/v1/tasks/*` (`apps/builder/src/features/tasks/api/public.ts`): list, get, create, update, complete, delete, watchers and the task feed (`tasks.comments.*`). A token acts with workspace authority: it may change or delete any task. Its `name` is recorded as `createdByLabel` on tasks and `authorLabel` on comments. Linking a contact or conversation needs only `tasks`, not `contacts`/`inbox`. Scope wiring is pinned in `apps/builder/__tests__/tasks-public-api.test.ts`.
+
 ## Adding a new scope value
 
 1. Add the value to `workspaceApiTokenScopes` in

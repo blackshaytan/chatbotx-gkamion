@@ -1187,6 +1187,23 @@ chatbotx spreadsheets headers list <id> <worksheetName>
 
 ---
 
+### `tasks` (scope `tasks`)
+
+```bash
+chatbotx tasks list                                  # [--status open --due overdue --assigneeUserId ...]
+chatbotx tasks create --title "..." --assigneeUserId <userId>   # or --assigneeTeamId; [--conversationId --messageId]
+chatbotx tasks get <id>
+chatbotx tasks update <id> --status in_progress
+chatbotx tasks complete add <id>
+chatbotx tasks delete <id>
+chatbotx tasks watcher add <id> --userId <userId>
+chatbotx tasks watcher delete <id> <userId>
+chatbotx tasks comments list <id>
+chatbotx tasks comment add <id> --text "..."
+```
+
+---
+
 ### `threads-comments`
 
 ```bash

@@ -47,6 +47,8 @@ jobs:
           __tests__/public-spec-options.test.ts
           __tests__/public-spec-mcp.test.ts
           __tests__/external-agent-api.test.ts
+          __tests__/tasks-public-api.test.ts
+          __tests__/workspace-token-scope-registry.test.ts
 
       - working-directory: apps/builder
         run: >-
@@ -76,6 +78,8 @@ jobs:
           __tests__/conversation-unread.test.ts
           __tests__/contact-filter.test.ts
           __tests__/sharded-message-repository.test.ts
+          __tests__/task-partial.test.ts
+          __tests__/task-list-where.test.ts
 
       - working-directory: apps/worker
         run: pnpm exec vitest run __tests__/notification __tests__/incoming-push-policy.test.ts __tests__/received-message.test.ts
@@ -88,6 +92,7 @@ jobs:
           __tests__/conversation-service.test.ts
           __tests__/message-create-outgoing.test.ts
           src/conversation/__tests__/conversation.service.test.ts
+          __tests__/task
 
       - working-directory: apps/worker
         run: >-

@@ -45,7 +45,7 @@ Use `search_tools` when the task needs something outside the default set (e.g. d
 
 ## Available tools
 
-Tool names are derived from the OpenAPI `operationId` converted to `snake_case` (e.g. `tags.list` → `tags_list`). The current default set has 46 tools:
+Tool names are derived from the OpenAPI `operationId` converted to `snake_case` (e.g. `tags.list` → `tags_list`). The current default set has 48 tools:
 
 ### Capabilities
 
@@ -157,6 +157,13 @@ Tool names are derived from the OpenAPI `operationId` converted to `snake_case` 
 | `sequences_list` | List sequences |
 | `sequences_get` | Get sequence |
 | `sequences_update` | Update sequence name or active state |
+
+### Tasks
+
+| Tool | Description |
+|---|---|
+| `tasks_list` | List tasks |
+| `tasks_create` | Create task |
 
 Everything else — deletes, less-common resources (coupons, products, webhooks, saved replies, tags/triggers/inboxes/custom-fields management, integrations, workspace members, etc.), and channel-token-only or deprecated operations — is reachable via `search_tools` → `call_tool`, not `tools/list`.
 
