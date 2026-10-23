@@ -39,7 +39,9 @@ export const taskMentionSuggestion = (
       },
       onUpdate: (props) => {
         component.updateProps(props)
-        popup?.setProps({ getReferenceClientRect: props.clientRect })
+        popup?.setProps({
+          getReferenceClientRect: () => props.clientRect?.() ?? new DOMRect(),
+        })
       },
       onKeyDown: (props) => {
         if (props.event.key === "Escape") {
