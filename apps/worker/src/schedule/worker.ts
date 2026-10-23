@@ -8,6 +8,7 @@ import {
 import { type Job, Queue, Worker } from "bullmq"
 import { ensureBootstrapped } from "../lib/bootstrap"
 import { logger } from "../lib/logger"
+import { registerNotificationRealtime } from "../lib/notification-realtime"
 import { runJobWithAuditContext } from "../lib/run-job-with-audit-context"
 import {
   cleanupTriggerExecutions,
@@ -44,6 +45,7 @@ import { purgeErrorLogs } from "./handlers/purge-error-logs"
 import { purgeExpiredCallRecordings } from "./handlers/purge-expired-call-recordings"
 import { purgeExpiredConnectSessions } from "./handlers/purge-expired-connect-sessions"
 import { purgeInboundWebhookRequests } from "./handlers/purge-inbound-webhook-requests"
+import { purgeOldNotifications } from "./handlers/purge-old-notifications"
 import { purgeWhatsappSignupSessions } from "./handlers/purge-whatsapp-signup-sessions"
 import { purgeWorkspaces } from "./handlers/purge-workspaces"
 import { reconcileBroadcasts } from "./handlers/reconcile-broadcasts"
@@ -59,10 +61,13 @@ import { scanContactScans } from "./handlers/scan-contact-scans"
 import { scanSmartDelay } from "./handlers/scan-smart-delay"
 import { sweepStaleWhatsappCalls } from "./handlers/sweep-stale-whatsapp-calls"
 import { syncUserQuota } from "./handlers/sync-user-quota"
+import { taskDueScan } from "./handlers/task-due-scan"
 import { teardownExpiredTrial } from "./handlers/teardown-expired-trial"
 import { unsubscribeExpiredTrials } from "./handlers/unsubscribe-expired-trials"
 
 async function startScheduleWorker() {
+  registerNotificationRealtime()
+
   try {
     await ensureBootstrapped()
     logger.info("Analytics bootstrapped successfully")
@@ -262,6 +267,14 @@ async function startScheduleWorker() {
 
             case ScheduleJobData.teardownExpiredTrial:
               await teardownExpiredTrial(job.data.data.userId)
+              return
+
+            case ScheduleJobData.taskDueScan:
+              await taskDueScan()
+              return
+
+            case ScheduleJobData.purgeOldNotifications:
+              await purgeOldNotifications()
               return
 
             default:

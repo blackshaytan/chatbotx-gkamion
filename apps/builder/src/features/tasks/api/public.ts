@@ -1,3 +1,4 @@
+import "@/features/notifications/lib/notification-realtime"
 import { taskService } from "@chatbotx.io/business"
 import { mcpSpec } from "@/lib/orpc/mcp-annotations"
 import {

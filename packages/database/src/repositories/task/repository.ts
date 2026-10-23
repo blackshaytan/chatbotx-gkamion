@@ -5,7 +5,11 @@ import {
   db,
   eq,
   inArray,
+  isNotNull,
+  isNull,
+  lte,
 } from "../../client"
+import { OPEN_TASK_STATUSES } from "../../partials/task"
 import {
   contactModel,
   conversationModel,
@@ -44,6 +48,25 @@ export type TaskAssignmentRow = {
   assigneeUserId: string | null
   assigneeTeamId: string | null
 }
+
+/** Fields required by task reminder/overdue notification delivery. */
+export type TaskDueNotificationRow = {
+  id: string
+  workspaceId: string
+  title: string
+  assigneeUserId: string | null
+  assigneeTeamId: string | null
+  createdByUserId: string | null
+}
+
+const taskDueNotificationColumns = {
+  id: taskModel.id,
+  workspaceId: taskModel.workspaceId,
+  title: taskModel.title,
+  assigneeUserId: taskModel.assigneeUserId,
+  assigneeTeamId: taskModel.assigneeTeamId,
+  createdByUserId: taskModel.createdByUserId,
+} as const
 
 const withRelations = {
   watchers: { columns: { userId: true }, orderBy: { id: "asc" } },
@@ -454,6 +477,62 @@ class TaskRepository {
           inArray(taskModel.id, taskIds),
         ),
       )
+  }
+
+  async claimDueReminders(props: {
+    now: Date
+    limit: number
+    tx?: DatabaseClient
+  }): Promise<TaskDueNotificationRow[]> {
+    const { now, limit, tx = db } = props
+    const dueTaskIds = tx
+      .select({ id: taskModel.id })
+      .from(taskModel)
+      .where(
+        and(
+          inArray(taskModel.status, [...OPEN_TASK_STATUSES]),
+          isNotNull(taskModel.remindAt),
+          lte(taskModel.remindAt, now),
+          isNull(taskModel.remindedAt),
+        ),
+      )
+      .orderBy(taskModel.remindAt)
+      .limit(limit)
+      .for("update", { skipLocked: true })
+
+    return await tx
+      .update(taskModel)
+      .set({ remindedAt: now })
+      .where(inArray(taskModel.id, dueTaskIds))
+      .returning(taskDueNotificationColumns)
+  }
+
+  async claimOverdue(props: {
+    now: Date
+    limit: number
+    tx?: DatabaseClient
+  }): Promise<TaskDueNotificationRow[]> {
+    const { now, limit, tx = db } = props
+    const overdueTaskIds = tx
+      .select({ id: taskModel.id })
+      .from(taskModel)
+      .where(
+        and(
+          inArray(taskModel.status, [...OPEN_TASK_STATUSES]),
+          isNotNull(taskModel.dueAt),
+          lte(taskModel.dueAt, now),
+          isNull(taskModel.overdueNotifiedAt),
+        ),
+      )
+      .orderBy(taskModel.dueAt)
+      .limit(limit)
+      .for("update", { skipLocked: true })
+
+    return await tx
+      .update(taskModel)
+      .set({ overdueNotifiedAt: now })
+      .where(inArray(taskModel.id, overdueTaskIds))
+      .returning(taskDueNotificationColumns)
   }
 }
 

@@ -90,6 +90,57 @@ describe("notificationService.notifyTask", () => {
     expect(listener).toHaveBeenCalledTimes(1)
   })
 
+  test("notifyTaskReminder notifies the assignee with a system actor", async () => {
+    await notificationService.notifyTaskReminder({
+      id: "t-1",
+      workspaceId: "ws-1",
+      title: "Reminder",
+      assigneeUserId: "u-assignee",
+      assigneeTeamId: null,
+      createdByUserId: "u-creator",
+    })
+
+    expect(repo.notification.insertMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rows: [
+          expect.objectContaining({
+            type: "taskReminder",
+            userId: "u-assignee",
+            payload: expect.objectContaining({
+              actorUserId: null,
+              actorLabel: "System",
+            }),
+          }),
+        ],
+      }),
+    )
+  })
+
+  test("notifyTaskOverdue notifies assignee and creator", async () => {
+    repo.task.listMemberUserIds.mockResolvedValue(["u-assignee", "u-creator"])
+
+    await notificationService.notifyTaskOverdue({
+      id: "t-1",
+      workspaceId: "ws-1",
+      title: "Overdue",
+      assigneeUserId: "u-assignee",
+      assigneeTeamId: null,
+      createdByUserId: "u-creator",
+    })
+
+    expect(repo.notification.insertMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rows: expect.arrayContaining([
+          expect.objectContaining({
+            type: "taskOverdue",
+            userId: "u-assignee",
+          }),
+          expect.objectContaining({ type: "taskOverdue", userId: "u-creator" }),
+        ]),
+      }),
+    )
+  })
+
   test("skips disabled notification types", async () => {
     repo.member.listNotificationTypesByUserIds.mockResolvedValue([
       {

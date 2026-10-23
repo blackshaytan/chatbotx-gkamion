@@ -234,6 +234,10 @@ describe("REALTIME_EVENT_TOPICS", () => {
       durability: "ephemeral",
       topics: [RealtimeTopic.tasks],
     })
+    expect(REALTIME_EVENT_TOPICS.notificationCreated).toEqual({
+      durability: "ephemeral",
+      topics: [RealtimeTopic.notifications],
+    })
   })
 })
 

@@ -3,6 +3,7 @@ import type {
   TaskNotificationType,
   WorkspaceMemberNotificationTypes,
 } from "@chatbotx.io/database/partials"
+import type { TaskDueNotificationRow } from "@chatbotx.io/database/repositories"
 import {
   notificationRepository,
   taskRepository,
@@ -12,6 +13,7 @@ import { BaseService } from "../base.service"
 import { logger } from "../logger"
 import type { TaskActor } from "../task/actor"
 import { actorLabel, actorUserId } from "../task/actor"
+import { listAssigneeUserIds } from "../task/notifications"
 import { emitNotificationsCreated } from "./listeners"
 import {
   isTaskNotificationEnabled,
@@ -199,6 +201,46 @@ class NotificationService extends BaseService {
     limit: number
   }): Promise<number> {
     return await notificationRepository.deleteOlderThan(input)
+  }
+
+  async notifyTaskReminder(task: TaskDueNotificationRow): Promise<void> {
+    const assigneeUserIds = await listAssigneeUserIds({
+      workspaceId: task.workspaceId,
+      assigneeUserId: task.assigneeUserId,
+      assigneeTeamId: task.assigneeTeamId,
+    })
+    if (assigneeUserIds.length === 0) {
+      return
+    }
+    await this.notifyTask({
+      workspaceId: task.workspaceId,
+      task,
+      actor: { kind: "api", label: "System" },
+      events: [{ kind: "reminder", userIds: assigneeUserIds }],
+    })
+  }
+
+  async notifyTaskOverdue(task: TaskDueNotificationRow): Promise<void> {
+    const assigneeUserIds = await listAssigneeUserIds({
+      workspaceId: task.workspaceId,
+      assigneeUserId: task.assigneeUserId,
+      assigneeTeamId: task.assigneeTeamId,
+    })
+    const userIds = [
+      ...new Set([
+        ...assigneeUserIds,
+        ...(task.createdByUserId ? [task.createdByUserId] : []),
+      ]),
+    ]
+    if (userIds.length === 0) {
+      return
+    }
+    await this.notifyTask({
+      workspaceId: task.workspaceId,
+      task,
+      actor: { kind: "api", label: "System" },
+      events: [{ kind: "overdue", userIds }],
+    })
   }
 
   private collectReferencedUserIds(

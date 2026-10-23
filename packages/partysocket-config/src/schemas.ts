@@ -24,12 +24,14 @@ export const RealtimeEventType = {
   contactInboxThreadControlUpdated: "contactInboxThreadControlUpdated",
   taskChanged: "taskChanged",
   taskCommentsChanged: "taskCommentsChanged",
+  notificationCreated: "notificationCreated",
 } as const
 
 export const RealtimeTopic = {
   chat: "chat",
   tasks: "tasks",
   voip: "voip",
+  notifications: "notifications",
 } as const
 
 export type RealtimeTopic = (typeof RealtimeTopic)[keyof typeof RealtimeTopic]
@@ -143,6 +145,10 @@ export const REALTIME_EVENT_TOPICS: {
   [RealtimeEventType.taskCommentsChanged]: {
     durability: "ephemeral",
     topics: [RealtimeTopic.tasks],
+  },
+  [RealtimeEventType.notificationCreated]: {
+    durability: "ephemeral",
+    topics: [RealtimeTopic.notifications],
   },
 }
 
@@ -497,6 +503,19 @@ export type RealtimeEventTaskCommentsChanged = {
   data: TaskRealtimePayload
 }
 
+export const notificationCreatedPayloadSchema = z.object({
+  notificationId: z.string(),
+})
+
+export type NotificationCreatedPayload = z.infer<
+  typeof notificationCreatedPayloadSchema
+>
+
+export type RealtimeEventNotificationCreated = {
+  eventType: typeof RealtimeEventType.notificationCreated
+  data: NotificationCreatedPayload
+}
+
 export type RealtimeEventData =
   | RealtimeEventCreateMessage
   | RealtimeEventMessageDeleted
@@ -519,3 +538,4 @@ export type RealtimeEventData =
   | RealtimeEventContactInboxThreadControlUpdated
   | RealtimeEventTaskChanged
   | RealtimeEventTaskCommentsChanged
+  | RealtimeEventNotificationCreated

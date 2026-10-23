@@ -1,3 +1,4 @@
+import "@/features/notifications/lib/notification-realtime"
 import { taskService } from "@chatbotx.io/business"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import { withWorkspaceIdSchema } from "@/features/workspaces/schema/resource"
