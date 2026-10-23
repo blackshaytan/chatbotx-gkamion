@@ -24,6 +24,7 @@ import { withCache } from "@chatbotx.io/redis"
 import { BaseService } from "../base.service"
 import { notFoundException } from "../errors"
 import { logger } from "../logger"
+import { taskService } from "../task/service"
 import { workspaceUsageService } from "../workspace-usage/service"
 
 type ListWorkspaceMembersInput = {
@@ -112,6 +113,14 @@ export class WorkspaceMemberService extends BaseService {
           eq(workspaceMemberModel.workspaceId, workspaceId),
         ),
       )
+
+    if (member) {
+      await taskService.reassignFromMember({
+        workspaceId,
+        userId: member.userId,
+        tx,
+      })
+    }
 
     await workspaceUsageService
       .decrement(workspaceId, "teamMembers")

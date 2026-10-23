@@ -35,6 +35,12 @@ vi.mock("../src/workspace-usage/service", () => ({
   },
 }))
 
+vi.mock("../src/task/service", () => ({
+  taskService: {
+    reassignFromMember: vi.fn(),
+  },
+}))
+
 vi.mock("@chatbotx.io/database/client", () => ({
   and: (...args: unknown[]) => ({ and: args }),
   db: makeClient(),
@@ -144,6 +150,7 @@ describe("workspaceMemberService.delete", () => {
     mocks.decrement.mockResolvedValue(undefined)
     mocks.findFirst.mockResolvedValue({
       id: "member-1",
+      userId: "user-ada",
       user: { name: "Ada", email: "ada@example.com" },
     })
   })

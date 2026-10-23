@@ -10,6 +10,7 @@ import {
 import {
   inboxTeamMemberRepository,
   internalThreadRepository,
+  type TaskAssignmentRow,
   type TaskListFilter,
   type TaskTargetInsert,
   type TaskWithRelations,
@@ -26,6 +27,7 @@ import {
   assertRemindBeforeDue,
   buildTaskChangeEvents,
   buildTaskUpdateSet,
+  encodeAssignee,
 } from "./changes"
 import { resolveTaskDueWindow } from "./due-window"
 import {
@@ -368,6 +370,96 @@ class TaskService extends BaseService {
       threadId: task.threadId,
       text: input.text,
       actor: input.actor,
+    })
+  }
+
+  /** A removed member's tasks go to the workspace owner (spec section 8). */
+  async reassignFromMember(input: {
+    workspaceId: string
+    userId: string
+    tx?: DatabaseClient
+  }): Promise<void> {
+    const { workspaceId, userId, tx = db } = input
+    const workspace = await taskRepository.findWorkspace({ workspaceId, tx })
+    if (!workspace || workspace.ownerId === userId) {
+      return
+    }
+    const tasks = await taskRepository.listAssignedToUser({
+      workspaceId,
+      userId,
+      tx,
+    })
+    await this.assignToOwner({
+      workspaceId,
+      ownerId: workspace.ownerId,
+      tasks,
+      tx,
+    })
+  }
+
+  /** Call before deleting teams: their tasks go to the workspace owner. */
+  async reassignFromTeams(input: {
+    workspaceId: string
+    teamIds: string[]
+    tx?: DatabaseClient
+  }): Promise<void> {
+    const { workspaceId, teamIds, tx = db } = input
+    const workspace = await taskRepository.findWorkspace({ workspaceId, tx })
+    if (!workspace) {
+      return
+    }
+    const tasks = await taskRepository.listAssignedToTeams({
+      workspaceId,
+      teamIds,
+      tx,
+    })
+    await this.assignToOwner({
+      workspaceId,
+      ownerId: workspace.ownerId,
+      tasks,
+      tx,
+    })
+  }
+
+  private async assignToOwner(input: {
+    workspaceId: string
+    ownerId: string
+    tasks: TaskAssignmentRow[]
+    tx: DatabaseClient
+  }): Promise<void> {
+    const { workspaceId, ownerId, tasks, tx } = input
+    if (tasks.length === 0) {
+      return
+    }
+    await taskRepository.assignToUser({
+      workspaceId,
+      taskIds: tasks.map((task) => task.id),
+      userId: ownerId,
+      tx,
+    })
+    await taskRepository.insertWatchers({
+      rows: tasks.map((task) => ({ taskId: task.id, userId: ownerId })),
+      tx,
+    })
+    await internalThreadRepository.insertMembers({
+      rows: tasks.map((task) => ({ threadId: task.threadId, userId: ownerId })),
+      tx,
+    })
+    await internalThreadRepository.insertMessages({
+      rows: tasks.map((task) =>
+        systemMessageRow({
+          workspaceId,
+          threadId: task.threadId,
+          event: {
+            type: "assignee",
+            from: encodeAssignee(task),
+            to: `user:${ownerId}`,
+            byUserId: null,
+          },
+          authorLabel: null,
+        }),
+      ),
+      tx,
     })
   }
 

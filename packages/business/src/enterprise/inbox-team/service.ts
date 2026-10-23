@@ -20,6 +20,7 @@ import { createId } from "@chatbotx.io/utils"
 import { BaseService } from "../../base.service"
 import { ChatbotXException, notFoundException } from "../../errors"
 import { type IdLabel, selectLabelsByIds } from "../../select-labels-by-ids"
+import { taskService } from "../../task/service"
 import { workspaceMemberService } from "../../workspace-member/service"
 
 type InboxTeamWithMembers = InboxTeamModel & {
@@ -182,14 +183,21 @@ class InboxTeamService extends BaseService {
       throw notFoundException("Inbox team not found")
     }
 
-    await db
-      .delete(inboxTeamModel)
-      .where(
-        and(
-          eq(inboxTeamModel.workspaceId, workspaceId),
-          inArray(inboxTeamModel.id, ids),
-        ),
-      )
+    await db.transaction(async (tx) => {
+      await taskService.reassignFromTeams({
+        workspaceId,
+        teamIds: teams.map((team) => team.id),
+        tx,
+      })
+      await tx
+        .delete(inboxTeamModel)
+        .where(
+          and(
+            eq(inboxTeamModel.workspaceId, workspaceId),
+            inArray(inboxTeamModel.id, ids),
+          ),
+        )
+    })
     await this.invalidate({ workspaceId })
 
     if (teams.length > 0) {
