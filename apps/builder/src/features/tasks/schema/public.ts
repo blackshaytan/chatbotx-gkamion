@@ -34,6 +34,10 @@ const taskTargetResource = z.object({
   hidden: z
     .boolean()
     .describe("True when the caller may not see this contact or conversation."),
+  label: z
+    .string()
+    .nullable()
+    .describe("Contact name for a visible contact link; otherwise null."),
 })
 
 export const taskPublicResource = z.object({
@@ -57,6 +61,7 @@ export const taskPublicResource = z.object({
   completedAt: z.date().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
+  url: z.string().describe("Link to the task page in the web app."),
 })
 
 const assigneeFields = {
@@ -134,36 +139,57 @@ export const updateTaskPublicRequest = taskIdPathParam.extend({
   ...assigneeFields,
 })
 
+export const taskFilterFields = {
+  status: z
+    .enum([...taskStatusValues, "open"])
+    .optional()
+    .describe("One status, or `open` for `todo` + `in_progress`."),
+  priority: taskPriorities
+    .optional()
+    .describe("Filter by importance: `low`, `normal`, `high`, or `urgent`."),
+  due: taskDueFilters
+    .optional()
+    .describe(
+      "`overdue` (open and past due), `today`, `week` (7 days from today, workspace time zone) or `none` (no due date).",
+    ),
+  assigneeUserId: userId("Only tasks assigned to this member.").optional(),
+  assigneeTeamId: teamId.optional(),
+  createdByUserId: userId("Only tasks this member created.").optional(),
+  watcherUserId: userId("Only tasks this member watches.").optional(),
+  teamMemberUserId: userId(
+    "Only tasks assigned to a team this member belongs to.",
+  ).optional(),
+  contactId: zodBigintAsString()
+    .optional()
+    .describe(
+      "Only tasks linked to this contact. Get it from `contacts.list`.",
+    ),
+  conversationId: zodBigintAsString()
+    .optional()
+    .describe(
+      "Only tasks linked to this conversation. Get it from `conversations.list`.",
+    ),
+}
+
 export const listTasksPublicRequest = withPublicPaging(
-  z.object({
-    status: z
-      .enum([...taskStatusValues, "open"])
-      .optional()
-      .describe("One status, or `open` for `todo` + `in_progress`."),
-    priority: taskPriorities
-      .optional()
-      .describe("Filter by importance: `low`, `normal`, `high`, or `urgent`."),
-    due: taskDueFilters
-      .optional()
-      .describe(
-        "`overdue` (open and past due), `today`, `week` (7 days from today, workspace time zone) or `none` (no due date).",
-      ),
-    assigneeUserId: userId("Only tasks assigned to this member.").optional(),
-    assigneeTeamId: teamId.optional(),
-    createdByUserId: userId("Only tasks this member created.").optional(),
-    watcherUserId: userId("Only tasks this member watches.").optional(),
-    contactId: zodBigintAsString()
-      .optional()
-      .describe(
-        "Only tasks linked to this contact. Get it from `contacts.list`.",
-      ),
-    conversationId: zodBigintAsString()
-      .optional()
-      .describe(
-        "Only tasks linked to this conversation. Get it from `conversations.list`.",
-      ),
-  }),
+  z.object(taskFilterFields),
 )
+
+export const countTasksPublicRequest = z.object(taskFilterFields)
+
+export const countTasksResponse = z.object({ total: z.number().int() })
+
+export const takeTaskPublicRequest = taskIdPathParam.extend({
+  userId: userId("Member of the assignee team who takes the task."),
+})
+
+export const taskTabs = z.enum([
+  "mine",
+  "createdByMe",
+  "watching",
+  "myTeams",
+  "all",
+])
 
 export const listTasksPublicResponse = publicListResponse(taskPublicResource)
 

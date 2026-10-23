@@ -38,10 +38,12 @@ vi.mock("@/orpc", () => ({ workspaceTokenAuthAPIForScope }))
 
 const taskService = {
   list: vi.fn(),
+  count: vi.fn(),
   get: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
   complete: vi.fn(),
+  take: vi.fn(),
   delete: vi.fn(),
   addWatcher: vi.fn(),
   removeWatcher: vi.fn(),
@@ -87,10 +89,12 @@ test("every procedure sits under the tasks scope", () => {
 describe("registered operations", () => {
   test.each([
     ["GET", "/v1/tasks"],
+    ["GET", "/v1/tasks/count"],
     ["POST", "/v1/tasks"],
     ["GET", "/v1/tasks/{id}"],
     ["PATCH", "/v1/tasks/{id}"],
     ["POST", "/v1/tasks/{id}/complete"],
+    ["POST", "/v1/tasks/{id}/take"],
     ["DELETE", "/v1/tasks/{id}"],
     ["POST", "/v1/tasks/{id}/watchers"],
     ["DELETE", "/v1/tasks/{id}/watchers/{userId}"],
@@ -113,7 +117,25 @@ describe("registered operations", () => {
         .successStatus,
     ).toBe(204)
     expect(procedureFor("GET", "/v1/tasks").route.spec).toBeTypeOf("function")
+    expect(procedureFor("GET", "/v1/tasks/count").route.spec).toBeTypeOf(
+      "function",
+    )
     expect(procedureFor("POST", "/v1/tasks").route.spec).toBeTypeOf("function")
+  })
+
+  test("count route is registered before get so count is not captured by {id}", () => {
+    const countIndex = capturedProcedures.findIndex(
+      (procedure) =>
+        procedure.route.method === "GET" &&
+        procedure.route.path === "/v1/tasks/count",
+    )
+    const getIndex = capturedProcedures.findIndex(
+      (procedure) =>
+        procedure.route.method === "GET" &&
+        procedure.route.path === "/v1/tasks/{id}",
+    )
+    expect(countIndex).toBeGreaterThanOrEqual(0)
+    expect(getIndex).toBeGreaterThan(countIndex)
   })
 })
 
@@ -165,6 +187,42 @@ describe("handlers", () => {
       page: 1,
       perPage: 50,
       status: "open",
+    })
+  })
+
+  test("list forwards teamMemberUserId filter", async () => {
+    taskService.list.mockResolvedValue({ data: [], pageCount: 0 })
+    await call("GET", "/v1/tasks", {
+      page: 1,
+      perPage: 50,
+      teamMemberUserId: "u-7",
+    })
+    expect(taskService.list).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      page: 1,
+      perPage: 50,
+      teamMemberUserId: "u-7",
+    })
+  })
+
+  test("count applies filters on the workspace", async () => {
+    taskService.count.mockResolvedValue({ total: 3 })
+    await call("GET", "/v1/tasks/count", { status: "open", due: "overdue" })
+    expect(taskService.count).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      status: "open",
+      due: "overdue",
+    })
+  })
+
+  test("take uses request userId and api token actor", async () => {
+    taskService.take.mockResolvedValue({ id: "t-1" })
+    await call("POST", "/v1/tasks/{id}/take", { id: "t-1", userId: "u-2" })
+    expect(taskService.take).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      id: "t-1",
+      userId: "u-2",
+      actor: { kind: "api", label: "Hermes" },
     })
   })
 

@@ -2773,6 +2773,11 @@ exports[`public API spec — operation naming guard > operation list (operationI
     "path": "/v1/tasks/{id}/complete",
   },
   {
+    "method": "GET",
+    "operationId": "tasks.count",
+    "path": "/v1/tasks/count",
+  },
+  {
     "method": "POST",
     "operationId": "tasks.create",
     "path": "/v1/tasks",
@@ -2796,6 +2801,11 @@ exports[`public API spec — operation naming guard > operation list (operationI
     "method": "DELETE",
     "operationId": "tasks.removeWatcher",
     "path": "/v1/tasks/{id}/watchers/{userId}",
+  },
+  {
+    "method": "POST",
+    "operationId": "tasks.take",
+    "path": "/v1/tasks/{id}/take",
   },
   {
     "method": "PATCH",

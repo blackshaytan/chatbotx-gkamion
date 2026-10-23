@@ -10,12 +10,15 @@ import { workspaceTokenAuthAPIForScope } from "@/orpc"
 import { apiTokenActor } from "../lib/actor"
 import { parseTaskAssignee, requireTaskAssignee } from "../lib/assignee"
 import {
+  countTasksPublicRequest,
+  countTasksResponse,
   createTaskCommentPublicRequest,
   createTaskPublicRequest,
   listTaskCommentsPublicRequest,
   listTaskCommentsPublicResponse,
   listTasksPublicRequest,
   listTasksPublicResponse,
+  takeTaskPublicRequest,
   taskCommentPublicResource,
   taskIdPathParam,
   taskPublicResource,
@@ -82,7 +85,7 @@ export const tasksPublicRouter = {
       path: "/v1/tasks",
       summary: "List tasks",
       description:
-        "Finds staff tasks by status, priority, due date, assignee, creator, watcher, contact or conversation. Filter ids: `assigneeUserId`, `createdByUserId`, and `watcherUserId` from `workspaceMembers.list` (`userId`); `assigneeTeamId` from `inboxTeams.list`; `contactId` from `contacts.list`; `conversationId` from `conversations.list`. Sorted by due date (tasks without one last), then priority (urgent first), then newest. Returns `{ data, pageCount }`; page with `page`/`perPage`.",
+        "Finds staff tasks by status, priority, due date, assignee, creator, watcher, contact or conversation. Filter ids: `assigneeUserId`, `createdByUserId`, `watcherUserId`, and `teamMemberUserId` from `workspaceMembers.list` (`userId`); `assigneeTeamId` from `inboxTeams.list`; `contactId` from `contacts.list`; `conversationId` from `conversations.list`. Sorted by due date (tasks without one last), then priority (urgent first), then newest. Returns `{ data, pageCount }`; page with `page`/`perPage`.",
       spec: defaultTool,
       tags,
     })
@@ -92,6 +95,27 @@ export const tasksPublicRouter = {
     .handler(
       async ({ context, input }) =>
         await taskService.list({ ...input, workspaceId: context.workspace.id }),
+    ),
+
+  count: workspaceTokenAuthAPI
+    .route({
+      method: "GET",
+      path: "/v1/tasks/count",
+      summary: "Count tasks",
+      description:
+        "Counts staff tasks with the same filters as `tasks.list`. Filter ids: `assigneeUserId`, `createdByUserId`, `watcherUserId`, and `teamMemberUserId` from `workspaceMembers.list` (`userId`); `assigneeTeamId` from `inboxTeams.list`; `contactId` from `contacts.list`; `conversationId` from `conversations.list`. Returns `{ total }`.",
+      spec: defaultTool,
+      tags,
+    })
+    .input(countTasksPublicRequest)
+    .output(countTasksResponse)
+    .errors(possibleErrorsOnListingResource)
+    .handler(
+      async ({ context, input }) =>
+        await taskService.count({
+          ...input,
+          workspaceId: context.workspace.id,
+        }),
     ),
 
   get: workspaceTokenAuthAPI
@@ -187,6 +211,27 @@ export const tasksPublicRouter = {
         await taskService.complete({
           workspaceId: context.workspace.id,
           id: input.id,
+          actor: apiTokenActor(context.apiToken),
+        }),
+    ),
+
+  take: workspaceTokenAuthAPI
+    .route({
+      method: "POST",
+      path: "/v1/tasks/{id}/take",
+      summary: "Take team task",
+      description: `Moves a task assigned to a team to one member of that team. \`userId\` from \`workspaceMembers.list\` (must be in the team; team members from \`inboxTeams.list\`). ${taskIdFrom}`,
+      tags,
+    })
+    .input(takeTaskPublicRequest)
+    .output(taskPublicResource)
+    .errors(possibleErrorsOnMutatingResource)
+    .handler(
+      async ({ context, input }) =>
+        await taskService.take({
+          workspaceId: context.workspace.id,
+          id: input.id,
+          userId: input.userId,
           actor: apiTokenActor(context.apiToken),
         }),
     ),
