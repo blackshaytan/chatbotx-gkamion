@@ -40,12 +40,6 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
 }))
 vi.mock("@chatbotx.io/redis", () => ({ invalidateCacheByTags: vi.fn() }))
 vi.mock("../../src/audit/dispatcher", () => ({ dispatchAuditRecord: vi.fn() }))
-vi.mock("../../src/platform/settings", () => ({
-  resolveTenantSettings: vi.fn(async () => ({
-    appUrl: "https://app.test",
-  })),
-}))
-
 const { taskService } = await import("../../src/task/service")
 
 const storedTask = (overrides: Record<string, unknown> = {}) => ({
@@ -245,7 +239,7 @@ describe("taskService.create messageId validation", () => {
 })
 
 describe("task views stage 2", () => {
-  test("contact label, hideTargets, and task url", async () => {
+  test("contact label and hideTargets", async () => {
     repo.task.list.mockResolvedValue({
       rows: [
         storedTask({
@@ -277,10 +271,6 @@ describe("task views stage 2", () => {
       hidden: false,
       label: "Иван",
     })
-    expect(unrestricted.data[0]?.url).toBe(
-      "https://app.test/space/ws-1/tasks/t-1",
-    )
-
     repo.task.list.mockResolvedValue({
       rows: [
         storedTask({

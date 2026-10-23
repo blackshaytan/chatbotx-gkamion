@@ -24,7 +24,6 @@ import { notFoundException, validationException } from "../errors"
 import { systemMessageRow } from "../internal-thread/message-rows"
 import { internalThreadService } from "../internal-thread/service"
 import type { InternalMessageView } from "../internal-thread/view"
-import { resolveTenantSettings } from "../platform/settings"
 import { actorLabel, actorUserId, type TaskActor } from "./actor"
 import {
   assertRemindBeforeDue,
@@ -58,6 +57,7 @@ export type CreateTaskInput = {
   assignee: TaskAssignee
   watcherUserIds?: string[]
   targets?: TaskTargetsInput
+  accessScope?: TaskAccessScope
 }
 
 export type TaskAccessScope = ContactAccessScope & { hideTargets?: boolean }
@@ -169,7 +169,11 @@ class TaskService extends BaseService {
     })
 
     await this.audit("create", `created a task (#${taskId})`)
-    return await this.get({ workspaceId, id: taskId })
+    return await this.get({
+      workspaceId,
+      id: taskId,
+      accessScope: input.accessScope,
+    })
   }
 
   async get(input: {
@@ -218,6 +222,7 @@ class TaskService extends BaseService {
     id: string
     userId: string
     actor: TaskActor
+    accessScope?: TaskAccessScope
   }): Promise<TaskView> {
     const { workspaceId, id, userId, actor } = input
     const task = await this.findOrFail({ workspaceId, id })
@@ -242,6 +247,7 @@ class TaskService extends BaseService {
       id,
       actor,
       patch: { assignee: { type: "user", userId } },
+      accessScope: input.accessScope,
     })
   }
 
@@ -250,6 +256,7 @@ class TaskService extends BaseService {
     id: string
     actor: TaskActor
     patch: TaskPatch
+    accessScope?: TaskAccessScope
   }): Promise<TaskView> {
     const { workspaceId, id, actor, patch } = input
     const task = await this.findOrFail({ workspaceId, id })
@@ -289,13 +296,14 @@ class TaskService extends BaseService {
       })
       await this.audit("update", `updated a task (#${id})`)
     }
-    return await this.get({ workspaceId, id })
+    return await this.get({ workspaceId, id, accessScope: input.accessScope })
   }
 
   async complete(input: {
     workspaceId: string
     id: string
     actor: TaskActor
+    accessScope?: TaskAccessScope
   }): Promise<TaskView> {
     return await this.update({ ...input, patch: { status: "done" } })
   }
@@ -326,6 +334,7 @@ class TaskService extends BaseService {
     id: string
     userId: string
     actor: TaskActor
+    accessScope?: TaskAccessScope
   }): Promise<TaskView> {
     const { workspaceId, id, userId, actor } = input
     const task = await this.findOrFail({ workspaceId, id })
@@ -345,7 +354,7 @@ class TaskService extends BaseService {
         tx,
       })
     })
-    return await this.get({ workspaceId, id })
+    return await this.get({ workspaceId, id, accessScope: input.accessScope })
   }
 
   async removeWatcher(input: {
@@ -560,17 +569,16 @@ class TaskService extends BaseService {
     tasks: TaskWithRelations[],
     accessScope?: TaskAccessScope,
   ): Promise<TaskView[]> {
-    const { appUrl } = await resolveTenantSettings({ workspaceId })
     if (accessScope?.hideTargets) {
       const hidden = {
         contactIds: new Set<string>(),
         conversationIds: new Set<string>(),
       }
-      return tasks.map((task) => toTaskView(task, hidden, appUrl))
+      return tasks.map((task) => toTaskView(task, hidden))
     }
     const assignedUserId = accessScope?.restrictToAssignedUserId
     if (!assignedUserId) {
-      return tasks.map((task) => toTaskView(task, null, appUrl))
+      return tasks.map((task) => toTaskView(task, null))
     }
     const targets = tasks.flatMap((task) => task.targets)
     const visible = await taskRepository.listVisibleTargetIds({
@@ -587,7 +595,7 @@ class TaskService extends BaseService {
       contactIds: new Set(visible.contactIds),
       conversationIds: new Set(visible.conversationIds),
     }
-    return tasks.map((task) => toTaskView(task, visibility, appUrl))
+    return tasks.map((task) => toTaskView(task, visibility))
   }
 
   private async assertCanModify(

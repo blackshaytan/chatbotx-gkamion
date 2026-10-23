@@ -11,7 +11,6 @@ export type TaskTargetView = {
 export type TaskView = Omit<TaskModel, "remindedAt" | "overdueNotifiedAt"> & {
   watcherUserIds: string[]
   targets: TaskTargetView[]
-  url: string
 }
 
 /** Ids a member restricted to assigned contacts may see; `null` = unrestricted. */
@@ -73,7 +72,6 @@ const toTargetViews = (
 export const toTaskView = (
   task: TaskWithRelations,
   visibility: TaskTargetVisibility,
-  appUrl: string,
 ): TaskView => {
   const {
     watchers,
@@ -86,6 +84,5 @@ export const toTaskView = (
     ...fields,
     watcherUserIds: watchers.map((watcher) => watcher.userId),
     targets: toTargetViews(targets, visibility),
-    url: `${appUrl}/space/${task.workspaceId}/tasks/${task.id}`,
   }
 }

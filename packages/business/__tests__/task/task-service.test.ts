@@ -43,11 +43,6 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
   })),
   getSafeSinceTime: vi.fn((time: Date) => time),
 }))
-vi.mock("../../src/platform/settings", () => ({
-  resolveTenantSettings: vi.fn(async () => ({
-    appUrl: "https://app.test",
-  })),
-}))
 vi.mock("@chatbotx.io/redis", () => ({ invalidateCacheByTags: vi.fn() }))
 vi.mock("../../src/audit/dispatcher", () => ({ dispatchAuditRecord: vi.fn() }))
 
@@ -294,6 +289,33 @@ describe("taskService.update", () => {
       patch: { status: "in_progress" },
     })
     expect(repo.task.update).toHaveBeenCalled()
+  })
+
+  test("returns hidden targets when accessScope hides them", async () => {
+    repo.task.findById.mockResolvedValue(
+      storedTask({
+        targets: [
+          {
+            id: "1",
+            taskId: "t-1",
+            contactId: "c-1",
+            conversationId: null,
+            messageId: null,
+            contact: { fullName: "Alice" },
+          },
+        ],
+      }),
+    )
+    const view = await taskService.update({
+      workspaceId: "ws-1",
+      id: "t-1",
+      actor: API,
+      patch: {},
+      accessScope: { hideTargets: true },
+    })
+    expect(view.targets).toEqual([
+      { type: "contact", id: null, hidden: true, label: null },
+    ])
   })
 
   test("a new user assignee becomes a watcher", async () => {

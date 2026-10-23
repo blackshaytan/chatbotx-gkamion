@@ -10,6 +10,7 @@ import {
   sessionTaskActor,
   tabToFilter,
 } from "../lib/session"
+import { withTaskUrl, withTaskUrls } from "../lib/task-url"
 import {
   countTasksPublicRequest,
   countTasksResponse,
@@ -114,12 +115,13 @@ export const tasksAuthenticatedAPI = {
     .output(listTasksPublicResponse)
     .handler(async ({ context, input }) => {
       const { workspaceId, tab, ...rest } = input
-      return await taskService.list({
+      const page = await taskService.list({
         ...rest,
         ...tabToFilter(tab, context.user.id),
         workspaceId,
         accessScope: sessionAccessScope(context),
       })
+      return { ...page, data: await withTaskUrls(workspaceId, page.data) }
     }),
 
   count: authorizedAPI
@@ -151,13 +153,14 @@ export const tasksAuthenticatedAPI = {
     .input(taskIdPathParam.extend(withWorkspaceIdSchema.shape))
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(taskPublicResource)
-    .handler(
-      async ({ context, input }) =>
+    .handler(async ({ context, input }) =>
+      withTaskUrl(
         await taskService.get({
           workspaceId: input.workspaceId,
           id: input.id,
           accessScope: sessionAccessScope(context),
         }),
+      ),
     ),
 
   create: authorizedAPI
@@ -173,22 +176,26 @@ export const tasksAuthenticatedAPI = {
     .output(taskPublicResource)
     .handler(async ({ context, input }) => {
       const { workspaceId, ...fields } = input
-      return await taskService.create({
-        workspaceId,
-        actor: sessionTaskActor(context),
-        title: fields.title,
-        description: fields.description,
-        priority: fields.priority,
-        dueAt: fields.dueAt,
-        remindAt: fields.remindAt,
-        assignee: requireTaskAssignee(fields),
-        watcherUserIds: fields.watcherUserIds,
-        targets: {
-          contactId: fields.contactId,
-          conversationId: fields.conversationId,
-          messageId: fields.messageId,
-        },
-      })
+      const scope = sessionAccessScope(context)
+      return await withTaskUrl(
+        await taskService.create({
+          workspaceId,
+          actor: sessionTaskActor(context),
+          title: fields.title,
+          description: fields.description,
+          priority: fields.priority,
+          dueAt: fields.dueAt,
+          remindAt: fields.remindAt,
+          assignee: requireTaskAssignee(fields),
+          watcherUserIds: fields.watcherUserIds,
+          targets: {
+            contactId: fields.contactId,
+            conversationId: fields.conversationId,
+            messageId: fields.messageId,
+          },
+          accessScope: scope,
+        }),
+      )
     }),
 
   update: authorizedAPI
@@ -204,15 +211,19 @@ export const tasksAuthenticatedAPI = {
     .handler(async ({ context, input }) => {
       const { workspaceId, id, assigneeUserId, assigneeTeamId, ...fields } =
         input
-      return await taskService.update({
-        workspaceId,
-        id,
-        actor: sessionTaskActor(context),
-        patch: {
-          ...fields,
-          assignee: parseTaskAssignee({ assigneeUserId, assigneeTeamId }),
-        },
-      })
+      const scope = sessionAccessScope(context)
+      return await withTaskUrl(
+        await taskService.update({
+          workspaceId,
+          id,
+          actor: sessionTaskActor(context),
+          patch: {
+            ...fields,
+            assignee: parseTaskAssignee({ assigneeUserId, assigneeTeamId }),
+          },
+          accessScope: scope,
+        }),
+      )
     }),
 
   complete: authorizedAPI
@@ -225,13 +236,15 @@ export const tasksAuthenticatedAPI = {
     .input(taskIdPathParam.extend(withWorkspaceIdSchema.shape))
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(taskPublicResource)
-    .handler(
-      async ({ context, input }) =>
+    .handler(async ({ context, input }) =>
+      withTaskUrl(
         await taskService.complete({
           workspaceId: input.workspaceId,
           id: input.id,
           actor: sessionTaskActor(context),
+          accessScope: sessionAccessScope(context),
         }),
+      ),
     ),
 
   take: authorizedAPI
@@ -248,14 +261,16 @@ export const tasksAuthenticatedAPI = {
     )
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(taskPublicResource)
-    .handler(
-      async ({ context, input }) =>
+    .handler(async ({ context, input }) =>
+      withTaskUrl(
         await taskService.take({
           workspaceId: input.workspaceId,
           id: input.id,
           userId: context.user.id,
           actor: sessionTaskActor(context),
+          accessScope: sessionAccessScope(context),
         }),
+      ),
     ),
 
   delete: authorizedAPI
@@ -286,14 +301,16 @@ export const tasksAuthenticatedAPI = {
     .input(taskWatcherPublicRequest.extend(withWorkspaceIdSchema.shape))
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(taskPublicResource)
-    .handler(
-      async ({ context, input }) =>
+    .handler(async ({ context, input }) =>
+      withTaskUrl(
         await taskService.addWatcher({
           workspaceId: input.workspaceId,
           id: input.id,
           userId: input.userId,
           actor: sessionTaskActor(context),
+          accessScope: sessionAccessScope(context),
         }),
+      ),
     ),
 
   removeWatcher: authorizedAPI

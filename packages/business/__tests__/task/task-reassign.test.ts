@@ -24,12 +24,6 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
 }))
 vi.mock("@chatbotx.io/redis", () => ({ invalidateCacheByTags: vi.fn() }))
 vi.mock("../../src/audit/dispatcher", () => ({ dispatchAuditRecord: vi.fn() }))
-vi.mock("../../src/platform/settings", () => ({
-  resolveTenantSettings: vi.fn(async () => ({
-    appUrl: "https://app.test",
-  })),
-}))
-
 const { taskService } = await import("../../src/task/service")
 
 beforeEach(() => {

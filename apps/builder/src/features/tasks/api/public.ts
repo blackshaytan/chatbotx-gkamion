@@ -9,6 +9,7 @@ import {
 import { workspaceTokenAuthAPIForScope } from "@/orpc"
 import { apiTokenActor } from "../lib/actor"
 import { parseTaskAssignee, requireTaskAssignee } from "../lib/assignee"
+import { withTaskUrl, withTaskUrls } from "../lib/task-url"
 import {
   countTasksPublicRequest,
   countTasksResponse,
@@ -92,10 +93,16 @@ export const tasksPublicRouter = {
     .input(listTasksPublicRequest)
     .output(listTasksPublicResponse)
     .errors(possibleErrorsOnListingResource)
-    .handler(
-      async ({ context, input }) =>
-        await taskService.list({ ...input, workspaceId: context.workspace.id }),
-    ),
+    .handler(async ({ context, input }) => {
+      const page = await taskService.list({
+        ...input,
+        workspaceId: context.workspace.id,
+      })
+      return {
+        ...page,
+        data: await withTaskUrls(context.workspace.id, page.data),
+      }
+    }),
 
   count: workspaceTokenAuthAPI
     .route({
@@ -129,12 +136,13 @@ export const tasksPublicRouter = {
     .input(taskIdPathParam)
     .output(taskPublicResource)
     .errors(possibleErrorsOnFindingResource)
-    .handler(
-      async ({ context, input }) =>
+    .handler(async ({ context, input }) =>
+      withTaskUrl(
         await taskService.get({
           workspaceId: context.workspace.id,
           id: input.id,
         }),
+      ),
     ),
 
   create: workspaceTokenAuthAPI
@@ -151,8 +159,8 @@ export const tasksPublicRouter = {
     .input(createTaskPublicRequest)
     .output(taskPublicResource)
     .errors(possibleErrorsOnMutatingResource)
-    .handler(
-      async ({ context, input }) =>
+    .handler(async ({ context, input }) =>
+      withTaskUrl(
         await taskService.create({
           workspaceId: context.workspace.id,
           actor: apiTokenActor(context.apiToken),
@@ -169,6 +177,7 @@ export const tasksPublicRouter = {
             messageId: input.messageId,
           },
         }),
+      ),
     ),
 
   update: workspaceTokenAuthAPI
@@ -184,15 +193,17 @@ export const tasksPublicRouter = {
     .errors(possibleErrorsOnMutatingResource)
     .handler(async ({ context, input }) => {
       const { id, assigneeUserId, assigneeTeamId, ...fields } = input
-      return await taskService.update({
-        workspaceId: context.workspace.id,
-        id,
-        actor: apiTokenActor(context.apiToken),
-        patch: {
-          ...fields,
-          assignee: parseTaskAssignee({ assigneeUserId, assigneeTeamId }),
-        },
-      })
+      return await withTaskUrl(
+        await taskService.update({
+          workspaceId: context.workspace.id,
+          id,
+          actor: apiTokenActor(context.apiToken),
+          patch: {
+            ...fields,
+            assignee: parseTaskAssignee({ assigneeUserId, assigneeTeamId }),
+          },
+        }),
+      )
     }),
 
   complete: workspaceTokenAuthAPI
@@ -206,13 +217,14 @@ export const tasksPublicRouter = {
     .input(taskIdPathParam)
     .output(taskPublicResource)
     .errors(possibleErrorsOnMutatingResource)
-    .handler(
-      async ({ context, input }) =>
+    .handler(async ({ context, input }) =>
+      withTaskUrl(
         await taskService.complete({
           workspaceId: context.workspace.id,
           id: input.id,
           actor: apiTokenActor(context.apiToken),
         }),
+      ),
     ),
 
   take: workspaceTokenAuthAPI
@@ -226,14 +238,15 @@ export const tasksPublicRouter = {
     .input(takeTaskPublicRequest)
     .output(taskPublicResource)
     .errors(possibleErrorsOnMutatingResource)
-    .handler(
-      async ({ context, input }) =>
+    .handler(async ({ context, input }) =>
+      withTaskUrl(
         await taskService.take({
           workspaceId: context.workspace.id,
           id: input.id,
           userId: input.userId,
           actor: apiTokenActor(context.apiToken),
         }),
+      ),
     ),
 
   delete: workspaceTokenAuthAPI
@@ -266,14 +279,15 @@ export const tasksPublicRouter = {
     .input(taskWatcherPublicRequest)
     .output(taskPublicResource)
     .errors(possibleErrorsOnMutatingResource)
-    .handler(
-      async ({ context, input }) =>
+    .handler(async ({ context, input }) =>
+      withTaskUrl(
         await taskService.addWatcher({
           workspaceId: context.workspace.id,
           id: input.id,
           userId: input.userId,
           actor: apiTokenActor(context.apiToken),
         }),
+      ),
     ),
 
   removeWatcher: workspaceTokenAuthAPI

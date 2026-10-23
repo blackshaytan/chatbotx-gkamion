@@ -81,7 +81,10 @@ const taskService = {
   listComments: vi.fn(),
   addComment: vi.fn(),
 }
-vi.mock("@chatbotx.io/business", () => ({ taskService }))
+const resolveTenantSettings = vi.fn(async () => ({
+  appUrl: "https://app.test",
+}))
+vi.mock("@chatbotx.io/business", () => ({ taskService, resolveTenantSettings }))
 
 await import("@/features/tasks/api/private")
 
@@ -173,19 +176,37 @@ describe("handlers", () => {
     })
   })
 
-  test("create uses session actor", async () => {
-    taskService.create.mockResolvedValue({ id: "t-1" })
-    await call("POST", "/workspaces/{workspaceId}/tasks", {
+  test("create uses session actor and access scope", async () => {
+    taskService.create.mockResolvedValue({ id: "t-1", workspaceId: "ws-1" })
+    const created = (await call("POST", "/workspaces/{workspaceId}/tasks", {
       workspaceId: "ws-1",
       title: "Follow up",
       assigneeUserId: "member-7",
-    })
+    })) as { url: string }
+    expect(created.url).toBe("https://app.test/space/ws-1/tasks/t-1")
     expect(taskService.create).toHaveBeenCalledWith(
       expect.objectContaining({
         workspaceId: "ws-1",
         actor: { kind: "user", userId: "member-7", isOwner: false },
         title: "Follow up",
         assignee: { type: "user", userId: "member-7" },
+        accessScope: { restrictToAssignedUserId: "member-7" },
+      }),
+    )
+  })
+
+  test("update forwards session access scope", async () => {
+    taskService.update.mockResolvedValue({ id: "t-1", workspaceId: "ws-1" })
+    await call("PATCH", "/workspaces/{workspaceId}/tasks/{id}", {
+      workspaceId: "ws-1",
+      id: "t-1",
+      status: "in_progress",
+    })
+    expect(taskService.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workspaceId: "ws-1",
+        id: "t-1",
+        accessScope: { restrictToAssignedUserId: "member-7" },
       }),
     )
   })
@@ -201,6 +222,7 @@ describe("handlers", () => {
       id: "t-1",
       userId: "member-7",
       actor: { kind: "user", userId: "member-7", isOwner: false },
+      accessScope: { restrictToAssignedUserId: "member-7" },
     })
   })
 })
