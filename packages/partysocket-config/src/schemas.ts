@@ -22,6 +22,8 @@ export const RealtimeEventType = {
   whatsappCallOutboundStatus: "whatsappCallOutboundStatus",
   whatsappCallPermissionUpdated: "whatsappCallPermissionUpdated",
   contactInboxThreadControlUpdated: "contactInboxThreadControlUpdated",
+  taskChanged: "taskChanged",
+  taskCommentsChanged: "taskCommentsChanged",
 } as const
 
 export const RealtimeTopic = {
@@ -131,6 +133,14 @@ export const REALTIME_EVENT_TOPICS: {
   },
   [RealtimeEventType.contactInboxThreadControlUpdated]: {
     durability: "durable",
+    topics: [RealtimeTopic.chat],
+  },
+  [RealtimeEventType.taskChanged]: {
+    durability: "ephemeral",
+    topics: [RealtimeTopic.chat],
+  },
+  [RealtimeEventType.taskCommentsChanged]: {
+    durability: "ephemeral",
     topics: [RealtimeTopic.chat],
   },
 }
@@ -470,6 +480,22 @@ export type RealtimeEventContactInboxThreadControlUpdated = {
   data: ContactInboxThreadControlUpdatedData
 }
 
+export const taskRealtimePayloadSchema = z.object({
+  taskId: z.string(),
+})
+
+export type TaskRealtimePayload = z.infer<typeof taskRealtimePayloadSchema>
+
+export type RealtimeEventTaskChanged = {
+  eventType: typeof RealtimeEventType.taskChanged
+  data: TaskRealtimePayload
+}
+
+export type RealtimeEventTaskCommentsChanged = {
+  eventType: typeof RealtimeEventType.taskCommentsChanged
+  data: TaskRealtimePayload
+}
+
 export type RealtimeEventData =
   | RealtimeEventCreateMessage
   | RealtimeEventMessageDeleted
@@ -490,3 +516,5 @@ export type RealtimeEventData =
   | RealtimeEventWhatsappCallOutboundStatus
   | RealtimeEventWhatsappCallPermissionUpdated
   | RealtimeEventContactInboxThreadControlUpdated
+  | RealtimeEventTaskChanged
+  | RealtimeEventTaskCommentsChanged

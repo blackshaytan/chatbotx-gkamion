@@ -208,6 +208,21 @@ const taskSystemEventResource = z.object({
   byUserId: z.string().nullable(),
 })
 
+const taskCommentMentionsResource = z.object({
+  userIds: z.array(z.string()),
+  teamIds: z.array(z.string()),
+})
+
+const taskCommentAttachmentResource = z.object({
+  index: z.number().int(),
+  name: z.string(),
+  size: z.number().int(),
+  mimeType: z.string(),
+  url: z
+    .string()
+    .describe("Signed download URL (about one hour). Use as a link or href."),
+})
+
 export const taskCommentPublicResource = z.object({
   id: z.string(),
   kind: internalMessageKinds.describe(
@@ -216,11 +231,24 @@ export const taskCommentPublicResource = z.object({
   authorUserId: z.string().nullable(),
   authorLabel: z.string().nullable(),
   text: z.string().nullable(),
+  mentions: taskCommentMentionsResource.describe(
+    "Parsed @mentions from the comment text.",
+  ),
+  attachments: z.array(taskCommentAttachmentResource),
   systemEvent: taskSystemEventResource.nullable(),
   deleted: z.boolean(),
   editedAt: z.date().nullable(),
   createdAt: z.date(),
 })
+
+export const taskPrivateResource = taskPublicResource.extend({
+  unreadCount: z
+    .number()
+    .int()
+    .describe("Unread comments for the signed-in member (private API only)."),
+})
+
+export const listTasksPrivateResponse = publicListResponse(taskPrivateResource)
 
 export const listTaskCommentsPublicRequest = withPublicPaging(taskIdPathParam)
 
@@ -228,11 +256,92 @@ export const listTaskCommentsPublicResponse = publicListResponse(
   taskCommentPublicResource,
 )
 
-export const createTaskCommentPublicRequest = taskIdPathParam.extend({
-  text: z
+const taskCommentAttachmentInput = z.object({
+  key: z
+    .string()
+    .min(1)
+    .describe("Object key returned by `tasks.attachments.upload`."),
+  name: z
     .string()
     .trim()
     .min(1)
-    .max(TASK_LIMITS.maxCommentLength)
-    .describe("Comment body; shown in the task feed under the API token name."),
+    .max(255)
+    .describe("Original file name from the upload step."),
+})
+
+const mentionFormatDescription =
+  "Optional comment text. Mention people or teams with `@[Name](user:<userId>)` or `@[Team](team:<teamId>)` — get ids from `workspaceMembers.list` (`userId`) and `inboxTeams.list` (`id`)."
+
+export const taskCommentIdPathParam = taskIdPathParam.extend({
+  commentId: zodBigintAsString().describe(
+    "Comment id. Get it from `tasks.comments.list`.",
+  ),
+})
+
+export const createTaskCommentPublicRequest = taskIdPathParam
+  .extend({
+    text: z
+      .string()
+      .trim()
+      .max(TASK_LIMITS.maxCommentLength)
+      .optional()
+      .describe(mentionFormatDescription),
+    attachments: z
+      .array(taskCommentAttachmentInput)
+      .max(10)
+      .optional()
+      .describe(
+        "Files uploaded via `tasks.attachments.upload` (at most 10 per comment).",
+      ),
+  })
+  .superRefine((value, ctx) => {
+    const hasText = (value.text?.length ?? 0) > 0
+    const hasAttachments = (value.attachments?.length ?? 0) > 0
+    if (!(hasText || hasAttachments)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Provide comment text and/or attachments.",
+        path: ["text"],
+      })
+    }
+  })
+
+export const updateTaskCommentPublicRequest = taskCommentIdPathParam
+  .extend({
+    text: z
+      .string()
+      .trim()
+      .min(1)
+      .max(TASK_LIMITS.maxCommentLength)
+      .optional()
+      .describe(mentionFormatDescription),
+  })
+  .superRefine((value, ctx) => {
+    if (value.text === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Comment text is required.",
+        path: ["text"],
+      })
+    }
+  })
+
+const TASK_ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024
+
+export const uploadTaskAttachmentRequest = taskIdPathParam.extend({
+  file: z
+    .file()
+    .refine((file) => file.size <= TASK_ATTACHMENT_MAX_BYTES, {
+      message: "Max file size is 25MB.",
+    })
+    .describe(
+      "Multipart file body (one file, up to 25MB). Pass the returned `key`/`name` into `tasks.comments.create`.",
+    ),
+})
+
+export const uploadTaskAttachmentResponse = z.object({
+  key: z.string(),
+  name: z.string(),
+  size: z.number().int(),
+  mimeType: z.string(),
 })

@@ -2759,13 +2759,28 @@ exports[`public API spec — operation naming guard > operation list (operationI
   },
   {
     "method": "POST",
+    "operationId": "tasks.attachments.upload",
+    "path": "/v1/tasks/{id}/attachments",
+  },
+  {
+    "method": "POST",
     "operationId": "tasks.comments.create",
     "path": "/v1/tasks/{id}/comments",
+  },
+  {
+    "method": "DELETE",
+    "operationId": "tasks.comments.delete",
+    "path": "/v1/tasks/{id}/comments/{commentId}",
   },
   {
     "method": "GET",
     "operationId": "tasks.comments.list",
     "path": "/v1/tasks/{id}/comments",
+  },
+  {
+    "method": "PATCH",
+    "operationId": "tasks.comments.update",
+    "path": "/v1/tasks/{id}/comments/{commentId}",
   },
   {
     "method": "POST",

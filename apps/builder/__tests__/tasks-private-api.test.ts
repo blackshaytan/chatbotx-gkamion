@@ -47,6 +47,27 @@ const { authorizedAPI, workspaceAuthorizedMidddleware, capturedProcedures } =
 vi.mock("@/orpc", () => ({ authorizedAPI }))
 vi.mock("@/middlewares/auth", () => ({ workspaceAuthorizedMidddleware }))
 
+const { publishTaskChanged, publishTaskCommentsAndTaskChanged } = vi.hoisted(
+  () => ({
+    publishTaskChanged: vi.fn(),
+    publishTaskCommentsAndTaskChanged: vi.fn(),
+  }),
+)
+
+vi.mock("@/features/tasks/lib/task-realtime", () => ({
+  publishTaskChanged,
+  publishTaskCommentsAndTaskChanged,
+}))
+
+vi.mock("@/features/tasks/lib/attachment-url", () => ({
+  withCommentAttachmentUrls: vi.fn(
+    async (_ws: string, data: unknown[]) => data,
+  ),
+  withSingleCommentAttachmentUrls: vi.fn(
+    async (_ws: string, data: unknown) => data,
+  ),
+}))
+
 vi.mock("@/features/contacts/permissions", () => ({
   buildContactPermissionScope: ({
     permissions,
@@ -80,6 +101,10 @@ const taskService = {
   removeWatcher: vi.fn(),
   listComments: vi.fn(),
   addComment: vi.fn(),
+  updateComment: vi.fn(),
+  deleteComment: vi.fn(),
+  markRead: vi.fn(),
+  uploadAttachment: vi.fn(),
 }
 const resolveTenantSettings = vi.fn(async () => ({
   appUrl: "https://app.test",
@@ -136,6 +161,10 @@ describe("registered operations", () => {
     ["DELETE", "/workspaces/{workspaceId}/tasks/{id}/watchers/{userId}"],
     ["GET", "/workspaces/{workspaceId}/tasks/{id}/comments"],
     ["POST", "/workspaces/{workspaceId}/tasks/{id}/comments"],
+    ["PATCH", "/workspaces/{workspaceId}/tasks/{id}/comments/{commentId}"],
+    ["DELETE", "/workspaces/{workspaceId}/tasks/{id}/comments/{commentId}"],
+    ["POST", "/workspaces/{workspaceId}/tasks/{id}/read"],
+    ["POST", "/workspaces/{workspaceId}/tasks/{id}/attachments"],
   ])("%s %s", (method, path) => {
     expect(procedureFor(method, path)).toBeDefined()
   })
@@ -173,6 +202,19 @@ describe("handlers", () => {
       perPage: 20,
       assigneeUserId: "member-7",
       accessScope: { restrictToAssignedUserId: "member-7" },
+      viewerUserId: "member-7",
+    })
+  })
+
+  test("markRead uses signed-in user", async () => {
+    await call("POST", "/workspaces/{workspaceId}/tasks/{id}/read", {
+      workspaceId: "ws-1",
+      id: "t-1",
+    })
+    expect(taskService.markRead).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      id: "t-1",
+      userId: "member-7",
     })
   })
 

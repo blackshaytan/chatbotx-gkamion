@@ -5,10 +5,18 @@ import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"
 import { authorizedAPI } from "@/orpc"
 import { parseTaskAssignee, requireTaskAssignee } from "../lib/assignee"
 import {
+  withCommentAttachmentUrls,
+  withSingleCommentAttachmentUrls,
+} from "../lib/attachment-url"
+import {
   sessionTaskAccessScope,
   sessionTaskActor,
   tabToFilter,
 } from "../lib/session"
+import {
+  publishTaskChanged,
+  publishTaskCommentsAndTaskChanged,
+} from "../lib/task-realtime"
 import { withTaskUrl, withTaskUrls } from "../lib/task-url"
 import {
   countTasksPublicRequest,
@@ -17,15 +25,20 @@ import {
   createTaskPublicRequest,
   listTaskCommentsPublicRequest,
   listTaskCommentsPublicResponse,
+  listTasksPrivateResponse,
   listTasksPublicRequest,
-  listTasksPublicResponse,
   takeTaskPublicRequest,
+  taskCommentIdPathParam,
   taskCommentPublicResource,
   taskIdPathParam,
+  taskPrivateResource,
   taskPublicResource,
   taskTabs,
   taskWatcherPublicRequest,
+  updateTaskCommentPublicRequest,
   updateTaskPublicRequest,
+  uploadTaskAttachmentRequest,
+  uploadTaskAttachmentResponse,
 } from "../schema/public"
 
 const tags = ["Tasks"]
@@ -65,15 +78,18 @@ const taskCommentsPrivateRouter = {
     )
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(listTaskCommentsPublicResponse)
-    .handler(
-      async ({ input }) =>
-        await taskService.listComments({
-          workspaceId: input.workspaceId,
-          id: input.id,
-          page: input.page,
-          perPage: input.perPage,
-        }),
-    ),
+    .handler(async ({ input }) => {
+      const page = await taskService.listComments({
+        workspaceId: input.workspaceId,
+        id: input.id,
+        page: input.page,
+        perPage: input.perPage,
+      })
+      return {
+        ...page,
+        data: await withCommentAttachmentUrls(input.workspaceId, page.data),
+      }
+    }),
 
   create: authorizedAPI
     .route({
@@ -90,13 +106,91 @@ const taskCommentsPrivateRouter = {
     )
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(taskCommentPublicResource)
+    .handler(async ({ context, input }) => {
+      const comment = await taskService.addComment({
+        workspaceId: input.workspaceId,
+        id: input.id,
+        text: input.text ?? "",
+        attachments: input.attachments,
+        actor: sessionTaskActor(context),
+      })
+      publishTaskCommentsAndTaskChanged(input.workspaceId, input.id)
+      return await withSingleCommentAttachmentUrls(input.workspaceId, comment)
+    }),
+
+  update: authorizedAPI
+    .route({
+      method: "PATCH",
+      path: "/workspaces/{workspaceId}/tasks/{id}/comments/{commentId}",
+      summary: "Update task comment",
+      tags,
+    })
+    .input(
+      updateTaskCommentPublicRequest.extend({
+        workspaceId: zodBigintAsString(),
+      }),
+    )
+    .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
+    .output(taskCommentPublicResource)
+    .handler(async ({ context, input }) => {
+      const comment = await taskService.updateComment({
+        workspaceId: input.workspaceId,
+        id: input.id,
+        commentId: input.commentId,
+        text: input.text ?? "",
+        actor: sessionTaskActor(context),
+      })
+      publishTaskCommentsAndTaskChanged(input.workspaceId, input.id)
+      return await withSingleCommentAttachmentUrls(input.workspaceId, comment)
+    }),
+
+  delete: authorizedAPI
+    .route({
+      method: "DELETE",
+      path: "/workspaces/{workspaceId}/tasks/{id}/comments/{commentId}",
+      summary: "Delete task comment",
+      successStatus: 204,
+      tags,
+    })
+    .input(
+      taskCommentIdPathParam.extend({
+        workspaceId: zodBigintAsString(),
+      }),
+    )
+    .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
+    .handler(async ({ context, input }) => {
+      await taskService.deleteComment({
+        workspaceId: input.workspaceId,
+        id: input.id,
+        commentId: input.commentId,
+        actor: sessionTaskActor(context),
+      })
+      publishTaskCommentsAndTaskChanged(input.workspaceId, input.id)
+    }),
+}
+
+const taskAttachmentsPrivateRouter = {
+  upload: authorizedAPI
+    .route({
+      method: "POST",
+      path: "/workspaces/{workspaceId}/tasks/{id}/attachments",
+      summary: "Upload task attachment",
+      successStatus: 201,
+      tags,
+    })
+    .input(
+      uploadTaskAttachmentRequest.extend({
+        workspaceId: zodBigintAsString(),
+      }),
+    )
+    .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
+    .output(uploadTaskAttachmentResponse)
     .handler(
-      async ({ context, input }) =>
-        await taskService.addComment({
+      async ({ input }) =>
+        await taskService.uploadAttachment({
           workspaceId: input.workspaceId,
           id: input.id,
-          text: input.text,
-          actor: sessionTaskActor(context),
+          file: input.file,
         }),
     ),
 }
@@ -111,7 +205,7 @@ export const tasksAuthenticatedAPI = {
     })
     .input(listTasksPrivateRequest)
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
-    .output(listTasksPublicResponse)
+    .output(listTasksPrivateResponse)
     .handler(async ({ context, input }) => {
       const { workspaceId, tab, ...rest } = input
       const page = await taskService.list({
@@ -119,6 +213,7 @@ export const tasksAuthenticatedAPI = {
         ...tabToFilter(tab, context.user.id),
         workspaceId,
         accessScope: sessionAccessScope(context),
+        viewerUserId: context.user.id,
       })
       return { ...page, data: await withTaskUrls(workspaceId, page.data) }
     }),
@@ -151,13 +246,14 @@ export const tasksAuthenticatedAPI = {
     })
     .input(taskIdPathParam.extend(withWorkspaceIdSchema.shape))
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
-    .output(taskPublicResource)
+    .output(taskPrivateResource)
     .handler(async ({ context, input }) =>
       withTaskUrl(
         await taskService.get({
           workspaceId: input.workspaceId,
           id: input.id,
           accessScope: sessionAccessScope(context),
+          viewerUserId: context.user.id,
         }),
       ),
     ),
@@ -176,25 +272,25 @@ export const tasksAuthenticatedAPI = {
     .handler(async ({ context, input }) => {
       const { workspaceId, ...fields } = input
       const scope = sessionAccessScope(context)
-      return await withTaskUrl(
-        await taskService.create({
-          workspaceId,
-          actor: sessionTaskActor(context),
-          title: fields.title,
-          description: fields.description,
-          priority: fields.priority,
-          dueAt: fields.dueAt,
-          remindAt: fields.remindAt,
-          assignee: requireTaskAssignee(fields),
-          watcherUserIds: fields.watcherUserIds,
-          targets: {
-            contactId: fields.contactId,
-            conversationId: fields.conversationId,
-            messageId: fields.messageId,
-          },
-          accessScope: scope,
-        }),
-      )
+      const task = await taskService.create({
+        workspaceId,
+        actor: sessionTaskActor(context),
+        title: fields.title,
+        description: fields.description,
+        priority: fields.priority,
+        dueAt: fields.dueAt,
+        remindAt: fields.remindAt,
+        assignee: requireTaskAssignee(fields),
+        watcherUserIds: fields.watcherUserIds,
+        targets: {
+          contactId: fields.contactId,
+          conversationId: fields.conversationId,
+          messageId: fields.messageId,
+        },
+        accessScope: scope,
+      })
+      publishTaskChanged(workspaceId, task.id)
+      return await withTaskUrl(task)
     }),
 
   update: authorizedAPI
@@ -211,18 +307,18 @@ export const tasksAuthenticatedAPI = {
       const { workspaceId, id, assigneeUserId, assigneeTeamId, ...fields } =
         input
       const scope = sessionAccessScope(context)
-      return await withTaskUrl(
-        await taskService.update({
-          workspaceId,
-          id,
-          actor: sessionTaskActor(context),
-          patch: {
-            ...fields,
-            assignee: parseTaskAssignee({ assigneeUserId, assigneeTeamId }),
-          },
-          accessScope: scope,
-        }),
-      )
+      const task = await taskService.update({
+        workspaceId,
+        id,
+        actor: sessionTaskActor(context),
+        patch: {
+          ...fields,
+          assignee: parseTaskAssignee({ assigneeUserId, assigneeTeamId }),
+        },
+        accessScope: scope,
+      })
+      publishTaskChanged(workspaceId, id)
+      return await withTaskUrl(task)
     }),
 
   complete: authorizedAPI
@@ -235,16 +331,16 @@ export const tasksAuthenticatedAPI = {
     .input(taskIdPathParam.extend(withWorkspaceIdSchema.shape))
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(taskPublicResource)
-    .handler(async ({ context, input }) =>
-      withTaskUrl(
-        await taskService.complete({
-          workspaceId: input.workspaceId,
-          id: input.id,
-          actor: sessionTaskActor(context),
-          accessScope: sessionAccessScope(context),
-        }),
-      ),
-    ),
+    .handler(async ({ context, input }) => {
+      const task = await taskService.complete({
+        workspaceId: input.workspaceId,
+        id: input.id,
+        actor: sessionTaskActor(context),
+        accessScope: sessionAccessScope(context),
+      })
+      publishTaskChanged(input.workspaceId, input.id)
+      return await withTaskUrl(task)
+    }),
 
   take: authorizedAPI
     .route({
@@ -260,17 +356,17 @@ export const tasksAuthenticatedAPI = {
     )
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(taskPublicResource)
-    .handler(async ({ context, input }) =>
-      withTaskUrl(
-        await taskService.take({
-          workspaceId: input.workspaceId,
-          id: input.id,
-          userId: context.user.id,
-          actor: sessionTaskActor(context),
-          accessScope: sessionAccessScope(context),
-        }),
-      ),
-    ),
+    .handler(async ({ context, input }) => {
+      const task = await taskService.take({
+        workspaceId: input.workspaceId,
+        id: input.id,
+        userId: context.user.id,
+        actor: sessionTaskActor(context),
+        accessScope: sessionAccessScope(context),
+      })
+      publishTaskChanged(input.workspaceId, input.id)
+      return await withTaskUrl(task)
+    }),
 
   delete: authorizedAPI
     .route({
@@ -288,6 +384,7 @@ export const tasksAuthenticatedAPI = {
         id: input.id,
         actor: sessionTaskActor(context),
       })
+      publishTaskChanged(input.workspaceId, input.id)
     }),
 
   addWatcher: authorizedAPI
@@ -300,17 +397,17 @@ export const tasksAuthenticatedAPI = {
     .input(taskWatcherPublicRequest.extend(withWorkspaceIdSchema.shape))
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(taskPublicResource)
-    .handler(async ({ context, input }) =>
-      withTaskUrl(
-        await taskService.addWatcher({
-          workspaceId: input.workspaceId,
-          id: input.id,
-          userId: input.userId,
-          actor: sessionTaskActor(context),
-          accessScope: sessionAccessScope(context),
-        }),
-      ),
-    ),
+    .handler(async ({ context, input }) => {
+      const task = await taskService.addWatcher({
+        workspaceId: input.workspaceId,
+        id: input.id,
+        userId: input.userId,
+        actor: sessionTaskActor(context),
+        accessScope: sessionAccessScope(context),
+      })
+      publishTaskChanged(input.workspaceId, input.id)
+      return await withTaskUrl(task)
+    }),
 
   removeWatcher: authorizedAPI
     .route({
@@ -329,7 +426,27 @@ export const tasksAuthenticatedAPI = {
         userId: input.userId,
         actor: sessionTaskActor(context),
       })
+      publishTaskChanged(input.workspaceId, input.id)
+    }),
+
+  markRead: authorizedAPI
+    .route({
+      method: "POST",
+      path: "/workspaces/{workspaceId}/tasks/{id}/read",
+      summary: "Mark task feed read",
+      successStatus: 204,
+      tags,
+    })
+    .input(taskIdPathParam.extend(withWorkspaceIdSchema.shape))
+    .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
+    .handler(async ({ context, input }) => {
+      await taskService.markRead({
+        workspaceId: input.workspaceId,
+        id: input.id,
+        userId: context.user.id,
+      })
     }),
 
   comments: taskCommentsPrivateRouter,
+  attachments: taskAttachmentsPrivateRouter,
 }

@@ -36,6 +36,27 @@ const { workspaceTokenAuthAPIForScope, capturedProcedures } = vi.hoisted(() => {
 
 vi.mock("@/orpc", () => ({ workspaceTokenAuthAPIForScope }))
 
+const { publishTaskChanged, publishTaskCommentsAndTaskChanged } = vi.hoisted(
+  () => ({
+    publishTaskChanged: vi.fn(),
+    publishTaskCommentsAndTaskChanged: vi.fn(),
+  }),
+)
+
+vi.mock("@/features/tasks/lib/task-realtime", () => ({
+  publishTaskChanged,
+  publishTaskCommentsAndTaskChanged,
+}))
+
+vi.mock("@/features/tasks/lib/attachment-url", () => ({
+  withCommentAttachmentUrls: vi.fn(
+    async (_ws: string, data: unknown[]) => data,
+  ),
+  withSingleCommentAttachmentUrls: vi.fn(
+    async (_ws: string, data: unknown) => data,
+  ),
+}))
+
 const taskService = {
   list: vi.fn(),
   count: vi.fn(),
@@ -49,6 +70,9 @@ const taskService = {
   removeWatcher: vi.fn(),
   listComments: vi.fn(),
   addComment: vi.fn(),
+  updateComment: vi.fn(),
+  deleteComment: vi.fn(),
+  uploadAttachment: vi.fn(),
 }
 const resolveTenantSettings = vi.fn(async () => ({
   appUrl: "https://app.test",
@@ -103,6 +127,9 @@ describe("registered operations", () => {
     ["DELETE", "/v1/tasks/{id}/watchers/{userId}"],
     ["GET", "/v1/tasks/{id}/comments"],
     ["POST", "/v1/tasks/{id}/comments"],
+    ["PATCH", "/v1/tasks/{id}/comments/{commentId}"],
+    ["DELETE", "/v1/tasks/{id}/comments/{commentId}"],
+    ["POST", "/v1/tasks/{id}/attachments"],
   ])("%s %s", (method, path) => {
     expect(procedureFor(method, path)).toBeDefined()
   })
@@ -239,8 +266,8 @@ describe("handlers", () => {
     })
   })
 
-  test("update passes only the given fields", async () => {
-    taskService.update.mockResolvedValue({ id: "t-1" })
+  test("update passes only the given fields and publishes realtime", async () => {
+    taskService.update.mockResolvedValue({ id: "t-1", workspaceId: "ws-1" })
     await call("PATCH", "/v1/tasks/{id}", {
       id: "t-1",
       status: "in_progress",
@@ -252,10 +279,11 @@ describe("handlers", () => {
       actor: { kind: "api", label: "Hermes" },
       patch: { status: "in_progress", dueAt: null },
     })
+    expect(publishTaskChanged).toHaveBeenCalledWith("ws-1", "t-1")
   })
 
   test("comments are written as the token", async () => {
-    taskService.addComment.mockResolvedValue({ id: "m-1" })
+    taskService.addComment.mockResolvedValue({ id: "m-1", attachments: [] })
     await call("POST", "/v1/tasks/{id}/comments", {
       id: "t-1",
       text: "Нет на складе",
@@ -264,7 +292,12 @@ describe("handlers", () => {
       workspaceId: "ws-1",
       id: "t-1",
       text: "Нет на складе",
+      attachments: undefined,
       actor: { kind: "api", label: "Hermes" },
     })
+    expect(publishTaskCommentsAndTaskChanged).toHaveBeenCalledWith(
+      "ws-1",
+      "t-1",
+    )
   })
 })
