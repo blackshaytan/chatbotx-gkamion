@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
 import { toTaskView } from "../../src/task/view"
 
+const APP_URL = "https://app.test"
+
 const task = {
   id: "t-1",
   workspaceId: "ws-1",
@@ -31,6 +33,7 @@ const task = {
       messageId: null,
       createdAt: new Date(),
       updatedAt: new Date(),
+      contact: { fullName: "Alice" },
     },
     {
       id: "2",
@@ -55,26 +58,31 @@ const task = {
 
 describe("toTaskView", () => {
   test("unrestricted callers see every target id and watcher", () => {
-    const view = toTaskView(task, null)
+    const view = toTaskView(task, null, APP_URL)
     expect(view.watcherUserIds).toEqual(["u-1"])
+    expect(view.url).toBe(`${APP_URL}/space/ws-1/tasks/t-1`)
     expect(view.targets).toEqual([
-      { type: "contact", id: "c-1", hidden: false },
-      { type: "conversation", id: "conv-1", hidden: false },
-      { type: "message", id: "m-1", hidden: false },
+      { type: "contact", id: "c-1", hidden: false, label: "Alice" },
+      { type: "conversation", id: "conv-1", hidden: false, label: null },
+      { type: "message", id: "m-1", hidden: false, label: null },
     ])
     expect(view).not.toHaveProperty("remindedAt")
     expect(view).not.toHaveProperty("overdueNotifiedAt")
   })
 
   test("a member limited to assigned contacts gets hidden targets", () => {
-    const view = toTaskView(task, {
-      contactIds: new Set(),
-      conversationIds: new Set(),
-    })
+    const view = toTaskView(
+      task,
+      {
+        contactIds: new Set(),
+        conversationIds: new Set(),
+      },
+      APP_URL,
+    )
     expect(view.targets).toEqual([
-      { type: "contact", id: null, hidden: true },
-      { type: "conversation", id: null, hidden: true },
-      { type: "message", id: null, hidden: true },
+      { type: "contact", id: null, hidden: true, label: null },
+      { type: "conversation", id: null, hidden: true, label: null },
+      { type: "message", id: null, hidden: true, label: null },
     ])
   })
 
@@ -83,19 +91,23 @@ describe("toTaskView", () => {
       contactIds: new Set(["c-1"]),
       conversationIds: new Set(["conv-1"]),
     }
-    expect(toTaskView(task, visibility).targets[2]).toEqual({
+    expect(toTaskView(task, visibility, APP_URL).targets[2]).toEqual({
       type: "message",
       id: "m-1",
       hidden: false,
+      label: null,
     })
     const withoutConversation = {
       ...task,
       targets: task.targets.filter((target) => !target.conversationId),
     }
-    expect(toTaskView(withoutConversation, visibility).targets[1]).toEqual({
+    expect(
+      toTaskView(withoutConversation, visibility, APP_URL).targets[1],
+    ).toEqual({
       type: "message",
       id: null,
       hidden: true,
+      label: null,
     })
   })
 })

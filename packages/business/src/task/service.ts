@@ -8,6 +8,8 @@ import {
   type TaskSystemEvent,
 } from "@chatbotx.io/database/partials"
 import {
+  createMessageRepository,
+  getSafeSinceTime,
   inboxTeamMemberRepository,
   internalThreadRepository,
   type TaskAssignmentRow,
@@ -22,6 +24,7 @@ import { notFoundException, validationException } from "../errors"
 import { systemMessageRow } from "../internal-thread/message-rows"
 import { internalThreadService } from "../internal-thread/service"
 import type { InternalMessageView } from "../internal-thread/view"
+import { resolveTenantSettings } from "../platform/settings"
 import { actorLabel, actorUserId, type TaskActor } from "./actor"
 import {
   assertRemindBeforeDue,
@@ -57,6 +60,8 @@ export type CreateTaskInput = {
   targets?: TaskTargetsInput
 }
 
+export type TaskAccessScope = ContactAccessScope & { hideTargets?: boolean }
+
 export type ListTasksInput = {
   workspaceId: string
   page: number
@@ -66,13 +71,16 @@ export type ListTasksInput = {
   due?: TaskDueFilter
   assigneeUserId?: string
   assigneeTeamId?: string
+  teamMemberUserId?: string
   createdByUserId?: string
   watcherUserId?: string
   contactId?: string
   conversationId?: string
-  accessScope?: ContactAccessScope
+  accessScope?: TaskAccessScope
   now?: Date
 }
+
+export type TaskFilterInput = Omit<ListTasksInput, "page" | "perPage">
 
 type Paged<T> = { data: T[]; pageCount: number }
 
@@ -167,7 +175,7 @@ class TaskService extends BaseService {
   async get(input: {
     workspaceId: string
     id: string
-    accessScope?: ContactAccessScope
+    accessScope?: TaskAccessScope
   }): Promise<TaskView> {
     const task = await this.findOrFail(input)
     const [view] = await this.toViews(
@@ -179,37 +187,14 @@ class TaskService extends BaseService {
   }
 
   async list(input: ListTasksInput): Promise<Paged<TaskView>> {
-    const { workspaceId, page, perPage, accessScope, now = new Date() } = input
-    let statuses = toStatuses(input.status)
-    const filter: TaskListFilter = {
-      workspaceId,
-      priority: input.priority,
-      assigneeUserId: input.assigneeUserId,
-      assigneeTeamId: input.assigneeTeamId,
-      createdByUserId: input.createdByUserId,
-      watcherUserId: input.watcherUserId,
-      contactId: input.contactId,
-      conversationId: input.conversationId,
-    }
-
-    if (input.due) {
-      const workspace = await taskRepository.findWorkspace({ workspaceId })
-      const { openOnly, ...window } = resolveTaskDueWindow({
-        due: input.due,
-        now,
-        timezone: workspace?.timezone ?? "UTC",
-      })
-      Object.assign(filter, window)
-      if (openOnly) {
-        statuses = (statuses ?? [...OPEN_TASK_STATUSES]).filter(isOpenStatus)
-        if (statuses.length === 0) {
-          return { data: [], pageCount: 0 }
-        }
-      }
+    const { workspaceId, page, perPage, accessScope } = input
+    const filter = await this.resolveFilter(input)
+    if (!filter) {
+      return { data: [], pageCount: 0 }
     }
 
     const { rows, total } = await taskRepository.list({
-      filter: { ...filter, statuses },
+      filter,
       limit: perPage,
       offset: (page - 1) * perPage,
     })
@@ -217,6 +202,47 @@ class TaskService extends BaseService {
       data: await this.toViews(workspaceId, rows, accessScope),
       pageCount: Math.ceil(total / perPage),
     }
+  }
+
+  async count(input: TaskFilterInput): Promise<{ total: number }> {
+    const filter = await this.resolveFilter(input)
+    if (!filter) {
+      return { total: 0 }
+    }
+    const total = await taskRepository.count({ filter })
+    return { total }
+  }
+
+  async take(input: {
+    workspaceId: string
+    id: string
+    userId: string
+    actor: TaskActor
+  }): Promise<TaskView> {
+    const { workspaceId, id, userId, actor } = input
+    const task = await this.findOrFail({ workspaceId, id })
+    if (!task.assigneeTeamId) {
+      throw validationException(
+        "assigneeTeamId",
+        "Task is not assigned to a team",
+      )
+    }
+    const teamMemberIds = await inboxTeamMemberRepository.listUserIdsByTeamId({
+      workspaceId,
+      inboxTeamId: task.assigneeTeamId,
+    })
+    if (!teamMemberIds.includes(userId)) {
+      throw validationException("userId", "Member is not in the assignee team")
+    }
+    if (actor.kind === "user" && actor.userId !== userId && !actor.isOwner) {
+      throw taskForbiddenException()
+    }
+    return await this.update({
+      workspaceId,
+      id,
+      actor,
+      patch: { assignee: { type: "user", userId } },
+    })
   }
 
   async update(input: {
@@ -483,14 +509,68 @@ class TaskService extends BaseService {
     return task
   }
 
+  private async resolveFilter(
+    input: TaskFilterInput,
+  ): Promise<TaskListFilter | null> {
+    const { workspaceId, now = new Date() } = input
+    let statuses = toStatuses(input.status)
+    const filter: TaskListFilter = {
+      workspaceId,
+      priority: input.priority,
+      assigneeUserId: input.assigneeUserId,
+      assigneeTeamId: input.assigneeTeamId,
+      createdByUserId: input.createdByUserId,
+      watcherUserId: input.watcherUserId,
+      contactId: input.contactId,
+      conversationId: input.conversationId,
+    }
+
+    if (input.teamMemberUserId) {
+      const teamIds = await taskRepository.listTeamIdsForUser({
+        workspaceId,
+        userId: input.teamMemberUserId,
+      })
+      if (teamIds.length === 0) {
+        return null
+      }
+      filter.assigneeTeamIds = teamIds
+    }
+
+    if (input.due) {
+      const workspace = await taskRepository.findWorkspace({ workspaceId })
+      const { openOnly, ...window } = resolveTaskDueWindow({
+        due: input.due,
+        now,
+        timezone: workspace?.timezone ?? "UTC",
+      })
+      Object.assign(filter, window)
+      if (openOnly) {
+        statuses = (statuses ?? [...OPEN_TASK_STATUSES]).filter(isOpenStatus)
+        if (statuses.length === 0) {
+          return null
+        }
+      }
+    }
+
+    return { ...filter, statuses }
+  }
+
   private async toViews(
     workspaceId: string,
     tasks: TaskWithRelations[],
-    accessScope?: ContactAccessScope,
+    accessScope?: TaskAccessScope,
   ): Promise<TaskView[]> {
+    const { appUrl } = await resolveTenantSettings({ workspaceId })
+    if (accessScope?.hideTargets) {
+      const hidden = {
+        contactIds: new Set<string>(),
+        conversationIds: new Set<string>(),
+      }
+      return tasks.map((task) => toTaskView(task, hidden, appUrl))
+    }
     const assignedUserId = accessScope?.restrictToAssignedUserId
     if (!assignedUserId) {
-      return tasks.map((task) => toTaskView(task, null))
+      return tasks.map((task) => toTaskView(task, null, appUrl))
     }
     const targets = tasks.flatMap((task) => task.targets)
     const visible = await taskRepository.listVisibleTargetIds({
@@ -507,7 +587,7 @@ class TaskService extends BaseService {
       contactIds: new Set(visible.contactIds),
       conversationIds: new Set(visible.conversationIds),
     }
-    return tasks.map((task) => toTaskView(task, visibility))
+    return tasks.map((task) => toTaskView(task, visibility, appUrl))
   }
 
   private async assertCanModify(
@@ -613,6 +693,20 @@ class TaskService extends BaseService {
           "conversationId",
           "Conversation belongs to another contact",
         )
+      }
+      if (messageId) {
+        const repository = await createMessageRepository()
+        const message = await repository.findTriggerMessage({
+          id: messageId,
+          conversationId,
+          workspaceId,
+          sinceTime:
+            getSafeSinceTime(conversation.createdAt) ?? conversation.createdAt,
+          requireCompleteResults: true,
+        })
+        if (!message) {
+          throw notFoundException("Message not found")
+        }
       }
       linkedContactId = conversation.contactId
     } else if (contactId) {

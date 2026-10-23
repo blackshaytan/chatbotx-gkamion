@@ -73,4 +73,29 @@ describe("buildTaskListWhere", () => {
       id: "desc",
     })
   })
+
+  test("maps assigneeTeamIds to an in filter", () => {
+    expect(
+      buildTaskListWhere({
+        workspaceId: "1",
+        assigneeTeamIds: ["5", "6"],
+      }),
+    ).toEqual({
+      workspaceId: "1",
+      assigneeTeamId: { in: ["5", "6"] },
+    })
+  })
+
+  test("assigneeTeamId wins over assigneeTeamIds", () => {
+    expect(
+      buildTaskListWhere({
+        workspaceId: "1",
+        assigneeTeamId: "solo",
+        assigneeTeamIds: ["5", "6"],
+      }),
+    ).toEqual({
+      workspaceId: "1",
+      assigneeTeamId: "solo",
+    })
+  })
 })

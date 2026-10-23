@@ -9,6 +9,7 @@ import {
 import {
   contactModel,
   conversationModel,
+  inboxTeamMemberModel,
   inboxTeamModel,
   internalThreadModel,
   taskModel,
@@ -29,9 +30,13 @@ export type TaskTargetInsert = typeof taskTargetModel.$inferInsert
 export type TaskUpdate = Partial<
   Omit<TaskInsert, "id" | "workspaceId" | "threadId" | "createdAt">
 >
+export type TaskTargetWithContact = TaskTargetModel & {
+  contact?: { fullName: string } | null
+}
+
 export type TaskWithRelations = TaskModel & {
   watchers: { userId: string }[]
-  targets: TaskTargetModel[]
+  targets: TaskTargetWithContact[]
 }
 export type TaskAssignmentRow = {
   id: string
@@ -42,7 +47,10 @@ export type TaskAssignmentRow = {
 
 const withRelations = {
   watchers: { columns: { userId: true }, orderBy: { id: "asc" } },
-  targets: { orderBy: { id: "asc" } },
+  targets: {
+    orderBy: { id: "asc" },
+    with: { contact: { columns: { fullName: true } } },
+  },
 } as const
 
 const assignmentColumns = {
@@ -135,12 +143,13 @@ class TaskRepository {
     workspaceId: string
     conversationId: string
     tx?: DatabaseClient
-  }): Promise<{ id: string; contactId: string } | undefined> {
+  }): Promise<{ id: string; contactId: string; createdAt: Date } | undefined> {
     const { workspaceId, conversationId, tx = db } = props
     const [row] = await tx
       .select({
         id: conversationModel.id,
         contactId: conversationModel.contactId,
+        createdAt: conversationModel.createdAt,
       })
       .from(conversationModel)
       .where(
@@ -305,6 +314,42 @@ class TaskRepository {
       }),
     ])
     return { rows, total }
+  }
+
+  async count(props: {
+    filter: TaskListFilter
+    tx?: DatabaseClient
+  }): Promise<number> {
+    const { filter, tx = db } = props
+    const where = buildTaskListWhere(filter)
+    return await countWithRelationsFilter({
+      client: tx,
+      table: taskModel,
+      tsName: "taskModel",
+      where,
+    })
+  }
+
+  async listTeamIdsForUser(props: {
+    workspaceId: string
+    userId: string
+    tx?: DatabaseClient
+  }): Promise<string[]> {
+    const { workspaceId, userId, tx = db } = props
+    const rows = await tx
+      .select({ id: inboxTeamModel.id })
+      .from(inboxTeamMemberModel)
+      .innerJoin(
+        inboxTeamModel,
+        eq(inboxTeamMemberModel.inboxTeamId, inboxTeamModel.id),
+      )
+      .where(
+        and(
+          eq(inboxTeamModel.workspaceId, workspaceId),
+          eq(inboxTeamMemberModel.userId, userId),
+        ),
+      )
+    return rows.map((row) => row.id)
   }
 
   async update(props: {

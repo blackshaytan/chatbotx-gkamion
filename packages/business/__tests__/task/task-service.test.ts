@@ -28,6 +28,7 @@ const repo = vi.hoisted(() => ({
     listMessages: vi.fn(),
   },
   teamMembers: { listUserIdsByTeamId: vi.fn() },
+  message: { findTriggerMessage: vi.fn() },
 }))
 
 vi.mock("@chatbotx.io/database/client", () => ({
@@ -37,6 +38,15 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
   taskRepository: repo.task,
   internalThreadRepository: repo.thread,
   inboxTeamMemberRepository: repo.teamMembers,
+  createMessageRepository: vi.fn(async () => ({
+    findTriggerMessage: repo.message.findTriggerMessage,
+  })),
+  getSafeSinceTime: vi.fn((time: Date) => time),
+}))
+vi.mock("../../src/platform/settings", () => ({
+  resolveTenantSettings: vi.fn(async () => ({
+    appUrl: "https://app.test",
+  })),
 }))
 vi.mock("@chatbotx.io/redis", () => ({ invalidateCacheByTags: vi.fn() }))
 vi.mock("../../src/audit/dispatcher", () => ({ dispatchAuditRecord: vi.fn() }))
@@ -89,7 +99,9 @@ describe("taskService.create", () => {
     repo.task.findConversation.mockResolvedValue({
       id: "conv-1",
       contactId: "c-1",
+      createdAt: new Date("2026-01-01T00:00:00Z"),
     })
+    repo.message.findTriggerMessage.mockResolvedValue({ id: "m-1" })
 
     await taskService.create({
       workspaceId: "ws-1",
@@ -405,7 +417,7 @@ describe("taskService.list", () => {
     })
 
     expect(result.data[0]?.targets).toEqual([
-      { type: "contact", id: null, hidden: true },
+      { type: "contact", id: null, hidden: true, label: null },
     ])
   })
 })

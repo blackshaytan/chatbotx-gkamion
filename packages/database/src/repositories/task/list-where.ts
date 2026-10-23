@@ -6,6 +6,7 @@ export type TaskListFilter = {
   priority?: TaskPriority
   assigneeUserId?: string
   assigneeTeamId?: string
+  assigneeTeamIds?: string[]
   createdByUserId?: string
   watcherUserId?: string
   contactId?: string
@@ -55,6 +56,8 @@ export function buildTaskListWhere(filter: TaskListFilter): TaskWhere {
   }
   if (filter.assigneeTeamId) {
     where.assigneeTeamId = filter.assigneeTeamId
+  } else if (filter.assigneeTeamIds) {
+    where.assigneeTeamId = { in: filter.assigneeTeamIds }
   }
   if (filter.createdByUserId) {
     where.createdByUserId = filter.createdByUserId
