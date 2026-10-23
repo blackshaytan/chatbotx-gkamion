@@ -4,6 +4,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
@@ -20,6 +21,7 @@ type NavItem = {
   items?: { title: string; url: string }[]
   crossZone?: boolean
   disabled?: boolean
+  badge?: number
 }
 
 function NavItemContent({
@@ -111,6 +113,9 @@ export function NavMain({
                   onNavigate={closeMobileSidebar}
                 />
               </SidebarMenuButton>
+              {item.badge ? (
+                <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+              ) : null}
             </SidebarMenuItem>
           )
         })}

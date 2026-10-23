@@ -7,12 +7,14 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@chatbotx.io/ui/components/ui/sidebar"
+import { useQuery } from "@tanstack/react-query"
 import {
   AtomIcon,
   BrainIcon,
   ChartPieIcon,
   ChevronsRight,
   LightbulbIcon,
+  ListChecksIcon,
   type LucideIcon,
   MessageCircleMoreIcon,
   PhoneCallIcon,
@@ -41,12 +43,14 @@ import {
   PERMISSION_NAV,
   type WorkspacePermissionKey,
 } from "@/lib/auth/permission-routes"
+import { orpc } from "@/lib/orpc/query"
 
 type SidebarNavItem = {
   title: string
   url: string
   icon: LucideIcon
-  permission: WorkspacePermissionKey
+  permission?: WorkspacePermissionKey
+  badge?: number
   /** Only present for items with an extra visibility rule beyond the
    * permission check below — computed once in the workspace layout via
    * `resolveWorkspaceRealtimeGates`. */
@@ -81,6 +85,16 @@ export function AppSidebar({
 }) {
   const t = useTranslations()
   const { data: session } = authClient.useSession()
+  const { data: overdueTasks } = useQuery(
+    orpc.tasksAPI.count.queryOptions({
+      input: {
+        workspaceId,
+        tab: "mine",
+        due: "overdue",
+      },
+      enabled: !scheduledForDeletion,
+    }),
+  )
 
   const data = {
     user: {
@@ -112,6 +126,13 @@ export function AppSidebar({
         url: `/space/${workspaceId}/contacts`,
         icon: UsersIcon,
         permission: PERMISSION_NAV.contacts,
+      },
+      {
+        title: t("tasks.title"),
+        url: `/space/${workspaceId}/tasks`,
+        icon: ListChecksIcon,
+        badge: overdueTasks?.total,
+        visible: true,
       },
       {
         title: t("aiAgent.title"),
@@ -182,6 +203,9 @@ export function AppSidebar({
     // contacts-access rule, which also admits assigned-only members.
     if (item.permission === PERMISSION_NAV.contacts) {
       return hasContactsAccess(permissions)
+    }
+    if (!item.permission) {
+      return false
     }
     return hasWorkspacePermission(permissions, item.permission)
   }
