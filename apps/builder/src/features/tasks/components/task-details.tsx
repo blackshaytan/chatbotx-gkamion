@@ -89,6 +89,9 @@ export const TaskDetails = ({
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [watcherUserId, setWatcherUserId] = useState("")
+  const handleWatcherSelect = (value: unknown) => {
+    setWatcherUserId(typeof value === "string" ? value : "")
+  }
   const {
     data: task,
     error,
@@ -439,7 +442,7 @@ export const TaskDetails = ({
             })}
           </div>
           <div className="flex gap-2">
-            <Select onValueChange={setWatcherUserId} value={watcherUserId}>
+            <Select onValueChange={handleWatcherSelect} value={watcherUserId}>
               <SelectTrigger aria-label={t("actions.addWatcher")}>
                 <SelectValue placeholder={t("actions.addWatcher")} />
               </SelectTrigger>
