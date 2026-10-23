@@ -24,6 +24,7 @@ import {
   useTaskSearchParams,
 } from "../hooks/use-task-search-params"
 import { CreateTaskDialog } from "./create-task-dialog"
+import { TaskSheet } from "./task-sheet"
 import { TasksTable } from "./tasks-table"
 
 type TasksPageProps = {
@@ -224,6 +225,7 @@ export const TasksPage = ({ workspaceId }: TasksPageProps) => {
         tasks={data?.data ?? []}
         workspaceId={workspaceId}
       />
+      <TaskSheet workspaceId={workspaceId} />
     </div>
   )
 }

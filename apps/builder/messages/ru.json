@@ -9208,7 +9208,10 @@
       "complete": "Завершить задачу",
       "save": "Сохранить задачу",
       "comment": "Комментировать",
-      "openConversation": "Открыть диалог"
+      "openConversation": "Открыть диалог",
+      "openStandalone": "Открыть на отдельной странице",
+      "addWatcher": "Добавить наблюдателя",
+      "removeWatcher": "Удалить наблюдателя {name}"
     },
     "empty": "Задачи не найдены",
     "deleteConfirm": "Удалить эту задачу?",
@@ -9232,6 +9235,8 @@
     },
     "hidden": "Скрыто",
     "createdByApi": "Создано через API: {name}",
-    "openCount": "Открытых задач: {count}"
+    "openCount": "Открытых задач: {count}",
+    "notFound": "Задача не найдена",
+    "allTasks": "Все задачи"
   }
 }

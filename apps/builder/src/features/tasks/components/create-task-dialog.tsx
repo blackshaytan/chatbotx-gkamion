@@ -37,6 +37,7 @@ import {
   type ReminderPreset,
   remindAtFromPreset,
 } from "../lib/reminder-presets"
+import { parseTaskAssigneeValue } from "../lib/task-assignee"
 import type { taskPublicResource } from "../schema/public"
 
 type CreateTaskDialogProps = {
@@ -84,16 +85,6 @@ const reminderLabelKeyByPreset = {
   hour1: "reminder.hour1",
   day1: "reminder.day1",
 } as const satisfies Record<ReminderPreset, string>
-
-const parseAssignee = (assignee: string) => {
-  const id = assignee.slice(2)
-
-  if (assignee.startsWith("u_")) {
-    return { assigneeUserId: id }
-  }
-
-  return { assigneeTeamId: id }
-}
 
 const toDate = (value: string | undefined) => {
   if (!value) {
@@ -180,7 +171,7 @@ export const CreateTaskDialog = ({
     const remindAt = toDate(values.remindAt)
 
     createTaskMutation.mutate({
-      ...parseAssignee(values.assignee),
+      ...parseTaskAssigneeValue(values.assignee),
       contactId: defaultTargets?.contactId,
       conversationId: defaultTargets?.conversationId,
       description: values.description || null,

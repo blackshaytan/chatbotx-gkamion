@@ -9208,7 +9208,10 @@
       "complete": "Complete task",
       "save": "Save task",
       "comment": "Comment",
-      "openConversation": "Open conversation"
+      "openConversation": "Open conversation",
+      "openStandalone": "Open on separate page",
+      "addWatcher": "Add watcher",
+      "removeWatcher": "Remove watcher {name}"
     },
     "empty": "No tasks found",
     "deleteConfirm": "Are you sure you want to delete this task?",
@@ -9232,6 +9235,8 @@
     },
     "hidden": "Hidden",
     "createdByApi": "Created via API: {name}",
-    "openCount": "Open tasks: {count}"
+    "openCount": "Open tasks: {count}",
+    "notFound": "Task not found",
+    "allTasks": "All tasks"
   }
 }
