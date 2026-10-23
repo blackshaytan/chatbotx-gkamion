@@ -4,6 +4,7 @@ import { DataTable } from "@chatbotx.io/ui/components/data-table/data-table"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
 import { useDataTable } from "@chatbotx.io/ui/hooks/use-data-table"
 import type { ColumnDef } from "@tanstack/react-table"
+import { Loader2Icon } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { useMemo } from "react"
@@ -21,6 +22,7 @@ type TasksTableProps = {
   tasks: Task[]
   pageCount: number
   onTaskSelect: (taskId: string) => void
+  isPending: boolean
 }
 
 export const TasksTable = ({
@@ -28,6 +30,7 @@ export const TasksTable = ({
   tasks,
   pageCount,
   onTaskSelect,
+  isPending,
 }: TasksTableProps) => {
   const t = useTranslations("tasks")
   const commonT = useTranslations()
@@ -131,9 +134,21 @@ export const TasksTable = ({
     pageCount,
     initialState: { pagination: { pageSize: 20, pageIndex: 0 } },
     getRowId: (task) => task.id,
-    shallow: false,
+    shallow: true,
     clearOnDefault: true,
   })
+
+  if (isPending) {
+    return (
+      <div
+        aria-label={commonT("actions.loading")}
+        className="flex min-h-24 items-center justify-center"
+        role="status"
+      >
+        <Loader2Icon aria-hidden="true" className="animate-spin" />
+      </div>
+    )
+  }
 
   return <DataTable labels={{ noResults: t("empty") }} table={table} />
 }

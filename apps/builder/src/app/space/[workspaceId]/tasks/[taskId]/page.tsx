@@ -1,4 +1,4 @@
-import { getIdFromParams } from "@chatbotx.io/utils"
+import { getIdFromParams, isNumericId } from "@chatbotx.io/utils"
 import { notFound } from "next/navigation"
 import { TaskDetailsPage } from "@/features/tasks/components/task-details-page"
 
@@ -9,7 +9,7 @@ export default async function TaskRoutePage(props: {
   const workspaceId = getIdFromParams(params, "workspaceId")
   const taskId = getIdFromParams(params, "taskId")
 
-  if (!(workspaceId && taskId)) {
+  if (!(workspaceId && taskId && isNumericId(taskId))) {
     return notFound()
   }
 

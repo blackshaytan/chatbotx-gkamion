@@ -9170,7 +9170,8 @@
       "todo": "К выполнению",
       "in_progress": "В работе",
       "done": "Готово",
-      "canceled": "Отменена"
+      "canceled": "Отменена",
+      "open": "Открытые"
     },
     "priority": {
       "low": "Низкий",
@@ -9237,6 +9238,15 @@
     "createdByApi": "Создано через API: {name}",
     "openCount": "Открытых задач: {count}",
     "notFound": "Задача не найдена",
-    "allTasks": "Все задачи"
+    "allTasks": "Все задачи",
+    "filters": {
+      "any": "Любые"
+    },
+    "contactLabel": "Контакт: {name}",
+    "createdByLabel": "Создатель: {name}",
+    "validation": {
+      "titleRequired": "Введите название задачи",
+      "assigneeRequired": "Выберите ответственного"
+    }
   }
 }

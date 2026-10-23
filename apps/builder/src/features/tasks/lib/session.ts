@@ -1,8 +1,7 @@
 import type { TaskAccessScope, TaskActor } from "@chatbotx.io/business"
 import type { WorkspaceMemberPermissions } from "@chatbotx.io/database/partials"
 import { buildContactPermissionScope } from "@/features/contacts/permissions"
-
-export type TaskTab = "mine" | "createdByMe" | "watching" | "myTeams" | "all"
+import type { TaskTab } from "../schema/public"
 
 export const sessionTaskActor = (context: {
   user: { id: string }

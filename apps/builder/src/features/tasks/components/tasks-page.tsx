@@ -20,9 +20,9 @@ import { useTranslations } from "next-intl"
 import { orpc } from "@/lib/orpc/query"
 import {
   taskStatusFilters,
-  taskTabs,
   useTaskSearchParams,
 } from "../hooks/use-task-search-params"
+import { type TaskTab, taskTabs } from "../schema/public"
 import { CreateTaskDialog } from "./create-task-dialog"
 import { TaskSheet } from "./task-sheet"
 import { TasksTable } from "./tasks-table"
@@ -31,7 +31,7 @@ type TasksPageProps = {
   workspaceId: string
 }
 
-type TaskTab = (typeof taskTabs)[number]
+const CLEAR_VALUE = "__clear__"
 
 const tabLabelKeyByTab = {
   mine: "tabs.mine",
@@ -42,7 +42,7 @@ const tabLabelKeyByTab = {
 } as const satisfies Record<TaskTab, string>
 
 const statusLabelKeyByStatus = {
-  open: "tabs.all",
+  open: "status.open",
   todo: "status.todo",
   in_progress: "status.in_progress",
   done: "status.done",
@@ -64,7 +64,7 @@ const dueLabelKeyByDue = {
 } as const satisfies Record<(typeof taskDueFilters.options)[number], string>
 
 const isTaskTab = (value: string): value is TaskTab =>
-  taskTabs.some((tab) => tab === value)
+  taskTabs.options.some((tab) => tab === value)
 
 const isTaskStatusFilter = (
   value: string,
@@ -83,11 +83,32 @@ export const TasksPage = ({ workspaceId }: TasksPageProps) => {
   const t = useTranslations("tasks")
   const commonT = useTranslations()
   const [
-    { tab, status, priority, due, contactId, conversationId, page },
+    { tab, status, priority, due, contactId, conversationId, page, perPage },
     setSearchParams,
   ] = useTaskSearchParams()
 
-  const { data } = useQuery(
+  const statusItems = [
+    { label: t("filters.any"), value: CLEAR_VALUE },
+    ...taskStatusFilters.map((statusFilter) => ({
+      label: t(statusLabelKeyByStatus[statusFilter]),
+      value: statusFilter,
+    })),
+  ]
+  const priorityItems = [
+    { label: t("filters.any"), value: CLEAR_VALUE },
+    ...taskPriorities.options.map((taskPriority) => ({
+      label: t(priorityLabelKeyByPriority[taskPriority]),
+      value: taskPriority,
+    })),
+  ]
+  const dueItems = [
+    { label: t("filters.any"), value: CLEAR_VALUE },
+    ...taskDueFilters.options.map((dueFilter) => ({
+      label: t(dueLabelKeyByDue[dueFilter]),
+      value: dueFilter,
+    })),
+  ]
+  const { data, isPending } = useQuery(
     orpc.tasksAPI.list.queryOptions({
       input: {
         workspaceId,
@@ -98,13 +119,13 @@ export const TasksPage = ({ workspaceId }: TasksPageProps) => {
         contactId: contactId ?? undefined,
         conversationId: conversationId ?? undefined,
         page,
-        perPage: 20,
+        perPage,
       },
     }),
   )
 
-  const handleTabChange = async (value: string) => {
-    if (!isTaskTab(value)) {
+  const handleTabChange = async (value: unknown) => {
+    if (!(typeof value === "string" && isTaskTab(value))) {
       return
     }
 
@@ -112,6 +133,11 @@ export const TasksPage = ({ workspaceId }: TasksPageProps) => {
   }
 
   const handleStatusChange = async (value: unknown) => {
+    if (value === CLEAR_VALUE) {
+      await setSearchParams({ status: null, page: 1 })
+      return
+    }
+
     if (!(typeof value === "string" && isTaskStatusFilter(value))) {
       return
     }
@@ -120,6 +146,11 @@ export const TasksPage = ({ workspaceId }: TasksPageProps) => {
   }
 
   const handlePriorityChange = async (value: unknown) => {
+    if (value === CLEAR_VALUE) {
+      await setSearchParams({ page: 1, priority: null })
+      return
+    }
+
     if (!(typeof value === "string" && isTaskPriority(value))) {
       return
     }
@@ -128,6 +159,11 @@ export const TasksPage = ({ workspaceId }: TasksPageProps) => {
   }
 
   const handleDueChange = async (value: unknown) => {
+    if (value === CLEAR_VALUE) {
+      await setSearchParams({ due: null, page: 1 })
+      return
+    }
+
     if (!(typeof value === "string" && isTaskDueFilter(value))) {
       return
     }
@@ -156,7 +192,7 @@ export const TasksPage = ({ workspaceId }: TasksPageProps) => {
 
       <Tabs onValueChange={handleTabChange} value={tab}>
         <TabsList className="h-auto flex-wrap">
-          {taskTabs.map((taskTab) => (
+          {taskTabs.options.map((taskTab) => (
             <TabsTrigger key={taskTab} value={taskTab}>
               {t(tabLabelKeyByTab[taskTab])}
             </TabsTrigger>
@@ -165,40 +201,52 @@ export const TasksPage = ({ workspaceId }: TasksPageProps) => {
       </Tabs>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Select onValueChange={handleStatusChange} value={status}>
+        <Select
+          items={statusItems}
+          onValueChange={handleStatusChange}
+          value={status ?? CLEAR_VALUE}
+        >
           <SelectTrigger aria-label={commonT("fields.status.label")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {taskStatusFilters.map((statusFilter) => (
-              <SelectItem key={statusFilter} value={statusFilter}>
-                {t(statusLabelKeyByStatus[statusFilter])}
+            {statusItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select onValueChange={handlePriorityChange} value={priority}>
+        <Select
+          items={priorityItems}
+          onValueChange={handlePriorityChange}
+          value={priority ?? CLEAR_VALUE}
+        >
           <SelectTrigger aria-label={t("fields.priority")}>
             <SelectValue placeholder={t("fields.priority")} />
           </SelectTrigger>
           <SelectContent>
-            {taskPriorities.options.map((taskPriority) => (
-              <SelectItem key={taskPriority} value={taskPriority}>
-                {t(priorityLabelKeyByPriority[taskPriority])}
+            {priorityItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select onValueChange={handleDueChange} value={due}>
+        <Select
+          items={dueItems}
+          onValueChange={handleDueChange}
+          value={due ?? CLEAR_VALUE}
+        >
           <SelectTrigger aria-label={t("fields.dueAt")}>
             <SelectValue placeholder={t("fields.dueAt")} />
           </SelectTrigger>
           <SelectContent>
-            {taskDueFilters.options.map((dueFilter) => (
-              <SelectItem key={dueFilter} value={dueFilter}>
-                {t(dueLabelKeyByDue[dueFilter])}
+            {dueItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -220,6 +268,7 @@ export const TasksPage = ({ workspaceId }: TasksPageProps) => {
       </div>
 
       <TasksTable
+        isPending={isPending}
         onTaskSelect={handleTaskSelect}
         pageCount={data?.pageCount ?? 0}
         tasks={data?.data ?? []}

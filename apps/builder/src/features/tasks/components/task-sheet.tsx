@@ -47,6 +47,7 @@ export const TaskSheet = ({ workspaceId }: TaskSheetProps) => {
                 {t("title")}
               </SheetDescription>
               <Button
+                nativeButton={false}
                 render={<Link href={`/space/${workspaceId}/tasks/${taskId}`} />}
                 size="sm"
                 variant="link"

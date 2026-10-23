@@ -36,6 +36,7 @@ export const ConversationTasksBadge = ({
   return (
     <Button
       aria-label={t("openCount", { count: total })}
+      nativeButton={false}
       render={
         <Link
           href={`/space/${workspaceId}/tasks?tab=all&conversationId=${conversationId}`}

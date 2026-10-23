@@ -32,6 +32,7 @@ import {
 } from "@/features/users/provider/user-hook"
 import { orpc } from "@/lib/orpc/query"
 import { useInvalidateTasks } from "../hooks/use-invalidate-tasks"
+import { extractApiErrorMessage } from "../lib/extract-api-error-message"
 import {
   REMINDER_PRESETS,
   type ReminderPreset,
@@ -51,17 +52,15 @@ type CreateTaskDialogProps = {
   onCreated?: (task: z.infer<typeof taskPublicResource>) => void
 }
 
-const createTaskFormSchema = z.object({
-  title: z.string().trim().min(1),
-  description: z.string().trim(),
-  assignee: z.string().regex(/^[ut]_.+/),
-  watcherValues: z.array(z.string()),
-  dueAt: z.string().optional(),
-  remindAt: z.string().optional(),
-  priority: z.enum(["low", "normal", "high", "urgent"]),
-})
-
-type CreateTaskFormValues = z.infer<typeof createTaskFormSchema>
+type CreateTaskFormValues = {
+  title: string
+  description: string
+  assignee: string
+  watcherValues: string[]
+  dueAt?: string
+  remindAt?: string
+  priority: TaskPriority
+}
 
 const defaultFormValues: CreateTaskFormValues = {
   title: "",
@@ -86,6 +85,8 @@ const reminderLabelKeyByPreset = {
   day1: "reminder.day1",
 } as const satisfies Record<ReminderPreset, string>
 
+const taskAssigneePattern = /^[ut]_.+/
+
 const toDate = (value: string | undefined) => {
   if (!value) {
     return
@@ -107,6 +108,21 @@ export const CreateTaskDialog = ({
   const assigneeOptions = useContactAssigneeOptions({ enabled: open })
   const assigneeMultiSelectOptions = useContactAssigneeMultiSelectOptions()
   const invalidateTasks = useInvalidateTasks()
+  const createTaskFormSchema = useMemo(
+    () =>
+      z.object({
+        title: z.string().trim().min(1, t("validation.titleRequired")),
+        description: z.string().trim(),
+        assignee: z
+          .string()
+          .regex(taskAssigneePattern, t("validation.assigneeRequired")),
+        watcherValues: z.array(z.string()),
+        dueAt: z.string().optional(),
+        remindAt: z.string().optional(),
+        priority: z.enum(["low", "normal", "high", "urgent"]),
+      }),
+    [t],
+  )
   const form = useForm<CreateTaskFormValues>({
     defaultValues: defaultFormValues,
     resolver: zodResolver(createTaskFormSchema),
@@ -128,8 +144,10 @@ export const CreateTaskDialog = ({
 
   const createTaskMutation = useMutation(
     orpc.tasksAPI.create.mutationOptions({
-      onError: () => {
-        toast.error(commonT("messages.unknownError"))
+      onError: (error) => {
+        toast.error(
+          extractApiErrorMessage(error, commonT("messages.unknownError")),
+        )
       },
       onSuccess: async (task) => {
         toast.success(t("toasts.created"))
@@ -166,6 +184,20 @@ export const CreateTaskDialog = ({
     )
   }
 
+  const handleClearDueAt = () => {
+    form.setValue("dueAt", undefined, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+  }
+
+  const handleClearRemindAt = () => {
+    form.setValue("remindAt", undefined, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+  }
+
   const handleSubmit = (values: CreateTaskFormValues) => {
     const dueAt = toDate(values.dueAt)
     const remindAt = toDate(values.remindAt)
@@ -191,7 +223,6 @@ export const CreateTaskDialog = ({
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogTrigger
-        nativeButton={false}
         render={trigger ?? <Button type="button">{t("actions.create")}</Button>}
       />
       <DialogContent className="max-h-[85dvh] max-w-lg overflow-y-auto">
@@ -208,7 +239,7 @@ export const CreateTaskDialog = ({
           >
             {defaultTargets?.contactLabel ? (
               <p className="text-muted-foreground text-sm">
-                {t("fields.contact")}: {defaultTargets.contactLabel}
+                {t("contactLabel", { name: defaultTargets.contactLabel })}
               </p>
             ) : null}
             <InputField label={t("fields.title")} name="title" required />
@@ -232,6 +263,14 @@ export const CreateTaskDialog = ({
               name="dueAt"
               saveFormat="iso"
             />
+            <Button
+              onClick={handleClearDueAt}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              {commonT("actions.clear")}
+            </Button>
             {dueDate ? (
               <div className="flex flex-wrap gap-2">
                 {REMINDER_PRESETS.map((preset) => (
@@ -252,6 +291,14 @@ export const CreateTaskDialog = ({
               name="remindAt"
               saveFormat="iso"
             />
+            <Button
+              onClick={handleClearRemindAt}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              {commonT("actions.clear")}
+            </Button>
             <SelectField
               label={t("fields.priority")}
               name="priority"

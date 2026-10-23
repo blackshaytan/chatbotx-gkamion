@@ -27,11 +27,10 @@ import {
 } from "@chatbotx.io/ui/components/ui/select"
 import { Separator } from "@chatbotx.io/ui/components/ui/separator"
 import { Textarea } from "@chatbotx.io/ui/components/ui/textarea"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { format } from "date-fns"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Loader2Icon, PencilIcon, PlusIcon, XIcon } from "lucide-react"
 import Link from "next/link"
-import { useTranslations } from "next-intl"
+import { useFormatter, useTranslations } from "next-intl"
 import { type FormEvent, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import {
@@ -40,6 +39,7 @@ import {
 } from "@/features/users/provider/user-hook"
 import { orpc } from "@/lib/orpc/query"
 import { useInvalidateTasks } from "../hooks/use-invalidate-tasks"
+import { extractApiErrorMessage } from "../lib/extract-api-error-message"
 import {
   REMINDER_PRESETS,
   type ReminderPreset,
@@ -82,12 +82,16 @@ export const TaskDetails = ({
 }: TaskDetailsProps) => {
   const t = useTranslations("tasks")
   const commonT = useTranslations()
+  const formatter = useFormatter()
   const invalidateTasks = useInvalidateTasks()
+  const queryClient = useQueryClient()
   const { data: workspaceMembers = [] } = useWorkspaceMembers(workspaceId)
   const assigneeOptions = useContactAssigneeOptions({ autoGroup: false })
   const [isEditingText, setIsEditingText] = useState(false)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
+  const [dueAtDraft, setDueAtDraft] = useState<Date | undefined>()
+  const [remindAtDraft, setRemindAtDraft] = useState<Date | undefined>()
   const [watcherUserId, setWatcherUserId] = useState("")
   const handleWatcherSelect = (value: unknown) => {
     setWatcherUserId(typeof value === "string" ? value : "")
@@ -101,8 +105,10 @@ export const TaskDetails = ({
   )
   const updateTaskMutation = useMutation(
     orpc.tasksAPI.update.mutationOptions({
-      onError: () => {
-        toast.error(commonT("messages.unknownError"))
+      onError: (error) => {
+        toast.error(
+          extractApiErrorMessage(error, commonT("messages.unknownError")),
+        )
       },
       onSuccess: async () => {
         toast.success(t("toasts.updated"))
@@ -112,8 +118,10 @@ export const TaskDetails = ({
   )
   const takeTaskMutation = useMutation(
     orpc.tasksAPI.take.mutationOptions({
-      onError: () => {
-        toast.error(commonT("messages.unknownError"))
+      onError: (error) => {
+        toast.error(
+          extractApiErrorMessage(error, commonT("messages.unknownError")),
+        )
       },
       onSuccess: async () => {
         toast.success(t("toasts.taken"))
@@ -123,8 +131,10 @@ export const TaskDetails = ({
   )
   const addWatcherMutation = useMutation(
     orpc.tasksAPI.addWatcher.mutationOptions({
-      onError: () => {
-        toast.error(commonT("messages.unknownError"))
+      onError: (error) => {
+        toast.error(
+          extractApiErrorMessage(error, commonT("messages.unknownError")),
+        )
       },
       onSuccess: async () => {
         toast.success(t("toasts.updated"))
@@ -135,8 +145,10 @@ export const TaskDetails = ({
   )
   const removeWatcherMutation = useMutation(
     orpc.tasksAPI.removeWatcher.mutationOptions({
-      onError: () => {
-        toast.error(commonT("messages.unknownError"))
+      onError: (error) => {
+        toast.error(
+          extractApiErrorMessage(error, commonT("messages.unknownError")),
+        )
       },
       onSuccess: async () => {
         toast.success(t("toasts.updated"))
@@ -146,25 +158,36 @@ export const TaskDetails = ({
   )
   const deleteTaskMutation = useMutation(
     orpc.tasksAPI.delete.mutationOptions({
-      onError: () => {
-        toast.error(commonT("messages.unknownError"))
+      onError: (error) => {
+        toast.error(
+          extractApiErrorMessage(error, commonT("messages.unknownError")),
+        )
       },
       onSuccess: async () => {
         toast.success(t("toasts.deleted"))
-        await invalidateTasks()
+        queryClient.removeQueries({
+          queryKey: orpc.tasksAPI.get.key({
+            input: { id: taskId, workspaceId },
+          }),
+        })
+        queryClient.removeQueries({
+          queryKey: orpc.tasksAPI.comments.list.key({
+            input: { id: taskId, page: 1, workspaceId },
+          }),
+        })
         onDeleted?.()
+        await invalidateTasks()
       },
     }),
   )
 
   useEffect(() => {
-    if (!task) {
-      return
-    }
+    setDueAtDraft(task?.dueAt ?? undefined)
+  }, [task?.dueAt])
 
-    setTitle(task.title)
-    setDescription(task.description ?? "")
-  }, [task])
+  useEffect(() => {
+    setRemindAtDraft(task?.remindAt ?? undefined)
+  }, [task?.remindAt])
 
   const watcherOptions = useMemo(
     () =>
@@ -175,6 +198,10 @@ export const TaskDetails = ({
       ),
     [assigneeOptions, task?.watcherUserIds],
   )
+  const priorityItems = taskPriorities.options.map((priority) => ({
+    label: t(priorityLabelKeyByPriority[priority]),
+    value: priority,
+  }))
 
   if (isPending) {
     return <Loader2Icon className="animate-spin" />
@@ -209,6 +236,12 @@ export const TaskDetails = ({
     setIsEditingText(false)
   }
 
+  const handleStartEditing = () => {
+    setTitle(task.title)
+    setDescription(task.description ?? "")
+    setIsEditingText(true)
+  }
+
   const handlePriorityChange = (value: unknown) => {
     if (
       !(
@@ -240,27 +273,55 @@ export const TaskDetails = ({
   }
 
   const handleDueAtChange = (dueAt: Date | undefined) => {
+    setDueAtDraft(dueAt)
+  }
+
+  const handleDueAtSave = () => {
     updateTaskMutation.mutate({
-      dueAt: dueAt ?? null,
+      dueAt: dueAtDraft ?? null,
       id: task.id,
       workspaceId,
     })
   }
 
   const handleRemindAtChange = (remindAt: Date | undefined) => {
+    setRemindAtDraft(remindAt)
+  }
+
+  const handleRemindAtSave = () => {
     updateTaskMutation.mutate({
       id: task.id,
-      remindAt: remindAt ?? null,
+      remindAt: remindAtDraft ?? null,
+      workspaceId,
+    })
+  }
+
+  const handleDateMonthChange = (date: Date | undefined) => date
+
+  const handleDueAtClear = () => {
+    setDueAtDraft(undefined)
+    updateTaskMutation.mutate({
+      dueAt: null,
+      id: task.id,
+      workspaceId,
+    })
+  }
+
+  const handleRemindAtClear = () => {
+    setRemindAtDraft(undefined)
+    updateTaskMutation.mutate({
+      id: task.id,
+      remindAt: null,
       workspaceId,
     })
   }
 
   const handleReminderPreset = (preset: ReminderPreset) => {
-    if (!task.dueAt) {
+    if (!dueAtDraft) {
       return
     }
 
-    handleRemindAtChange(remindAtFromPreset(task.dueAt, preset))
+    setRemindAtDraft(remindAtFromPreset(dueAtDraft, preset))
   }
 
   const handleAddWatcher = () => {
@@ -286,7 +347,7 @@ export const TaskDetails = ({
           <h1 className="font-semibold text-xl">{task.title}</h1>
           <Button
             aria-label={commonT("actions.edit")}
-            onClick={() => setIsEditingText((value) => !value)}
+            onClick={handleStartEditing}
             size="icon"
             type="button"
             variant="ghost"
@@ -326,7 +387,11 @@ export const TaskDetails = ({
             <span className="text-muted-foreground text-sm">
               {t("fields.priority")}
             </span>
-            <Select onValueChange={handlePriorityChange} value={task.priority}>
+            <Select
+              items={priorityItems}
+              onValueChange={handlePriorityChange}
+              value={task.priority}
+            >
               <SelectTrigger aria-label={t("fields.priority")}>
                 <SelectValue>
                   <TaskPriorityBadge priority={task.priority} />
@@ -346,6 +411,7 @@ export const TaskDetails = ({
               {t("fields.assignee")}
             </span>
             <Select
+              items={assigneeOptions}
               onValueChange={handleAssigneeChange}
               value={taskAssigneeValue(task)}
             >
@@ -379,11 +445,31 @@ export const TaskDetails = ({
             </span>
             <DateTimePicker
               onChange={handleDueAtChange}
+              onMonthChange={handleDateMonthChange}
               placeholder={t("fields.dueAt")}
-              value={task.dueAt ?? undefined}
+              value={dueAtDraft}
             />
+            <div className="flex flex-wrap gap-2">
+              <Button
+                disabled={updateTaskMutation.isPending}
+                onClick={handleDueAtSave}
+                size="sm"
+                type="button"
+              >
+                {t("actions.save")}
+              </Button>
+              <Button
+                disabled={!task.dueAt || updateTaskMutation.isPending}
+                onClick={handleDueAtClear}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                {commonT("actions.clear")}
+              </Button>
+            </div>
           </div>
-          {task.dueAt ? (
+          {dueAtDraft ? (
             <div className="flex flex-wrap gap-2">
               {REMINDER_PRESETS.map((preset) => (
                 <Button
@@ -404,9 +490,29 @@ export const TaskDetails = ({
             </span>
             <DateTimePicker
               onChange={handleRemindAtChange}
+              onMonthChange={handleDateMonthChange}
               placeholder={t("fields.remindAt")}
-              value={task.remindAt ?? undefined}
+              value={remindAtDraft}
             />
+            <div className="flex flex-wrap gap-2">
+              <Button
+                disabled={updateTaskMutation.isPending}
+                onClick={handleRemindAtSave}
+                size="sm"
+                type="button"
+              >
+                {t("actions.save")}
+              </Button>
+              <Button
+                disabled={!task.remindAt || updateTaskMutation.isPending}
+                onClick={handleRemindAtClear}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                {commonT("actions.clear")}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -442,7 +548,14 @@ export const TaskDetails = ({
             })}
           </div>
           <div className="flex gap-2">
-            <Select onValueChange={handleWatcherSelect} value={watcherUserId}>
+            <Select
+              items={watcherOptions.map((option) => ({
+                label: option.label,
+                value: option.value.slice(2),
+              }))}
+              onValueChange={handleWatcherSelect}
+              value={watcherUserId}
+            >
               <SelectTrigger aria-label={t("actions.addWatcher")}>
                 <SelectValue placeholder={t("actions.addWatcher")} />
               </SelectTrigger>
@@ -494,15 +607,22 @@ export const TaskDetails = ({
             return null
           })}
           <p className="text-muted-foreground">
-            {t("fields.createdBy")}:{" "}
             {task.createdByUserId
-              ? (workspaceMembers.find(
-                  (member) => member.userId === task.createdByUserId,
-                )?.user?.name ?? t("hidden"))
-              : t("createdByApi", { name: task.createdByLabel ?? t("hidden") })}
+              ? t("createdByLabel", {
+                  name:
+                    workspaceMembers.find(
+                      (member) => member.userId === task.createdByUserId,
+                    )?.user?.name ?? t("hidden"),
+                })
+              : t("createdByApi", {
+                  name: task.createdByLabel ?? t("hidden"),
+                })}
           </p>
           <time className="text-muted-foreground">
-            {format(task.createdAt, "PPp")}
+            {formatter.dateTime(task.createdAt, {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })}
           </time>
         </div>
 

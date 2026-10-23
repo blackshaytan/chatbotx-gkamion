@@ -11,8 +11,8 @@ import { Button } from "@chatbotx.io/ui/components/ui/button"
 import { Separator } from "@chatbotx.io/ui/components/ui/separator"
 import { Textarea } from "@chatbotx.io/ui/components/ui/textarea"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { format, isValid } from "date-fns"
-import { useTranslations } from "next-intl"
+import { isValid } from "date-fns"
+import { useFormatter, useTranslations } from "next-intl"
 import { type KeyboardEvent, useMemo, useState } from "react"
 import { toast } from "sonner"
 import {
@@ -20,7 +20,9 @@ import {
   useWorkspaceMembers,
 } from "@/features/users/provider/user-hook"
 import { orpc } from "@/lib/orpc/query"
+import { PUBLIC_LIST_MAX_PER_PAGE } from "@/lib/public-api/list"
 import { useInvalidateTasks } from "../hooks/use-invalidate-tasks"
+import { extractApiErrorMessage } from "../lib/extract-api-error-message"
 
 type TaskFeedProps = {
   taskId: string
@@ -58,19 +60,30 @@ const isTaskPriority = (value: string): value is TaskPriority =>
 export const TaskFeed = ({ taskId, workspaceId }: TaskFeedProps) => {
   const t = useTranslations("tasks")
   const commonT = useTranslations()
+  const formatter = useFormatter()
   const [comment, setComment] = useState("")
   const invalidateTasks = useInvalidateTasks()
   const { data: workspaceMembers = [] } = useWorkspaceMembers(workspaceId)
   const { data: inboxTeams = [] } = useInboxTeams(workspaceId)
-  const { data } = useQuery(
+  const { data, error, isError, isPending } = useQuery(
     orpc.tasksAPI.comments.list.queryOptions({
-      input: { id: taskId, page: 1, perPage: 100, workspaceId },
+      input: {
+        id: taskId,
+        page: 1,
+        perPage: PUBLIC_LIST_MAX_PER_PAGE,
+        workspaceId,
+      },
     }),
   )
   const createCommentMutation = useMutation(
     orpc.tasksAPI.comments.create.mutationOptions({
-      onError: () => {
-        toast.error(commonT("messages.unknownError"))
+      onError: (mutationError) => {
+        toast.error(
+          extractApiErrorMessage(
+            mutationError,
+            commonT("messages.unknownError"),
+          ),
+        )
       },
       onSuccess: async () => {
         setComment("")
@@ -109,7 +122,9 @@ export const TaskFeed = ({ taskId, workspaceId }: TaskFeedProps) => {
     }
 
     const date = new Date(value)
-    return isValid(date) ? format(date, "PPp") : value
+    return isValid(date)
+      ? formatter.dateTime(date, { dateStyle: "medium", timeStyle: "short" })
+      : value
   }
 
   const handleCommentSubmit = () => {
@@ -135,45 +150,59 @@ export const TaskFeed = ({ taskId, workspaceId }: TaskFeedProps) => {
     <section className="flex min-h-0 flex-col gap-3">
       <h2 className="font-semibold">{t("actions.comment")}</h2>
       <div className="max-h-[45dvh] space-y-3 overflow-y-auto pe-1">
-        {comments.length === 0 ? (
+        {isPending ? (
+          <p className="text-muted-foreground text-sm">
+            {commonT("actions.loading")}
+          </p>
+        ) : null}
+        {isError ? (
+          <p className="text-destructive text-sm" role="alert">
+            {extractApiErrorMessage(error, commonT("messages.unknownError"))}
+          </p>
+        ) : null}
+        {!(isPending || isError) && comments.length === 0 ? (
           <p className="text-muted-foreground text-sm">{t("feed.empty")}</p>
-        ) : (
-          comments.map((item) => {
-            const author =
-              workspaceMembers.find(
-                (member) => member.userId === item.authorUserId,
-              )?.user?.name ??
-              item.authorLabel ??
-              t("hidden")
-            const event = item.systemEvent
+        ) : null}
+        {!(isPending || isError) && comments.length > 0
+          ? comments.map((item) => {
+              const author =
+                workspaceMembers.find(
+                  (member) => member.userId === item.authorUserId,
+                )?.user?.name ??
+                item.authorLabel ??
+                t("hidden")
+              const event = item.systemEvent
 
-            return (
-              <div className="space-y-1" key={item.id}>
-                {item.kind === "system" && event ? (
-                  <p className="text-muted-foreground text-sm">
-                    {t(systemEventKeyByType[event.type], {
-                      from: resolveEventValue(event.from),
-                      to: resolveEventValue(event.to),
-                    })}
-                  </p>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between gap-2 text-sm">
-                      <span className="font-medium">{author}</span>
-                      <time className="text-muted-foreground">
-                        {format(item.createdAt, "PPp")}
-                      </time>
-                    </div>
-                    <p className="whitespace-pre-wrap text-sm">
-                      {item.deleted ? "—" : item.text}
+              return (
+                <div className="space-y-1" key={item.id}>
+                  {item.kind === "system" && event ? (
+                    <p className="text-muted-foreground text-sm">
+                      {t(systemEventKeyByType[event.type], {
+                        from: resolveEventValue(event.from),
+                        to: resolveEventValue(event.to),
+                      })}
                     </p>
-                  </>
-                )}
-                <Separator />
-              </div>
-            )
-          })
-        )}
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between gap-2 text-sm">
+                        <span className="font-medium">{author}</span>
+                        <time className="text-muted-foreground">
+                          {formatter.dateTime(item.createdAt, {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </time>
+                      </div>
+                      <p className="whitespace-pre-wrap text-sm">
+                        {item.deleted ? "—" : item.text}
+                      </p>
+                    </>
+                  )}
+                  <Separator />
+                </div>
+              )
+            })
+          : null}
       </div>
       <div className="space-y-2">
         <Textarea

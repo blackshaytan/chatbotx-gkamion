@@ -71,6 +71,7 @@ export const ContactTasksSection = ({
               <div className="min-w-0">
                 <Button
                   className="h-auto max-w-full justify-start p-0 text-start"
+                  nativeButton={false}
                   render={
                     <Link
                       href={`/space/${workspaceId}/tasks?tab=all&task=${task.id}`}
@@ -95,6 +96,7 @@ export const ContactTasksSection = ({
 
       <Button
         className="mt-2 h-auto p-0"
+        nativeButton={false}
         render={
           <Link
             href={`/space/${workspaceId}/tasks?tab=all&contactId=${contactId}`}

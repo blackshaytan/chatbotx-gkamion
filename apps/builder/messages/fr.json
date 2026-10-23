@@ -9170,7 +9170,8 @@
       "todo": "To do",
       "in_progress": "In progress",
       "done": "Done",
-      "canceled": "Canceled"
+      "canceled": "Canceled",
+      "open": "Open"
     },
     "priority": {
       "low": "Low",
@@ -9237,6 +9238,15 @@
     "createdByApi": "Created via API: {name}",
     "openCount": "Open tasks: {count}",
     "notFound": "Task not found",
-    "allTasks": "All tasks"
+    "allTasks": "All tasks",
+    "filters": {
+      "any": "Any"
+    },
+    "contactLabel": "Contact: {name}",
+    "createdByLabel": "Created by: {name}",
+    "validation": {
+      "titleRequired": "Enter a task title",
+      "assigneeRequired": "Select an assignee"
+    }
   }
 }

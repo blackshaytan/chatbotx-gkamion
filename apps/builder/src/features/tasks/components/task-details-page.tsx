@@ -26,6 +26,7 @@ export const TaskDetailsPage = ({
   return (
     <div className="space-y-4">
       <Button
+        nativeButton={false}
         render={<Link href={`/space/${workspaceId}/tasks`} />}
         type="button"
         variant="ghost"

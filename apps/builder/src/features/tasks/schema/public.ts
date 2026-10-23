@@ -190,6 +190,7 @@ export const taskTabs = z.enum([
   "myTeams",
   "all",
 ])
+export type TaskTab = z.infer<typeof taskTabs>
 
 export const listTasksPublicResponse = publicListResponse(taskPublicResource)
 

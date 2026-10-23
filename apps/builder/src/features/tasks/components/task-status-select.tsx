@@ -17,6 +17,7 @@ import { toast } from "sonner"
 import type { z } from "zod"
 import { orpc } from "@/lib/orpc/query"
 import { useInvalidateTasks } from "../hooks/use-invalidate-tasks"
+import { extractApiErrorMessage } from "../lib/extract-api-error-message"
 import type { taskPublicResource } from "../schema/public"
 
 type TaskStatusSelectProps = {
@@ -41,10 +42,16 @@ export const TaskStatusSelect = ({
   const t = useTranslations("tasks")
   const commonT = useTranslations()
   const invalidateTasks = useInvalidateTasks()
+  const statusItems = taskStatusValues.map((status) => ({
+    label: t(statusLabelKeyByStatus[status]),
+    value: status,
+  }))
   const updateTaskMutation = useMutation(
     orpc.tasksAPI.update.mutationOptions({
-      onError: () => {
-        toast.error(commonT("messages.unknownError"))
+      onError: (error) => {
+        toast.error(
+          extractApiErrorMessage(error, commonT("messages.unknownError")),
+        )
       },
       onSuccess: async () => {
         toast.success(t("toasts.updated"))
@@ -71,6 +78,7 @@ export const TaskStatusSelect = ({
   return (
     <Select
       disabled={updateTaskMutation.isPending}
+      items={statusItems}
       onValueChange={handleStatusChange}
       value={task.status}
     >
