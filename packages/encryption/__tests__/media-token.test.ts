@@ -59,6 +59,19 @@ describe("media token", () => {
     await expect(verifyMediaToken(tamperedToken)).rejects.toThrow()
   })
 
+  test("round-trips taskAttachment kind", async () => {
+    const token = await signMediaToken({
+      workspaceId: "workspace-1",
+      kind: "taskAttachment",
+      refId: "message-1:0",
+    })
+
+    await expect(verifyMediaToken(token)).resolves.toMatchObject({
+      kind: "taskAttachment",
+      refId: "message-1:0",
+    })
+  })
+
   test("rejects expired tokens", async () => {
     const token = await signMediaToken(
       {

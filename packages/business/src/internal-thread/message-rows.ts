@@ -1,5 +1,7 @@
 import {
   EMPTY_INTERNAL_MESSAGE_MENTIONS,
+  type InternalMessageAttachment,
+  type InternalMessageMentions,
   type TaskSystemEvent,
 } from "@chatbotx.io/database/partials"
 import type { InternalMessageInsert } from "@chatbotx.io/database/repositories"
@@ -10,6 +12,8 @@ export const commentRow = (input: {
   threadId: string
   text: string
   actor: TaskActor
+  mentions?: InternalMessageMentions
+  attachments?: InternalMessageAttachment[]
 }): InternalMessageInsert => ({
   workspaceId: input.workspaceId,
   threadId: input.threadId,
@@ -17,8 +21,8 @@ export const commentRow = (input: {
   authorUserId: actorUserId(input.actor),
   authorLabel: actorLabel(input.actor),
   text: input.text,
-  mentions: EMPTY_INTERNAL_MESSAGE_MENTIONS,
-  attachments: [],
+  mentions: input.mentions ?? EMPTY_INTERNAL_MESSAGE_MENTIONS,
+  attachments: input.attachments ?? [],
   systemEvent: null,
 })
 

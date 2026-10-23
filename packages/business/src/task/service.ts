@@ -21,6 +21,10 @@ import {
 import { BaseService } from "../base.service"
 import type { ContactAccessScope } from "../contact/service"
 import { notFoundException, validationException } from "../errors"
+import {
+  resolveTaskAttachments,
+  uploadTaskAttachment,
+} from "../internal-thread/attachments"
 import { systemMessageRow } from "../internal-thread/message-rows"
 import { internalThreadService } from "../internal-thread/service"
 import type { InternalMessageView } from "../internal-thread/view"
@@ -180,17 +184,21 @@ class TaskService extends BaseService {
     workspaceId: string
     id: string
     accessScope?: TaskAccessScope
+    viewerUserId?: string
   }): Promise<TaskView> {
     const task = await this.findOrFail(input)
     const [view] = await this.toViews(
       input.workspaceId,
       [task],
       input.accessScope,
+      input.viewerUserId,
     )
     return view
   }
 
-  async list(input: ListTasksInput): Promise<Paged<TaskView>> {
+  async list(
+    input: ListTasksInput & { viewerUserId?: string },
+  ): Promise<Paged<TaskView>> {
     const { workspaceId, page, perPage, accessScope } = input
     const filter = await this.resolveFilter(input)
     if (!filter) {
@@ -203,7 +211,12 @@ class TaskService extends BaseService {
       offset: (page - 1) * perPage,
     })
     return {
-      data: await this.toViews(workspaceId, rows, accessScope),
+      data: await this.toViews(
+        workspaceId,
+        rows,
+        accessScope,
+        input.viewerUserId,
+      ),
       pageCount: Math.ceil(total / perPage),
     }
   }
@@ -397,15 +410,138 @@ class TaskService extends BaseService {
     workspaceId: string
     id: string
     text: string
+    attachments?: { key: string; name: string }[]
     actor: TaskActor
   }): Promise<InternalMessageView> {
     const task = await this.findOrFail(input)
-    return await internalThreadService.postComment({
+    const attachments = input.attachments?.length
+      ? await resolveTaskAttachments({
+          workspaceId: input.workspaceId,
+          taskId: task.id,
+          items: input.attachments,
+        })
+      : []
+    return await db.transaction(async (tx) => {
+      const comment = await internalThreadService.postComment({
+        workspaceId: input.workspaceId,
+        threadId: task.threadId,
+        text: input.text,
+        attachments,
+        actor: input.actor,
+        tx,
+      })
+      await this.addMentionWatchers({
+        taskId: task.id,
+        threadId: task.threadId,
+        userIds: comment.mentions.userIds,
+        existingWatcherIds: task.watchers.map((w) => w.userId),
+        tx,
+      })
+      return comment
+    })
+  }
+
+  async updateComment(input: {
+    workspaceId: string
+    id: string
+    commentId: string
+    text: string
+    actor: TaskActor
+  }): Promise<InternalMessageView> {
+    const task = await this.findOrFail(input)
+    return await db.transaction(async (tx) => {
+      const comment = await internalThreadService.editComment({
+        workspaceId: input.workspaceId,
+        threadId: task.threadId,
+        id: input.commentId,
+        text: input.text,
+        actor: input.actor,
+        tx,
+      })
+      await this.addMentionWatchers({
+        taskId: task.id,
+        threadId: task.threadId,
+        userIds: comment.mentions.userIds,
+        existingWatcherIds: task.watchers.map((w) => w.userId),
+        tx,
+      })
+      return comment
+    })
+  }
+
+  async deleteComment(input: {
+    workspaceId: string
+    id: string
+    commentId: string
+    actor: TaskActor
+  }): Promise<InternalMessageView> {
+    const task = await this.findOrFail(input)
+    const isOwner = input.actor.kind === "user" && input.actor.isOwner
+    return await internalThreadService.deleteComment({
       workspaceId: input.workspaceId,
       threadId: task.threadId,
-      text: input.text,
+      id: input.commentId,
       actor: input.actor,
+      isOwner,
     })
+  }
+
+  async uploadAttachment(input: {
+    workspaceId: string
+    id: string
+    file: File
+  }): Promise<{ key: string; name: string; size: number; mimeType: string }> {
+    const task = await this.findOrFail(input)
+    return await uploadTaskAttachment({
+      workspaceId: input.workspaceId,
+      taskId: task.id,
+      file: input.file,
+    })
+  }
+
+  async markRead(input: {
+    workspaceId: string
+    id: string
+    userId: string
+  }): Promise<void> {
+    const task = await this.findOrFail(input)
+    await internalThreadService.markRead({
+      threadId: task.threadId,
+      userId: input.userId,
+    })
+  }
+
+  async findAttachment(input: {
+    workspaceId: string
+    messageId: string
+    index: number
+  }): Promise<{
+    key: string
+    name: string
+    mimeType: string
+    size: number
+  } | null> {
+    const message = await internalThreadRepository.findMessage({
+      workspaceId: input.workspaceId,
+      id: input.messageId,
+    })
+    if (
+      message?.kind !== "comment" ||
+      message.deletedAt ||
+      message?.workspaceId !== input.workspaceId
+    ) {
+      return null
+    }
+    const attachment = message.attachments[input.index]
+    if (!attachment) {
+      return null
+    }
+    return {
+      key: attachment.key,
+      name: attachment.name,
+      mimeType: attachment.mimeType,
+      size: attachment.size,
+    }
   }
 
   /** A removed member's tasks go to the workspace owner (spec section 8). */
@@ -568,17 +704,36 @@ class TaskService extends BaseService {
     workspaceId: string,
     tasks: TaskWithRelations[],
     accessScope?: TaskAccessScope,
+    viewerUserId?: string,
   ): Promise<TaskView[]> {
+    const unreadByThread =
+      viewerUserId && tasks.length > 0
+        ? await internalThreadService.countUnread({
+            workspaceId,
+            userId: viewerUserId,
+            threadIds: tasks.map((task) => task.threadId),
+          })
+        : null
+
+    const withUnread = (view: TaskView, threadId: string): TaskView =>
+      unreadByThread
+        ? { ...view, unreadCount: unreadByThread.get(threadId) ?? 0 }
+        : view
+
     if (accessScope?.hideTargets) {
       const hidden = {
         contactIds: new Set<string>(),
         conversationIds: new Set<string>(),
       }
-      return tasks.map((task) => toTaskView(task, hidden))
+      return tasks.map((task) =>
+        withUnread(toTaskView(task, hidden), task.threadId),
+      )
     }
     const assignedUserId = accessScope?.restrictToAssignedUserId
     if (!assignedUserId) {
-      return tasks.map((task) => toTaskView(task, null))
+      return tasks.map((task) =>
+        withUnread(toTaskView(task, null), task.threadId),
+      )
     }
     const targets = tasks.flatMap((task) => task.targets)
     const visible = await taskRepository.listVisibleTargetIds({
@@ -595,7 +750,29 @@ class TaskService extends BaseService {
       contactIds: new Set(visible.contactIds),
       conversationIds: new Set(visible.conversationIds),
     }
-    return tasks.map((task) => toTaskView(task, visibility))
+    return tasks.map((task) =>
+      withUnread(toTaskView(task, visibility), task.threadId),
+    )
+  }
+
+  private async addMentionWatchers(input: {
+    taskId: string
+    threadId: string
+    userIds: string[]
+    existingWatcherIds: string[]
+    tx: DatabaseClient
+  }): Promise<void> {
+    const existing = new Set(input.existingWatcherIds)
+    const newIds = unique(input.userIds.filter((id) => !existing.has(id)))
+    if (newIds.length === 0) {
+      return
+    }
+    await this.addWatcherRows({
+      taskId: input.taskId,
+      threadId: input.threadId,
+      userIds: newIds,
+      tx: input.tx,
+    })
   }
 
   private async assertCanModify(

@@ -68,5 +68,7 @@ describe("internal message rows", () => {
     })
     expect(view.text).toBeNull()
     expect(view.deleted).toBe(true)
+    expect(view.attachments).toEqual([])
+    expect(view.mentions).toEqual({ userIds: [], teamIds: [] })
   })
 })

@@ -453,6 +453,8 @@ describe("taskService comments", () => {
         authorUserId: null,
         authorLabel: "Hermes",
         text: "Нет на складе",
+        mentions: { userIds: [], teamIds: [] },
+        attachments: [],
         systemEvent: null,
         editedAt: null,
         deletedAt: null,
@@ -473,6 +475,7 @@ describe("taskService comments", () => {
           text: "Нет на складе",
         }),
       ],
+      tx: "tx",
     })
     expect(comment).toMatchObject({
       id: "m-1",

@@ -1,4 +1,12 @@
-import { and, type DatabaseClient, db, eq, inArray } from "../../client"
+import {
+  and,
+  type DatabaseClient,
+  db,
+  eq,
+  inArray,
+  isNull,
+  sql,
+} from "../../client"
 import {
   internalMessageModel,
   internalThreadMemberModel,
@@ -110,6 +118,103 @@ class InternalThreadRepository {
       ),
     ])
     return { rows, total }
+  }
+
+  async findMessage(props: {
+    workspaceId: string
+    threadId?: string
+    id: string
+    tx?: DatabaseClient
+  }): Promise<InternalMessageModel | null> {
+    const { workspaceId, threadId, id, tx = db } = props
+    return (
+      (await tx.query.internalMessageModel.findFirst({
+        where: threadId ? { workspaceId, threadId, id } : { workspaceId, id },
+      })) ?? null
+    )
+  }
+
+  async updateMessage(props: {
+    workspaceId: string
+    id: string
+    set: Partial<
+      Pick<
+        InternalMessageInsert,
+        "text" | "mentions" | "attachments" | "editedAt" | "deletedAt"
+      >
+    >
+    tx?: DatabaseClient
+  }): Promise<InternalMessageModel | null> {
+    const { workspaceId, id, set, tx = db } = props
+    const [row] = await tx
+      .update(internalMessageModel)
+      .set(set)
+      .where(
+        and(
+          eq(internalMessageModel.workspaceId, workspaceId),
+          eq(internalMessageModel.id, id),
+        ),
+      )
+      .returning()
+    return row ?? null
+  }
+
+  async markRead(props: {
+    threadId: string
+    userId: string
+    at: Date
+    tx?: DatabaseClient
+  }): Promise<boolean> {
+    const { threadId, userId, at, tx = db } = props
+    const rows = await tx
+      .update(internalThreadMemberModel)
+      .set({ lastReadAt: at })
+      .where(
+        and(
+          eq(internalThreadMemberModel.threadId, threadId),
+          eq(internalThreadMemberModel.userId, userId),
+        ),
+      )
+      .returning({ id: internalThreadMemberModel.id })
+    return rows.length > 0
+  }
+
+  async countUnreadByThreads(props: {
+    workspaceId: string
+    userId: string
+    threadIds: string[]
+    tx?: DatabaseClient
+  }): Promise<Map<string, number>> {
+    const { workspaceId, userId, threadIds, tx = db } = props
+    if (threadIds.length === 0) {
+      return new Map()
+    }
+    const rows = await tx
+      .select({
+        threadId: internalMessageModel.threadId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(internalMessageModel)
+      .innerJoin(
+        internalThreadMemberModel,
+        and(
+          eq(internalThreadMemberModel.threadId, internalMessageModel.threadId),
+          eq(internalThreadMemberModel.userId, userId),
+        ),
+      )
+      .where(
+        and(
+          eq(internalMessageModel.workspaceId, workspaceId),
+          inArray(internalMessageModel.threadId, threadIds),
+          eq(internalMessageModel.kind, "comment"),
+          isNull(internalMessageModel.deletedAt),
+          sql`${internalMessageModel.authorUserId} is distinct from ${userId}`,
+          sql`${internalMessageModel.createdAt} > coalesce(${internalThreadMemberModel.lastReadAt}, '-infinity'::timestamp)`,
+        ),
+      )
+      .groupBy(internalMessageModel.threadId)
+
+    return new Map(rows.map((row) => [row.threadId, row.count]))
   }
 }
 

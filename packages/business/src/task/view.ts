@@ -11,6 +11,7 @@ export type TaskTargetView = {
 export type TaskView = Omit<TaskModel, "remindedAt" | "overdueNotifiedAt"> & {
   watcherUserIds: string[]
   targets: TaskTargetView[]
+  unreadCount?: number
 }
 
 /** Ids a member restricted to assigned contacts may see; `null` = unrestricted. */
