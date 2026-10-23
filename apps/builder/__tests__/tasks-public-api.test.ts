@@ -77,7 +77,12 @@ const taskService = {
 const resolveTenantSettings = vi.fn(async () => ({
   appUrl: "https://app.test",
 }))
-vi.mock("@chatbotx.io/business", () => ({ taskService, resolveTenantSettings }))
+vi.mock("@chatbotx.io/business", () => ({
+  taskService,
+  resolveTenantSettings,
+  onNotificationsCreated: vi.fn(),
+  sendToWorkspaceMember: vi.fn(),
+}))
 
 await import("@/features/tasks/api/public")
 

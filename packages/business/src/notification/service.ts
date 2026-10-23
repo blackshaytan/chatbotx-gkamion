@@ -171,7 +171,7 @@ class NotificationService extends BaseService {
   }): Promise<TaskNotificationPreferences> {
     const existing =
       (await workspaceMemberRepository.findNotificationTypes(input)) ?? {}
-    const merged: WorkspaceMemberNotificationTypes = {
+    const merged: Partial<WorkspaceMemberNotificationTypes> = {
       ...existing,
       ...input.patch,
     }

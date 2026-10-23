@@ -56,7 +56,10 @@ class WorkspaceMemberRepository {
     userIds: string[]
     tx?: DatabaseClient
   }): Promise<
-    { userId: string; notificationTypes: WorkspaceMemberNotificationTypes }[]
+    {
+      userId: string
+      notificationTypes: Partial<WorkspaceMemberNotificationTypes>
+    }[]
   > {
     const { workspaceId, userIds, tx = db } = props
     if (userIds.length === 0) {
@@ -80,7 +83,7 @@ class WorkspaceMemberRepository {
     workspaceId: string
     userId: string
     tx?: DatabaseClient
-  }): Promise<WorkspaceMemberNotificationTypes | undefined> {
+  }): Promise<Partial<WorkspaceMemberNotificationTypes> | undefined> {
     const { workspaceId, userId, tx = db } = props
     const [row] = await tx
       .select({ notificationTypes: workspaceMemberModel.notificationTypes })
@@ -98,13 +101,16 @@ class WorkspaceMemberRepository {
   async updateNotificationTypes(props: {
     workspaceId: string
     userId: string
-    notificationTypes: WorkspaceMemberNotificationTypes
+    notificationTypes: Partial<WorkspaceMemberNotificationTypes>
     tx?: DatabaseClient
   }): Promise<void> {
     const { workspaceId, userId, notificationTypes, tx = db } = props
     await tx
       .update(workspaceMemberModel)
-      .set({ notificationTypes })
+      .set({
+        notificationTypes:
+          notificationTypes as WorkspaceMemberNotificationTypes,
+      })
       .where(
         and(
           eq(workspaceMemberModel.workspaceId, workspaceId),

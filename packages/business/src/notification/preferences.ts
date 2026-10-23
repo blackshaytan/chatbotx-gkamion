@@ -7,7 +7,7 @@ import {
 export type TaskNotificationPreferences = Record<TaskNotificationType, boolean>
 
 export const isTaskNotificationEnabled = (
-  notificationTypes: WorkspaceMemberNotificationTypes,
+  notificationTypes: Partial<WorkspaceMemberNotificationTypes>,
   type: TaskNotificationType,
 ): boolean => {
   const value = notificationTypes[type]
@@ -15,7 +15,7 @@ export const isTaskNotificationEnabled = (
 }
 
 export const readTaskNotificationPreferences = (
-  notificationTypes: WorkspaceMemberNotificationTypes,
+  notificationTypes: Partial<WorkspaceMemberNotificationTypes>,
 ): TaskNotificationPreferences => {
   const prefs = {} as TaskNotificationPreferences
   for (const type of taskNotificationTypes.options) {

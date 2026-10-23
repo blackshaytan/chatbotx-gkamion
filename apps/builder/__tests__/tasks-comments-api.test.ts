@@ -80,7 +80,11 @@ const taskService = {
   deleteComment: vi.fn(),
   uploadAttachment: vi.fn(),
 }
-vi.mock("@chatbotx.io/business", () => ({ taskService }))
+vi.mock("@chatbotx.io/business", () => ({
+  taskService,
+  onNotificationsCreated: vi.fn(),
+  sendToWorkspaceMember: vi.fn(),
+}))
 
 await import("@/features/tasks/api/public")
 
