@@ -119,6 +119,7 @@ import { integrationWebchatRelations } from "./integration-webchat"
 import { integrationWhatsappRelations } from "./integration-whatsapp"
 import { integrationZaloRelations } from "./integration-zalo"
 import { integrationZzapRelations } from "./integration-zzap"
+import { internalThreadRelations } from "./internal-thread"
 import { leaderboardRelations } from "./leaderboard"
 import { leaderboardAuditLogRelations } from "./leaderboard-audit-log"
 import { leaderboardParticipantRelations } from "./leaderboard-participant"
@@ -146,6 +147,7 @@ import { sequenceDispatchRelations } from "./sequence-dispatch"
 import { sequenceStepRelations } from "./sequence-step"
 import { spreadsheetRelations } from "./spreadsheet"
 import { tagRelations } from "./tag"
+import { taskRelations } from "./task"
 import { tagChannelRelations } from "./tag-channel"
 import { telegramChatRelations } from "./telegram-chat"
 import { templateRelations } from "./template"
@@ -186,6 +188,7 @@ export const relations = {
   ...contactRelations,
   ...contactInboxPostRelations,
   ...tagRelations,
+  ...taskRelations,
   ...templateRelations,
   ...templateInstallationRelations,
   ...templateInstalledResourceRelations,
@@ -236,6 +239,7 @@ export const relations = {
   ...integrationWebchatRelations,
   ...integrationZaloRelations,
   ...integrationZzapRelations,
+  ...internalThreadRelations,
   ...invitationRelations,
   ...emailTopicRelations,
   ...analyticsEmailTopicRelations,

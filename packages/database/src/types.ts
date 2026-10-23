@@ -320,3 +320,11 @@ export type MediaLibraryFolderModel =
   typeof schema.mediaLibraryFolderModel.$inferSelect
 export type MediaLibraryFileModel =
   typeof schema.mediaLibraryFileModel.$inferSelect
+export type InternalThreadModel = typeof schema.internalThreadModel.$inferSelect
+export type InternalThreadMemberModel =
+  typeof schema.internalThreadMemberModel.$inferSelect
+export type InternalMessageModel =
+  typeof schema.internalMessageModel.$inferSelect
+export type TaskModel = typeof schema.taskModel.$inferSelect
+export type TaskWatcherModel = typeof schema.taskWatcherModel.$inferSelect
+export type TaskTargetModel = typeof schema.taskTargetModel.$inferSelect
