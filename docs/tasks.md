@@ -18,7 +18,7 @@ Workspace members, API tokens (for example the Hermes agent) and, later, flows a
 
 ### Comments (feed)
 
-- **Mentions** — comment text may include `@[Display name](user:<userId>)` or `@[Team name](team:<teamId>)` (same tokens the web editor inserts). Parsed mentions appear on each comment as `mentions.userIds` / `mentions.teamIds`. **Mentioned members** are added as task watchers if they are not already watching. Team mentions are stored and rendered; they do not add watchers or send notifications to the whole team (notification delivery is stage 4).
+- **Mentions** — comment text may include `@[Display name](user:<userId>)` or `@[Team name](team:<teamId>)` (same tokens the web editor inserts). Parsed mentions appear on each comment as `mentions.userIds` / `mentions.teamIds`. **Mentioned members** are added as task watchers if they are not already watching. Team mentions expand to all members of that inbox team for notifications (see **Notifications**).
 - **Edit** — the author may edit their comment within **24 hours** of posting. API tokens may edit comments they authored (`authorUserId` is null and `authorLabel` matches the token). System events cannot be edited.
 - **Delete** — soft-delete. The author may delete within **24 hours**. The workspace **owner** and **API tokens** (workspace authority) may delete any comment at any time. System events cannot be deleted.
 
@@ -54,8 +54,51 @@ The builder publishes workspace-wide party events (payload is ids only; clients 
 |---|---|---|
 | `taskChanged` | `{ taskId }` | Invalidate task list/detail (status, assignee, unread badge on row). |
 | `taskCommentsChanged` | `{ taskId }` | Invalidate comment feed and task row unread count. |
+| `notificationCreated` | `{ notificationId }` | Invalidate the signed-in member’s notification list and unread badge (user-targeted; not workspace-wide). |
 
-Published after public and private comment/task mutations (not when tasks are reassigned to the owner on member removal).
+Published after public and private comment/task mutations (not when tasks are reassigned to the owner on member removal). `notificationCreated` is sent only to each notification recipient after a row is inserted.
+
+## Notifications
+
+Personal task alerts live in the **Notification** table (`workspaceId`, `userId`, `type`, `entityType` = `task`, `entityId`, `payload`, `readAt`). Deleting a task deletes its notifications in the same transaction.
+
+### Types
+
+| Type | When it is created |
+|---|---|
+| `taskAssigned` | Task created or assignee changes (member or every member of an assignee team). |
+| `taskMentioned` | Comment create/update adds a new `@user` or `@team` mention (teams expand to members). |
+| `taskCommented` | New comment on the task (watchers only; see below). |
+| `taskStatusChanged` | Status changes (`payload.from` / `payload.to`). |
+| `taskDueChanged` | Due date changes (`payload.from` / `payload.to`). |
+| `taskReminder` | Scheduled reminder time is reached (assignee or assignee team). |
+| `taskOverdue` | Due date passed while status is `todo` or `in_progress` (assignee/team plus task author). |
+
+Comment notifications include a short `payload.excerpt` (mentions rendered as `@Display name`).
+
+### Recipients
+
+- **One notification per member per action.** If several events fire together, the highest-priority type wins: `taskMentioned` > `taskAssigned` > `taskStatusChanged` > `taskDueChanged` > `taskCommented`. A comment that both mentions someone and notifies watchers therefore sends **`taskMentioned`**, not a separate `taskCommented`, to that person.
+- **Actor excluded** — the member who performed the action (`actorUserId`) never receives a notification for that action. System/API actors (`actorUserId` null) do not suppress anyone.
+- **Watchers** receive `taskCommented`, `taskStatusChanged`, and `taskDueChanged`. Mentioned users on the same comment are excluded from `taskCommented` (they already get `taskMentioned`).
+- Only **current workspace members** are eligible; non-members are dropped.
+
+### Preferences
+
+Per-member toggles live in `WorkspaceMember.notificationTypes` next to existing notification keys. **Missing key = enabled.** When a type is disabled, **no row is created** (the in-app bell is the only delivery channel for stage 4). The profile menu **Notifications** dialog exposes all seven task types; changes save immediately.
+
+### Reminders and overdue
+
+- Worker schedule **`taskDueScan`** runs **every minute** under a distributed lock. It claims tasks in batches (`claimDueReminders` / `claimOverdue` set `remindedAt` / `overdueNotifiedAt` in the same `UPDATE … RETURNING`).
+- Each task is notified **at most once** per reminder or overdue cycle until the due/reminder fields change (task updates clear the corresponding flag so a moved due date can fire again).
+- **`withBlockedOwnerGuard`** skips notification delivery for blocked owners (same pattern as broadcasts). The claim flag is set **before** that guard runs, so a blocked workspace **does not** get that reminder/overdue notification and will not retry until the schedule is reset by editing the task.
+- Completed/canceled tasks are not claimed. **`purgeOldNotifications`** (daily) deletes rows older than **90 days** in batches.
+
+### In-app center
+
+Signed-in members use the private **`notificationsAPI`** (`list`, `countUnread`, `markRead`, `markAllRead`, `getPreferences`, `updatePreferences`) — same service methods as the worker/task hooks, scoped to `context.user.id`. The sidebar **bell** (above the profile menu) shows unread count, a popover list, **Mark all read**, and navigation to the task on click (marks read). Realtime **`notificationCreated`** refreshes the list without reload (`useInvalidateNotifications`).
+
+There is **no public API** for the notification center or personal notification settings (spec section 6): these are per-user UI state, like `tasks.markRead`, not workspace-token operations for agents.
 
 ## API
 
@@ -71,6 +114,6 @@ Public operations under the `tasks` token scope: `tasks.list`, `tasks.count`, `t
 
 ## Not yet
 
-- **Stage 4** — notification center, reminder/overdue delivery, mention/assignment notifications (including team mention delivery), related settings.
 - **Later cleanup** — orphan attachment objects after unused uploads and files on deleted tasks (upload keys are validated on comment create but not garbage-collected yet).
-- Web push (stage 5); staff MAX bot (stage 6); the `createTask` flow step and **Create task** from a client message menu (stage 7).
+- **Web push** for task notifications (stage 5); **staff MAX bot** channel (stage 6); **60s coalescing** / `notificationDispatch` queue (stages 5–6).
+- The `createTask` flow step and **Create task** from a client message menu (stage 7).
