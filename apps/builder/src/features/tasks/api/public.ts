@@ -111,7 +111,7 @@ export const tasksPublicRouter = {
       summary: "Count tasks",
       description:
         "Counts staff tasks with the same filters as `tasks.list`. Filter ids: `assigneeUserId`, `createdByUserId`, `watcherUserId`, and `teamMemberUserId` from `workspaceMembers.list` (`userId`); `assigneeTeamId` from `inboxTeams.list`; `contactId` from `contacts.list`; `conversationId` from `conversations.list`. Returns `{ total }`.",
-      spec: defaultTool,
+
       tags,
     })
     .input(countTasksPublicRequest)

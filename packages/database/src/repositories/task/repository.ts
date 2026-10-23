@@ -31,7 +31,7 @@ export type TaskUpdate = Partial<
   Omit<TaskInsert, "id" | "workspaceId" | "threadId" | "createdAt">
 >
 export type TaskTargetWithContact = TaskTargetModel & {
-  contact?: { fullName: string } | null
+  contact?: { fullName: string | null } | null
 }
 
 export type TaskWithRelations = TaskModel & {
