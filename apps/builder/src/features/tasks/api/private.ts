@@ -1,6 +1,5 @@
 import { taskService } from "@chatbotx.io/business"
 import { zodBigintAsString } from "@chatbotx.io/utils"
-import type z from "zod"
 import { withWorkspaceIdSchema } from "@/features/workspaces/schema/resource"
 import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"
 import { authorizedAPI } from "@/orpc"
@@ -31,14 +30,14 @@ import {
 
 const tags = ["Tasks"]
 
-const withWorkspaceTab = <T extends z.ZodObject<z.ZodRawShape>>(schema: T) =>
-  schema.extend({
-    workspaceId: zodBigintAsString(),
-    tab: taskTabs.default("all"),
-  })
+const privateListFields = {
+  workspaceId: zodBigintAsString(),
+  tab: taskTabs.default("all"),
+}
 
-const listTasksPrivateRequest = withWorkspaceTab(listTasksPublicRequest)
-const countTasksPrivateRequest = withWorkspaceTab(countTasksPublicRequest)
+const listTasksPrivateRequest = listTasksPublicRequest.extend(privateListFields)
+const countTasksPrivateRequest =
+  countTasksPublicRequest.extend(privateListFields)
 
 const sessionAccessScope = (context: {
   user: { id: string }

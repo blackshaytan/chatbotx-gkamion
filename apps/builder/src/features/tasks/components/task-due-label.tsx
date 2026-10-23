@@ -21,7 +21,9 @@ export const TaskDueLabel = ({ dueAt, status }: TaskDueLabelProps) => {
     return <span className="text-muted-foreground">{t("due.none")}</span>
   }
 
-  const isOverdue = OPEN_TASK_STATUSES.includes(status) && isPast(dueAt)
+  const isOverdue =
+    (OPEN_TASK_STATUSES as readonly TaskStatus[]).includes(status) &&
+    isPast(dueAt)
 
   return (
     <span className={cn(isOverdue && "font-medium text-destructive")}>

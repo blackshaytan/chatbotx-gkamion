@@ -53,8 +53,11 @@ export const TaskStatusSelect = ({
     }),
   )
 
-  const handleStatusChange = (value: string | null) => {
-    if (!(value && isTaskStatus(value)) || value === task.status) {
+  const handleStatusChange = (value: unknown) => {
+    if (
+      !(typeof value === "string" && isTaskStatus(value)) ||
+      value === task.status
+    ) {
       return
     }
 

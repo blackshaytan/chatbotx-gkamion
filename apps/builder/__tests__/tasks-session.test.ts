@@ -36,11 +36,22 @@ describe("sessionTaskActor", () => {
   })
 })
 
+const noPermissions = {
+  superAdmin: false,
+  analytics: false,
+  flows: false,
+  contacts: false,
+  onlyAssignedContacts: false,
+  emailAndPhone: false,
+  broadcast: false,
+  ecommerce: false,
+}
+
 describe("sessionTaskAccessScope", () => {
   test("hides targets when contacts access is denied", () => {
     expect(
       sessionTaskAccessScope({
-        permissions: {},
+        permissions: { ...noPermissions },
         userId: "7",
       }),
     ).toEqual({ hideTargets: true })
@@ -49,7 +60,11 @@ describe("sessionTaskAccessScope", () => {
   test("restricts to assigned contacts when onlyAssignedContacts is set", () => {
     expect(
       sessionTaskAccessScope({
-        permissions: { contacts: true, onlyAssignedContacts: true },
+        permissions: {
+          ...noPermissions,
+          contacts: true,
+          onlyAssignedContacts: true,
+        },
         userId: "7",
       }),
     ).toEqual({ restrictToAssignedUserId: "7" })

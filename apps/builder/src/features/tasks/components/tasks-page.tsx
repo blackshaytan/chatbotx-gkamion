@@ -111,24 +111,24 @@ export const TasksPage = ({ workspaceId }: TasksPageProps) => {
     await setSearchParams({ tab: value, page: 1 })
   }
 
-  const handleStatusChange = async (value: string | null) => {
-    if (!(value && isTaskStatusFilter(value))) {
+  const handleStatusChange = async (value: unknown) => {
+    if (!(typeof value === "string" && isTaskStatusFilter(value))) {
       return
     }
 
     await setSearchParams({ status: value, page: 1 })
   }
 
-  const handlePriorityChange = async (value: string | null) => {
-    if (!(value && isTaskPriority(value))) {
+  const handlePriorityChange = async (value: unknown) => {
+    if (!(typeof value === "string" && isTaskPriority(value))) {
       return
     }
 
     await setSearchParams({ priority: value, page: 1 })
   }
 
-  const handleDueChange = async (value: string | null) => {
-    if (!(value && isTaskDueFilter(value))) {
+  const handleDueChange = async (value: unknown) => {
+    if (!(typeof value === "string" && isTaskDueFilter(value))) {
       return
     }
 

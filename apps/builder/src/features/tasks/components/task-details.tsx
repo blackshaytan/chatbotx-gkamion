@@ -206,10 +206,11 @@ export const TaskDetails = ({
     setIsEditingText(false)
   }
 
-  const handlePriorityChange = (value: string | null) => {
+  const handlePriorityChange = (value: unknown) => {
     if (
       !(
-        value && taskPriorities.options.some((priority) => priority === value)
+        typeof value === "string" &&
+        taskPriorities.options.some((priority) => priority === value)
       ) ||
       value === task.priority
     ) {
@@ -223,8 +224,8 @@ export const TaskDetails = ({
     })
   }
 
-  const handleAssigneeChange = (value: string | null) => {
-    if (!value || value === taskAssigneeValue(task)) {
+  const handleAssigneeChange = (value: unknown) => {
+    if (typeof value !== "string" || value === taskAssigneeValue(task)) {
       return
     }
 

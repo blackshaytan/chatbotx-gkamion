@@ -120,9 +120,7 @@ describe("registered operations", () => {
         .successStatus,
     ).toBe(204)
     expect(procedureFor("GET", "/v1/tasks").route.spec).toBeTypeOf("function")
-    expect(procedureFor("GET", "/v1/tasks/count").route.spec).toBeTypeOf(
-      "function",
-    )
+    expect(procedureFor("GET", "/v1/tasks/count").route.spec).toBeUndefined()
     expect(procedureFor("POST", "/v1/tasks").route.spec).toBeTypeOf("function")
   })
 
