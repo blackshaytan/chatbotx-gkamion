@@ -98,29 +98,36 @@ export class WorkspaceMemberService extends BaseService {
     workspaceId: string
     tx?: DatabaseClient
   }): Promise<void> {
-    const { id, workspaceId, tx = db } = props
+    const { id, workspaceId } = props
 
-    const member = await tx.query.workspaceMemberModel.findFirst({
-      where: { id, workspaceId },
-      with: { user: true },
-    })
-
-    await tx
-      .delete(workspaceMemberModel)
-      .where(
-        and(
-          eq(workspaceMemberModel.id, id),
-          eq(workspaceMemberModel.workspaceId, workspaceId),
-        ),
-      )
-
-    if (member) {
-      await taskService.reassignFromMember({
-        workspaceId,
-        userId: member.userId,
-        tx,
+    const removeMember = async (tx: DatabaseClient) => {
+      const found = await tx.query.workspaceMemberModel.findFirst({
+        where: { id, workspaceId },
+        with: { user: true },
       })
+
+      await tx
+        .delete(workspaceMemberModel)
+        .where(
+          and(
+            eq(workspaceMemberModel.id, id),
+            eq(workspaceMemberModel.workspaceId, workspaceId),
+          ),
+        )
+
+      if (found) {
+        await taskService.reassignFromMember({
+          workspaceId,
+          userId: found.userId,
+          tx,
+        })
+      }
+      return found
     }
+
+    const member = props.tx
+      ? await removeMember(props.tx)
+      : await db.transaction(removeMember)
 
     await workspaceUsageService
       .decrement(workspaceId, "teamMembers")

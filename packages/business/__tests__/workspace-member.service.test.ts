@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => {
     findFirst: vi.fn(),
     listPermissionsByUserIds: vi.fn(),
     markOnlineBulk: vi.fn(),
+    reassignFromMember: vi.fn(),
+    transactionClient: {} as Record<string, unknown>,
   }
 })
 
@@ -23,6 +25,8 @@ const makeClient = () => ({
   })),
   delete: vi.fn(() => ({ where: mocks.deleteWhere })),
 })
+
+Object.assign(mocks.transactionClient, makeClient())
 
 vi.mock("../src/audit/dispatcher", () => ({
   dispatchAuditRecord: mocks.dispatchAuditRecord,
@@ -37,13 +41,18 @@ vi.mock("../src/workspace-usage/service", () => ({
 
 vi.mock("../src/task/service", () => ({
   taskService: {
-    reassignFromMember: vi.fn(),
+    reassignFromMember: mocks.reassignFromMember,
   },
 }))
 
 vi.mock("@chatbotx.io/database/client", () => ({
   and: (...args: unknown[]) => ({ and: args }),
-  db: makeClient(),
+  db: {
+    ...makeClient(),
+    transaction: vi.fn((run: (tx: unknown) => unknown) =>
+      run(mocks.transactionClient),
+    ),
+  },
   eq: (...args: unknown[]) => ({ eq: args }),
 }))
 
@@ -174,6 +183,19 @@ describe("workspaceMemberService.delete", () => {
     expect(mocks.dispatchAuditRecord).toHaveBeenCalledWith({
       action: "delete",
       detail: "removed Ada from workspace",
+    })
+  })
+
+  test("hands the member's tasks to the owner in the delete transaction", async () => {
+    await workspaceMemberService.delete({
+      id: "member-1",
+      workspaceId: "workspace-1",
+    })
+
+    expect(mocks.reassignFromMember).toHaveBeenCalledWith({
+      workspaceId: "workspace-1",
+      userId: "user-ada",
+      tx: mocks.transactionClient,
     })
   })
 })
