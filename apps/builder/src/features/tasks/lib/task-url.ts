@@ -2,8 +2,10 @@ import { resolveTenantSettings, type TaskView } from "@chatbotx.io/business"
 
 export type TaskViewWithUrl = TaskView & { url: string }
 
-const buildTaskUrl = (appUrl: string, view: TaskView): string =>
-  `${appUrl}/space/${view.workspaceId}/tasks/${view.id}`
+export const buildTaskUrl = (
+  appUrl: string,
+  task: { id: string; workspaceId: string },
+): string => `${appUrl}/space/${task.workspaceId}/tasks/${task.id}`
 
 export const withTaskUrl = async (view: TaskView): Promise<TaskViewWithUrl> => {
   const { appUrl } = await resolveTenantSettings({

@@ -5,6 +5,7 @@ import { WhatsappCallPanel } from "@/features/integration-whatsapp/calling/voip/
 import { WhatsappCallRealtime } from "@/features/integration-whatsapp/calling/voip/whatsapp-call-realtime"
 import { WhatsappVoipCallProvider } from "@/features/integration-whatsapp/calling/voip/whatsapp-voip-call-context"
 import { WhatsappCallInfoSheet } from "@/features/messages/components/whatsapp-call-info-sheet"
+import { NotificationsRealtimeSync } from "@/features/notifications/components/notifications-realtime-sync"
 import { WorkspaceRealtimeProvider } from "@/features/realtime/workspace-realtime-provider"
 import { TasksRealtimeSync } from "@/features/tasks/components/tasks-realtime-sync"
 
@@ -49,6 +50,7 @@ export function WorkspaceRealtimeShell({
   return (
     <WorkspaceRealtimeProvider>
       <TasksRealtimeSync />
+      <NotificationsRealtimeSync />
       {callHistoryEnabled && <WhatsappCallInfoSheet />}
       {callingEnabled ? (
         <WorkspaceCallingLayer>{children}</WorkspaceCallingLayer>

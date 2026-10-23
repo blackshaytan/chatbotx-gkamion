@@ -121,6 +121,11 @@ export const router = {
       default: m.tasksAuthenticatedAPI,
     })),
   ),
+  notificationsAPI: lazy(() =>
+    import("@/features/notifications/api/private").then((m) => ({
+      default: m.notificationsAuthenticatedAPI,
+    })),
+  ),
   contactSequencesAPI: lazy(() =>
     import("@/features/contact-sequences/api/private").then((m) => ({
       default: m.contactSequencesAuthenticatedAPI,

@@ -164,7 +164,13 @@ export const ruBatches = {
     "userDataWebview",
     "extensionsMe",
   ],
-  "13-mini-apps-games": ["miniApps", "minigames", "leaderboards", "tasks"],
+  "13-mini-apps-games": [
+    "miniApps",
+    "minigames",
+    "leaderboards",
+    "tasks",
+    "notifications",
+  ],
 } as const satisfies Record<string, readonly string[]>
 
 export type RuBatchId = keyof typeof ruBatches

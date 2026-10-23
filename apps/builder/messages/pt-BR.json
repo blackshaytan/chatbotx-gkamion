@@ -9157,6 +9157,56 @@
     "returnToBot": "Return to bot",
     "unreadCount": "{count} unread"
   },
+  "notifications": {
+    "title": "Notifications",
+    "bellAriaLabel": "Notifications, {count} unread",
+    "empty": "No notifications",
+    "markAllRead": "Mark all as read",
+    "system": "System",
+    "items": {
+      "taskAssigned": "{actor} assigned you the task “{task}”",
+      "taskMentioned": "{actor} mentioned you in “{task}”",
+      "taskCommented": "{actor} added a comment to “{task}”",
+      "taskStatusChanged": "Status of “{task}”: {from} → {to}",
+      "taskDueChanged": "Due date for “{task}” changed to {date}",
+      "taskReminder": "Reminder for “{task}”",
+      "taskOverdue": "Task “{task}” is overdue"
+    },
+    "settings": {
+      "title": "Notification settings",
+      "description": "Choose which task events appear in your notification center.",
+      "channelNotice": "For now, notifications are shown only under the bell. Push and MAX delivery will be added later.",
+      "saveFailed": "Could not save notification settings.",
+      "taskAssigned": {
+        "label": "Task assignments",
+        "description": "When a task is assigned to you."
+      },
+      "taskMentioned": {
+        "label": "Mentions",
+        "description": "When someone mentions you in a task comment."
+      },
+      "taskCommented": {
+        "label": "New comments",
+        "description": "When someone comments on a task you watch."
+      },
+      "taskStatusChanged": {
+        "label": "Status changes",
+        "description": "When the status of a task you watch changes."
+      },
+      "taskDueChanged": {
+        "label": "Due date changes",
+        "description": "When the due date of a task you watch changes."
+      },
+      "taskReminder": {
+        "label": "Reminders",
+        "description": "When a task reminder becomes due."
+      },
+      "taskOverdue": {
+        "label": "Overdue tasks",
+        "description": "When an open task passes its due date."
+      }
+    }
+  },
   "tasks": {
     "title": "Tasks",
     "tabs": {

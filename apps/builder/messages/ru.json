@@ -9157,6 +9157,56 @@
     "returnToBot": "Вернуть боту",
     "unreadCount": "Непрочитанных: {count}"
   },
+  "notifications": {
+    "title": "Уведомления",
+    "bellAriaLabel": "Уведомления, непрочитанных: {count}",
+    "empty": "Уведомлений нет",
+    "markAllRead": "Прочитать всё",
+    "system": "Система",
+    "items": {
+      "taskAssigned": "{actor} назначил(а) вам задачу «{task}»",
+      "taskMentioned": "{actor} упомянул(а) вас в задаче «{task}»",
+      "taskCommented": "{actor} добавил(а) комментарий к задаче «{task}»",
+      "taskStatusChanged": "Статус задачи «{task}»: {from} → {to}",
+      "taskDueChanged": "Срок задачи «{task}» изменён: {date}",
+      "taskReminder": "Напоминание о задаче «{task}»",
+      "taskOverdue": "Задача «{task}» просрочена"
+    },
+    "settings": {
+      "title": "Настройки уведомлений",
+      "description": "Выберите события задач, которые будут появляться в центре уведомлений.",
+      "channelNotice": "Пока уведомления видны только под колокольчиком. Push и доставка в MAX появятся позже.",
+      "saveFailed": "Не удалось сохранить настройки уведомлений.",
+      "taskAssigned": {
+        "label": "Назначение задач",
+        "description": "Когда задачу назначают вам."
+      },
+      "taskMentioned": {
+        "label": "Упоминания",
+        "description": "Когда вас упоминают в комментарии к задаче."
+      },
+      "taskCommented": {
+        "label": "Новые комментарии",
+        "description": "Когда комментируют задачу, за которой вы наблюдаете."
+      },
+      "taskStatusChanged": {
+        "label": "Изменения статуса",
+        "description": "Когда меняется статус наблюдаемой задачи."
+      },
+      "taskDueChanged": {
+        "label": "Изменения срока",
+        "description": "Когда меняется срок наблюдаемой задачи."
+      },
+      "taskReminder": {
+        "label": "Напоминания",
+        "description": "Когда наступает время напомнить о задаче."
+      },
+      "taskOverdue": {
+        "label": "Просроченные задачи",
+        "description": "Когда открытая задача становится просроченной."
+      }
+    }
+  },
   "tasks": {
     "title": "Задачи",
     "tabs": {

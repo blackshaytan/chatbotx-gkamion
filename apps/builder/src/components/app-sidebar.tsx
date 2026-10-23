@@ -35,6 +35,7 @@ import { NavMain } from "@/components/nav-main"
 import { NavUsage, type QuotaSummary } from "@/components/nav-usage"
 import { NavUser } from "@/components/nav-user"
 import { WorkspaceSwitcher } from "@/components/workspace-switcher"
+import { NotificationBell } from "@/features/notifications/components/notification-bell"
 import type { WorkspaceResource } from "@/features/workspaces/schema/resource"
 import { authClient } from "@/lib/auth/auth-client"
 import {
@@ -241,11 +242,13 @@ export function AppSidebar({
           planStatus={quota.planStatus}
           trialEndsAt={quota.trialEndsAt}
         />
+        <NotificationBell workspaceId={workspaceId} />
         <NavUser
           isPlatformAdmin={isPlatformAdmin}
           isSuperAdmin={isSuperAdmin}
           planName={quota.planName}
           user={data.user}
+          workspaceId={workspaceId}
         />
         <NavHelp />
       </SidebarFooter>
