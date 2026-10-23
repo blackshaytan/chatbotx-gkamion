@@ -38,12 +38,14 @@ const toTargetViews = (
   if (!visibility) {
     return targets.map(visibleView)
   }
-  // A message is reachable only through its conversation.
-  const conversationsVisible = targets.every(
-    (target) =>
-      !target.conversationId ||
-      visibility.conversationIds.has(target.conversationId),
+  // A message is reachable only through its conversation, whose target row
+  // disappears when the conversation is deleted.
+  const conversationIds = targets.flatMap((target) =>
+    target.conversationId ? [target.conversationId] : [],
   )
+  const conversationsVisible =
+    conversationIds.length > 0 &&
+    conversationIds.every((id) => visibility.conversationIds.has(id))
   const isVisible = (target: TaskTargetModel): boolean => {
     if (target.contactId) {
       return visibility.contactIds.has(target.contactId)

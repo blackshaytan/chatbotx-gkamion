@@ -77,4 +77,25 @@ describe("toTaskView", () => {
       { type: "message", id: null, hidden: true },
     ])
   })
+
+  test("a restricted member sees a message only with its conversation", () => {
+    const visibility = {
+      contactIds: new Set(["c-1"]),
+      conversationIds: new Set(["conv-1"]),
+    }
+    expect(toTaskView(task, visibility).targets[2]).toEqual({
+      type: "message",
+      id: "m-1",
+      hidden: false,
+    })
+    const withoutConversation = {
+      ...task,
+      targets: task.targets.filter((target) => !target.conversationId),
+    }
+    expect(toTaskView(withoutConversation, visibility).targets[1]).toEqual({
+      type: "message",
+      id: null,
+      hidden: true,
+    })
+  })
 })
