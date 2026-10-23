@@ -26,6 +26,7 @@ import { findContactInboxByChannel } from "../conversations/utils/contact-inbox"
 import { useOutboundCallMode } from "../integration-whatsapp/calling/voip/use-outbound-call-mode"
 import { WhatsappVoipCallButton } from "../integration-whatsapp/calling/voip/whatsapp-voip-call-button"
 import { useOptionalWhatsappVoipCallContext } from "../integration-whatsapp/calling/voip/whatsapp-voip-call-context"
+import { ConversationTasksBadge } from "../tasks/components/conversation-tasks-badge"
 
 /**
  * `onBack` and `onOpenContact` are supplied only by the mobile inbox layout,
@@ -121,6 +122,10 @@ export default function MessageHead({
             outboundCallMode={outboundCallMode.data}
           />
         )}
+        <ConversationTasksBadge
+          conversationId={activeConversation.id}
+          workspaceId={workspaceId}
+        />
         <ThreadControlReleaseButton conversation={activeConversation} />
         {!isConversationActive(activeConversation) && (
           <Tooltip>
