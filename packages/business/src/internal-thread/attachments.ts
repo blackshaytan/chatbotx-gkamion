@@ -13,8 +13,19 @@ export const taskAttachmentPrefix = (
   taskId: string,
 ): string => `private/space/${workspaceId}/tasks/${taskId}/`
 
+const FORBIDDEN_NAME_CHARACTERS = new Set(["/", "\\", '"'])
+
+const isAllowedNameCharacter = (character: string): boolean => {
+  const code = character.charCodeAt(0)
+  return code >= 32 && code !== 127 && !FORBIDDEN_NAME_CHARACTERS.has(character)
+}
+
 const sanitizeAttachmentName = (name: string): string =>
-  name.replaceAll(/[/\\]/g, "").slice(0, 255)
+  Array.from(name)
+    .filter(isAllowedNameCharacter)
+    .join("")
+    .trim()
+    .slice(0, 255) || "file"
 
 export const uploadTaskAttachment = async (input: {
   workspaceId: string
@@ -34,16 +45,17 @@ export const uploadTaskAttachment = async (input: {
     )
   }
   const key = `${taskAttachmentPrefix(workspaceId, taskId)}${createId()}`
-  const buffer = (await file.arrayBuffer()) as unknown as Buffer
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const name = sanitizeAttachmentName(file.name)
   const mimeType = file.type || "application/octet-stream"
   await uploader.putObject(key, buffer, {
     ContentLength: file.size,
     ContentType: mimeType,
-    ContentDisposition: `attachment; filename="${sanitizeAttachmentName(file.name)}"`,
+    ContentDisposition: `attachment; filename*=UTF-8''${encodeURIComponent(name)}`,
   })
   return {
     key,
-    name: file.name,
+    name,
     size: file.size,
     mimeType,
   }

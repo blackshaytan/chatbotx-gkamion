@@ -245,6 +245,7 @@ export const taskPrivateResource = taskPublicResource.extend({
   unreadCount: z
     .number()
     .int()
+    .default(0)
     .describe("Unread comments for the signed-in member (private API only)."),
 })
 

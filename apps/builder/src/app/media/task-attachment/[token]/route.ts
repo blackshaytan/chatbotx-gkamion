@@ -48,7 +48,7 @@ export const GET = async (request: NextRequest, context: RouteContext) => {
   const body = await uploader.getObject(attachment.key)
   const encodedName = encodeURIComponent(attachment.name)
 
-  return new NextResponse(body, {
+  return new NextResponse(new Uint8Array(body), {
     status: 200,
     headers: {
       "Content-Type": attachment.mimeType,

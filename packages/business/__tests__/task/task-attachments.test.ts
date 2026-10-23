@@ -31,7 +31,7 @@ describe("uploadTaskAttachment", () => {
     })
     expect(uploader.putObject).toHaveBeenCalledWith(
       "private/space/ws-1/tasks/t-1/file-id-1",
-      expect.any(ArrayBuffer),
+      expect.any(Buffer),
       expect.objectContaining({
         ContentType: "application/pdf",
         ContentDisposition: expect.stringContaining("doc.pdf"),
@@ -44,6 +44,19 @@ describe("uploadTaskAttachment", () => {
       size: 100,
       mimeType: "application/pdf",
     })
+  })
+
+  test("strips quotes, slashes and control characters from the name", async () => {
+    uploader.putObject.mockResolvedValue(undefined)
+    const unsafe = new File(["x"], 'a"b/c\\d\u0007.pdf', {
+      type: "application/pdf",
+    })
+    const result = await uploadTaskAttachment({
+      workspaceId: "ws-1",
+      taskId: "t-1",
+      file: unsafe,
+    })
+    expect(result.name).toBe("abcd.pdf")
   })
 
   test("rejects files over maxBytes", async () => {
