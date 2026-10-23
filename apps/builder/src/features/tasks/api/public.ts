@@ -27,14 +27,16 @@ const workspaceTokenAuthAPI = workspaceTokenAuthAPIForScope("tasks")
 const defaultTool = mcpSpec({ visibility: "default" })
 const tags = ["Tasks"]
 
+const taskIdFrom =
+  "Get task ids from `tasks.list` (or the `id` returned by `tasks.create`)."
+
 const taskCommentsPublicRouter = {
   list: workspaceTokenAuthAPI
     .route({
       method: "GET",
       path: "/v1/tasks/{id}/comments",
       summary: "List task comments",
-      description:
-        "Returns the task's feed, newest first: comments and `system` change events (created, status, due date, assignee, priority). Returns `{ data, pageCount }`; page with `page`/`perPage`.",
+      description: `${taskIdFrom} Returns the task's feed, newest first: comments and \`system\` change events (created, status, due date, assignee, priority). Returns \`{ data, pageCount }\`; page with \`page\`/\`perPage\`.`,
       tags,
     })
     .input(listTaskCommentsPublicRequest)
@@ -55,8 +57,7 @@ const taskCommentsPublicRouter = {
       method: "POST",
       path: "/v1/tasks/{id}/comments",
       summary: "Comment on task",
-      description:
-        "Adds a comment to the task's feed on behalf of the API token (its name is shown as the author). Get the task id from `tasks.list`.",
+      description: `${taskIdFrom} Adds a comment to the task's feed on behalf of the API token (its name is shown as the author).`,
       successStatus: 201,
       tags,
     })
@@ -81,7 +82,7 @@ export const tasksPublicRouter = {
       path: "/v1/tasks",
       summary: "List tasks",
       description:
-        "Finds staff tasks by status, priority, due date, assignee, creator, watcher, contact or conversation. Sorted by due date (tasks without one last), then priority (urgent first), then newest. Returns `{ data, pageCount }`; page with `page`/`perPage`.",
+        "Finds staff tasks by status, priority, due date, assignee, creator, watcher, contact or conversation. Filter ids: `assigneeUserId`, `createdByUserId`, and `watcherUserId` from `workspaceMembers.list` (`userId`); `assigneeTeamId` from `inboxTeams.list`; `contactId` from `contacts.list`; `conversationId` from `conversations.list`. Sorted by due date (tasks without one last), then priority (urgent first), then newest. Returns `{ data, pageCount }`; page with `page`/`perPage`.",
       spec: defaultTool,
       tags,
     })
@@ -98,8 +99,7 @@ export const tasksPublicRouter = {
       method: "GET",
       path: "/v1/tasks/{id}",
       summary: "Get task",
-      description:
-        "Returns one task with its watchers and linked contact, conversation and message. Get the id from `tasks.list`.",
+      description: `Returns one task with its watchers and linked contact, conversation and message. ${taskIdFrom}`,
       tags,
     })
     .input(taskIdPathParam)
@@ -119,7 +119,7 @@ export const tasksPublicRouter = {
       path: "/v1/tasks",
       summary: "Create task",
       description:
-        'Assigns a task to a workspace member (`assigneeUserId`, from `workspaceMembers.list`) or a team (`assigneeTeamId`, from `inboxTeams.list`), e.g. "check the part is in stock and answer the client by 15:00". Optionally links a contact (`contacts.list`), a conversation (`conversations.list`) and a client message (`messages.list`). The API token\'s name is recorded as the creator.',
+        "Assigns a task to a workspace member (`assigneeUserId` from `workspaceMembers.list`) or a team (`assigneeTeamId` from `inboxTeams.list`). Optional links: `contactId` from `contacts.list`, `conversationId` from `conversations.list`, `messageId` from `messages.list` (requires `conversationId`); extra `watcherUserIds` from `workspaceMembers.list`. The API token's name is recorded as the creator.",
       successStatus: 201,
       spec: defaultTool,
       tags,
@@ -152,8 +152,7 @@ export const tasksPublicRouter = {
       method: "PATCH",
       path: "/v1/tasks/{id}",
       summary: "Update task",
-      description:
-        "Changes only the given fields. Each change of status, due date, assignee or priority is written to the task feed (`tasks.comments.list`). Moving the due date or reminder re-arms its notification. Get the id from `tasks.list`.",
+      description: `${taskIdFrom} Changes only the given fields. New assignee: \`assigneeUserId\` from \`workspaceMembers.list\`, \`assigneeTeamId\` from \`inboxTeams.list\`. Each change of status, due date, assignee or priority is written to the task feed (\`tasks.comments.list\`). Moving the due date or reminder re-arms its notification.`,
       tags,
     })
     .input(updateTaskPublicRequest)
@@ -177,8 +176,7 @@ export const tasksPublicRouter = {
       method: "POST",
       path: "/v1/tasks/{id}/complete",
       summary: "Complete task",
-      description:
-        'Marks the task `done`. Same as `tasks.update` with `status: "done"`. Get the id from `tasks.list`.',
+      description: `${taskIdFrom} Marks the task \`done\`. Same as \`tasks.update\` with \`status: "done"\`.`,
       tags,
     })
     .input(taskIdPathParam)
@@ -198,8 +196,7 @@ export const tasksPublicRouter = {
       method: "DELETE",
       path: "/v1/tasks/{id}",
       summary: "Delete task",
-      description:
-        'Permanently deletes the task with its feed, watchers and links. Prefer `tasks.update` with `status: "canceled"` to keep history.',
+      description: `${taskIdFrom} Permanently deletes the task with its feed, watchers and links. Prefer \`tasks.update\` with \`status: "canceled"\` to keep history.`,
       successStatus: 204,
       tags,
     })
@@ -218,8 +215,7 @@ export const tasksPublicRouter = {
       method: "POST",
       path: "/v1/tasks/{id}/watchers",
       summary: "Add task watcher",
-      description:
-        "Adds a workspace member (`userId` from `workspaceMembers.list`) to the task's watchers.",
+      description: `${taskIdFrom} Adds a workspace member (\`userId\` from \`workspaceMembers.list\`) to the task's watchers.`,
       tags,
     })
     .input(taskWatcherPublicRequest)
@@ -240,8 +236,7 @@ export const tasksPublicRouter = {
       method: "DELETE",
       path: "/v1/tasks/{id}/watchers/{userId}",
       summary: "Remove task watcher",
-      description:
-        "Removes a member from the task's watchers. Get watcher ids from `tasks.get` (`watcherUserIds`).",
+      description: `${taskIdFrom} Removes a member (\`userId\` from \`workspaceMembers.list\`, or from \`tasks.get\` \`watcherUserIds\`).`,
       successStatus: 204,
       tags,
     })
