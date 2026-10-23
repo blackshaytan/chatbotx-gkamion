@@ -49,7 +49,7 @@ export function NavUser({
   isSuperAdmin?: boolean
   isPlatformAdmin?: boolean
   planName?: string | null
-  workspaceId: string
+  workspaceId?: string
 }) {
   const { isMobile } = useSidebar()
   const t = useTranslations()
@@ -60,11 +60,13 @@ export function NavUser({
 
   return (
     <>
-      <NotificationSettingsDialog
-        onOpenChange={setNotificationSettingsOpen}
-        open={notificationSettingsOpen}
-        workspaceId={workspaceId}
-      />
+      {workspaceId && (
+        <NotificationSettingsDialog
+          onOpenChange={setNotificationSettingsOpen}
+          open={notificationSettingsOpen}
+          workspaceId={workspaceId}
+        />
+      )}
       <SidebarMenu>
         <SidebarMenuItem>
           {isCloud() && (
@@ -178,15 +180,19 @@ export function NavUser({
                   <ThemeSwitcher />
                 </DropdownMenuItem>
               </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => setNotificationSettingsOpen(true)}
-                >
-                  <Bell />
-                  {t("notifications.title")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
+              {workspaceId && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem
+                      onClick={() => setNotificationSettingsOpen(true)}
+                    >
+                      <Bell />
+                      {t("notifications.title")}
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </>
+              )}
               <DropdownMenuSeparator />
               {(isSuperAdmin || isPlatformAdmin) && (
                 <>

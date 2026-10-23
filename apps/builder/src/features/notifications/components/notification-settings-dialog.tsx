@@ -67,8 +67,11 @@ export const NotificationSettingsDialog = ({
   const updateMutation = useMutation(
     orpc.notificationsAPI.updatePreferences.mutationOptions({
       onError: (_error, _variables, context) => {
-        if (context?.previous) {
-          queryClient.setQueryData(preferencesQuery.queryKey, context.previous)
+        const previous = (
+          context as { previous?: NotificationPreferences } | undefined
+        )?.previous
+        if (previous) {
+          queryClient.setQueryData(preferencesQuery.queryKey, previous)
         }
         toast.error(t("saveFailed"))
       },
