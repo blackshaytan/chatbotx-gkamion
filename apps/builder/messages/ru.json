@@ -9156,5 +9156,82 @@
     "botPausedUntil": "Бот на паузе до {time}",
     "returnToBot": "Вернуть боту",
     "unreadCount": "Непрочитанных: {count}"
+  },
+  "tasks": {
+    "title": "Задачи",
+    "tabs": {
+      "mine": "Мои",
+      "createdByMe": "Поставленные мной",
+      "watching": "Наблюдаю",
+      "myTeams": "Мои команды",
+      "all": "Все"
+    },
+    "status": {
+      "todo": "К выполнению",
+      "in_progress": "В работе",
+      "done": "Готово",
+      "canceled": "Отменена"
+    },
+    "priority": {
+      "low": "Низкий",
+      "normal": "Обычный",
+      "high": "Высокий",
+      "urgent": "Срочный"
+    },
+    "due": {
+      "overdue": "Просрочено",
+      "today": "Сегодня",
+      "week": "На этой неделе",
+      "none": "Без срока"
+    },
+    "fields": {
+      "title": "Название",
+      "description": "Описание",
+      "assignee": "Ответственный",
+      "watchers": "Наблюдатели",
+      "dueAt": "Срок",
+      "remindAt": "Напоминание",
+      "priority": "Приоритет",
+      "contact": "Контакт",
+      "conversation": "Диалог",
+      "createdBy": "Создатель"
+    },
+    "reminder": {
+      "min15": "За 15 минут",
+      "hour1": "За 1 час",
+      "day1": "За 1 день"
+    },
+    "actions": {
+      "create": "Создать задачу",
+      "take": "Взять задачу",
+      "delete": "Удалить задачу",
+      "complete": "Завершить задачу",
+      "save": "Сохранить задачу",
+      "comment": "Комментировать",
+      "openConversation": "Открыть диалог"
+    },
+    "empty": "Задачи не найдены",
+    "deleteConfirm": "Удалить эту задачу?",
+    "feed": {
+      "placeholder": "Напишите комментарий...",
+      "empty": "Комментариев пока нет",
+      "system": {
+        "created": "Задача создана",
+        "status": "Статус изменён с {from} на {to}",
+        "due": "Срок изменён с {from} на {to}",
+        "assignee": "Ответственный изменён с {from} на {to}",
+        "priority": "Приоритет изменён с {from} на {to}"
+      }
+    },
+    "toasts": {
+      "created": "Задача создана",
+      "updated": "Задача обновлена",
+      "deleted": "Задача удалена",
+      "taken": "Задача взята",
+      "commented": "Комментарий добавлен"
+    },
+    "hidden": "Скрыто",
+    "createdByApi": "Создано через API: {name}",
+    "openCount": "Открытых задач: {count}"
   }
 }
