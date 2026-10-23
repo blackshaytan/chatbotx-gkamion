@@ -1574,7 +1574,8 @@
       "ads": "Annunci",
       "settings": "Impostazioni",
       "miniApps": "Mini Apps",
-      "leaderboards": "Classifiche"
+      "leaderboards": "Classifiche",
+      "tasks": "Tasks"
     },
     "adReferral": {
       "label": "Ads",

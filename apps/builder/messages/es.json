@@ -2590,7 +2590,8 @@
       "ads": "Anuncios",
       "settings": "Ajustes",
       "miniApps": "Mini Apps",
-      "leaderboards": "Clasificaciones"
+      "leaderboards": "Clasificaciones",
+      "tasks": "Tasks"
     },
     "adReferral": {
       "label": "Ads",

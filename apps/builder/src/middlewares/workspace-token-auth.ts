@@ -138,6 +138,7 @@ export const workspaceTokenAuthMidddleware = base.middleware(
     const requestApiToken: RequestApiToken = {
       id: apiToken.id,
       workspaceId: apiToken.workspaceId,
+      name: apiToken.name,
       permission: apiToken.permission,
       scopes: apiToken.scopes,
       isDefault: apiToken.isDefault,

@@ -72,7 +72,14 @@ const callMiddleware = (
 
 const authResult = (permission: "full" | "read_only" = "full") => ({
   workspace: { id: "ws-1", ownerId: "owner-1" },
-  apiToken: { id: "token-1", permission },
+  apiToken: {
+    id: "token-1",
+    workspaceId: "ws-1",
+    name: "Test Token",
+    permission,
+    scopes: null,
+    isDefault: false,
+  },
 })
 
 beforeEach(() => {
@@ -297,10 +304,11 @@ describe("workspaceTokenAuthMidddleware", () => {
         workspace: auth.workspace,
         apiToken: {
           id: "token-1",
-          workspaceId: undefined,
+          workspaceId: "ws-1",
+          name: "Test Token",
           permission: "full",
-          scopes: undefined,
-          isDefault: undefined,
+          scopes: null,
+          isDefault: false,
         },
         apiCredentialId: "api-token:token-1",
       },

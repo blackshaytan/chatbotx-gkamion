@@ -2444,7 +2444,8 @@
       "ads": "Iklan",
       "settings": "Pengaturan",
       "miniApps": "Mini Apps",
-      "leaderboards": "Papan peringkat"
+      "leaderboards": "Papan peringkat",
+      "tasks": "Tasks"
     },
     "adReferral": {
       "label": "Ads",

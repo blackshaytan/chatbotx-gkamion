@@ -6,15 +6,15 @@ import { os } from "@orpc/server"
 import type { ResponseHeadersPluginContext } from "@orpc/server/plugins"
 import type { SessionUser } from "@/lib/auth/utils"
 
-// Handlers only ever need `.permission`/`.scopes` off the authenticated
-// token — never `tokenHash`/`encryptedToken`. Projecting the context type
-// down to this shape means a careless `logger.info({ apiToken })` at a
-// handler call site can't ship a usable credential hash to logs; the full
-// row still exists, but only inside workspace-token-auth.ts before this
-// projection is built.
+// Handlers only ever need `.name` (author label for tasks/comments),
+// `.permission`, and `.scopes` off the authenticated token — never
+// `tokenHash`/`encryptedToken`. Projecting the context type down to this
+// shape means a careless `logger.info({ apiToken })` at a handler call site
+// can't ship a usable credential hash to logs; the full row still exists, but
+// only inside workspace-token-auth.ts before this projection is built.
 export type RequestApiToken = Pick<
   WorkspaceApiTokenModel,
-  "id" | "workspaceId" | "permission" | "scopes" | "isDefault"
+  "id" | "workspaceId" | "name" | "permission" | "scopes" | "isDefault"
 >
 
 export type BaseContext = ResponseHeadersPluginContext & {

@@ -3365,7 +3365,8 @@
       "ads": "广告",
       "settings": "设置",
       "miniApps": "迷你应用",
-      "leaderboards": "排行榜"
+      "leaderboards": "排行榜",
+      "tasks": "Tasks"
     },
     "adReferral": {
       "label": "Ads",

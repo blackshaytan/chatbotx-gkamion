@@ -2444,7 +2444,8 @@
       "ads": "Anzeigen",
       "settings": "Einstellungen",
       "miniApps": "Mini Apps",
-      "leaderboards": "Bestenlisten"
+      "leaderboards": "Bestenlisten",
+      "tasks": "Tasks"
     },
     "adReferral": {
       "label": "Ads",

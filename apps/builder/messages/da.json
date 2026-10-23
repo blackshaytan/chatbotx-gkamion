@@ -2444,7 +2444,8 @@
       "ads": "Annoncer",
       "settings": "Indstillinger",
       "miniApps": "Mini Apps",
-      "leaderboards": "Ranglister"
+      "leaderboards": "Ranglister",
+      "tasks": "Tasks"
     },
     "adReferral": {
       "label": "Ads",

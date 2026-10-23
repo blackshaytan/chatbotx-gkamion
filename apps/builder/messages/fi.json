@@ -2444,7 +2444,8 @@
       "ads": "Mainokset",
       "settings": "Asetukset",
       "miniApps": "Mini Apps",
-      "leaderboards": "Tulostaulukot"
+      "leaderboards": "Tulostaulukot",
+      "tasks": "Tasks"
     },
     "adReferral": {
       "label": "Ads",

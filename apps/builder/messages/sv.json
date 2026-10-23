@@ -3362,7 +3362,8 @@
       "ads": "Annonser",
       "settings": "Inställningar",
       "miniApps": "Mini Apps",
-      "leaderboards": "Topplistor"
+      "leaderboards": "Topplistor",
+      "tasks": "Tasks"
     },
     "adReferral": {
       "label": "Ads",

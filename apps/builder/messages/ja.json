@@ -2444,7 +2444,8 @@
       "ads": "広告",
       "settings": "設定",
       "miniApps": "ミニアプリ",
-      "leaderboards": "ランキング"
+      "leaderboards": "ランキング",
+      "tasks": "Tasks"
     },
     "adReferral": {
       "label": "Ads",

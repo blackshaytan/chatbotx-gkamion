@@ -2632,7 +2632,8 @@
       "ads": "Ads",
       "settings": "Settings",
       "miniApps": "Mini Apps",
-      "leaderboards": "Leaderboards"
+      "leaderboards": "Leaderboards",
+      "tasks": "Tasks"
     },
     "adReferral": {
       "label": "Ads",
