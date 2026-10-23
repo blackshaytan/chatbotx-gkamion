@@ -85,6 +85,7 @@ import { sequencesPublicRouter } from "@/features/sequences/api/public"
 import { commentAutomationsPublicRouter } from "@/features/shared/comment-automation/api/public"
 import { spreadsheetsPublicRouter } from "@/features/spreadsheets/api/public"
 import { tagsPublicRouter } from "@/features/tags/api/public"
+import { tasksPublicRouter } from "@/features/tasks/api/public"
 import { threadsCommentsPublicRouter } from "@/features/threads-comments/api/public"
 import { tiktokCommentsPublicRouter } from "@/features/tiktok-comments/api/public"
 import { tokenPublicRouter } from "@/features/token/api/public"
@@ -167,6 +168,7 @@ export const publicRouter = {
   smtpIntegrations: smtpIntegrationsPublicRouter,
   spreadsheets: spreadsheetsPublicRouter,
   tags: tagsPublicRouter,
+  tasks: tasksPublicRouter,
   templateMessages: templateMessagesPublicRouter,
   threadsComments: threadsCommentsPublicRouter,
   tiktokComments: tiktokCommentsPublicRouter,

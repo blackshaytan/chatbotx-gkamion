@@ -2753,6 +2753,56 @@ exports[`public API spec — operation naming guard > operation list (operationI
     "path": "/v1/tags/{id}",
   },
   {
+    "method": "POST",
+    "operationId": "tasks.addWatcher",
+    "path": "/v1/tasks/{id}/watchers",
+  },
+  {
+    "method": "POST",
+    "operationId": "tasks.comments.create",
+    "path": "/v1/tasks/{id}/comments",
+  },
+  {
+    "method": "GET",
+    "operationId": "tasks.comments.list",
+    "path": "/v1/tasks/{id}/comments",
+  },
+  {
+    "method": "POST",
+    "operationId": "tasks.complete",
+    "path": "/v1/tasks/{id}/complete",
+  },
+  {
+    "method": "POST",
+    "operationId": "tasks.create",
+    "path": "/v1/tasks",
+  },
+  {
+    "method": "DELETE",
+    "operationId": "tasks.delete",
+    "path": "/v1/tasks/{id}",
+  },
+  {
+    "method": "GET",
+    "operationId": "tasks.get",
+    "path": "/v1/tasks/{id}",
+  },
+  {
+    "method": "GET",
+    "operationId": "tasks.list",
+    "path": "/v1/tasks",
+  },
+  {
+    "method": "DELETE",
+    "operationId": "tasks.removeWatcher",
+    "path": "/v1/tasks/{id}/watchers/{userId}",
+  },
+  {
+    "method": "PATCH",
+    "operationId": "tasks.update",
+    "path": "/v1/tasks/{id}",
+  },
+  {
     "method": "GET",
     "operationId": "templateMessages.list",
     "path": "/v1/template-messages",
