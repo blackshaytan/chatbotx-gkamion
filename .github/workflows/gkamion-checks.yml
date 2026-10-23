@@ -49,6 +49,9 @@ jobs:
           __tests__/external-agent-api.test.ts
           __tests__/tasks-public-api.test.ts
           __tests__/tasks-private-api.test.ts
+          __tests__/tasks-comments-api.test.ts
+          __tests__/task-attachment-route.test.ts
+          __tests__/tasks-mention-serialize.test.ts
           __tests__/tasks-session.test.ts
           __tests__/tasks-reminder-presets.test.ts
           __tests__/workspace-token-scope-registry.test.ts
@@ -98,6 +101,12 @@ jobs:
           __tests__/task
           __tests__/workspace-member.service.test.ts
           __tests__/inbox-team-service-members.test.ts
+
+      - working-directory: packages/utils
+        run: pnpm exec vitest run __tests__/internal-mentions.test.ts
+
+      - working-directory: packages/encryption
+        run: pnpm exec vitest run __tests__/media-token.test.ts
 
       - working-directory: apps/worker
         run: >-

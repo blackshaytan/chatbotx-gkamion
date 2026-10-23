@@ -165,7 +165,7 @@ Tool names are derived from the OpenAPI `operationId` converted to `snake_case` 
 | `tasks_list` | List tasks |
 | `tasks_create` | Create task |
 
-Other task operations (`tasks_count`, `tasks_take`, `tasks_get`, updates, watchers, comments, etc.) are reachable via `search_tools` → `call_tool`, not `tools/list`.
+Other task operations (`tasks_count`, `tasks_take`, `tasks_get`, updates, watchers, `tasks_comments_list` / `tasks_comments_create` / `tasks_comments_update` / `tasks_comments_delete`, `tasks_attachments_upload` [multipart file], etc.) are reachable via `search_tools` → `call_tool`, not `tools/list`.
 
 Everything else — deletes, less-common resources (coupons, products, webhooks, saved replies, tags/triggers/inboxes/custom-fields management, integrations, workspace members, etc.), and channel-token-only or deprecated operations — is reachable via `search_tools` → `call_tool`, not `tools/list`.
 

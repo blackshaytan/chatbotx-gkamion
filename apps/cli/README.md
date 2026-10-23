@@ -1201,10 +1201,17 @@ chatbotx tasks delete <id>
 chatbotx tasks watcher add <id> --userId <userId>
 chatbotx tasks watcher delete <id> <userId>
 chatbotx tasks comments list <id>
-chatbotx tasks comment add <id> --text "..."
+chatbotx tasks comment add <id> --text "..."   # optional --attachments (JSON); mention format below
+chatbotx tasks comments update <id> <commentId> --text "..."
+chatbotx tasks comment delete <id> <commentId>
+chatbotx tasks attachment add <id> --file <path>   # multipart; returns key/name for comments.create
 ```
 
 List/count responses include task `url` (web UI link) and contact `label` on visible contact targets.
+
+Comment text may mention members or teams as `@[Name](user:<userId>)` or `@[Team name](team:<teamId>)` (ids from `workspaceMembers.list` / `inboxTeams.list`). Mentioned members are added as watchers; team mentions are stored in the comment only (no team-wide notifications yet).
+
+Attachments: upload each file with `tasks attachment add` (one file, up to 25 MB), then pass `{ key, name }` in `tasks comment add` (at most 10 per comment). Comment responses include signed download URLs (about one hour) on `/media/task-attachment/<token>` — not direct `/storage/private/…` links.
 
 ---
 
