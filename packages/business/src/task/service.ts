@@ -395,6 +395,12 @@ class TaskService extends BaseService {
       tasks,
       tx,
     })
+    await taskRepository.deleteWatchersForUser({ workspaceId, userId, tx })
+    await internalThreadRepository.deleteMembersForUser({
+      workspaceId,
+      userId,
+      tx,
+    })
   }
 
   /** Call before deleting teams: their tasks go to the workspace owner. */

@@ -7,8 +7,13 @@ const repo = vi.hoisted(() => ({
     listAssignedToTeams: vi.fn(),
     assignToUser: vi.fn(),
     insertWatchers: vi.fn(),
+    deleteWatchersForUser: vi.fn(),
   },
-  thread: { insertMembers: vi.fn(), insertMessages: vi.fn() },
+  thread: {
+    insertMembers: vi.fn(),
+    insertMessages: vi.fn(),
+    deleteMembersForUser: vi.fn(),
+  },
 }))
 
 vi.mock("@chatbotx.io/database/client", () => ({ db: {} }))
@@ -71,6 +76,16 @@ describe("taskService.reassignFromMember", () => {
       ],
       tx: "tx",
     })
+    expect(repo.task.deleteWatchersForUser).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      userId: "u-1",
+      tx: "tx",
+    })
+    expect(repo.thread.deleteMembersForUser).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      userId: "u-1",
+      tx: "tx",
+    })
   })
 
   test("does nothing for the owner or a member without tasks", async () => {
@@ -83,6 +98,16 @@ describe("taskService.reassignFromMember", () => {
     repo.task.listAssignedToUser.mockResolvedValue([])
     await taskService.reassignFromMember({ workspaceId: "ws-1", userId: "u-2" })
     expect(repo.task.assignToUser).not.toHaveBeenCalled()
+    expect(repo.task.deleteWatchersForUser).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      userId: "u-2",
+      tx: {},
+    })
+    expect(repo.thread.deleteMembersForUser).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      userId: "u-2",
+      tx: {},
+    })
   })
 })
 

@@ -236,6 +236,28 @@ class TaskRepository {
       )
   }
 
+  async deleteWatchersForUser(props: {
+    workspaceId: string
+    userId: string
+    tx?: DatabaseClient
+  }): Promise<void> {
+    const { workspaceId, userId, tx = db } = props
+    await tx
+      .delete(taskWatcherModel)
+      .where(
+        and(
+          eq(taskWatcherModel.userId, userId),
+          inArray(
+            taskWatcherModel.taskId,
+            tx
+              .select({ id: taskModel.id })
+              .from(taskModel)
+              .where(eq(taskModel.workspaceId, workspaceId)),
+          ),
+        ),
+      )
+  }
+
   async insertTargets(props: {
     rows: TaskTargetInsert[]
     tx?: DatabaseClient

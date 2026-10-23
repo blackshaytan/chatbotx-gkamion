@@ -1,4 +1,4 @@
-import { and, type DatabaseClient, db, eq } from "../../client"
+import { and, type DatabaseClient, db, eq, inArray } from "../../client"
 import {
   internalMessageModel,
   internalThreadMemberModel,
@@ -47,6 +47,28 @@ class InternalThreadRepository {
         and(
           eq(internalThreadMemberModel.threadId, threadId),
           eq(internalThreadMemberModel.userId, userId),
+        ),
+      )
+  }
+
+  async deleteMembersForUser(props: {
+    workspaceId: string
+    userId: string
+    tx?: DatabaseClient
+  }): Promise<void> {
+    const { workspaceId, userId, tx = db } = props
+    await tx
+      .delete(internalThreadMemberModel)
+      .where(
+        and(
+          eq(internalThreadMemberModel.userId, userId),
+          inArray(
+            internalThreadMemberModel.threadId,
+            tx
+              .select({ id: internalThreadModel.id })
+              .from(internalThreadModel)
+              .where(eq(internalThreadModel.workspaceId, workspaceId)),
+          ),
         ),
       )
   }

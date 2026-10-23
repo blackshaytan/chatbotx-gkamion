@@ -91,8 +91,8 @@ export const taskModel = pgTable(
     index("Task_workspaceId_dueAt_open_idx")
       .on(table.workspaceId, table.dueAt)
       .where(sql`"status" IN ('todo', 'in_progress')`),
-    // At most one: a deleted user or team nulls its FK, and the service
-    // then hands the task to the workspace owner.
+    // At most one assignee. A deleted User/team nulls its FK; the service
+    // reassigns to the owner when a member is removed or a team is deleted.
     check(
       "Task_single_assignee_check",
       sql`num_nonnulls("assigneeUserId", "assigneeTeamId") <= 1`,
@@ -148,7 +148,8 @@ export const taskTargetModel = pgTable(
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-    // No FK: Message is a sharded hypertable without foreign keys.
+    // No FK: Message is a sharded hypertable. Scope message lookups by this
+    // task's workspaceId and the target row's linked conversationId.
     messageId: bigintAsString(),
   },
   (table) => [
