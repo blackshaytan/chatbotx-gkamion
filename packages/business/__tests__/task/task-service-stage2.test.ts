@@ -40,6 +40,14 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
 }))
 vi.mock("@chatbotx.io/redis", () => ({ invalidateCacheByTags: vi.fn() }))
 vi.mock("../../src/audit/dispatcher", () => ({ dispatchAuditRecord: vi.fn() }))
+vi.mock("../../src/notification/service", () => ({
+  notificationService: {
+    deleteForTask: vi.fn(),
+    notifyTask: vi.fn(),
+  },
+  notifyTaskSafe: vi.fn(),
+  formatCommentExcerpt: (text: string) => text,
+}))
 const { taskService } = await import("../../src/task/service")
 
 const storedTask = (overrides: Record<string, unknown> = {}) => ({

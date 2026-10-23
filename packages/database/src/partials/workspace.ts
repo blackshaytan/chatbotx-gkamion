@@ -48,6 +48,13 @@ export const workspaceMemberNotificationTypesSchema = z.object({
   notifyAdmin: z.boolean(),
   newMessageToHuman: z.boolean(),
   newOrder: z.boolean(),
+  taskAssigned: z.boolean().optional(),
+  taskMentioned: z.boolean().optional(),
+  taskCommented: z.boolean().optional(),
+  taskStatusChanged: z.boolean().optional(),
+  taskDueChanged: z.boolean().optional(),
+  taskReminder: z.boolean().optional(),
+  taskOverdue: z.boolean().optional(),
 })
 export type WorkspaceMemberNotificationTypes = z.infer<
   typeof workspaceMemberNotificationTypesSchema

@@ -28,6 +28,8 @@ import {
 import { systemMessageRow } from "../internal-thread/message-rows"
 import { internalThreadService } from "../internal-thread/service"
 import type { InternalMessageView } from "../internal-thread/view"
+import { formatCommentExcerpt } from "../notification/excerpt"
+import { notificationService, notifyTaskSafe } from "../notification/service"
 import { actorLabel, actorUserId, type TaskActor } from "./actor"
 import {
   assertRemindBeforeDue,
@@ -36,6 +38,13 @@ import {
   encodeAssignee,
 } from "./changes"
 import { resolveTaskDueWindow } from "./due-window"
+import {
+  buildNotifyEventsFromChanges,
+  expandMentionUserIds,
+  listAssigneeUserIds,
+  pickDueChangeBounds,
+  pickStatusChangeBounds,
+} from "./notifications"
 import {
   canDeleteTask,
   canModifyTask,
@@ -173,6 +182,25 @@ class TaskService extends BaseService {
     })
 
     await this.audit("create", `created a task (#${taskId})`)
+    const assigneeUserIds = await listAssigneeUserIds({
+      workspaceId,
+      assigneeUserId: assignee.type === "user" ? assignee.userId : null,
+      assigneeTeamId: assignee.type === "team" ? assignee.teamId : null,
+    })
+    if (assigneeUserIds.length > 0) {
+      await notifyTaskSafe({
+        workspaceId,
+        task: {
+          id: taskId,
+          title: input.title,
+          assigneeUserId: assignee.type === "user" ? assignee.userId : null,
+          assigneeTeamId: assignee.type === "team" ? assignee.teamId : null,
+          createdByUserId: actorUserId(actor),
+        },
+        actor,
+        events: [{ kind: "assigned", userIds: assigneeUserIds }],
+      })
+    }
     return await this.get({
       workspaceId,
       id: taskId,
@@ -308,6 +336,34 @@ class TaskService extends BaseService {
         })
       })
       await this.audit("update", `updated a task (#${id})`)
+      const notifyEvents = await buildNotifyEventsFromChanges({
+        workspaceId,
+        events,
+      })
+      if (notifyEvents.length > 0) {
+        const statusBounds = pickStatusChangeBounds(events)
+        const dueBounds = pickDueChangeBounds(events)
+        await notifyTaskSafe({
+          workspaceId,
+          task: {
+            id,
+            title: patch.title ?? task.title,
+            assigneeUserId:
+              set.assigneeUserId === undefined
+                ? task.assigneeUserId
+                : set.assigneeUserId,
+            assigneeTeamId:
+              set.assigneeTeamId === undefined
+                ? task.assigneeTeamId
+                : set.assigneeTeamId,
+            createdByUserId: task.createdByUserId,
+          },
+          actor,
+          events: notifyEvents,
+          from: statusBounds?.from ?? dueBounds?.from ?? null,
+          to: statusBounds?.to ?? dueBounds?.to ?? null,
+        })
+      }
     }
     return await this.get({ workspaceId, id, accessScope: input.accessScope })
   }
@@ -332,6 +388,11 @@ class TaskService extends BaseService {
       throw taskForbiddenException()
     }
     await db.transaction(async (tx) => {
+      await notificationService.deleteForTask({
+        workspaceId,
+        taskId: id,
+        tx,
+      })
       await taskRepository.deleteWithThread({
         workspaceId,
         id,
@@ -421,8 +482,8 @@ class TaskService extends BaseService {
           items: input.attachments,
         })
       : []
-    return await db.transaction(async (tx) => {
-      const comment = await internalThreadService.postComment({
+    const comment = await db.transaction(async (tx) => {
+      const posted = await internalThreadService.postComment({
         workspaceId: input.workspaceId,
         threadId: task.threadId,
         text: input.text,
@@ -433,12 +494,37 @@ class TaskService extends BaseService {
       await this.addMentionWatchers({
         taskId: task.id,
         threadId: task.threadId,
-        userIds: comment.mentions.userIds,
+        userIds: posted.mentions.userIds,
         existingWatcherIds: task.watchers.map((w) => w.userId),
         tx,
       })
-      return comment
+      return posted
     })
+    const mentionUserIds = await expandMentionUserIds({
+      workspaceId: input.workspaceId,
+      userIds: comment.mentions.userIds,
+      teamIds: comment.mentions.teamIds,
+    })
+    const events = [
+      ...(mentionUserIds.length > 0
+        ? [{ kind: "mentioned" as const, userIds: mentionUserIds }]
+        : []),
+      { kind: "commented" as const },
+    ]
+    await notifyTaskSafe({
+      workspaceId: input.workspaceId,
+      task: {
+        id: task.id,
+        title: task.title,
+        assigneeUserId: task.assigneeUserId,
+        assigneeTeamId: task.assigneeTeamId,
+        createdByUserId: task.createdByUserId,
+      },
+      actor: input.actor,
+      events,
+      excerpt: formatCommentExcerpt(input.text),
+    })
+    return comment
   }
 
   async updateComment(input: {
@@ -449,8 +535,12 @@ class TaskService extends BaseService {
     actor: TaskActor
   }): Promise<InternalMessageView> {
     const task = await this.findOrFail(input)
-    return await db.transaction(async (tx) => {
-      const comment = await internalThreadService.editComment({
+    const previousMessage = await internalThreadRepository.findMessage({
+      workspaceId: input.workspaceId,
+      id: input.commentId,
+    })
+    const comment = await db.transaction(async (tx) => {
+      const edited = await internalThreadService.editComment({
         workspaceId: input.workspaceId,
         threadId: task.threadId,
         id: input.commentId,
@@ -461,12 +551,41 @@ class TaskService extends BaseService {
       await this.addMentionWatchers({
         taskId: task.id,
         threadId: task.threadId,
-        userIds: comment.mentions.userIds,
+        userIds: edited.mentions.userIds,
         existingWatcherIds: task.watchers.map((w) => w.userId),
         tx,
       })
-      return comment
+      return edited
     })
+    const previousUsers = new Set(previousMessage?.mentions.userIds ?? [])
+    const previousTeams = new Set(previousMessage?.mentions.teamIds ?? [])
+    const newUserIds = comment.mentions.userIds.filter(
+      (userId) => !previousUsers.has(userId),
+    )
+    const newTeamIds = comment.mentions.teamIds.filter(
+      (teamId) => !previousTeams.has(teamId),
+    )
+    const mentionUserIds = await expandMentionUserIds({
+      workspaceId: input.workspaceId,
+      userIds: newUserIds,
+      teamIds: newTeamIds,
+    })
+    if (mentionUserIds.length > 0) {
+      await notifyTaskSafe({
+        workspaceId: input.workspaceId,
+        task: {
+          id: task.id,
+          title: task.title,
+          assigneeUserId: task.assigneeUserId,
+          assigneeTeamId: task.assigneeTeamId,
+          createdByUserId: task.createdByUserId,
+        },
+        actor: input.actor,
+        events: [{ kind: "mentioned", userIds: mentionUserIds }],
+        excerpt: formatCommentExcerpt(input.text),
+      })
+    }
+    return comment
   }
 
   async deleteComment(input: {

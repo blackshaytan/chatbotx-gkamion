@@ -218,6 +218,18 @@ class TaskRepository {
     return task
   }
 
+  async listWatcherUserIds(props: {
+    taskId: string
+    tx?: DatabaseClient
+  }): Promise<string[]> {
+    const { taskId, tx = db } = props
+    const rows = await tx
+      .select({ userId: taskWatcherModel.userId })
+      .from(taskWatcherModel)
+      .where(eq(taskWatcherModel.taskId, taskId))
+    return rows.map((row) => row.userId)
+  }
+
   async insertWatchers(props: {
     rows: { taskId: string; userId: string }[]
     tx?: DatabaseClient

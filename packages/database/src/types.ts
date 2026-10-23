@@ -328,3 +328,4 @@ export type InternalMessageModel =
 export type TaskModel = typeof schema.taskModel.$inferSelect
 export type TaskWatcherModel = typeof schema.taskWatcherModel.$inferSelect
 export type TaskTargetModel = typeof schema.taskTargetModel.$inferSelect
+export type NotificationModel = typeof schema.notificationModel.$inferSelect

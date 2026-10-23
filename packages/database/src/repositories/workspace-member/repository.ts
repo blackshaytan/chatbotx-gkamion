@@ -1,5 +1,8 @@
 import { and, type DatabaseClient, db, eq, inArray, sql } from "../../client"
-import type { WorkspaceMemberPermissions } from "../../partials/workspace"
+import type {
+  WorkspaceMemberNotificationTypes,
+  WorkspaceMemberPermissions,
+} from "../../partials/workspace"
 import { workspaceMemberModel } from "../../schema"
 
 export type WorkspaceMemberPermissionsRow = {
@@ -48,6 +51,68 @@ class WorkspaceMemberRepository {
    * No existence check, so a synthetic support membership (no real row) is a
    * silent no-op for that id only, not the whole batch.
    */
+  async listNotificationTypesByUserIds(props: {
+    workspaceId: string
+    userIds: string[]
+    tx?: DatabaseClient
+  }): Promise<
+    { userId: string; notificationTypes: WorkspaceMemberNotificationTypes }[]
+  > {
+    const { workspaceId, userIds, tx = db } = props
+    if (userIds.length === 0) {
+      return []
+    }
+    return await tx
+      .select({
+        userId: workspaceMemberModel.userId,
+        notificationTypes: workspaceMemberModel.notificationTypes,
+      })
+      .from(workspaceMemberModel)
+      .where(
+        and(
+          eq(workspaceMemberModel.workspaceId, workspaceId),
+          inArray(workspaceMemberModel.userId, userIds),
+        ),
+      )
+  }
+
+  async findNotificationTypes(props: {
+    workspaceId: string
+    userId: string
+    tx?: DatabaseClient
+  }): Promise<WorkspaceMemberNotificationTypes | undefined> {
+    const { workspaceId, userId, tx = db } = props
+    const [row] = await tx
+      .select({ notificationTypes: workspaceMemberModel.notificationTypes })
+      .from(workspaceMemberModel)
+      .where(
+        and(
+          eq(workspaceMemberModel.workspaceId, workspaceId),
+          eq(workspaceMemberModel.userId, userId),
+        ),
+      )
+      .limit(1)
+    return row?.notificationTypes
+  }
+
+  async updateNotificationTypes(props: {
+    workspaceId: string
+    userId: string
+    notificationTypes: WorkspaceMemberNotificationTypes
+    tx?: DatabaseClient
+  }): Promise<void> {
+    const { workspaceId, userId, notificationTypes, tx = db } = props
+    await tx
+      .update(workspaceMemberModel)
+      .set({ notificationTypes })
+      .where(
+        and(
+          eq(workspaceMemberModel.workspaceId, workspaceId),
+          eq(workspaceMemberModel.userId, userId),
+        ),
+      )
+  }
+
   async markOnlineBulk(props: {
     workspaceId: string
     userIds: string[]
