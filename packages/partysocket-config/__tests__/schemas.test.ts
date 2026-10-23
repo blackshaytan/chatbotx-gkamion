@@ -220,11 +220,19 @@ describe("REALTIME_EVENT_TOPICS", () => {
     }
   })
 
-  test("only typing is ephemeral and conversationAssigned carries both topics", () => {
+  test("maps task events to the tasks topic and keeps chat typing ephemeral", () => {
     expect(REALTIME_EVENT_TOPICS.typing.durability).toBe("ephemeral")
     expect(REALTIME_EVENT_TOPICS.conversationAssigned).toMatchObject({
       durability: "durable",
       topics: expect.arrayContaining([RealtimeTopic.chat, RealtimeTopic.voip]),
+    })
+    expect(REALTIME_EVENT_TOPICS.taskChanged).toEqual({
+      durability: "ephemeral",
+      topics: [RealtimeTopic.tasks],
+    })
+    expect(REALTIME_EVENT_TOPICS.taskCommentsChanged).toEqual({
+      durability: "ephemeral",
+      topics: [RealtimeTopic.tasks],
     })
   })
 })
@@ -256,7 +264,7 @@ describe("realtimeProtocolSchema", () => {
 
 describe("realtimeSubscriptionMessageSchema", () => {
   test("parses a valid subscribe frame", () => {
-    const payload = { type: "subscribe", topics: ["chat", "voip"] }
+    const payload = { type: "subscribe", topics: ["chat", "tasks", "voip"] }
 
     expect(realtimeSubscriptionMessageSchema.parse(payload)).toEqual(payload)
   })
@@ -290,13 +298,14 @@ describe("serializeRealtimeSubscriptionMessage", () => {
   test("round-trips through the schema it pairs with", () => {
     const wire = serializeRealtimeSubscriptionMessage([
       RealtimeTopic.chat,
+      RealtimeTopic.tasks,
       RealtimeTopic.voip,
     ])
 
     const parsed = realtimeSubscriptionMessageSchema.parse(JSON.parse(wire))
     expect(parsed).toEqual({
       type: "subscribe",
-      topics: ["chat", "voip"],
+      topics: ["chat", "tasks", "voip"],
     })
   })
 })

@@ -45,7 +45,12 @@ export const GET = async (request: NextRequest, context: RouteContext) => {
     return new NextResponse(null, { status: 404 })
   }
 
-  const body = await uploader.getObject(attachment.key)
+  let body: Buffer
+  try {
+    body = await uploader.getObject(attachment.key)
+  } catch {
+    return new NextResponse(null, { status: 404 })
+  }
   const encodedName = encodeURIComponent(attachment.name)
 
   return new NextResponse(new Uint8Array(body), {
@@ -54,6 +59,7 @@ export const GET = async (request: NextRequest, context: RouteContext) => {
       "Content-Type": attachment.mimeType,
       "Content-Disposition": `attachment; filename*=UTF-8''${encodedName}`,
       "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "sandbox",
       "Cache-Control": "private, max-age=300",
     },
   })

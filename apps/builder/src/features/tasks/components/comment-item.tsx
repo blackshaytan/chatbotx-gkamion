@@ -129,17 +129,20 @@ export const CommentItem = ({
     return (
       <>
         <p className="whitespace-pre-wrap text-sm">
-          {splitInternalMentionText(comment.text ?? "").map((segment) =>
-            segment.type === "mention" ? (
-              <span
-                className="rounded bg-primary/10 px-1 text-primary"
-                key={`mention-${segment.kind}-${segment.id}-${segment.label}`}
-              >
-                @{segment.label}
-              </span>
-            ) : (
-              <span key={`text-${segment.text}`}>{segment.text}</span>
-            ),
+          {splitInternalMentionText(comment.text ?? "").map(
+            (segment, index) => {
+              const segmentKey = `segment-${index}`
+              return segment.type === "mention" ? (
+                <span
+                  className="rounded bg-primary/10 px-1 text-primary"
+                  key={segmentKey}
+                >
+                  @{segment.label}
+                </span>
+              ) : (
+                <span key={segmentKey}>{segment.text}</span>
+              )
+            },
           )}
         </p>
         <CommentAttachments attachments={comment.attachments} />

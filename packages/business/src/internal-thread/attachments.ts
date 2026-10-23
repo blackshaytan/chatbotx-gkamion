@@ -2,6 +2,7 @@ import type { InternalMessageAttachment } from "@chatbotx.io/database/partials"
 import { uploader } from "@chatbotx.io/filesystem"
 import { createId } from "@chatbotx.io/utils"
 import { validationException } from "../errors"
+import { logger } from "../logger"
 
 export const TASK_ATTACHMENT_LIMITS = {
   maxFiles: 10,
@@ -85,7 +86,11 @@ export const resolveTaskAttachments = async (input: {
     let head: { ContentLength?: number; ContentType?: string }
     try {
       head = await uploader.headObject(item.key)
-    } catch {
+    } catch (err) {
+      logger.warn(
+        { err, key: item.key, taskId, workspaceId },
+        "Task attachment was not found in storage",
+      )
       throw validationException(
         "attachments",
         "Attachment not found in storage",

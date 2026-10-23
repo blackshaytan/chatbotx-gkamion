@@ -44,6 +44,7 @@ export const CommentComposer = ({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [text, setText] = useState(initialText)
   const [attachments, setAttachments] = useState<UploadedAttachment[]>([])
+  const [editorResetKey, setEditorResetKey] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
   const uploadMutation = useMutation(
     orpc.tasksAPI.attachments.upload.mutationOptions(),
@@ -57,6 +58,7 @@ export const CommentComposer = ({
       onSuccess: async () => {
         setText("")
         setAttachments([])
+        setEditorResetKey((current) => current + 1)
         toast.success(t("toasts.commented"))
         await invalidateTasks()
         onSubmitted?.()
@@ -129,6 +131,7 @@ export const CommentComposer = ({
         onChange={setText}
         onSubmit={handleSubmit}
         placeholder={t("feed.placeholder")}
+        resetKey={editorResetKey}
         workspaceId={workspaceId}
       />
       {attachments.length > 0 ? (

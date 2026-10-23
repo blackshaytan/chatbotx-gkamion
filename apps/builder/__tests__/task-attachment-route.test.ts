@@ -109,7 +109,27 @@ describe("task attachment media route", () => {
       "attachment; filename*=UTF-8''report.pdf",
     )
     expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff")
+    expect(response.headers.get("Content-Security-Policy")).toBe("sandbox")
     expect(response.headers.get("Cache-Control")).toBe("private, max-age=300")
     expect(await response.text()).toBe("data")
+  })
+
+  test("missing storage object returns 404", async () => {
+    mocks.verifyMediaToken.mockResolvedValue({
+      workspaceId: "ws-1",
+      kind: "taskAttachment",
+      refId: "msg-9:1",
+    })
+    mocks.findAttachment.mockResolvedValue({
+      key: "private/space/ws-1/tasks/t-1/missing",
+      name: "report.pdf",
+      mimeType: "application/pdf",
+      size: 4,
+    })
+    mocks.getObject.mockRejectedValue(new Error("not found"))
+
+    const response = await GET(request() as never, tokenContext())
+
+    expect(response.status).toBe(404)
   })
 })

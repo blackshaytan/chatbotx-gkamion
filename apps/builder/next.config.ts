@@ -36,6 +36,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
+    proxyClientMaxBodySize: "26mb",
     serverActions: {
       bodySizeLimit: "20mb",
     },

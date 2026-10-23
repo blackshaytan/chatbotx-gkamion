@@ -28,6 +28,7 @@ export const RealtimeEventType = {
 
 export const RealtimeTopic = {
   chat: "chat",
+  tasks: "tasks",
   voip: "voip",
 } as const
 
@@ -137,11 +138,11 @@ export const REALTIME_EVENT_TOPICS: {
   },
   [RealtimeEventType.taskChanged]: {
     durability: "ephemeral",
-    topics: [RealtimeTopic.chat],
+    topics: [RealtimeTopic.tasks],
   },
   [RealtimeEventType.taskCommentsChanged]: {
     durability: "ephemeral",
-    topics: [RealtimeTopic.chat],
+    topics: [RealtimeTopic.tasks],
   },
 }
 

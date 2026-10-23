@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useTranslations } from "next-intl"
+import { useFormatter, useTranslations } from "next-intl"
 
 type CommentAttachmentsProps = {
   attachments: Array<{
@@ -13,15 +13,24 @@ type CommentAttachmentsProps = {
   }>
 }
 
-const formatFileSize = (size: number) =>
-  size < 1024 * 1024
-    ? `${Math.max(1, Math.round(size / 1024))} KB`
-    : `${(size / (1024 * 1024)).toFixed(1)} MB`
-
 export const CommentAttachments = ({
   attachments,
 }: CommentAttachmentsProps) => {
   const t = useTranslations("tasks")
+  const formatter = useFormatter()
+  const formatFileSize = (size: number) =>
+    size < 1024 * 1024
+      ? formatter.number(Math.max(1, Math.round(size / 1024)), {
+          style: "unit",
+          unit: "kilobyte",
+          unitDisplay: "short",
+        })
+      : formatter.number(size / (1024 * 1024), {
+          style: "unit",
+          unit: "megabyte",
+          unitDisplay: "short",
+          maximumFractionDigits: 1,
+        })
 
   if (attachments.length === 0) {
     return null

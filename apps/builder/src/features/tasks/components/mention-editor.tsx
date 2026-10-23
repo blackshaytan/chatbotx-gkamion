@@ -80,6 +80,7 @@ type MentionEditorProps = {
   onChange: (text: string) => void
   onSubmit: () => void
   placeholder: string
+  resetKey?: number
   disabled?: boolean
   workspaceId: string
 }
@@ -89,6 +90,7 @@ export const MentionEditor = ({
   onChange,
   onSubmit,
   placeholder,
+  resetKey,
   disabled = false,
   workspaceId,
 }: MentionEditorProps) => {
@@ -116,6 +118,7 @@ export const MentionEditor = ({
     [inboxTeams, workspaceMembers],
   )
   const optionsRef = useRef(options)
+  const previousResetKeyRef = useRef(resetKey)
 
   useEffect(() => {
     optionsRef.current = options
@@ -127,7 +130,12 @@ export const MentionEditor = ({
       Mention.configure({
         renderHTML: ({ node }) => [
           "span",
-          { class: "rounded bg-primary/10 px-1 text-primary" },
+          {
+            "data-id": String(node.attrs.id ?? ""),
+            "data-label": String(node.attrs.label ?? ""),
+            "data-type": "mention",
+            class: "rounded bg-primary/10 px-1 text-primary",
+          },
           `@${node.attrs.label ?? ""}`,
         ],
         renderText: ({ node }) => {
@@ -175,6 +183,18 @@ export const MentionEditor = ({
   useEffect(() => {
     editor?.setEditable(!disabled)
   }, [disabled, editor])
+
+  useEffect(() => {
+    if (
+      resetKey === undefined ||
+      previousResetKeyRef.current === resetKey ||
+      !editor
+    ) {
+      return
+    }
+    previousResetKeyRef.current = resetKey
+    editor.commands.clearContent(false)
+  }, [editor, resetKey])
 
   return <EditorContent editor={editor} />
 }

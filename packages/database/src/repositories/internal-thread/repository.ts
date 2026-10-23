@@ -153,6 +153,7 @@ class InternalThreadRepository {
         and(
           eq(internalMessageModel.workspaceId, workspaceId),
           eq(internalMessageModel.id, id),
+          isNull(internalMessageModel.deletedAt),
         ),
       )
       .returning()

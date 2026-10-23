@@ -18,6 +18,7 @@ import {
 } from "@/features/users/provider/user-hook"
 import { orpc } from "@/lib/orpc/query"
 import { PUBLIC_LIST_MAX_PER_PAGE } from "@/lib/public-api/list"
+import { useInvalidateTasks } from "../hooks/use-invalidate-tasks"
 import { extractApiErrorMessage } from "../lib/extract-api-error-message"
 import { CommentComposer } from "./comment-composer"
 import { CommentItem } from "./comment-item"
@@ -59,6 +60,7 @@ export const TaskFeed = ({ taskId, workspaceId }: TaskFeedProps) => {
   const t = useTranslations("tasks")
   const commonT = useTranslations()
   const formatter = useFormatter()
+  const invalidateTasks = useInvalidateTasks()
   const { data: workspaceMembers = [] } = useWorkspaceMembers(workspaceId)
   const { data: inboxTeams = [] } = useInboxTeams(workspaceId)
   const { data, error, isError, isPending } = useQuery(
@@ -71,10 +73,16 @@ export const TaskFeed = ({ taskId, workspaceId }: TaskFeedProps) => {
       },
     }),
   )
-  const markReadMutation = useMutation(orpc.tasksAPI.markRead.mutationOptions())
+  const { mutate: markRead } = useMutation(
+    orpc.tasksAPI.markRead.mutationOptions({
+      onSuccess: () => invalidateTasks(),
+    }),
+  )
   const lastMarkedReadAt = useRef(0)
+  const lastMarkedReadCommentId = useRef<string | undefined>(undefined)
 
   const comments = useMemo(() => [...(data?.data ?? [])].reverse(), [data])
+  const latestCommentId = data?.data[0]?.id
 
   const resolveEventValue = (value: string | null) => {
     if (!value) {
@@ -109,25 +117,26 @@ export const TaskFeed = ({ taskId, workspaceId }: TaskFeedProps) => {
   }
 
   useEffect(() => {
-    if (!data) {
+    if (
+      !latestCommentId ||
+      latestCommentId === lastMarkedReadCommentId.current
+    ) {
       return
     }
     const now = Date.now()
     const delay = Math.max(0, 2000 - (now - lastMarkedReadAt.current))
-    const markRead = () => {
-      if (markReadMutation.isPending) {
-        return
-      }
+    const handleMarkRead = () => {
       lastMarkedReadAt.current = Date.now()
-      markReadMutation.mutate({ id: taskId, workspaceId })
+      lastMarkedReadCommentId.current = latestCommentId
+      markRead({ id: taskId, workspaceId })
     }
     if (delay === 0) {
-      markRead()
+      handleMarkRead()
       return
     }
-    const timeout = setTimeout(markRead, delay)
+    const timeout = setTimeout(handleMarkRead, delay)
     return () => clearTimeout(timeout)
-  }, [data, markReadMutation, taskId, workspaceId])
+  }, [latestCommentId, markRead, taskId, workspaceId])
 
   return (
     <section className="flex min-h-0 flex-col gap-3">

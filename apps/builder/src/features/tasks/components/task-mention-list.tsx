@@ -1,6 +1,6 @@
 "use client"
 
-import { type Ref, useImperativeHandle, useState } from "react"
+import { type Ref, useEffect, useImperativeHandle, useState } from "react"
 
 export type TaskMentionOption = {
   id: string
@@ -12,11 +12,23 @@ export type TaskMentionListRef = {
   onKeyDown: ({ event }: { event: KeyboardEvent }) => boolean
 }
 
+export type TaskMentionAttributes = {
+  id: string
+  label: string
+}
+
 type TaskMentionListProps = {
   ref: Ref<TaskMentionListRef>
   items: TaskMentionOption[]
-  command: (option: TaskMentionOption) => void
+  command: (attrs: TaskMentionAttributes) => void
 }
+
+export const toTaskMentionAttributes = (
+  option: TaskMentionOption,
+): TaskMentionAttributes => ({
+  id: `${option.kind}:${option.id}`,
+  label: option.label.replaceAll("]", "").slice(0, 100),
+})
 
 export const TaskMentionList = ({
   ref,
@@ -24,13 +36,19 @@ export const TaskMentionList = ({
   command,
 }: TaskMentionListProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const itemIds = items.map((item) => `${item.kind}:${item.id}`).join(",")
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Reset selection whenever available options change.
+  useEffect(() => {
+    setSelectedIndex(0)
+  }, [itemIds])
 
   const selectItem = (index: number) => {
     const option = items[index]
     if (!option) {
       return false
     }
-    command(option)
+    command(toTaskMentionAttributes(option))
     return true
   }
 
@@ -53,6 +71,10 @@ export const TaskMentionList = ({
       return event.key === "Escape"
     },
   }))
+
+  if (items.length === 0) {
+    return null
+  }
 
   return (
     <div className="max-h-60 w-56 overflow-y-auto rounded-md border bg-popover p-1 shadow-md">
