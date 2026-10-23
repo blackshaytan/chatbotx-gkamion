@@ -48,6 +48,9 @@ jobs:
           __tests__/public-spec-mcp.test.ts
           __tests__/external-agent-api.test.ts
           __tests__/tasks-public-api.test.ts
+          __tests__/tasks-private-api.test.ts
+          __tests__/tasks-session.test.ts
+          __tests__/tasks-reminder-presets.test.ts
           __tests__/workspace-token-scope-registry.test.ts
 
       - working-directory: apps/builder

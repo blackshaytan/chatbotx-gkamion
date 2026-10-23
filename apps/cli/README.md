@@ -1190,17 +1190,21 @@ chatbotx spreadsheets headers list <id> <worksheetName>
 ### `tasks` (scope `tasks`)
 
 ```bash
-chatbotx tasks list                                  # [--status open --due overdue --assigneeUserId ...]
+chatbotx tasks list                                  # [--status open --due overdue --assigneeUserId --teamMemberUserId ...]
+chatbotx tasks count                                 # same filters as list; returns { total }
 chatbotx tasks create --title "..." --assigneeUserId <userId>   # or --assigneeTeamId; [--conversationId --messageId]
 chatbotx tasks get <id>
 chatbotx tasks update <id> --status in_progress
 chatbotx tasks complete add <id>
+chatbotx tasks take add <id> --userId <userId>       # claim a team-assigned task for a member
 chatbotx tasks delete <id>
 chatbotx tasks watcher add <id> --userId <userId>
 chatbotx tasks watcher delete <id> <userId>
 chatbotx tasks comments list <id>
 chatbotx tasks comment add <id> --text "..."
 ```
+
+List/count responses include task `url` (web UI link) and contact `label` on visible contact targets.
 
 ---
 
