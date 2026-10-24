@@ -55,6 +55,7 @@ type NotificationListProps = {
   loading: boolean
   onMarkAllRead: () => void
   onSelect: (item: NotificationItem) => void
+  totalUnread: number
   workspaceId: string
 }
 
@@ -63,6 +64,7 @@ export const NotificationList = ({
   loading,
   onMarkAllRead,
   onSelect,
+  totalUnread,
   workspaceId,
 }: NotificationListProps) => {
   const t = useTranslations("notifications")
@@ -70,7 +72,6 @@ export const NotificationList = ({
   const commonT = useTranslations()
   const formatter = useFormatter()
   const { data: workspaceMembers = [] } = useWorkspaceMembers(workspaceId)
-  const hasUnread = items.some((item) => item.readAt === null)
 
   const resolveActor = (item: NotificationItem): string => {
     if (item.payload.actorUserId) {
@@ -129,7 +130,7 @@ export const NotificationList = ({
       <div className="flex items-center justify-between border-b px-2 pb-2">
         <h2 className="font-semibold">{t("title")}</h2>
         <Button
-          disabled={!hasUnread}
+          disabled={totalUnread === 0}
           onClick={onMarkAllRead}
           size="sm"
           variant="ghost"
@@ -159,9 +160,14 @@ export const NotificationList = ({
               <span className="min-w-0 flex-1 space-y-1">
                 <span className={item.readAt ? "block" : "block font-medium"}>
                   {t(
-                    notificationTextKeyByType[item.type],
+                    item.type === "taskDueChanged" && item.payload.to === null
+                      ? "items.taskDueRemoved"
+                      : notificationTextKeyByType[item.type],
                     resolveTextParams(item),
                   )}
+                  {item.readAt === null ? (
+                    <span className="sr-only"> {t("unread")}</span>
+                  ) : null}
                 </span>
                 {item.payload.excerpt ? (
                   <span className="line-clamp-2 block text-muted-foreground text-xs">

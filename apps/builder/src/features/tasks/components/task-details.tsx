@@ -33,6 +33,7 @@ import Link from "next/link"
 import { useFormatter, useTranslations } from "next-intl"
 import { type FormEvent, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
+import { useInvalidateNotifications } from "@/features/notifications/hooks/use-invalidate-notifications"
 import {
   useContactAssigneeOptions,
   useWorkspaceMembers,
@@ -83,6 +84,7 @@ export const TaskDetails = ({
   const t = useTranslations("tasks")
   const commonT = useTranslations()
   const formatter = useFormatter()
+  const invalidateNotifications = useInvalidateNotifications()
   const invalidateTasks = useInvalidateTasks()
   const queryClient = useQueryClient()
   const { data: workspaceMembers = [] } = useWorkspaceMembers(workspaceId)
@@ -175,8 +177,8 @@ export const TaskDetails = ({
             input: { id: taskId, page: 1, workspaceId },
           }),
         })
+        await Promise.all([invalidateTasks(), invalidateNotifications()])
         onDeleted?.()
-        await invalidateTasks()
       },
     }),
   )

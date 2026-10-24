@@ -46,6 +46,7 @@ export const NotificationBell = ({ workspaceId }: { workspaceId: string }) => {
   const { data: notifications, isPending } = useQuery(
     orpc.notificationsAPI.list.queryOptions({
       input: { workspaceId, limit: 20 },
+      enabled: open,
     }),
   )
   const markReadMutation = useMutation(
@@ -85,11 +86,18 @@ export const NotificationBell = ({ workspaceId }: { workspaceId: string }) => {
             render={
               <SidebarMenuButton
                 aria-label={t("bellAriaLabel", { count: total })}
-                className="h-9"
-                tooltip={t("title")}
+                className="relative h-9"
               >
                 <BellIcon />
                 <span>{t("title")}</span>
+                {total > 0 ? (
+                  <span
+                    aria-hidden="true"
+                    className="absolute end-0 top-0 hidden h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground tabular-nums group-data-[collapsible=icon]:flex"
+                  >
+                    {badge}
+                  </span>
+                ) : null}
               </SidebarMenuButton>
             }
           />
@@ -105,6 +113,7 @@ export const NotificationBell = ({ workspaceId }: { workspaceId: string }) => {
               loading={isPending}
               onMarkAllRead={() => markAllReadMutation.mutate({ workspaceId })}
               onSelect={handleSelect}
+              totalUnread={total}
               workspaceId={workspaceId}
             />
           </PopoverContent>

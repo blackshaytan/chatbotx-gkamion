@@ -9162,6 +9162,7 @@
     "bellAriaLabel": "Notifications, {count} unread",
     "empty": "No notifications",
     "markAllRead": "Mark all as read",
+    "unread": "Unread",
     "system": "System",
     "items": {
       "taskAssigned": "{actor} assigned you the task “{task}”",
@@ -9169,6 +9170,7 @@
       "taskCommented": "{actor} added a comment to “{task}”",
       "taskStatusChanged": "Status of “{task}”: {from} → {to}",
       "taskDueChanged": "Due date for “{task}” changed to {date}",
+      "taskDueRemoved": "Due date removed from “{task}”",
       "taskReminder": "Reminder for “{task}”",
       "taskOverdue": "Task “{task}” is overdue"
     },

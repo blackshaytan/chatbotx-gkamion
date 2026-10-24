@@ -9162,6 +9162,7 @@
     "bellAriaLabel": "Уведомления, непрочитанных: {count}",
     "empty": "Уведомлений нет",
     "markAllRead": "Прочитать всё",
+    "unread": "Не прочитано",
     "system": "Система",
     "items": {
       "taskAssigned": "{actor} назначил(а) вам задачу «{task}»",
@@ -9169,6 +9170,7 @@
       "taskCommented": "{actor} добавил(а) комментарий к задаче «{task}»",
       "taskStatusChanged": "Статус задачи «{task}»: {from} → {to}",
       "taskDueChanged": "Срок задачи «{task}» изменён: {date}",
+      "taskDueRemoved": "Срок задачи «{task}» удалён",
       "taskReminder": "Напоминание о задаче «{task}»",
       "taskOverdue": "Задача «{task}» просрочена"
     },
