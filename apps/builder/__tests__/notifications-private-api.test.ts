@@ -150,6 +150,20 @@ describe("notification private API", () => {
     })
   })
 
+  test("list query parses unreadOnly string booleans", async () => {
+    const { listNotificationsRequest } = await import(
+      "@/features/notifications/schema/query"
+    )
+    const parse = (unreadOnly: unknown) =>
+      listNotificationsRequest.parse({ workspaceId: "2", unreadOnly })
+        .unreadOnly
+
+    expect(parse("false")).toBe(false)
+    expect(parse("true")).toBe(true)
+    expect(parse(false)).toBe(false)
+    expect(parse(undefined)).toBeUndefined()
+  })
+
   test("workspace middleware protects every procedure", () => {
     expect(capturedProcedures).toHaveLength(6)
     expect(capturedProcedures.every((procedure) => procedure.protected)).toBe(

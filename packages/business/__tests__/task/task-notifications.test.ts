@@ -46,7 +46,9 @@ vi.mock("../../src/audit/dispatcher", () => ({ dispatchAuditRecord: vi.fn() }))
 
 const { taskService } = await import("../../src/task/service")
 const { notificationService } = await import("../../src/notification/service")
-
+const { internalThreadService } = await import(
+  "../../src/internal-thread/service"
+)
 const storedTask = () => ({
   id: "t-1",
   workspaceId: "ws-1",
@@ -91,6 +93,9 @@ beforeEach(() => {
     },
   ])
   repo.notification.insertMany.mockResolvedValue([{ id: "n-1", userId: "w-1" }])
+  repo.task.listTeamIds.mockImplementation(
+    async ({ teamIds }: { teamIds: string[] }) => teamIds,
+  )
 })
 
 describe("taskService notifications", () => {
@@ -106,6 +111,76 @@ describe("taskService notifications", () => {
       entityType: "task",
       entityId: "t-1",
       tx: "tx",
+    })
+  })
+
+  test("addComment still succeeds when mention expansion fails", async () => {
+    repo.thread.insertMessages.mockResolvedValue([
+      {
+        id: "m-1",
+        kind: "comment",
+        authorUserId: "u-2",
+        authorLabel: null,
+        text: "hello @team",
+        mentions: { userIds: [], teamIds: ["team-1"] },
+        attachments: [],
+        systemEvent: null,
+        editedAt: null,
+        deletedAt: null,
+        createdAt: new Date(),
+      },
+    ])
+    repo.teamMembers.listUserIdsByTeamId.mockRejectedValueOnce(
+      new Error("team lookup failed"),
+    )
+
+    const comment = await taskService.addComment({
+      workspaceId: "ws-1",
+      id: "t-1",
+      text: "hello @team",
+      actor: { kind: "user", userId: "u-2", isOwner: false },
+    })
+
+    expect(comment.id).toBe("m-1")
+    expect(repo.notification.insertMany).not.toHaveBeenCalled()
+  })
+
+  test("create still succeeds when assignee expansion fails", async () => {
+    repo.teamMembers.listUserIdsByTeamId.mockRejectedValueOnce(
+      new Error("team lookup failed"),
+    )
+
+    const created = await taskService.create({
+      workspaceId: "ws-1",
+      title: "Task title",
+      assignee: { type: "team", teamId: "team-1" },
+      actor: { kind: "user", userId: "u-1", isOwner: true },
+    })
+
+    expect(created.id).toBe("t-1")
+    expect(repo.teamMembers.listUserIdsByTeamId).toHaveBeenCalled()
+    expect(repo.notification.insertMany).not.toHaveBeenCalled()
+  })
+
+  test("updateComment scopes the previous message lookup to the task thread", async () => {
+    repo.thread.findMessage.mockResolvedValue(null)
+    vi.spyOn(internalThreadService, "editComment").mockResolvedValueOnce({
+      id: "m-1",
+      mentions: { userIds: [], teamIds: [] },
+    } as never)
+
+    await taskService.updateComment({
+      workspaceId: "ws-1",
+      id: "t-1",
+      commentId: "m-1",
+      text: "edited",
+      actor: { kind: "user", userId: "u-2", isOwner: false },
+    })
+
+    expect(repo.thread.findMessage).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      threadId: "th-1",
+      id: "m-1",
     })
   })
 

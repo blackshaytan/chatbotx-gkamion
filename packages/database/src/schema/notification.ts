@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm"
 import { index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import type {
   NotificationPayload,
@@ -34,12 +35,14 @@ export const notificationModel = pgTable(
     readAt: timestamp(timestampConfig),
   },
   (table) => [
-    index("Notification_userId_workspaceId_readAt_createdAt_idx").on(
+    index("Notification_userId_workspaceId_createdAt_idx").on(
       table.userId,
       table.workspaceId,
-      table.readAt,
-      table.createdAt,
+      table.createdAt.desc(),
     ),
+    index("Notification_userId_workspaceId_unread_idx")
+      .on(table.userId, table.workspaceId)
+      .where(sql`"readAt" IS NULL`),
     index("Notification_workspaceId_entityType_entityId_idx").on(
       table.workspaceId,
       table.entityType,

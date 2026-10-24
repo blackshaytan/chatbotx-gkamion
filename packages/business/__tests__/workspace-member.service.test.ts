@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => {
     listPermissionsByUserIds: vi.fn(),
     markOnlineBulk: vi.fn(),
     reassignFromMember: vi.fn(),
+    deleteNotificationsForUser: vi.fn(),
     transactionClient: {} as Record<string, unknown>,
   }
 })
@@ -68,6 +69,9 @@ vi.mock("@chatbotx.io/database/schema", () => ({
 }))
 
 vi.mock("@chatbotx.io/database/repositories", () => ({
+  notificationRepository: {
+    deleteForUser: mocks.deleteNotificationsForUser,
+  },
   workspaceMemberRepository: {
     listPermissionsByUserIds: mocks.listPermissionsByUserIds,
     markOnlineBulk: mocks.markOnlineBulk,
@@ -193,6 +197,19 @@ describe("workspaceMemberService.delete", () => {
     })
 
     expect(mocks.reassignFromMember).toHaveBeenCalledWith({
+      workspaceId: "workspace-1",
+      userId: "user-ada",
+      tx: mocks.transactionClient,
+    })
+  })
+
+  test("deletes the member's notifications in the delete transaction", async () => {
+    await workspaceMemberService.delete({
+      id: "member-1",
+      workspaceId: "workspace-1",
+    })
+
+    expect(mocks.deleteNotificationsForUser).toHaveBeenCalledWith({
       workspaceId: "workspace-1",
       userId: "user-ada",
       tx: mocks.transactionClient,

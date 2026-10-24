@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "44607d4e-710d-4332-a0f4-fd5e24ed9348",
+  "id": "de87e656-e3fc-4efd-babe-c375574d7842",
   "prevIds": [
     "0ae8bbbb-32a5-45ec-898f-307fa6f85942"
   ],
@@ -2243,12 +2243,6 @@
     },
     {
       "isRlsEnabled": false,
-      "name": "Notification",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
       "name": "MinigameContact",
       "entityType": "tables",
       "schema": "public"
@@ -2256,6 +2250,12 @@
     {
       "isRlsEnabled": false,
       "name": "MinigamePlay",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "Notification",
       "entityType": "tables",
       "schema": "public"
     },
@@ -28272,136 +28272,6 @@
       "name": "id",
       "entityType": "columns",
       "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "type": "timestamp(6) with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "createdAt",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "type": "timestamp(6) with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "updatedAt",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "type": "bigint",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "workspaceId",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "type": "bigint",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "userId",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "type",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "entityType",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "type": "bigint",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "entityId",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "payload",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "type": "timestamp(6) with time zone",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "readAt",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "type": "bigint",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
       "table": "MinigameContact"
     },
     {
@@ -28637,6 +28507,136 @@
       "entityType": "columns",
       "schema": "public",
       "table": "MinigamePlay"
+    },
+    {
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "type": "timestamp(6) with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "createdAt",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "type": "timestamp(6) with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updatedAt",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "workspaceId",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "userId",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "entityType",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "entityId",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "payload",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "type": "timestamp(6) with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "readAt",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "Notification"
     },
     {
       "type": "bigint",
@@ -45786,104 +45786,6 @@
       "nameExplicit": true,
       "columns": [
         {
-          "value": "userId",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "workspaceId",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "readAt",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "createdAt",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "Notification_userId_workspaceId_readAt_createdAt_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "workspaceId",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "entityType",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "entityId",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "Notification_workspaceId_entityType_entityId_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "createdAt",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "Notification_createdAt_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
           "value": "minigameId",
           "isExpression": false,
           "asc": true,
@@ -45998,6 +45900,125 @@
       "entityType": "indexes",
       "schema": "public",
       "table": "MinigamePlay"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "userId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "workspaceId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "createdAt",
+          "isExpression": false,
+          "asc": false,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "Notification_userId_workspaceId_createdAt_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "userId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "workspaceId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": "\"readAt\" IS NULL",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "Notification_userId_workspaceId_unread_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "workspaceId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "entityType",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "entityId",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "Notification_workspaceId_entityType_entityId_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "createdAt",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "Notification_createdAt_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "Notification"
     },
     {
       "nameExplicit": true,
@@ -47402,6 +47423,48 @@
       "method": "btree",
       "concurrently": false,
       "name": "Task_workspaceId_dueAt_open_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "Task"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "remindAt",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": "\"remindedAt\" IS NULL AND \"remindAt\" IS NOT NULL AND \"status\" IN ('todo', 'in_progress')",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "Task_remindAt_pending_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "Task"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "dueAt",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": "\"overdueNotifiedAt\" IS NULL AND \"dueAt\" IS NOT NULL AND \"status\" IN ('todo', 'in_progress')",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "Task_dueAt_overdue_pending_idx",
       "entityType": "indexes",
       "schema": "public",
       "table": "Task"
@@ -54769,40 +54832,6 @@
     {
       "nameExplicit": false,
       "columns": [
-        "workspaceId"
-      ],
-      "schemaTo": "public",
-      "tableTo": "Workspace",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "CASCADE",
-      "onDelete": "CASCADE",
-      "name": "Notification_workspaceId_Workspace_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "userId"
-      ],
-      "schemaTo": "public",
-      "tableTo": "User",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "CASCADE",
-      "onDelete": "CASCADE",
-      "name": "Notification_userId_User_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "Notification"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
         "minigameId"
       ],
       "schemaTo": "public",
@@ -54901,6 +54930,40 @@
       "entityType": "fks",
       "schema": "public",
       "table": "MinigamePlay"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "workspaceId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "Workspace",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "CASCADE",
+      "onDelete": "CASCADE",
+      "name": "Notification_workspaceId_Workspace_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "Notification"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "userId"
+      ],
+      "schemaTo": "public",
+      "tableTo": "User",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "CASCADE",
+      "onDelete": "CASCADE",
+      "name": "Notification_userId_User_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "Notification"
     },
     {
       "nameExplicit": false,
@@ -58318,16 +58381,6 @@
         "id"
       ],
       "nameExplicit": false,
-      "name": "Notification_pkey",
-      "schema": "public",
-      "table": "Notification",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
       "name": "MinigameContact_pkey",
       "schema": "public",
       "table": "MinigameContact",
@@ -58341,6 +58394,16 @@
       "name": "MinigamePlay_pkey",
       "schema": "public",
       "table": "MinigamePlay",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "Notification_pkey",
+      "schema": "public",
+      "table": "Notification",
       "entityType": "pks"
     },
     {

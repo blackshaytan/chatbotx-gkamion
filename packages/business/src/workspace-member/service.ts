@@ -7,6 +7,7 @@ import {
 } from "@chatbotx.io/database/client"
 import { workspaceMemberRoles } from "@chatbotx.io/database/partials"
 import {
+  notificationRepository,
   type WorkspaceMemberPermissionsRow,
   workspaceMemberRepository,
 } from "@chatbotx.io/database/repositories"
@@ -105,6 +106,14 @@ export class WorkspaceMemberService extends BaseService {
         where: { id, workspaceId },
         with: { user: true },
       })
+
+      if (found) {
+        await notificationRepository.deleteForUser({
+          workspaceId,
+          userId: found.userId,
+          tx,
+        })
+      }
 
       await tx
         .delete(workspaceMemberModel)

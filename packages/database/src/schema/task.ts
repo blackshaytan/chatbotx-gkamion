@@ -91,6 +91,16 @@ export const taskModel = pgTable(
     index("Task_workspaceId_dueAt_open_idx")
       .on(table.workspaceId, table.dueAt)
       .where(sql`"status" IN ('todo', 'in_progress')`),
+    index("Task_remindAt_pending_idx")
+      .on(table.remindAt)
+      .where(
+        sql`"remindedAt" IS NULL AND "remindAt" IS NOT NULL AND "status" IN ('todo', 'in_progress')`,
+      ),
+    index("Task_dueAt_overdue_pending_idx")
+      .on(table.dueAt)
+      .where(
+        sql`"overdueNotifiedAt" IS NULL AND "dueAt" IS NOT NULL AND "status" IN ('todo', 'in_progress')`,
+      ),
     // At most one assignee. A deleted User/team nulls its FK; the service
     // reassigns to the owner when a member is removed or a team is deleted.
     check(

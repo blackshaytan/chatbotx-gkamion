@@ -11,7 +11,7 @@ describe("resolveTaskNotificationRecipients", () => {
       watcherUserIds: [],
       memberUserIds: members,
     })
-    expect(map.get("2")).toBe("taskAssigned")
+    expect(map.get("2")).toEqual(["taskAssigned"])
   })
 
   test("excludes the actor", () => {
@@ -31,8 +31,8 @@ describe("resolveTaskNotificationRecipients", () => {
       watcherUserIds: [],
       memberUserIds: members,
     })
-    expect(map.get("2")).toBe("taskAssigned")
-    expect(map.get("3")).toBe("taskAssigned")
+    expect(map.get("2")).toEqual(["taskAssigned"])
+    expect(map.get("3")).toEqual(["taskAssigned"])
   })
 
   test("mention plus comment collapses to taskMentioned for overlap", () => {
@@ -42,8 +42,8 @@ describe("resolveTaskNotificationRecipients", () => {
       watcherUserIds: ["2", "3"],
       memberUserIds: members,
     })
-    expect(map.get("2")).toBe("taskMentioned")
-    expect(map.get("3")).toBe("taskCommented")
+    expect(map.get("2")).toEqual(["taskMentioned"])
+    expect(map.get("3")).toEqual(["taskCommented"])
   })
 
   test("status change goes to watchers", () => {
@@ -53,8 +53,8 @@ describe("resolveTaskNotificationRecipients", () => {
       watcherUserIds: ["2", "3"],
       memberUserIds: members,
     })
-    expect(map.get("2")).toBe("taskStatusChanged")
-    expect(map.get("3")).toBe("taskStatusChanged")
+    expect(map.get("2")).toEqual(["taskStatusChanged"])
+    expect(map.get("3")).toEqual(["taskStatusChanged"])
   })
 
   test("due change goes to watchers", () => {
@@ -64,7 +64,7 @@ describe("resolveTaskNotificationRecipients", () => {
       watcherUserIds: ["4"],
       memberUserIds: members,
     })
-    expect(map.get("4")).toBe("taskDueChanged")
+    expect(map.get("4")).toEqual(["taskDueChanged"])
   })
 
   test("filters non-members", () => {
@@ -87,6 +87,8 @@ describe("resolveTaskNotificationRecipients", () => {
       watcherUserIds: [],
       memberUserIds: members,
     })
-    expect(map.get("2")).toBe("taskMentioned")
+    expect(map.get("2")).toEqual(
+      expect.arrayContaining(["taskAssigned", "taskMentioned"]),
+    )
   })
 })

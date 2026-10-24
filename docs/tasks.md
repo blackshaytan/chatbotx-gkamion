@@ -89,14 +89,14 @@ Per-member toggles live in `WorkspaceMember.notificationTypes` next to existing 
 
 ### Reminders and overdue
 
-- Worker schedule **`taskDueScan`** runs **every minute** under a distributed lock. It claims tasks in batches (`claimDueReminders` / `claimOverdue` set `remindedAt` / `overdueNotifiedAt` in the same `UPDATE … RETURNING`).
+- Worker schedule **`taskDueScan`** runs **every minute** under a distributed lock and calls `notificationService.processDueTaskNotifications`, which claims tasks in batches (`claimDueReminders` / `claimOverdue` set `remindedAt` / `overdueNotifiedAt` in the same `UPDATE … RETURNING`). The `team_task_notifications` migration stamps both flags on tasks already past their reminder/due time, so the first scan after deploy does not notify the backlog.
 - Each task is notified **at most once** per reminder or overdue cycle until the due/reminder fields change (task updates clear the corresponding flag so a moved due date can fire again).
 - **`withBlockedOwnerGuard`** skips notification delivery for blocked owners (same pattern as broadcasts). The claim flag is set **before** that guard runs, so a blocked workspace **does not** get that reminder/overdue notification and will not retry until the schedule is reset by editing the task.
 - Completed/canceled tasks are not claimed. **`purgeOldNotifications`** (daily) deletes rows older than **90 days** in batches.
 
 ### In-app center
 
-Signed-in members use the private **`notificationsAPI`** (`list`, `countUnread`, `markRead`, `markAllRead`, `getPreferences`, `updatePreferences`) — same service methods as the worker/task hooks, scoped to `context.user.id`. The sidebar **bell** (above the profile menu) shows unread count, a popover list, **Mark all read**, and navigation to the task on click (marks read). Realtime **`notificationCreated`** refreshes the list without reload (`useInvalidateNotifications`).
+Signed-in members use the private **`notificationsAPI`** (`list`, `countUnread`, `markRead`, `markAllRead`, `getPreferences`, `updatePreferences`) — same service methods as the worker/task hooks, scoped to `context.user.id`. The sidebar **bell** (above the profile menu) shows unread count, a popover list, **Mark all read**, and navigation to the task on click (marks read). Realtime **`notificationCreated`** refreshes the list without reload (`useInvalidateNotifications`). Deploy **`apps/realtime`** together with builder when shipping notification center changes so `REALTIME_EVENT_TOPICS` includes `notificationCreated` on the workspace party.
 
 There is **no public API** for the notification center or personal notification settings (spec section 6): these are per-user UI state, like `tasks.markRead`, not workspace-token operations for agents.
 

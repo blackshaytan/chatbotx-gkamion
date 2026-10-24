@@ -100,6 +100,22 @@ class NotificationRepository {
     await tx.update(notificationModel).set({ readAt: sql`now()` }).where(scope)
   }
 
+  async deleteForUser(props: {
+    workspaceId: string
+    userId: string
+    tx?: DatabaseClient
+  }): Promise<void> {
+    const { workspaceId, userId, tx = db } = props
+    await tx
+      .delete(notificationModel)
+      .where(
+        and(
+          eq(notificationModel.workspaceId, workspaceId),
+          eq(notificationModel.userId, userId),
+        ),
+      )
+  }
+
   async deleteByEntity(props: {
     workspaceId: string
     entityType: "task"

@@ -29,7 +29,10 @@ import { systemMessageRow } from "../internal-thread/message-rows"
 import { internalThreadService } from "../internal-thread/service"
 import type { InternalMessageView } from "../internal-thread/view"
 import { formatCommentExcerpt } from "../notification/excerpt"
-import { notificationService, notifyTaskSafe } from "../notification/service"
+import {
+  notificationService,
+  notifyTaskSafeLazy,
+} from "../notification/service"
 import { actorLabel, actorUserId, type TaskActor } from "./actor"
 import {
   assertRemindBeforeDue,
@@ -182,13 +185,16 @@ class TaskService extends BaseService {
     })
 
     await this.audit("create", `created a task (#${taskId})`)
-    const assigneeUserIds = await listAssigneeUserIds({
-      workspaceId,
-      assigneeUserId: assignee.type === "user" ? assignee.userId : null,
-      assigneeTeamId: assignee.type === "team" ? assignee.teamId : null,
-    })
-    if (assigneeUserIds.length > 0) {
-      await notifyTaskSafe({
+    await notifyTaskSafeLazy(async () => {
+      const assigneeUserIds = await listAssigneeUserIds({
+        workspaceId,
+        assigneeUserId: assignee.type === "user" ? assignee.userId : null,
+        assigneeTeamId: assignee.type === "team" ? assignee.teamId : null,
+      })
+      if (assigneeUserIds.length === 0) {
+        return null
+      }
+      return {
         workspaceId,
         task: {
           id: taskId,
@@ -199,8 +205,8 @@ class TaskService extends BaseService {
         },
         actor,
         events: [{ kind: "assigned", userIds: assigneeUserIds }],
-      })
-    }
+      }
+    })
     return await this.get({
       workspaceId,
       id: taskId,
@@ -336,14 +342,17 @@ class TaskService extends BaseService {
         })
       })
       await this.audit("update", `updated a task (#${id})`)
-      const notifyEvents = await buildNotifyEventsFromChanges({
-        workspaceId,
-        events,
-      })
-      if (notifyEvents.length > 0) {
+      await notifyTaskSafeLazy(async () => {
+        const notifyEvents = await buildNotifyEventsFromChanges({
+          workspaceId,
+          events,
+        })
+        if (notifyEvents.length === 0) {
+          return null
+        }
         const statusBounds = pickStatusChangeBounds(events)
         const dueBounds = pickDueChangeBounds(events)
-        await notifyTaskSafe({
+        return {
           workspaceId,
           task: {
             id,
@@ -362,8 +371,8 @@ class TaskService extends BaseService {
           events: notifyEvents,
           from: statusBounds?.from ?? dueBounds?.from ?? null,
           to: statusBounds?.to ?? dueBounds?.to ?? null,
-        })
-      }
+        }
+      })
     }
     return await this.get({ workspaceId, id, accessScope: input.accessScope })
   }
@@ -500,29 +509,31 @@ class TaskService extends BaseService {
       })
       return posted
     })
-    const mentionUserIds = await expandMentionUserIds({
-      workspaceId: input.workspaceId,
-      userIds: comment.mentions.userIds,
-      teamIds: comment.mentions.teamIds,
-    })
-    const events = [
-      ...(mentionUserIds.length > 0
-        ? [{ kind: "mentioned" as const, userIds: mentionUserIds }]
-        : []),
-      { kind: "commented" as const },
-    ]
-    await notifyTaskSafe({
-      workspaceId: input.workspaceId,
-      task: {
-        id: task.id,
-        title: task.title,
-        assigneeUserId: task.assigneeUserId,
-        assigneeTeamId: task.assigneeTeamId,
-        createdByUserId: task.createdByUserId,
-      },
-      actor: input.actor,
-      events,
-      excerpt: formatCommentExcerpt(input.text),
+    await notifyTaskSafeLazy(async () => {
+      const mentionUserIds = await expandMentionUserIds({
+        workspaceId: input.workspaceId,
+        userIds: comment.mentions.userIds,
+        teamIds: comment.mentions.teamIds,
+      })
+      const events = [
+        ...(mentionUserIds.length > 0
+          ? [{ kind: "mentioned" as const, userIds: mentionUserIds }]
+          : []),
+        { kind: "commented" as const },
+      ]
+      return {
+        workspaceId: input.workspaceId,
+        task: {
+          id: task.id,
+          title: task.title,
+          assigneeUserId: task.assigneeUserId,
+          assigneeTeamId: task.assigneeTeamId,
+          createdByUserId: task.createdByUserId,
+        },
+        actor: input.actor,
+        events,
+        excerpt: formatCommentExcerpt(input.text),
+      }
     })
     return comment
   }
@@ -537,6 +548,7 @@ class TaskService extends BaseService {
     const task = await this.findOrFail(input)
     const previousMessage = await internalThreadRepository.findMessage({
       workspaceId: input.workspaceId,
+      threadId: task.threadId,
       id: input.commentId,
     })
     const comment = await db.transaction(async (tx) => {
@@ -565,13 +577,16 @@ class TaskService extends BaseService {
     const newTeamIds = comment.mentions.teamIds.filter(
       (teamId) => !previousTeams.has(teamId),
     )
-    const mentionUserIds = await expandMentionUserIds({
-      workspaceId: input.workspaceId,
-      userIds: newUserIds,
-      teamIds: newTeamIds,
-    })
-    if (mentionUserIds.length > 0) {
-      await notifyTaskSafe({
+    await notifyTaskSafeLazy(async () => {
+      const mentionUserIds = await expandMentionUserIds({
+        workspaceId: input.workspaceId,
+        userIds: newUserIds,
+        teamIds: newTeamIds,
+      })
+      if (mentionUserIds.length === 0) {
+        return null
+      }
+      return {
         workspaceId: input.workspaceId,
         task: {
           id: task.id,
@@ -583,8 +598,8 @@ class TaskService extends BaseService {
         actor: input.actor,
         events: [{ kind: "mentioned", userIds: mentionUserIds }],
         excerpt: formatCommentExcerpt(input.text),
-      })
-    }
+      }
+    })
     return comment
   }
 

@@ -32,14 +32,16 @@ const EVENT_TO_TYPE: Record<
   overdue: "taskOverdue",
 }
 
-const pickHigherPriority = (
-  current: TaskNotificationType | undefined,
-  next: TaskNotificationType,
+export const pickHighestPriorityType = (
+  types: TaskNotificationType[],
 ): TaskNotificationType => {
-  if (!current) {
-    return next
+  let best = types[0]
+  for (const type of types.slice(1)) {
+    if (TYPE_PRIORITY[type] > TYPE_PRIORITY[best]) {
+      best = type
+    }
   }
-  return TYPE_PRIORITY[next] > TYPE_PRIORITY[current] ? next : current
+  return best
 }
 
 export const resolveTaskNotificationRecipients = (input: {
@@ -47,7 +49,7 @@ export const resolveTaskNotificationRecipients = (input: {
   events: TaskNotificationActionEvent[]
   watcherUserIds: string[]
   memberUserIds: ReadonlySet<string>
-}): Map<string, TaskNotificationType> => {
+}): Map<string, TaskNotificationType[]> => {
   const { actorUserId, events, watcherUserIds, memberUserIds } = input
   const mentionedUserIds = new Set<string>()
   for (const event of events) {
@@ -58,14 +60,17 @@ export const resolveTaskNotificationRecipients = (input: {
     }
   }
 
-  const recipients = new Map<string, TaskNotificationType>()
+  const recipients = new Map<string, TaskNotificationType[]>()
 
   const addUsers = (userIds: string[], type: TaskNotificationType) => {
     for (const userId of userIds) {
       if (!memberUserIds.has(userId)) {
         continue
       }
-      recipients.set(userId, pickHigherPriority(recipients.get(userId), type))
+      const existing = recipients.get(userId) ?? []
+      if (!existing.includes(type)) {
+        recipients.set(userId, [...existing, type])
+      }
     }
   }
 

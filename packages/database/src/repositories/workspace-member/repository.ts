@@ -45,12 +45,6 @@ class WorkspaceMemberRepository {
       )
   }
 
-  /**
-   * Stamps onlineSince = now() in one bulk UPDATE for the offline->online
-   * subset only; no "mark offline" write since Redis is the source of truth.
-   * No existence check, so a synthetic support membership (no real row) is a
-   * silent no-op for that id only, not the whole batch.
-   */
   async listNotificationTypesByUserIds(props: {
     workspaceId: string
     userIds: string[]
@@ -103,9 +97,9 @@ class WorkspaceMemberRepository {
     userId: string
     notificationTypes: Partial<WorkspaceMemberNotificationTypes>
     tx?: DatabaseClient
-  }): Promise<void> {
+  }): Promise<number> {
     const { workspaceId, userId, notificationTypes, tx = db } = props
-    await tx
+    const updated = await tx
       .update(workspaceMemberModel)
       .set({
         notificationTypes:
@@ -117,8 +111,16 @@ class WorkspaceMemberRepository {
           eq(workspaceMemberModel.userId, userId),
         ),
       )
+      .returning({ id: workspaceMemberModel.id })
+    return updated.length
   }
 
+  /**
+   * Stamps onlineSince = now() in one bulk UPDATE for the offline->online
+   * subset only; no "mark offline" write since Redis is the source of truth.
+   * No existence check, so a synthetic support membership (no real row) is a
+   * silent no-op for that id only, not the whole batch.
+   */
   async markOnlineBulk(props: {
     workspaceId: string
     userIds: string[]

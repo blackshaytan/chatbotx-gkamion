@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
-  claimDueReminders: vi.fn(),
-  claimOverdue: vi.fn(),
-  notifyTaskReminder: vi.fn(),
-  notifyTaskOverdue: vi.fn(),
+  processDueTaskNotifications: vi.fn(),
   purgeOlderThan: vi.fn(),
   withBlockedOwnerGuard: vi.fn(
     async (_workspaceId: string, fn: () => Promise<void>) => {
@@ -18,17 +15,9 @@ const mocks = vi.hoisted(() => ({
   loggerInfo: vi.fn(),
 }))
 
-vi.mock("@chatbotx.io/database/repositories", () => ({
-  taskRepository: {
-    claimDueReminders: mocks.claimDueReminders,
-    claimOverdue: mocks.claimOverdue,
-  },
-}))
-
 vi.mock("@chatbotx.io/business", () => ({
   notificationService: {
-    notifyTaskReminder: mocks.notifyTaskReminder,
-    notifyTaskOverdue: mocks.notifyTaskOverdue,
+    processDueTaskNotifications: mocks.processDueTaskNotifications,
     purgeOlderThan: mocks.purgeOlderThan,
   },
   withBlockedOwnerGuard: mocks.withBlockedOwnerGuard,
@@ -53,23 +42,13 @@ const { purgeOldNotifications } = await import(
   "../src/schedule/handlers/purge-old-notifications"
 )
 
-const makeTask = (overrides: Record<string, unknown> = {}) => ({
-  id: "task-1",
-  workspaceId: "ws-1",
-  title: "Reminder task",
-  assigneeUserId: "user-1",
-  assigneeTeamId: null,
-  createdByUserId: "user-2",
-  ...overrides,
-})
-
 describe("taskDueScan", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.claimDueReminders.mockResolvedValue([])
-    mocks.claimOverdue.mockResolvedValue([])
-    mocks.notifyTaskReminder.mockResolvedValue(undefined)
-    mocks.notifyTaskOverdue.mockResolvedValue(undefined)
+    mocks.processDueTaskNotifications.mockResolvedValue({
+      reminders: 0,
+      overdue: 0,
+    })
   })
 
   test("uses distributed lock with the task due scan key", async () => {
@@ -80,54 +59,25 @@ describe("taskDueScan", () => {
     )
   })
 
-  test("sends a reminder only once when claim returns empty on the second run", async () => {
-    mocks.claimDueReminders
-      .mockResolvedValueOnce([makeTask()])
-      .mockResolvedValueOnce([])
-    mocks.claimOverdue.mockResolvedValue([])
-
-    await taskDueScan()
-    await taskDueScan()
-
-    expect(mocks.notifyTaskReminder).toHaveBeenCalledTimes(1)
-  })
-
-  test("sends overdue only once when claim returns empty on the second run", async () => {
-    mocks.claimDueReminders.mockResolvedValue([])
-    mocks.claimOverdue
-      .mockResolvedValueOnce([makeTask({ id: "task-overdue" })])
-      .mockResolvedValueOnce([])
-
-    await taskDueScan()
-    await taskDueScan()
-
-    expect(mocks.notifyTaskOverdue).toHaveBeenCalledTimes(1)
-  })
-
-  test("skips notification delivery for blocked workspaces", async () => {
-    mocks.claimDueReminders.mockResolvedValueOnce([makeTask()])
-    mocks.withBlockedOwnerGuard.mockImplementationOnce(() => Promise.resolve())
+  test("delegates scan batches to notificationService under the guard", async () => {
+    mocks.processDueTaskNotifications.mockResolvedValueOnce({
+      reminders: 3,
+      overdue: 1,
+    })
 
     await taskDueScan()
 
-    expect(mocks.withBlockedOwnerGuard).toHaveBeenCalledWith(
-      "ws-1",
-      expect.any(Function),
+    expect(mocks.processDueTaskNotifications).toHaveBeenCalledWith(
+      expect.objectContaining({
+        batchSize: 200,
+        maxBatches: 10,
+        guard: mocks.withBlockedOwnerGuard,
+      }),
     )
-    expect(mocks.notifyTaskReminder).not.toHaveBeenCalled()
-  })
-
-  test("processes at most ten reminder batches per run", async () => {
-    const fullBatch = Array.from({ length: 200 }, (_, index) =>
-      makeTask({ id: `task-${index}` }),
+    expect(mocks.loggerInfo).toHaveBeenCalledWith(
+      { reminders: 3, overdue: 1 },
+      "Task due scan processed notifications",
     )
-    mocks.claimDueReminders.mockResolvedValue(fullBatch)
-    mocks.claimOverdue.mockResolvedValue([])
-
-    await taskDueScan()
-
-    expect(mocks.claimDueReminders).toHaveBeenCalledTimes(10)
-    expect(mocks.notifyTaskReminder).toHaveBeenCalledTimes(2000)
   })
 })
 

@@ -50,7 +50,7 @@ vi.mock("../../src/notification/service", () => ({
     deleteForTask: vi.fn(),
     notifyTask: vi.fn(),
   },
-  notifyTaskSafe: vi.fn(),
+  notifyTaskSafeLazy: vi.fn(),
   formatCommentExcerpt: (text: string) => text,
 }))
 

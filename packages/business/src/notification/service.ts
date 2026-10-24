@@ -10,6 +10,7 @@ import {
   workspaceMemberRepository,
 } from "@chatbotx.io/database/repositories"
 import { BaseService } from "../base.service"
+import { validationException } from "../errors"
 import { logger } from "../logger"
 import type { TaskActor } from "../task/actor"
 import { actorLabel, actorUserId } from "../task/actor"
@@ -21,11 +22,21 @@ import {
   type TaskNotificationPreferences,
 } from "./preferences"
 import {
+  pickHighestPriorityType,
   resolveTaskNotificationRecipients,
   type TaskNotificationActionEvent,
 } from "./recipients"
 
 export type { TaskNotificationActionEvent } from "./recipients"
+
+/** Scheduled reminder/overdue events have no acting member or label. */
+type NotificationActor = TaskActor | { kind: "system" }
+
+const notificationActorUserId = (actor: NotificationActor): string | null =>
+  actor.kind === "system" ? null : actorUserId(actor)
+
+const notificationActorLabel = (actor: NotificationActor): string | null =>
+  actor.kind === "system" ? null : actorLabel(actor)
 
 class NotificationService extends BaseService {
   async notifyTask(props: {
@@ -37,7 +48,7 @@ class NotificationService extends BaseService {
       assigneeTeamId: string | null
       createdByUserId: string | null
     }
-    actor: TaskActor
+    actor: NotificationActor
     events: TaskNotificationActionEvent[]
     excerpt?: string | null
     from?: string | null
@@ -74,7 +85,7 @@ class NotificationService extends BaseService {
       }),
     )
     const recipients = resolveTaskNotificationRecipients({
-      actorUserId: actorUserId(actor),
+      actorUserId: notificationActorUserId(actor),
       events,
       watcherUserIds,
       memberUserIds,
@@ -95,25 +106,33 @@ class NotificationService extends BaseService {
 
     const payloadBase = {
       taskTitle: task.title,
-      actorUserId: actorUserId(actor),
-      actorLabel: actorLabel(actor),
+      actorUserId: notificationActorUserId(actor),
+      actorLabel: notificationActorLabel(actor),
       excerpt,
       ...(from === null ? {} : { from }),
       ...(to === null ? {} : { to }),
     }
 
     const rows = [...recipients.entries()]
-      .filter(([userId, type]) =>
-        isTaskNotificationEnabled(prefsByUser.get(userId) ?? {}, type),
-      )
-      .map(([userId, type]) => ({
-        workspaceId,
-        userId,
-        type,
-        entityType: "task" as const,
-        entityId: task.id,
-        payload: payloadBase,
-      }))
+      .map(([userId, candidateTypes]) => {
+        const prefs = prefsByUser.get(userId) ?? {}
+        const enabled = candidateTypes.filter((type) =>
+          isTaskNotificationEnabled(prefs, type),
+        )
+        if (enabled.length === 0) {
+          return null
+        }
+        const type = pickHighestPriorityType(enabled)
+        return {
+          workspaceId,
+          userId,
+          type,
+          entityType: "task" as const,
+          entityId: task.id,
+          payload: payloadBase,
+        }
+      })
+      .filter((row): row is NonNullable<typeof row> => row !== null)
 
     if (rows.length === 0) {
       return
@@ -175,12 +194,82 @@ class NotificationService extends BaseService {
       ...existing,
       ...input.patch,
     }
-    await workspaceMemberRepository.updateNotificationTypes({
+    const updated = await workspaceMemberRepository.updateNotificationTypes({
       workspaceId: input.workspaceId,
       userId: input.userId,
       notificationTypes: merged,
     })
+    if (updated === 0) {
+      throw validationException(
+        "notificationPreferences",
+        "Notification preferences cannot be updated without workspace membership",
+      )
+    }
     return readTaskNotificationPreferences(merged)
+  }
+
+  async processDueTaskNotifications(input: {
+    now: Date
+    batchSize: number
+    maxBatches: number
+    guard: (workspaceId: string, fn: () => Promise<void>) => Promise<void>
+  }): Promise<{ reminders: number; overdue: number }> {
+    const { now, batchSize, maxBatches, guard } = input
+    let reminders = 0
+    for (let batch = 0; batch < maxBatches; batch++) {
+      const claimed = await taskRepository.claimDueReminders({
+        now,
+        limit: batchSize,
+      })
+      if (claimed.length === 0) {
+        break
+      }
+      for (const task of claimed) {
+        await guard(task.workspaceId, async () => {
+          try {
+            await this.notifyTaskReminder(task)
+          } catch (err) {
+            logger.error(
+              { err, taskId: task.id },
+              "Failed to send task reminder",
+            )
+          }
+        })
+        reminders += 1
+      }
+      if (claimed.length < batchSize) {
+        break
+      }
+    }
+
+    let overdue = 0
+    for (let batch = 0; batch < maxBatches; batch++) {
+      const claimed = await taskRepository.claimOverdue({
+        now,
+        limit: batchSize,
+      })
+      if (claimed.length === 0) {
+        break
+      }
+      for (const task of claimed) {
+        await guard(task.workspaceId, async () => {
+          try {
+            await this.notifyTaskOverdue(task)
+          } catch (err) {
+            logger.error(
+              { err, taskId: task.id },
+              "Failed to send task overdue notice",
+            )
+          }
+        })
+        overdue += 1
+      }
+      if (claimed.length < batchSize) {
+        break
+      }
+    }
+
+    return { reminders, overdue }
   }
 
   async deleteForTask(input: {
@@ -215,7 +304,7 @@ class NotificationService extends BaseService {
     await this.notifyTask({
       workspaceId: task.workspaceId,
       task,
-      actor: { kind: "api", label: "System" },
+      actor: { kind: "system" },
       events: [{ kind: "reminder", userIds: assigneeUserIds }],
     })
   }
@@ -238,7 +327,7 @@ class NotificationService extends BaseService {
     await this.notifyTask({
       workspaceId: task.workspaceId,
       task,
-      actor: { kind: "api", label: "System" },
+      actor: { kind: "system" },
       events: [{ kind: "overdue", userIds }],
     })
   }
@@ -270,11 +359,14 @@ class NotificationService extends BaseService {
 
 export const notificationService = new NotificationService()
 
-export const notifyTaskSafe = async (
-  input: Parameters<NotificationService["notifyTask"]>[0],
+export const notifyTaskSafeLazy = async (
+  build: () => Promise<Parameters<NotificationService["notifyTask"]>[0] | null>,
 ): Promise<void> => {
   try {
-    await notificationService.notifyTask(input)
+    const input = await build()
+    if (input) {
+      await notificationService.notifyTask(input)
+    }
   } catch (err) {
     logger.error({ err }, "Failed to send task notifications")
   }
