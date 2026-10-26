@@ -56,6 +56,17 @@ jobs:
           __tests__/tasks-reminder-presets.test.ts
           __tests__/notifications-private-api.test.ts
           __tests__/workspace-token-scope-registry.test.ts
+          __tests__/tasks-message-quote.test.ts
+          __tests__/i18n-source-keys.test.ts
+          src/features/flows/react-flow/steps/__tests__/create-task-registration.test.ts
+          src/features/flows/react-flow/steps/create-task/__tests__/assignee-value.test.ts
+          src/features/flows/react-flow/nodes/perform-action/__tests__/menu.test.ts
+
+      - working-directory: packages/flow-config
+        run: >-
+          pnpm exec vitest run
+          __tests__/create-task.test.ts
+          __tests__/channel-policies.test.ts
 
       - working-directory: apps/builder
         run: >-
@@ -121,6 +132,11 @@ jobs:
           __tests__/sender-signature-send.test.ts
           __tests__/task-due-scan.test.ts
           __tests__/notification-realtime.test.ts
+          __tests__/create-task-step-handler.test.ts
+          __tests__/create-task-step-registration.test.ts
+          __tests__/integration-worker-boot.test.ts
+          __tests__/integration-worker-incoming-message.test.ts
+          __tests__/external-request-handler.test.ts
 
   check-types:
     name: Types

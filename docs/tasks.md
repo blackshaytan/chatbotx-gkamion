@@ -43,6 +43,7 @@ Signed-in staff use the session `tasksAPI` router (same service methods as the p
 - **Create task** — dialog from the Tasks page or the contact panel: title, description, assignee (member or team), watchers, due date, reminder (presets: 15 minutes, 1 hour, 1 day before due), priority, optional contact / conversation / message links.
 - **Contact panel** — **Tasks** block lists open tasks for the contact, **Create** opens the dialog with contact (and conversation when in inbox) prefilled; links open the task card or filtered task list.
 - **Conversation header** — when the active conversation has open tasks, a badge shows the count and links to the filtered Tasks page.
+- **Inbox message menu** — on an **incoming** client message (including comments), the message actions menu includes **Create task**. It opens the create dialog with a markdown **quote** of the message body (truncated to the task description limit) and prefilled links to the contact, conversation, and message. Outgoing messages and webchat preview without inbox context do not show the action. No new public API: the dialog calls existing `tasks.create` with `contactId`, `conversationId`, and `messageId`.
 
 Lists and feeds refresh after mutations via TanStack Query invalidation (`useInvalidateTasks`) and **realtime** events (below).
 
@@ -56,7 +57,25 @@ The builder publishes workspace-wide party events (payload is ids only; clients 
 | `taskCommentsChanged` | `{ taskId }` | Invalidate comment feed and task row unread count. |
 | `notificationCreated` | `{ notificationId }` | Invalidate the signed-in member’s notification list and unread badge (user-targeted; not workspace-wide). |
 
-Published after public and private comment/task mutations (not when tasks are reassigned to the owner on member removal). `notificationCreated` is sent only to each notification recipient after a row is inserted.
+Published after public and private comment/task mutations (not when tasks are reassigned to the owner on member removal). The integration worker also publishes `taskChanged` after a flow **Create task** step creates a task, so open Tasks pages refresh without reload. `notificationCreated` is sent only to each notification recipient after a row is inserted.
+
+### Flow step: Create task
+
+The **`createTask`** step lives inside the **Perform action** node (same menu as **Call API**). Configure it in the flow builder under **Create task**.
+
+| Setting | Behavior |
+|---|---|
+| Title / description | Templates with contact/conversation variables; substituted and truncated to task limits (255 / 10 000) before create. Empty title after substitution → **error** output. |
+| Assignee | **Member** (`userId`), **team** (`teamId`), or **Assigned to conversation** (fresh `Conversation.assignedUserId`, else assigned inbox team; no assignee → **error**). Default: conversation. |
+| Due / reminder | Relative due (`amount` + minutes/hours/days) or none; optional reminder N minutes before due (requires a due date). |
+| Priority | `low` … `urgent`. |
+| Output field | Optional custom or bot field id; receives the new task id. Missing field or failed write → **success** anyway; worker logs a warning. |
+
+The step always links the current **contact** and **conversation** (`messageId` is not set). The actor is `{ kind: "flow", label: <active flow name> }` (fallback label **Flow**). Outputs: **success** (result includes `taskId`) and **error** (assignee not in workspace, team missing or empty, conversation unassigned, empty title, or other create failure).
+
+**Notifications:** the **integration** worker registers `registerNotificationRealtime()` (like the schedule worker), so assignees get **`notificationCreated`** in the bell without reload.
+
+**Flow import:** `outputFieldId` is remapped; assignee `userId` / `teamId` are **not** remapped across workspaces (same as `autoAssignConversation`) — the step may take the **error** output after import.
 
 ## Notifications
 
@@ -112,8 +131,9 @@ Public operations under the `tasks` token scope: `tasks.list`, `tasks.count`, `t
 
 `tasks.list` and `tasks.create` are in the MCP default tool set. `tasks.count`, `tasks.take`, comment update/delete, attachment upload, and other task operations are available via CLI commands or MCP `search_tools` → `call_tool`.
 
+The **Create task** flow step is part of flow configuration: publish or update drafts with `flows.publish` / `flows.updateDraft` (`createTask` in a `performAction` node’s `steps`). No new token scopes or public operations were added for the step itself.
+
 ## Not yet
 
 - **Later cleanup** — orphan attachment objects after unused uploads and files on deleted tasks (upload keys are validated on comment create but not garbage-collected yet).
 - **Web push** for task notifications (stage 5); **staff MAX bot** channel (stage 6); **60s coalescing** / `notificationDispatch` queue (stages 5–6).
-- The `createTask` flow step and **Create task** from a client message menu (stage 7).
