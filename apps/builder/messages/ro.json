@@ -9256,6 +9256,7 @@
     },
     "actions": {
       "create": "Create task",
+      "createFromMessage": "Create task from message",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

@@ -22,7 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "@tanstack/react-query"
 import { Loader2Icon } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { type ReactElement, useMemo, useState } from "react"
+import { type ReactElement, useEffect, useMemo, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -47,7 +47,11 @@ type CreateTaskDialogProps = {
     contactId?: string
     contactLabel?: string
     conversationId?: string
+    messageId?: string
   }
+  defaultDescription?: string
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   trigger?: ReactElement
   onCreated?: (task: z.infer<typeof taskPublicResource>) => void
 }
@@ -99,15 +103,33 @@ const toDate = (value: string | undefined) => {
 export const CreateTaskDialog = ({
   workspaceId,
   defaultTargets,
+  defaultDescription,
+  open: openProp,
+  onOpenChange,
   trigger,
   onCreated,
 }: CreateTaskDialogProps) => {
   const t = useTranslations("tasks")
   const commonT = useTranslations()
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = openProp !== undefined
+  const open = isControlled ? openProp : internalOpen
+  const setOpen = (nextOpen: boolean) => {
+    if (!isControlled) {
+      setInternalOpen(nextOpen)
+    }
+    onOpenChange?.(nextOpen)
+  }
   const assigneeOptions = useContactAssigneeOptions({ enabled: open })
   const assigneeMultiSelectOptions = useContactAssigneeMultiSelectOptions()
   const invalidateTasks = useInvalidateTasks()
+  const initialValues = useMemo(
+    () => ({
+      ...defaultFormValues,
+      description: defaultDescription ?? "",
+    }),
+    [defaultDescription],
+  )
   const createTaskFormSchema = useMemo(
     () =>
       z.object({
@@ -124,10 +146,16 @@ export const CreateTaskDialog = ({
     [t],
   )
   const form = useForm<CreateTaskFormValues>({
-    defaultValues: defaultFormValues,
+    defaultValues: initialValues,
     resolver: zodResolver(createTaskFormSchema),
   })
   const dueAt = useWatch({ control: form.control, name: "dueAt" })
+
+  useEffect(() => {
+    if (open) {
+      form.reset(initialValues)
+    }
+  }, [form, initialValues, open])
 
   const watcherOptions = useMemo(
     () =>
@@ -153,7 +181,7 @@ export const CreateTaskDialog = ({
         toast.success(t("toasts.created"))
         await invalidateTasks()
         onCreated?.(task)
-        form.reset(defaultFormValues)
+        form.reset(initialValues)
         setOpen(false)
       },
     }),
@@ -163,7 +191,7 @@ export const CreateTaskDialog = ({
     setOpen(nextOpen)
 
     if (!nextOpen) {
-      form.reset(defaultFormValues)
+      form.reset(initialValues)
     }
   }
 
@@ -206,6 +234,7 @@ export const CreateTaskDialog = ({
       ...parseTaskAssigneeValue(values.assignee),
       contactId: defaultTargets?.contactId,
       conversationId: defaultTargets?.conversationId,
+      messageId: defaultTargets?.messageId,
       description: values.description || null,
       dueAt,
       priority: values.priority,
@@ -222,9 +251,13 @@ export const CreateTaskDialog = ({
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogTrigger
-        render={trigger ?? <Button type="button">{t("actions.create")}</Button>}
-      />
+      {isControlled ? null : (
+        <DialogTrigger
+          render={
+            trigger ?? <Button type="button">{t("actions.create")}</Button>
+          }
+        />
+      )}
       <DialogContent className="max-h-[85dvh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("actions.create")}</DialogTitle>

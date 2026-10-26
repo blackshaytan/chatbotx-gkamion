@@ -303,6 +303,7 @@ export function MessageList() {
         initialTopMostItemIndex={{ index: "LAST" }}
         itemContent={(_, message) => (
           <MessageItem
+            canCreateTask
             canPrivateReply={(comment) =>
               canPrivateReplyToComment({
                 channel: activeChannel,

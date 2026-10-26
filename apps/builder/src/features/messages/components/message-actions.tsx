@@ -25,6 +25,7 @@ import {
   ExternalLinkIcon,
   EyeOff,
   ImageIcon,
+  ListChecksIcon,
   PaperclipIcon,
   PencilIcon,
   TrashIcon,
@@ -34,6 +35,8 @@ import Image from "next/image"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { MediaLibraryTrigger } from "@/features/media-library/components/media-library-trigger"
+import { CreateTaskDialog } from "@/features/tasks/components/create-task-dialog"
+import { toMarkdownQuote } from "@/features/tasks/lib/message-quote"
 import { useWorkspaceId } from "@/hooks/routing"
 import { useChatStore } from "../../chat/store/chat-store-provider"
 import type { MessageResourceWithRelations } from "../schema/resource"
@@ -265,6 +268,7 @@ type MessageActionsProps = {
   onDelete?: () => void
   onEdit?: (payload: EditPayload) => void
   onEditingChange?: (isEditing: boolean) => void
+  showCreateTask?: boolean
 }
 
 export const MessageActions = ({
@@ -273,9 +277,12 @@ export const MessageActions = ({
   onDelete,
   onEdit,
   onEditingChange,
+  showCreateTask = false,
 }: MessageActionsProps) => {
   const t = useTranslations()
+  const workspaceId = useWorkspaceId()
   const [open, setOpen] = useState(false)
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
 
   const { conversations, activeConversationId } = useChatStore((state) => state)
   const activeConversation = conversations.find(
@@ -284,6 +291,7 @@ export const MessageActions = ({
   const channel = activeConversation?.contactInboxes?.[0]?.channel
 
   const isDeleted = message.deletedAt != null
+  const isComment = message.type === "comment"
   const isOutgoing = message.messageType === "outgoing"
   const attributes = message.attributes as {
     liked?: boolean
@@ -299,110 +307,142 @@ export const MessageActions = ({
       : null
 
   return (
-    <Popover onOpenChange={setOpen} open={open}>
-      <PopoverTrigger
-        render={
-          <Button
-            className="self-center opacity-0 transition-opacity group-hover:opacity-100"
-            size="icon"
-            type="button"
-            variant="ghost"
-          >
-            <EllipsisVerticalIcon className="size-4" />
-          </Button>
-        }
-      />
-      <PopoverContent className="flex w-auto flex-col gap-0.5 p-1" side="top">
-        {messageLink && (
-          <a
-            className={buttonVariants({
-              size: "sm",
-              variant: "ghost",
-              className: "justify-start",
-            })}
-            href={messageLink}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <ExternalLinkIcon className="size-4" />
-            {t("messages.viewMessage")}
-          </a>
-        )}
+    <>
+      <Popover onOpenChange={setOpen} open={open}>
+        <PopoverTrigger
+          render={
+            <Button
+              aria-label={t("actions.actions")}
+              className="self-center opacity-0 transition-opacity group-hover:opacity-100"
+              size="icon"
+              type="button"
+              variant="ghost"
+            >
+              <EllipsisVerticalIcon className="size-4" />
+            </Button>
+          }
+        />
+        <PopoverContent className="flex w-auto flex-col gap-0.5 p-1" side="top">
+          {isComment && messageLink ? (
+            <a
+              className={buttonVariants({
+                size: "sm",
+                variant: "ghost",
+                className: "justify-start",
+              })}
+              href={messageLink}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <ExternalLinkIcon className="size-4" />
+              {t("messages.viewMessage")}
+            </a>
+          ) : null}
 
-        {!isOutgoing && (
-          <Button
-            className="justify-start"
-            disabled={isDeleted}
-            onClick={() => {
-              onChangeHide?.()
-              setOpen(false)
-            }}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            <EyeOff className={cn("size-3", isHidden && "fill-current")} />
-            {t("messages.changeHideState")}
-          </Button>
-        )}
+          {isComment && !isOutgoing ? (
+            <Button
+              className="justify-start"
+              disabled={isDeleted}
+              onClick={() => {
+                onChangeHide?.()
+                setOpen(false)
+              }}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              <EyeOff className={cn("size-3", isHidden && "fill-current")} />
+              {t("messages.changeHideState")}
+            </Button>
+          ) : null}
 
-        {onEdit && isOutgoing && (
-          <Button
-            className="justify-start"
-            disabled={isDeleted}
-            onClick={() => {
-              onEditingChange?.(true)
-              setOpen(false)
-            }}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            <PencilIcon className="size-3" />
-            {t("actions.edit")}
-          </Button>
-        )}
+          {isComment && onEdit && isOutgoing ? (
+            <Button
+              className="justify-start"
+              disabled={isDeleted}
+              onClick={() => {
+                onEditingChange?.(true)
+                setOpen(false)
+              }}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              <PencilIcon className="size-3" />
+              {t("actions.edit")}
+            </Button>
+          ) : null}
 
-        {onDelete && (
-          <AlertDialog>
-            <AlertDialogTrigger
-              render={
-                <Button
-                  className="justify-start text-destructive hover:text-destructive"
-                  disabled={isDeleted}
-                  size="sm"
-                  type="button"
-                  variant="ghost"
-                >
-                  <TrashIcon className="size-3" />
-                  {t("actions.delete")}
-                </Button>
-              }
-            />
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {t("messages.deleteComment")}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t("messages.deleteCommentConfirmation")}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => {
-                    onDelete()
-                    setOpen(false)
-                  }}
-                >
-                  {t("actions.confirm")}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
-      </PopoverContent>
-    </Popover>
+          {showCreateTask && activeConversation ? (
+            <Button
+              className="justify-start"
+              onClick={() => {
+                setOpen(false)
+                setIsCreateTaskOpen(true)
+              }}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              <ListChecksIcon className="size-3" />
+              {t("tasks.actions.createFromMessage")}
+            </Button>
+          ) : null}
+
+          {isComment && onDelete ? (
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    className="justify-start text-destructive hover:text-destructive"
+                    disabled={isDeleted}
+                    size="sm"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <TrashIcon className="size-3" />
+                    {t("actions.delete")}
+                  </Button>
+                }
+              />
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {t("messages.deleteComment")}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t("messages.deleteCommentConfirmation")}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      onDelete()
+                      setOpen(false)
+                    }}
+                  >
+                    {t("actions.confirm")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : null}
+        </PopoverContent>
+      </Popover>
+      {showCreateTask && activeConversation ? (
+        <CreateTaskDialog
+          defaultDescription={toMarkdownQuote(message.text ?? "")}
+          defaultTargets={{
+            contactId: activeConversation.contactId,
+            conversationId: activeConversation.id,
+            messageId: message.id,
+          }}
+          onOpenChange={setIsCreateTaskOpen}
+          open={isCreateTaskOpen}
+          workspaceId={workspaceId}
+        />
+      ) : null}
+    </>
   )
 }

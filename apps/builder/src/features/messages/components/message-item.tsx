@@ -56,6 +56,7 @@ import type { AttachmentResource } from "@/features/attachments/schema/resource"
 import { useAttachmentSource } from "@/features/attachments/utils"
 import { ExternalAgentActivityDivider } from "@/features/external-agent/components/external-agent-activity"
 import { getExternalAgentActivity } from "@/features/external-agent/lib/activity"
+import { canCreateTaskFromMessage } from "@/features/tasks/lib/message-quote"
 import { formatMessageTime } from "../lib/format-message-time"
 import {
   getThreadControlActivity,
@@ -77,6 +78,7 @@ import { WhatsappFlowResponseButton } from "./whatsapp-flow-response-dialog"
 type MessageItemProps = {
   message: MessageResourceWithRelations
   guestDisplay?: boolean
+  canCreateTask?: boolean
   /**
    * Workspace logo shown beside agent/bot bubbles in the guest widget when
    * `IntegrationWebchat.showLogo` is on. Deliberately opt-in and unused by
@@ -114,6 +116,7 @@ export const MessageItem = (props: MessageItemProps) => {
   const {
     message,
     guestDisplay = false,
+    canCreateTask = false,
     avatarUrl,
     onChangeLike,
     onChangeHide,
@@ -147,6 +150,7 @@ export const MessageItem = (props: MessageItemProps) => {
   }
 
   const isComment = message.type === "comment"
+  const showCreateTask = canCreateTask && canCreateTaskFromMessage(message)
   const isDeleted = message.deletedAt != null
   const attributes = message.attributes as {
     liked?: boolean
@@ -384,15 +388,16 @@ export const MessageItem = (props: MessageItemProps) => {
             </Tooltip>
           )}
 
-        {isComment && !isEditing && (
+        {(isComment && !isEditing) || showCreateTask ? (
           <MessageActions
             message={message}
             onChangeHide={onChangeHide}
             onDelete={onDelete}
             onEdit={message.messageType === "outgoing" ? onEdit : undefined}
             onEditingChange={setIsEditing}
+            showCreateTask={showCreateTask}
           />
-        )}
+        ) : null}
       </div>
     </MessageBubble>
   )
