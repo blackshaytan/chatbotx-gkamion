@@ -3396,6 +3396,7 @@
       "blockContact": "Block Contact",
       "broadcastActions": "Broadcast Actions",
       "callApi": "External API Request",
+      "createTask": "Create Task",
       "make": "Make",
       "triggerN8n": "Trigger n8n",
       "triggers": "Triggers",
@@ -9248,6 +9249,27 @@
       "contact": "Contact",
       "conversation": "Conversation",
       "createdBy": "Created by"
+    },
+    "flowStep": {
+      "variablesHint": "You can use contact variables",
+      "assigneeConversation": "Conversation assignee",
+      "assigneeHint": "If the conversation has no assignee, the error output is used",
+      "dueMode": "Due date",
+      "dueNone": "No due date",
+      "dueIn": "Due in",
+      "units": {
+        "minutes": "minutes",
+        "hours": "hours",
+        "days": "days"
+      },
+      "remindBefore": "Remind before due (minutes)",
+      "outputField": "Save task id to field",
+      "outputFieldHint": "The new task id is saved to this field when selected",
+      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "validation": {
+        "remindNeedsDue": "Set a due date before adding a reminder",
+        "remindAfterDue": "The reminder must not be later than the due date"
+      }
     },
     "reminder": {
       "min15": "15 minutes before",

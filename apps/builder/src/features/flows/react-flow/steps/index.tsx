@@ -24,6 +24,7 @@ import { clearCustomFieldStep } from "./clear-custom-field"
 import { conditionStep } from "./condition"
 import { countCharactersStep } from "./count-characters"
 import { markCouponUsedStep, setUpCouponStep } from "./coupon"
+import { createTaskStep } from "./create-task"
 import type { StepDefinition } from "./definition"
 import { deleteContactStep } from "./delete-contact"
 import { disableBotStep } from "./disable-bot"
@@ -124,6 +125,7 @@ export const allSteps: Record<StepType, StepDefinition<any> | undefined> = {
   [stepTypes.enum.threadControl]: threadControlStep,
   [stepTypes.enum.deleteContact]: deleteContactStep,
   [stepTypes.enum.callApi]: externalRequestStep,
+  [stepTypes.enum.createTask]: createTaskStep,
   [stepTypes.enum.make]: makeStep,
   [stepTypes.enum.triggerN8n]: triggerN8nStep,
   [stepTypes.enum.executeJavascript]: executeJavascriptStep,

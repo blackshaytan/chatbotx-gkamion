@@ -51,6 +51,17 @@ describe("perform action Google Ads conversion menu", () => {
   })
 })
 
+describe("perform action create task menu", () => {
+  test("exposes createTask as a top-level entry", () => {
+    expect(performActionMenus(t)).toContainEqual(
+      expect.objectContaining({
+        label: "flows.actions.createTask",
+        stepType: stepTypes.enum.createTask,
+      }),
+    )
+  })
+})
+
 describe("perform action coupon menu", () => {
   test("exposes topic coupon under tools as the create path", () => {
     const tools = performActionMenus(t).find(

@@ -26,6 +26,7 @@ import {
   Layers,
   Layers2,
   LayersPlus,
+  ListChecksIcon,
   MailIcon,
   MailOpenIcon,
   MegaphoneIcon,
@@ -551,6 +552,11 @@ export const performActionMenus = (t: TranslationFn): MenuItem[] => [
     label: t("flows.actions.appointmentScheduling"),
     icon: CalendarClockIcon,
     stepType: stepTypes.enum.appointmentScheduling,
+  },
+  {
+    label: t("flows.actions.createTask"),
+    icon: ListChecksIcon,
+    stepType: stepTypes.enum.createTask,
   },
   {
     label: t("flows.actions.questionnaires"),
