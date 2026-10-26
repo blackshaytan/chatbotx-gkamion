@@ -64,7 +64,7 @@ import type { ExecuteStepResult } from "./step"
  * (`customFieldService`/`botFieldService`) rather than querying `db` directly
  * — see `.agents/rules/data-access.md`.
  */
-async function referencedFieldExists({
+export async function referencedFieldExists({
   fieldId,
   workspaceId,
 }: {
@@ -147,7 +147,7 @@ async function resolveReferencedFieldType({
  * logged + swallowed on failure (e.g. a since-deleted bot field) so one bad
  * output never kills the rest of the flow step's job.
  */
-async function writeReferencedFieldValue({
+export async function writeReferencedFieldValue({
   fieldId,
   workspaceId,
   contactId,

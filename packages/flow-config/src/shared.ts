@@ -19,6 +19,7 @@ import { changeGamificationScoreStepSchema } from "./steps/change-gamification-s
 import { clearCustomFieldStepSchema } from "./steps/clear-custom-field"
 import { countCharactersStepSchema } from "./steps/count-characters"
 import { markCouponUsedStepSchema, setUpCouponStepSchema } from "./steps/coupon"
+import { createTaskStepSchema } from "./steps/create-task"
 import { deleteContactStepSchema } from "./steps/delete-contact"
 import { disableBotStepSchema } from "./steps/disable-bot"
 import { disableMessengerComposerStepSchema } from "./steps/disable-messenger-composer"
@@ -85,6 +86,8 @@ const inboxSteps = [
   unarchiveConversationStepSchema,
   threadControlStepSchema,
 ]
+
+const taskSteps = [createTaskStepSchema]
 
 const contactSteps = [
   addContactNotesStepSchema,
@@ -177,6 +180,7 @@ const googleSheetStep = [
 
 export const actionSteps = [
   ...inboxSteps,
+  ...taskSteps,
   ...contactSteps,
   ...broadcastSteps,
   ...sequenceSteps,

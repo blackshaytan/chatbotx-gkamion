@@ -32,6 +32,7 @@ import { isBlockedWorkspace } from "../lib/is-blocked-workspace"
 import { hasExhaustedAttempts } from "../lib/job-attempts"
 import { deferOnLockContention } from "../lib/lock-contention-deferral"
 import { logger } from "../lib/logger"
+import { registerNotificationRealtime } from "../lib/notification-realtime"
 import { resolveWorkspaceId } from "../lib/resolve-workspace-id"
 import { runJobWithAuditContext } from "../lib/run-job-with-audit-context"
 import { integrationService } from "../services/integrations"
@@ -164,6 +165,7 @@ async function resolveVoipSignalingWorkspaceId(
 }
 
 async function startIntegrationWorker() {
+  registerNotificationRealtime()
   try {
     await ensureBootstrapped()
   } catch (err) {

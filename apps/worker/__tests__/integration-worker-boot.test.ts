@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { getAuditActor } from "@chatbotx.io/business/audit"
 import type { AdsConversionJobData } from "@chatbotx.io/worker-config"
 import { describe, expect, test, vi } from "vitest"
@@ -19,17 +20,27 @@ type CapturedWorker = {
   options: Record<string, unknown>
 }
 
-const workerState = vi.hoisted(() => ({
-  aiAgentQueueAdd: vi.fn(async () => undefined),
-  capturedWorkers: [] as CapturedWorker[],
-  dispatchAdsConversionJob: vi.fn(async () => undefined),
-  ensureBootstrapped: vi.fn(async () => undefined),
-  getStoryReply: vi.fn(),
-  handleWhatsappIdentityChange: vi.fn(async () => undefined),
-  receiveMessage: vi.fn(),
-  workerClose: vi.fn(async () => undefined),
-  workerOn: vi.fn(),
-}))
+const workerState = vi.hoisted(() => {
+  const bootCallOrder: string[] = []
+  return {
+    aiAgentQueueAdd: vi.fn(async () => undefined),
+    bootCallOrder,
+    capturedWorkers: [] as CapturedWorker[],
+    dispatchAdsConversionJob: vi.fn(async () => undefined),
+    ensureBootstrapped: vi.fn(() => {
+      bootCallOrder.push("ensureBootstrapped")
+      return Promise.resolve(undefined)
+    }),
+    getStoryReply: vi.fn(),
+    handleWhatsappIdentityChange: vi.fn(async () => undefined),
+    receiveMessage: vi.fn(),
+    workerClose: vi.fn(async () => undefined),
+    workerOn: vi.fn(),
+  }
+})
+
+const INTEGRATION_WORKER_STARTS_NOTIFICATION_REALTIME_PATTERN =
+  /async function startIntegrationWorker\(\) \{\s*registerNotificationRealtime\(\)/s
 
 const LEGACY_AUTOMATION_ID_PATTERN = /^legacy-[a-f0-9]{24}$/
 const LEGACY_COMMENT_JOB_ID_PATTERN =
@@ -102,6 +113,8 @@ vi.mock("@chatbotx.io/automated-response", () => ({
 vi.mock("@chatbotx.io/business", () => ({
   buildContext: vi.fn(),
   conversationService: { ensureActive: vi.fn() },
+  onNotificationsCreated: vi.fn(),
+  sendToWorkspaceMember: vi.fn(),
   withBlockedOwnerGuard: vi.fn(
     async (_workspaceId: unknown, fn: () => Promise<unknown>) => await fn(),
   ),
@@ -288,6 +301,18 @@ await vi.waitFor(() => {
 })
 
 describe("integration worker process boot", () => {
+  test("registers notification realtime once before bootstrap", () => {
+    const workerSource = readFileSync("src/integration/worker.ts", "utf8")
+    expect(workerSource).toMatch(
+      INTEGRATION_WORKER_STARTS_NOTIFICATION_REALTIME_PATTERN,
+    )
+    const registerIndex = workerSource.indexOf("registerNotificationRealtime()")
+    const bootstrapIndex = workerSource.indexOf("await ensureBootstrapped()")
+    expect(registerIndex).toBeGreaterThan(-1)
+    expect(bootstrapIndex).toBeGreaterThan(registerIndex)
+    expect(workerState.capturedWorkers).toHaveLength(3)
+  })
+
   test("boots exactly three Workers: the shared integration queue, the dedicated callTranscription queue, and the dedicated whatsappVoipSignaling queue", () => {
     expect(workerState.capturedWorkers).toHaveLength(3)
     expect(workerState.capturedWorkers[0]?.queueName).toBe("integration")

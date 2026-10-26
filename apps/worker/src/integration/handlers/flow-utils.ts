@@ -178,6 +178,7 @@ export const STEP_PRODUCES_MESSAGE: Record<StepType, boolean> = {
   countCharacters: false,
   performAction: false,
   callApi: false,
+  createTask: false,
   executeJavascript: false,
   splitTraffic: false,
   make: false,

@@ -61,6 +61,7 @@ const stepExecutionKinds = {
   unarchiveConversation: "worker",
   threadControl: "worker",
   notifyAgent: "worker",
+  createTask: "worker",
   aiGenerateText: "worker",
   aiGenerateTextAgent: "worker",
   aiAnalyzeImage: "worker",

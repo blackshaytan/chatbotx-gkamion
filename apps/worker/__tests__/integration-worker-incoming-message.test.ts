@@ -142,6 +142,10 @@ vi.mock("../src/lib/bootstrap", () => ({
   ensureBootstrapped: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock("../src/lib/notification-realtime", () => ({
+  registerNotificationRealtime: vi.fn(),
+}))
+
 vi.mock("../src/lib/is-blocked-workspace", () => ({
   isBlockedWorkspace: vi.fn().mockResolvedValue(false),
 }))

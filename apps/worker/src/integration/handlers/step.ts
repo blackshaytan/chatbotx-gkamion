@@ -41,6 +41,7 @@ import {
   unsubscribeBroadcast,
 } from "./contact"
 import { markCouponUsed, setUpCoupon } from "./coupon"
+import { handleCreateTask } from "./create-task-handler"
 import { handleAIDeleteMessageHistory } from "./delete-message-history"
 import { subscribeDripSubscriber } from "./drip-handler"
 import { evaluateDecision } from "./evaluate-decision"
@@ -446,6 +447,7 @@ export const flowStepHandlers: Record<
   [stepTypes.enum.threadControl]: stepThreadControl,
   [stepTypes.enum.blockContact]: stepBlockContact,
   [stepTypes.enum.callApi]: externalRequest,
+  [stepTypes.enum.createTask]: handleCreateTask,
   [stepTypes.enum.make]: handleMakeStep,
   [stepTypes.enum.triggerN8n]: handleTriggerN8nStep,
   [stepTypes.enum.executeJavascript]: handleExecuteJavascript,

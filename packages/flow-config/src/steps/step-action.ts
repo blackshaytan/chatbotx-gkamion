@@ -60,6 +60,9 @@ export const stepTypes = z.enum([
   "notifyAgent",
   "threadControl",
 
+  // Tasks (T_)
+  "createTask",
+
   // AI/OpenAI Operations (A_)
   "aiGenerateText",
   "aiGenerateTextAgent",
