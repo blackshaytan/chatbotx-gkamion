@@ -323,6 +323,14 @@ describe("handleCreateTask", () => {
 
     expect(result.status).toBe("success")
     expect(mocks.writeReferencedFieldValue).not.toHaveBeenCalled()
+    expect(mocks.loggerWarn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workspaceId: "workspace-1",
+        contactId: "contact-1",
+        fieldId: "field-missing",
+      }),
+      "[handleCreateTask] output field does not exist; continuing",
+    )
   })
 
   test("write failure warns and stays success", async () => {

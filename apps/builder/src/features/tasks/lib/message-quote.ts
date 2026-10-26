@@ -10,12 +10,18 @@ export const toMarkdownQuote = (
     return ""
   }
 
-  return normalizedText
+  const quoted = normalizedText
     .split("\n")
     .map((line) => (line ? `> ${line}` : ">"))
     .join("\n")
     .slice(0, maxLength)
     .trimEnd()
+
+  if (quoted.endsWith("\n>")) {
+    return quoted.slice(0, -2)
+  }
+
+  return quoted
 }
 
 export const canCreateTaskFromMessage = (message: {

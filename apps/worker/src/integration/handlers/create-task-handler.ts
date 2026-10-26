@@ -169,6 +169,11 @@ export const handleCreateTask = async (
             contactId: conversation.contactId,
             value: task.id,
           })
+        } else {
+          logger.warn(
+            { workspaceId, contactId: conversation.contactId, fieldId },
+            "[handleCreateTask] output field does not exist; continuing",
+          )
         }
       } catch (err) {
         logger.warn(

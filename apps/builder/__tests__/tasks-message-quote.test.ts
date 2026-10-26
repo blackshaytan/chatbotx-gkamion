@@ -28,7 +28,7 @@ describe("toMarkdownQuote", () => {
 
     expect(result.length).toBeLessThanOrEqual(6)
     expect(result).not.toMatch(TRAILING_WHITESPACE_PATTERN)
-    expect(result).toBe("> a\n>")
+    expect(result).toBe("> a")
   })
 
   test("preserves Russian text", () => {
