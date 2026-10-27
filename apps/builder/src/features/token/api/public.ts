@@ -22,7 +22,9 @@ const tokenPublicResponse = z.object({
   scopes: z
     .array(workspaceApiTokenScopes)
     .nullable()
-    .describe("null means unrestricted — every scope."),
+    .describe(
+      "null means unrestricted for existing scopes, except Chats. Chat access always requires an explicit `chats` scope.",
+    ),
 })
 
 export const tokenPublicRouter = {
@@ -32,7 +34,7 @@ export const tokenPublicRouter = {
       path: "/v1/token",
       summary: "Get calling token workspace id, permission, and scopes",
       description:
-        "Reports the calling token's workspace id, permission, and scopes, including whether `scopes: null` grants unrestricted access. Call `capabilities.get` to discover useful resources before using the token with another operation.",
+        "Reports the calling token's workspace id, permission, and scopes. `scopes: null` grants existing scopes but never Chats; Chat access always needs an explicit `chats` scope. Call `capabilities.get` to discover useful resources before using the token with another operation.",
       tags: ["Capabilities"],
       spec: mcpSpec({ visibility: "default", alwaysVisible: true }),
     })

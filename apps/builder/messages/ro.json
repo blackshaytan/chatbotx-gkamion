@@ -3496,7 +3496,8 @@
       "settings": "Setări",
       "miniApps": "Mini Apps",
       "leaderboards": "Clasamente",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",
@@ -5325,7 +5326,8 @@
     "namePlaceholder": "ex. integrare Zapier",
     "empty": "Niciun token API încă.",
     "defaultBadge": "Implicit",
-    "allScopes": "Toate domeniile"
+    "allScopes": "Toate domeniile",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "Contacte",

@@ -758,6 +758,51 @@ exports[`public API spec — operation naming guard > operation list (operationI
     "path": "/v1/channels/api/typing",
   },
   {
+    "method": "POST",
+    "operationId": "chats.attachments.upload",
+    "path": "/v1/chats/{id}/attachments",
+  },
+  {
+    "method": "GET",
+    "operationId": "chats.get",
+    "path": "/v1/chats/{id}",
+  },
+  {
+    "method": "GET",
+    "operationId": "chats.list",
+    "path": "/v1/chats",
+  },
+  {
+    "method": "POST",
+    "operationId": "chats.messages.create",
+    "path": "/v1/chats/{id}/messages",
+  },
+  {
+    "method": "DELETE",
+    "operationId": "chats.messages.delete",
+    "path": "/v1/chats/{id}/messages/{messageId}",
+  },
+  {
+    "method": "GET",
+    "operationId": "chats.messages.list",
+    "path": "/v1/chats/{id}/messages",
+  },
+  {
+    "method": "PATCH",
+    "operationId": "chats.messages.update",
+    "path": "/v1/chats/{id}/messages/{messageId}",
+  },
+  {
+    "method": "POST",
+    "operationId": "chats.open",
+    "path": "/v1/chats/open",
+  },
+  {
+    "method": "GET",
+    "operationId": "chats.presence",
+    "path": "/v1/chats/presence",
+  },
+  {
     "method": "GET",
     "operationId": "commentAutomations.getMissedCommentRun",
     "path": "/v1/comment-automations/{id}/missed-comment-runs",

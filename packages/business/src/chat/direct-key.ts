@@ -1,6 +1,6 @@
 export type ChatAgentChannel =
   | { kind: "staff"; title: string }
-  | { kind: "token"; label: string }
+  | { kind: "token"; id: string; label: string }
 
 export const buildDirectKey = (first: string, second: string): string => {
   if (first === second) {
@@ -18,11 +18,10 @@ export const buildAgentChatKey = (
   if (channel.kind === "staff") {
     return `agent:${userId}:staff`
   }
-  const label = channel.label.trim()
-  if (!label) {
-    throw new Error("Token label is required")
+  if (!channel.id) {
+    throw new Error("Token id is required")
   }
-  return `agent:${userId}:token:${label}`
+  return `agent:${userId}:token:${channel.id}`
 }
 
 export const chatAgentTitle = (channel: ChatAgentChannel): string =>

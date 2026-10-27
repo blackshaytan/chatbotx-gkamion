@@ -105,6 +105,7 @@ export function ManageWorkspaceTokens({
           name: "",
           permission: "full",
           allScopes: true,
+          includeChats: false,
           scopes: [],
         },
       },
@@ -223,6 +224,27 @@ export function ManageWorkspaceTokens({
                       {t("developerAccessToken.allScopes")}
                     </Label>
                   </div>
+                  {allScopes && (
+                    <div className="flex flex-col gap-2">
+                      <p className="text-muted-foreground text-sm">
+                        {t("developerAccessToken.chatsScopeNotice")}
+                      </p>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={form.watch("includeChats")}
+                          id="includeChats"
+                          onCheckedChange={(checked) => {
+                            form.setValue("includeChats", checked === true, {
+                              shouldValidate: true,
+                            })
+                          }}
+                        />
+                        <Label className="font-normal" htmlFor="includeChats">
+                          {t("fields.tokenScopes.chats")}
+                        </Label>
+                      </div>
+                    </div>
+                  )}
                   {!allScopes && (
                     <CheckboxGroupField
                       label={t("fields.tokenScopes.label")}

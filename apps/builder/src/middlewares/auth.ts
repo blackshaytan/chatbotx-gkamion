@@ -97,6 +97,7 @@ export const workspaceAuthorizedMidddleware = base.middleware(
           context: {
             workspace,
             workspaceMember: access.member,
+            isSupportSession: access.isSupportSession,
           },
         }),
     )

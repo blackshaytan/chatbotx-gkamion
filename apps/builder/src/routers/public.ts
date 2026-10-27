@@ -24,6 +24,7 @@ import {
   createHandoverResumeFlowRoute,
 } from "@/features/channel-integrations/api/public"
 import { channelPostsPublicRouter } from "@/features/channel-posts/api/public"
+import { chatsPublicRouter } from "@/features/chats/api/public"
 import {
   connectionProvidersPublicRouter,
   connectionsPublicRouter,
@@ -114,6 +115,7 @@ export const publicRouter = {
   capabilities: capabilitiesPublicRouter,
   channelPosts: channelPostsPublicRouter,
   channels: channelsPublicRouter,
+  chats: chatsPublicRouter,
   commentAutomations: commentAutomationsPublicRouter,
   connectionProviders: connectionProvidersPublicRouter,
   connections: connectionsPublicRouter,

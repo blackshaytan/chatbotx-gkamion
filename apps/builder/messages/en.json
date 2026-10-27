@@ -2633,7 +2633,8 @@
       "settings": "Settings",
       "miniApps": "Mini Apps",
       "leaderboards": "Leaderboards",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",
@@ -6007,7 +6008,8 @@
     "namePlaceholder": "e.g. Zapier integration",
     "empty": "No API tokens yet.",
     "defaultBadge": "Default",
-    "allScopes": "All scopes"
+    "allScopes": "All scopes",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "Contacts",

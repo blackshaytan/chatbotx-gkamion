@@ -2445,7 +2445,8 @@
       "settings": "Asetukset",
       "miniApps": "Mini Apps",
       "leaderboards": "Tulostaulukot",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",
@@ -5325,7 +5326,8 @@
     "namePlaceholder": "esim. Zapier-integraatio",
     "empty": "Ei vielä API-tunnuksia.",
     "defaultBadge": "Oletus",
-    "allScopes": "Kaikki käyttöoikeudet"
+    "allScopes": "Kaikki käyttöoikeudet",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "Yhteystiedot",

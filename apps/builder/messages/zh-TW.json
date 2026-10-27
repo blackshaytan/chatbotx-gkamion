@@ -1575,7 +1575,8 @@
       "settings": "設定",
       "miniApps": "迷你應用程式",
       "leaderboards": "排行榜",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",
@@ -5358,7 +5359,8 @@
     "namePlaceholder": "例如：Zapier 整合",
     "empty": "尚無 API 權杖。",
     "defaultBadge": "預設",
-    "allScopes": "所有範圍"
+    "allScopes": "所有範圍",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "聯絡人",

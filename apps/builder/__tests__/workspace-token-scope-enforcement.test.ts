@@ -68,7 +68,7 @@ const authResult = (
 })
 
 const buildProcedure = (
-  scope: "contacts" | "inbox" | "automation" | "broadcasts",
+  scope: "contacts" | "inbox" | "automation" | "broadcasts" | "chats",
   method: "GET" | "POST",
 ) =>
   workspaceTokenAuthAPIForScope(scope)
@@ -104,6 +104,25 @@ describe("workspace API token resource-scope enforcement", () => {
     await expect(invoke(broadcastsProcedure)).resolves.toMatchObject({
       ok: true,
     })
+  })
+
+  test("null scopes do not grant the explicit chats scope", async () => {
+    findWorkspaceByTokenHash.mockResolvedValue(authResult(null))
+
+    await expect(invoke(buildProcedure("chats", "GET"))).rejects.toMatchObject({
+      code: "FORBIDDEN",
+      message: "Token is not authorized for the 'chats' scope",
+    })
+  })
+
+  test("an explicit chats scope grants chat access", async () => {
+    findWorkspaceByTokenHash.mockResolvedValue(authResult(["chats"]))
+
+    await expect(invoke(buildProcedure("chats", "GET"))).resolves.toMatchObject(
+      {
+        ok: true,
+      },
+    )
   })
 
   test("a token scoped to ['contacts'] passes the contacts-scoped route", async () => {

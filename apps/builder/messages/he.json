@@ -3131,7 +3131,8 @@
     "namePlaceholder": "לדוגמה: אינטגרציית Zapier",
     "empty": "אין עדיין אסימוני API.",
     "defaultBadge": "ברירת מחדל",
-    "allScopes": "כל ההיקפים"
+    "allScopes": "כל ההיקפים",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "אנשי קשר",
@@ -6270,7 +6271,8 @@
       "settings": "הגדרות",
       "miniApps": "Mini Apps",
       "leaderboards": "טבלאות מובילים",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",

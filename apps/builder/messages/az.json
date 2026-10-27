@@ -2633,7 +2633,8 @@
       "settings": "Parametrlər",
       "miniApps": "Mini Apps",
       "leaderboards": "Liderlər lövhələri",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Reklamlar",
@@ -6007,7 +6008,8 @@
     "namePlaceholder": "məs., Zapier inteqrasiyası",
     "empty": "Hələ API tokeni yoxdur.",
     "defaultBadge": "Standart",
-    "allScopes": "Bütün icazə dairələri"
+    "allScopes": "Bütün icazə dairələri",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "Kontaktlar",

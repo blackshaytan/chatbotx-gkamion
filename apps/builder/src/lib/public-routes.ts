@@ -13,6 +13,7 @@ export const PUBLIC_ROUTES = [
   "/media/attachment",
   "/media/avatar",
   "/media/task-attachment",
+  "/media/chat-attachment",
   "/minigames",
   // Public leaderboard page; the personal bar is attributed only via a signed token.
   "/leaderboards",

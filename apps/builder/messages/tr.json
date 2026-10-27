@@ -2591,7 +2591,8 @@
       "settings": "Ayarlar",
       "miniApps": "Mini Apps",
       "leaderboards": "Liderlik tabloları",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",
@@ -5325,7 +5326,8 @@
     "namePlaceholder": "ör. Zapier entegrasyonu",
     "empty": "Henüz API belirteci yok.",
     "defaultBadge": "Varsayılan",
-    "allScopes": "Tüm kapsamlar"
+    "allScopes": "Tüm kapsamlar",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "Kişiler",

@@ -4,6 +4,7 @@ type RouteConfig = {
   method: string
   path: string
   summary: string
+  description: string
   tags: string[]
 }
 
@@ -118,7 +119,7 @@ describe("GET /v1/token", () => {
     expect(result.permission).toBe("read_only")
   })
 
-  test("reports null scopes as unrestricted rather than an empty list", async () => {
+  test("reports null scopes while documenting that Chats still need an explicit scope", async () => {
     const result = await procedure.handler?.({
       context: {
         workspace: { id: "workspace-1" },
@@ -133,5 +134,6 @@ describe("GET /v1/token", () => {
     })
 
     expect(result.scopes).toBeNull()
+    expect(procedure.route.description).toContain("never Chats")
   })
 })

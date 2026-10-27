@@ -2591,7 +2591,8 @@
       "settings": "الإعدادات",
       "miniApps": "Mini Apps",
       "leaderboards": "لوحات المتصدرين",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",
@@ -5325,7 +5326,8 @@
     "namePlaceholder": "مثال: تكامل Zapier",
     "empty": "لا توجد رموز API حتى الآن.",
     "defaultBadge": "افتراضي",
-    "allScopes": "جميع النطاقات"
+    "allScopes": "جميع النطاقات",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "جهات الاتصال",

@@ -2445,7 +2445,8 @@
       "settings": "Pengaturan",
       "miniApps": "Mini Apps",
       "leaderboards": "Papan peringkat",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",
@@ -5325,7 +5326,8 @@
     "namePlaceholder": "mis. integrasi Zapier",
     "empty": "Belum ada token API.",
     "defaultBadge": "Default",
-    "allScopes": "Semua cakupan"
+    "allScopes": "Semua cakupan",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "Kontak",

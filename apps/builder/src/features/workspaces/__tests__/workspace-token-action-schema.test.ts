@@ -7,6 +7,7 @@ describe("createWorkspaceTokenRequest", () => {
       name: "My token",
       permission: "full",
       allScopes: false,
+      includeChats: false,
       scopes: [],
     })
 
@@ -18,6 +19,7 @@ describe("createWorkspaceTokenRequest", () => {
       name: "My token",
       permission: "full",
       allScopes: true,
+      includeChats: false,
       scopes: [],
     })
 
@@ -29,6 +31,7 @@ describe("createWorkspaceTokenRequest", () => {
       name: "My token",
       permission: "full",
       allScopes: false,
+      includeChats: false,
       scopes: ["contacts"],
     })
 

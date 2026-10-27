@@ -30,6 +30,7 @@ describe("isPublicRoute", () => {
     expect(isPublicRoute("/media/attachment/signed-token")).toBe(true)
     expect(isPublicRoute("/media/avatar/signed-token")).toBe(true)
     expect(isPublicRoute("/media/task-attachment/signed-token")).toBe(true)
+    expect(isPublicRoute("/media/chat-attachment/signed-token")).toBe(true)
     expect(isPublicRoute("/mediator")).toBe(false)
   })
 

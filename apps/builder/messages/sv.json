@@ -1322,7 +1322,8 @@
     "namePlaceholder": "t.ex. Zapier-integration",
     "empty": "Inga API-token ännu.",
     "defaultBadge": "Standard",
-    "allScopes": "Alla omfång"
+    "allScopes": "Alla omfång",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "dialog": {
     "deleteConfirmation": "Är du helt säker?\nDen här åtgärden kan inte ångras.\nDetta tar permanent bort {feature} från våra servrar."
@@ -3363,7 +3364,8 @@
       "settings": "Inställningar",
       "miniApps": "Mini Apps",
       "leaderboards": "Topplistor",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",

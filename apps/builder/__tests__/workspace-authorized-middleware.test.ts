@@ -158,7 +158,24 @@ describe("workspaceAuthorizedMidddleware", () => {
         context: {
           workspace: membership.workspace,
           workspaceMember: membership,
+          isSupportSession: false,
         },
+      }),
+    )
+  })
+
+  test("preserves the support-session marker in the procedure context", async () => {
+    resolveWorkspaceAccess.mockResolvedValueOnce({
+      workspace: membership.workspace,
+      member: membership,
+      isSupportSession: true,
+    })
+
+    await callMiddleware("GET")
+
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: expect.objectContaining({ isSupportSession: true }),
       }),
     )
   })

@@ -2633,7 +2633,8 @@
       "settings": "Cài đặt",
       "miniApps": "Mini Apps",
       "leaderboards": "Bảng xếp hạng",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",
@@ -5030,7 +5031,8 @@
     "namePlaceholder": "vd: tích hợp Zapier",
     "empty": "Chưa có mã API nào.",
     "defaultBadge": "Mặc định",
-    "allScopes": "Tất cả phạm vi"
+    "allScopes": "Tất cả phạm vi",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "Liên hệ",

@@ -58,6 +58,7 @@ type CreateWorkspaceTokenActionInput = {
     name: string
     permission: "full" | "read_only"
     allScopes: boolean
+    includeChats: boolean
     scopes: string[]
   }
 }
@@ -74,6 +75,7 @@ describe("createWorkspaceTokenAction", () => {
         name: "My token",
         permission: "full",
         allScopes: true,
+        includeChats: false,
         scopes: [],
       },
     })
@@ -102,6 +104,7 @@ describe("createWorkspaceTokenAction", () => {
         name: "Unrestricted token",
         permission: "full",
         allScopes: true,
+        includeChats: false,
         scopes: ["contacts"],
       },
     })
@@ -121,6 +124,7 @@ describe("createWorkspaceTokenAction", () => {
         name: "Scoped token",
         permission: "full",
         allScopes: false,
+        includeChats: false,
         scopes: ["contacts", "inbox"],
       },
     })
@@ -145,6 +149,7 @@ describe("createWorkspaceTokenAction", () => {
           name: "My token",
           permission: "full",
           allScopes: true,
+          includeChats: false,
           scopes: [],
         },
       }),
@@ -168,6 +173,7 @@ describe("createWorkspaceTokenAction", () => {
           name: "Overflow",
           permission: "full",
           allScopes: true,
+          includeChats: false,
           scopes: [],
         },
       }),
@@ -185,11 +191,33 @@ describe("createWorkspaceTokenAction", () => {
         name: "Members-scoped token",
         permission: "full",
         allScopes: false,
+        includeChats: false,
         scopes: ["members"],
       },
     })
 
     const call = mocks.createToken.mock.calls[0][0]
     expect(call.scopes).toEqual(["members"])
+  })
+
+  test("allScopes with Chats stores an explicit current scope list", async () => {
+    await (
+      createWorkspaceTokenAction as unknown as (
+        input: CreateWorkspaceTokenActionInput,
+      ) => Promise<{ token: string }>
+    )({
+      bindArgsParsedInputs: ["ws-1"],
+      parsedInput: {
+        name: "Chat-capable token",
+        permission: "full",
+        allScopes: true,
+        includeChats: true,
+        scopes: [],
+      },
+    })
+
+    const call = mocks.createToken.mock.calls[0][0]
+    expect(call.scopes).toContain("chats")
+    expect(call.scopes).toContain("contacts")
   })
 })

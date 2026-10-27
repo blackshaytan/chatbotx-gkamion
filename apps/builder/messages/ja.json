@@ -2445,7 +2445,8 @@
       "settings": "設定",
       "miniApps": "ミニアプリ",
       "leaderboards": "ランキング",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",
@@ -5304,7 +5305,8 @@
     "namePlaceholder": "例: Zapier連携",
     "empty": "APIトークンはまだありません。",
     "defaultBadge": "デフォルト",
-    "allScopes": "すべてのスコープ"
+    "allScopes": "すべてのスコープ",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "連絡先",

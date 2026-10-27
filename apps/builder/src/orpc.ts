@@ -159,10 +159,11 @@ const publicAPI = withErrorMapping.errors(commonApiErrors)
 
 /**
  * Enforces the resource-area axis on top of `workspaceTokenAuthMidddleware`.
- * `apiToken.scopes === null` means unrestricted ("All scopes") — every
- * existing and system-default token — so it always passes. A non-null array
- * is an explicit allow-list denied for anything outside it, including a
- * scope that ships after the token was created (least privilege; see the
+ * `apiToken.scopes === null` means unrestricted ("All scopes") for existing
+ * resource areas. Chats deliberately differ: they remain denied until the
+ * token carries an explicit `"chats"` scope. A non-null array is an explicit
+ * allow-list denied for anything outside it, including a scope that ships
+ * after the token was created (least privilege; see the
  * WorkspaceApiToken.scopes doc).
  *
  * `scope` accepts an array for a route that legitimately spans more than
@@ -180,10 +181,13 @@ const requireTokenScope = (
     // it optional (shared with authorizedAPI, which never sets it).
     const scopes = context.apiToken?.scopes
     const required = Array.isArray(scope) ? scope : [scope]
+    const requiresExplicitChats = required.includes("chats")
     if (
-      scopes !== null &&
-      scopes !== undefined &&
-      !required.some((candidate) => scopes.includes(candidate))
+      (requiresExplicitChats && !scopes?.includes("chats")) ||
+      (!requiresExplicitChats &&
+        scopes !== null &&
+        scopes !== undefined &&
+        !required.some((candidate) => scopes.includes(candidate)))
     ) {
       throw new ORPCError("FORBIDDEN", {
         message: `Token is not authorized for the '${required.join("' or '")}' scope`,

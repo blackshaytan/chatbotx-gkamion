@@ -37,9 +37,9 @@ export const workspaceApiTokenPermission = pgEnum(
 // per-workspace token cap.
 //
 // `scopes` is the resource-area axis (orthogonal to `permission`). NULL means
-// unrestricted ("All scopes") — every existing row and every `isDefault` row
-// stays NULL, so this column is zero-behavior-change on introduction. A
-// non-null array is an explicit allow-list: a token scoped to `["contacts"]`
+// unrestricted ("All scopes") for existing resource areas. Chats are the
+// privacy-sensitive exception and always need an explicit `"chats"` entry.
+// A non-null array is an explicit allow-list: a token scoped to `["contacts"]`
 // is denied every route outside that scope, and — critically — is frozen at
 // that list forever, even after a new scope value ships later (only NULL
 // tokens gain a future scope automatically). Plain `text[]`, not a pg enum,

@@ -31,13 +31,16 @@ Each token carries two orthogonal authorization axes:
 | `permission` | `full`, `read_only` | `workspaceTokenAuthMidddleware` — a `read_only` token may only use GET/HEAD; DELETE is denied. |
 | `scopes` | `null` or an array of resource areas | `requireTokenScope` middleware, composed per-endpoint by `workspaceTokenAuthAPIForScope`. |
 
-`scopes: null` means unrestricted ("All scopes") — every legacy row and every
-default row. A non-null array is an explicit allow-list, frozen at creation:
-a token scoped to `["contacts"]` is denied every route outside that scope,
-including scopes that ship later (only `null` tokens gain future scopes
-automatically). Scope values are defined by the `workspaceApiTokenScopes` zod
-enum in `packages/database/src/partials/workspace-api-token.ts` and stored as
-plain `text[]`, so adding a scope is an enum change, never a migration.
+`scopes: null` means unrestricted ("All scopes") for existing resource areas,
+but **never grants access to Chats**. Chat access is deliberately privacy
+sensitive: a token must carry an explicit `"chats"` entry. That key can read
+every employee and API-agent chat in its workspace. A non-null array is an
+explicit allow-list, frozen at creation: a token scoped to `["contacts"]` is
+denied every route outside that scope, including scopes that ship later (only
+`null` tokens gain future non-Chat scopes automatically). Scope values are
+defined by the `workspaceApiTokenScopes` zod enum in
+`packages/database/src/partials/workspace-api-token.ts` and stored as plain
+`text[]`, so adding a scope is an enum change, never a migration.
 
 The `analytics` scope covers both `/v1/error-logs`
 (`apps/builder/src/features/error-logs/api/public.ts`) and, as of the public
@@ -60,7 +63,10 @@ index). That row backs the `{{api_key}}` system field and is:
   `encryptedToken`, an AES-GCM blob bound to its workspace via AAD
   (`workspace-api-token:<workspaceId>`) so it can never be decrypted under
   another workspace;
-- always `permission: "full"`, `scopes: null`, and exempt from the token cap;
+- always `permission: "full"` and exempt from the token cap. Existing default
+  tokens have `scopes: null`; the deliberate Chat rollout step converts them
+  to the full explicit scope list plus `"chats"` without changing their
+  existing access;
 - upgraded lazily from the deprecated plaintext `Workspace.token` column for
   legacy rows (the column is read-only for this purpose and never consulted
   during auth).

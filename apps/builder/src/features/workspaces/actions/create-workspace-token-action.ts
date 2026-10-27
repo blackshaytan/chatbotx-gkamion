@@ -8,6 +8,7 @@ import {
 } from "@/features/common/schema"
 import { workspaceActionClient } from "@/lib/safe-action"
 import { requireWorkspaceTokenSuperAdmin } from "../lib/require-workspace-token-super-admin"
+import { orderedWorkspaceApiTokenScopes } from "../lib/workspace-token-scopes"
 import {
   type CreateWorkspaceTokenRequest,
   createWorkspaceTokenRequest,
@@ -27,6 +28,16 @@ export const createWorkspaceTokenAction = workspaceActionClient
       await requireWorkspaceTokenSuperAdmin(workspaceId)
 
       const { token, tokenHash, tokenPrefix } = await generateWorkspaceToken()
+      let scopes: CreateWorkspaceTokenRequest["scopes"] | null =
+        parsedInput.scopes
+      if (parsedInput.allScopes) {
+        // Chats are intentionally never covered by the legacy NULL "all
+        // scopes" value. Selecting them converts the token to an explicit
+        // list of every current scope, including chats.
+        scopes = parsedInput.includeChats
+          ? orderedWorkspaceApiTokenScopes
+          : null
+      }
 
       await workspaceApiTokenService.createToken({
         workspaceId,
@@ -34,7 +45,7 @@ export const createWorkspaceTokenAction = workspaceActionClient
         permission: parsedInput.permission,
         tokenHash,
         tokenPrefix,
-        scopes: parsedInput.allScopes ? null : parsedInput.scopes,
+        scopes,
       })
 
       // Plaintext exists only in this return value — never persisted.

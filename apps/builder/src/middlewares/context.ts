@@ -26,6 +26,8 @@ export type BaseContext = ResponseHeadersPluginContext & {
   }
   user?: SessionUser
   workspace?: WorkspaceModel
+  /** True only for the synthetic, time-limited platform support membership. */
+  isSupportSession?: boolean
   apiToken?: RequestApiToken
   /**
    * Stable identity of the workspace or channel API credential that

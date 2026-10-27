@@ -2445,7 +2445,8 @@
       "settings": "Indstillinger",
       "miniApps": "Mini Apps",
       "leaderboards": "Ranglister",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",
@@ -5325,7 +5326,8 @@
     "namePlaceholder": "f.eks. Zapier-integration",
     "empty": "Ingen API-tokens endnu.",
     "defaultBadge": "Standard",
-    "allScopes": "Alle scopes"
+    "allScopes": "Alle scopes",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "Kontakter",

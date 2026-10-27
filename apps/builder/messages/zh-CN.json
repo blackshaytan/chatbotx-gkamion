@@ -1510,7 +1510,8 @@
     "namePlaceholder": "例如：Zapier 集成",
     "empty": "暂无 API 令牌。",
     "defaultBadge": "默认",
-    "allScopes": "所有作用域"
+    "allScopes": "所有作用域",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "dialog": {
     "deleteConfirmation": "你确定吗？\n此操作无法撤销。\n这将从我们的服务器中永久删除您的 {feature}。"
@@ -3366,7 +3367,8 @@
       "settings": "设置",
       "miniApps": "迷你应用",
       "leaderboards": "排行榜",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",

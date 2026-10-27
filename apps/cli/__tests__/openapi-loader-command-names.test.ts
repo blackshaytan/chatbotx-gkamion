@@ -177,6 +177,30 @@ describe("pathAndMethodToCommandName — Google Ads reads", () => {
   })
 })
 
+describe("pathAndMethodToCommandName — chats", () => {
+  test("chat operations have distinct generated command names", () => {
+    const names = [
+      pathAndMethodToCommandName("/v1/chats", "GET"),
+      pathAndMethodToCommandName("/v1/chats/{id}", "GET"),
+      pathAndMethodToCommandName("/v1/chats/open", "POST"),
+      pathAndMethodToCommandName("/v1/chats/{id}/messages", "GET"),
+      pathAndMethodToCommandName("/v1/chats/{id}/messages", "POST"),
+      pathAndMethodToCommandName(
+        "/v1/chats/{id}/messages/{messageId}",
+        "PATCH",
+      ),
+      pathAndMethodToCommandName(
+        "/v1/chats/{id}/messages/{messageId}",
+        "DELETE",
+      ),
+      pathAndMethodToCommandName("/v1/chats/{id}/attachments", "POST"),
+      pathAndMethodToCommandName("/v1/chats/presence", "GET"),
+    ]
+
+    expect(new Set(names)).toHaveLength(names.length)
+  })
+})
+
 describe("pathAndMethodToCommandName — filter/variant on a collection", () => {
   test("a literal second segment with no trailing param joins as a hyphenated action", () => {
     expect(

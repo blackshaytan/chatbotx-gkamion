@@ -72,6 +72,19 @@ describe("media token", () => {
     })
   })
 
+  test("round-trips chatAttachment kind", async () => {
+    const token = await signMediaToken({
+      workspaceId: "workspace-1",
+      kind: "chatAttachment",
+      refId: "message-1:0",
+    })
+
+    await expect(verifyMediaToken(token)).resolves.toMatchObject({
+      kind: "chatAttachment",
+      refId: "message-1:0",
+    })
+  })
+
   test("rejects expired tokens", async () => {
     const token = await signMediaToken(
       {

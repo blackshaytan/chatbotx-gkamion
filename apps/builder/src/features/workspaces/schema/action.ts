@@ -13,6 +13,7 @@ export const createWorkspaceTokenRequest = z
     name: z.string().min(1).max(100),
     permission: workspaceApiTokenPermissions,
     allScopes: z.boolean(),
+    includeChats: z.boolean(),
     scopes: z.array(workspaceApiTokenScopes),
   })
   .refine((data) => data.allScopes || data.scopes.length > 0, {

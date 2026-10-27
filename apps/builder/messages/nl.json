@@ -2249,7 +2249,8 @@
       "settings": "Instellingen",
       "miniApps": "Mini Apps",
       "leaderboards": "Ranglijsten",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "chats": "Chats"
     },
     "adReferral": {
       "label": "Ads",
@@ -5325,7 +5326,8 @@
     "namePlaceholder": "bijv. Zapier-integratie",
     "empty": "Nog geen API-tokens.",
     "defaultBadge": "Standaard",
-    "allScopes": "Alle bereiken"
+    "allScopes": "Alle bereiken",
+    "chatsScopeNotice": "This key can read every employee and API-agent chat in this workspace."
   },
   "contacts": {
     "title": "Contacten",

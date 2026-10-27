@@ -209,7 +209,7 @@ class ChatService extends BaseService {
     workspaceId: string
     threadId: string
     text: string
-    attachments: InternalMessageAttachment[]
+    attachments: Pick<InternalMessageAttachment, "key" | "name">[]
     actor: ChatActor
   }) {
     if (input.text.length > CHAT_LIMITS.maxMessageLength) {

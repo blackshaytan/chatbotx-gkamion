@@ -1215,6 +1215,24 @@ Attachments: upload each file with `tasks attachment add` (one file, up to 25 MB
 
 ---
 
+### `chats` (scope `chats`)
+
+```bash
+chatbotx chats list                                  # [--userId --includeEmpty --page --perPage]
+chatbotx chats get <id>
+chatbotx chats open --userIds <userId>               # one member creates an API-agent chat; two create a direct chat
+chatbotx chats messages list <id>                    # [--beforeId --afterId --limit]
+chatbotx chats message add <id> --text "..."          # optional --attachments JSON [{"key":"...","name":"..."}]
+chatbotx chats messages update <id> <messageId> --text "..."
+chatbotx chats message delete <id> <messageId>
+chatbotx chats attachment add <id> --file <path>     # returns key/name for message add
+chatbotx chats presence
+```
+
+Chats are not in the MCP default tool set; search for them when needed. The API key must have the explicit `chats` scope. Attachment links expire after about one hour, and chat messages do not support mentions.
+
+---
+
 ### `threads-comments`
 
 ```bash
