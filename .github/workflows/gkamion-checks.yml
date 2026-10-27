@@ -100,6 +100,7 @@ jobs:
           __tests__/task-list-where.test.ts
           __tests__/chat-partials.test.ts
           __tests__/staff-chat-schema.test.ts
+          __tests__/chat-repository.test.ts
 
       - working-directory: apps/worker
         run: pnpm exec vitest run __tests__/notification __tests__/incoming-push-policy.test.ts __tests__/received-message.test.ts
@@ -113,6 +114,7 @@ jobs:
           __tests__/message-create-outgoing.test.ts
           src/conversation/__tests__/conversation.service.test.ts
           __tests__/task
+          __tests__/chat
           __tests__/notification
           __tests__/workspace-member.service.test.ts
           __tests__/inbox-team-service-members.test.ts

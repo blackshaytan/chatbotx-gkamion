@@ -1,5 +1,6 @@
 import type { DatabaseClient } from "@chatbotx.io/database/client"
 import type { InternalMessageAttachment } from "@chatbotx.io/database/partials"
+import { EMPTY_INTERNAL_MESSAGE_MENTIONS } from "@chatbotx.io/database/partials"
 import {
   internalThreadRepository,
   taskRepository,
@@ -38,16 +39,20 @@ class InternalThreadService extends BaseService {
     text: string
     attachments: InternalMessageAttachment[]
     actor: TaskActor
+    parseMentions?: boolean
     tx?: DatabaseClient
   }): Promise<InternalMessageView> {
     const trimmed = input.text.trim()
     if (trimmed.length === 0 && input.attachments.length === 0) {
       throw validationException("text", "Comment text or attachments required")
     }
-    const mentions = await this.filterMentions({
-      workspaceId: input.workspaceId,
-      text: input.text,
-    })
+    const mentions =
+      input.parseMentions === false
+        ? EMPTY_INTERNAL_MESSAGE_MENTIONS
+        : await this.filterMentions({
+            workspaceId: input.workspaceId,
+            text: input.text,
+          })
     const { tx, ...row } = input
     const [message] = await internalThreadRepository.insertMessages({
       rows: [
@@ -69,6 +74,7 @@ class InternalThreadService extends BaseService {
     id: string
     text: string
     actor: TaskActor
+    parseMentions?: boolean
     now?: Date
     tx?: DatabaseClient
   }): Promise<InternalMessageView> {
@@ -80,10 +86,13 @@ class InternalThreadService extends BaseService {
       }
       throw validationException("comment", "Comment cannot be edited")
     }
-    const mentions = await this.filterMentions({
-      workspaceId: input.workspaceId,
-      text: input.text,
-    })
+    const mentions =
+      input.parseMentions === false
+        ? EMPTY_INTERNAL_MESSAGE_MENTIONS
+        : await this.filterMentions({
+            workspaceId: input.workspaceId,
+            text: input.text,
+          })
     const updated = await internalThreadRepository.updateMessage({
       workspaceId: input.workspaceId,
       id: input.id,

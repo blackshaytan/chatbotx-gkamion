@@ -65,20 +65,23 @@ class InternalThreadRepository {
     tx?: DatabaseClient
   }): Promise<void> {
     const { workspaceId, userId, tx = db } = props
-    await tx
-      .delete(internalThreadMemberModel)
-      .where(
-        and(
-          eq(internalThreadMemberModel.userId, userId),
-          inArray(
-            internalThreadMemberModel.threadId,
-            tx
-              .select({ id: internalThreadModel.id })
-              .from(internalThreadModel)
-              .where(eq(internalThreadModel.workspaceId, workspaceId)),
-          ),
+    await tx.delete(internalThreadMemberModel).where(
+      and(
+        eq(internalThreadMemberModel.userId, userId),
+        inArray(
+          internalThreadMemberModel.threadId,
+          tx
+            .select({ id: internalThreadModel.id })
+            .from(internalThreadModel)
+            .where(
+              and(
+                eq(internalThreadModel.workspaceId, workspaceId),
+                eq(internalThreadModel.type, "task"),
+              ),
+            ),
         ),
-      )
+      ),
+    )
   }
 
   async insertMessages(props: {

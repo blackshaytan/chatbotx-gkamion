@@ -4,15 +4,24 @@ import { createId } from "@chatbotx.io/utils"
 import { validationException } from "../errors"
 import { logger } from "../logger"
 
-export const TASK_ATTACHMENT_LIMITS = {
+export const THREAD_ATTACHMENT_LIMITS = {
   maxFiles: 10,
   maxBytes: 25 * 1024 * 1024,
 } as const
 
+export const TASK_ATTACHMENT_LIMITS = THREAD_ATTACHMENT_LIMITS
+type ThreadAttachmentOwner = { kind: "tasks" | "chats"; id: string }
+export const threadAttachmentPrefix = (
+  workspaceId: string,
+  owner: ThreadAttachmentOwner,
+) => `private/space/${workspaceId}/${owner.kind}/${owner.id}/`
+export const chatAttachmentPrefix = (workspaceId: string, threadId: string) =>
+  threadAttachmentPrefix(workspaceId, { kind: "chats", id: threadId })
+
 export const taskAttachmentPrefix = (
   workspaceId: string,
   taskId: string,
-): string => `private/space/${workspaceId}/tasks/${taskId}/`
+): string => threadAttachmentPrefix(workspaceId, { kind: "tasks", id: taskId })
 
 const FORBIDDEN_NAME_CHARACTERS = new Set(["/", "\\", '"'])
 
@@ -28,9 +37,12 @@ const sanitizeAttachmentName = (name: string): string =>
     .trim()
     .slice(0, 255) || "file"
 
-export const uploadTaskAttachment = async (input: {
+const attachmentOwnerName = (owner: ThreadAttachmentOwner): string =>
+  owner.kind === "tasks" ? "task" : "chat"
+
+export const uploadThreadAttachment = async (input: {
   workspaceId: string
-  taskId: string
+  owner: ThreadAttachmentOwner
   file: File
 }): Promise<{
   key: string
@@ -38,14 +50,14 @@ export const uploadTaskAttachment = async (input: {
   size: number
   mimeType: string
 }> => {
-  const { workspaceId, taskId, file } = input
-  if (file.size > TASK_ATTACHMENT_LIMITS.maxBytes) {
+  const { workspaceId, owner, file } = input
+  if (file.size > THREAD_ATTACHMENT_LIMITS.maxBytes) {
     throw validationException(
       "file",
-      `File must be at most ${TASK_ATTACHMENT_LIMITS.maxBytes} bytes`,
+      `File must be at most ${THREAD_ATTACHMENT_LIMITS.maxBytes} bytes`,
     )
   }
-  const key = `${taskAttachmentPrefix(workspaceId, taskId)}${createId()}`
+  const key = `${threadAttachmentPrefix(workspaceId, owner)}${createId()}`
   const buffer = Buffer.from(await file.arrayBuffer())
   const name = sanitizeAttachmentName(file.name)
   const mimeType = file.type || "application/octet-stream"
@@ -62,25 +74,25 @@ export const uploadTaskAttachment = async (input: {
   }
 }
 
-export const resolveTaskAttachments = async (input: {
+export const resolveThreadAttachments = async (input: {
   workspaceId: string
-  taskId: string
+  owner: ThreadAttachmentOwner
   items: { key: string; name: string }[]
 }): Promise<InternalMessageAttachment[]> => {
-  const { workspaceId, taskId, items } = input
-  if (items.length > TASK_ATTACHMENT_LIMITS.maxFiles) {
+  const { workspaceId, owner, items } = input
+  if (items.length > THREAD_ATTACHMENT_LIMITS.maxFiles) {
     throw validationException(
       "attachments",
-      `At most ${TASK_ATTACHMENT_LIMITS.maxFiles} attachments allowed`,
+      `At most ${THREAD_ATTACHMENT_LIMITS.maxFiles} attachments allowed`,
     )
   }
-  const prefix = taskAttachmentPrefix(workspaceId, taskId)
+  const prefix = threadAttachmentPrefix(workspaceId, owner)
   const resolved: InternalMessageAttachment[] = []
   for (const item of items) {
     if (!item.key.startsWith(prefix)) {
       throw validationException(
         "attachments",
-        "Attachment key does not belong to this task",
+        `Attachment key does not belong to this ${attachmentOwnerName(owner)}`,
       )
     }
     let head: { ContentLength?: number; ContentType?: string }
@@ -88,8 +100,14 @@ export const resolveTaskAttachments = async (input: {
       head = await uploader.headObject(item.key)
     } catch (err) {
       logger.warn(
-        { err, key: item.key, taskId, workspaceId },
-        "Task attachment was not found in storage",
+        {
+          err,
+          key: item.key,
+          ownerId: owner.id,
+          ownerKind: owner.kind,
+          workspaceId,
+        },
+        "Thread attachment was not found in storage",
       )
       throw validationException(
         "attachments",
@@ -97,10 +115,10 @@ export const resolveTaskAttachments = async (input: {
       )
     }
     const size = head.ContentLength ?? 0
-    if (size > TASK_ATTACHMENT_LIMITS.maxBytes) {
+    if (size > THREAD_ATTACHMENT_LIMITS.maxBytes) {
       throw validationException(
         "attachments",
-        `Attachment exceeds ${TASK_ATTACHMENT_LIMITS.maxBytes} bytes`,
+        `Attachment exceeds ${THREAD_ATTACHMENT_LIMITS.maxBytes} bytes`,
       )
     }
     resolved.push({
@@ -112,3 +130,47 @@ export const resolveTaskAttachments = async (input: {
   }
   return resolved
 }
+
+export const uploadTaskAttachment = async (input: {
+  workspaceId: string
+  taskId: string
+  file: File
+}) =>
+  await uploadThreadAttachment({
+    workspaceId: input.workspaceId,
+    owner: { kind: "tasks", id: input.taskId },
+    file: input.file,
+  })
+
+export const resolveTaskAttachments = async (input: {
+  workspaceId: string
+  taskId: string
+  items: { key: string; name: string }[]
+}) =>
+  await resolveThreadAttachments({
+    workspaceId: input.workspaceId,
+    owner: { kind: "tasks", id: input.taskId },
+    items: input.items,
+  })
+
+export const uploadChatAttachment = async (input: {
+  workspaceId: string
+  threadId: string
+  file: File
+}) =>
+  await uploadThreadAttachment({
+    workspaceId: input.workspaceId,
+    owner: { kind: "chats", id: input.threadId },
+    file: input.file,
+  })
+
+export const resolveChatAttachments = async (input: {
+  workspaceId: string
+  threadId: string
+  items: { key: string; name: string }[]
+}) =>
+  await resolveThreadAttachments({
+    workspaceId: input.workspaceId,
+    owner: { kind: "chats", id: input.threadId },
+    items: input.items,
+  })

@@ -81,6 +81,30 @@ describe("internalThreadService.postComment", () => {
     })
   })
 
+  test("writes empty mentions without querying task members when disabled", async () => {
+    repo.thread.insertMessages.mockResolvedValue([storedMessage()])
+
+    await internalThreadService.postComment({
+      workspaceId: "ws-1",
+      threadId: "th-1",
+      text: "@[A](user:1)",
+      attachments: [],
+      actor: { kind: "user", userId: "u-1", isOwner: false },
+      parseMentions: false,
+    })
+
+    expect(repo.task.listMemberUserIds).not.toHaveBeenCalled()
+    expect(repo.task.listTeamIds).not.toHaveBeenCalled()
+    expect(repo.thread.insertMessages).toHaveBeenCalledWith({
+      rows: [
+        expect.objectContaining({
+          mentions: { userIds: [], teamIds: [] },
+        }),
+      ],
+      tx: undefined,
+    })
+  })
+
   test("allows empty text when attachments exist", async () => {
     repo.thread.insertMessages.mockResolvedValue([storedMessage({ text: "" })])
     await internalThreadService.postComment({
