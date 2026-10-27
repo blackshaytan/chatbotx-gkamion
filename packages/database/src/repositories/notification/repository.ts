@@ -12,13 +12,16 @@ import {
   sql,
 } from "../../client"
 import type {
+  ChatNotificationPayload,
+  ChatNotificationType,
+  NotificationEntityType,
   NotificationPayload,
   TaskNotificationType,
 } from "../../partials/notification"
 import { notificationModel } from "../../schema"
 import type { NotificationModel } from "../../types"
 
-export type NotificationInsert = {
+export type TaskNotificationInsert = {
   workspaceId: string
   userId: string
   type: TaskNotificationType
@@ -26,6 +29,17 @@ export type NotificationInsert = {
   entityId: string
   payload: NotificationPayload
 }
+
+export type ChatNotificationInsert = {
+  workspaceId: string
+  userId: string
+  type: ChatNotificationType
+  entityType: "chat"
+  entityId: string
+  payload: ChatNotificationPayload
+}
+
+export type NotificationInsert = TaskNotificationInsert | ChatNotificationInsert
 
 class NotificationRepository {
   async insertMany(props: {
@@ -44,13 +58,24 @@ class NotificationRepository {
     userId: string
     limit: number
     unreadOnly?: boolean
+    entityType?: NotificationEntityType
     tx?: DatabaseClient
   }): Promise<NotificationModel[]> {
-    const { workspaceId, userId, limit, unreadOnly, tx = db } = props
+    const {
+      workspaceId,
+      userId,
+      limit,
+      unreadOnly,
+      entityType,
+      tx = db,
+    } = props
     const conditions = [
       eq(notificationModel.workspaceId, workspaceId),
       eq(notificationModel.userId, userId),
     ]
+    if (entityType !== undefined) {
+      conditions.push(eq(notificationModel.entityType, entityType))
+    }
     if (unreadOnly) {
       conditions.push(isNull(notificationModel.readAt))
     }
@@ -118,7 +143,7 @@ class NotificationRepository {
 
   async deleteByEntity(props: {
     workspaceId: string
-    entityType: "task"
+    entityType: NotificationEntityType
     entityId: string
     tx?: DatabaseClient
   }): Promise<void> {

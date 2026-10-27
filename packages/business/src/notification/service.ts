@@ -1,5 +1,6 @@
 import { type DatabaseClient, db } from "@chatbotx.io/database/client"
 import type {
+  NotificationPayload,
   TaskNotificationType,
   WorkspaceMemberNotificationTypes,
 } from "@chatbotx.io/database/partials"
@@ -9,6 +10,7 @@ import {
   taskRepository,
   workspaceMemberRepository,
 } from "@chatbotx.io/database/repositories"
+import type { NotificationModel } from "@chatbotx.io/database/types"
 import { BaseService } from "../base.service"
 import { validationException } from "../errors"
 import { logger } from "../logger"
@@ -37,6 +39,14 @@ const notificationActorUserId = (actor: NotificationActor): string | null =>
 
 const notificationActorLabel = (actor: NotificationActor): string | null =>
   actor.kind === "system" ? null : actorLabel(actor)
+
+const isTaskNotificationRow = (
+  row: NotificationModel,
+): row is NotificationModel & {
+  type: TaskNotificationType
+  entityType: "task"
+  payload: NotificationPayload
+} => row.entityType === "task"
 
 class NotificationService extends BaseService {
   async notifyTask(props: {
@@ -153,8 +163,20 @@ class NotificationService extends BaseService {
     userId: string
     limit: number
     unreadOnly?: boolean
-  }) {
-    return await notificationRepository.listForUser(input)
+  }): Promise<
+    Array<
+      NotificationModel & {
+        type: TaskNotificationType
+        entityType: "task"
+        payload: NotificationPayload
+      }
+    >
+  > {
+    const rows = await notificationRepository.listForUser({
+      ...input,
+      entityType: "task",
+    })
+    return rows.filter(isTaskNotificationRow)
   }
 
   async countUnread(input: { workspaceId: string; userId: string }) {

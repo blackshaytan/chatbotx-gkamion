@@ -98,6 +98,8 @@ jobs:
           __tests__/sharded-message-repository.test.ts
           __tests__/task-partial.test.ts
           __tests__/task-list-where.test.ts
+          __tests__/chat-partials.test.ts
+          __tests__/staff-chat-schema.test.ts
 
       - working-directory: apps/worker
         run: pnpm exec vitest run __tests__/notification __tests__/incoming-push-policy.test.ts __tests__/received-message.test.ts

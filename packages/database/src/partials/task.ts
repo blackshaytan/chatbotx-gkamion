@@ -7,6 +7,12 @@ export const TASK_LIMITS = {
   maxWatchers: 50,
 } as const
 
+export const CHAT_LIMITS = {
+  maxMessageLength: TASK_LIMITS.maxCommentLength,
+  defaultPageSize: 50,
+  maxPageSize: 50,
+} as const
+
 export const taskStatusValues = [
   "todo",
   "in_progress",
@@ -31,7 +37,10 @@ export const taskCreatedBySourceValues = ["user", "flow", "api"] as const
 export const taskCreatedBySources = z.enum(taskCreatedBySourceValues)
 export type TaskCreatedBySource = z.infer<typeof taskCreatedBySources>
 
-export const internalThreadTypeValues = ["task"] as const
+export const internalThreadTypeValues = ["task", "direct", "agent"] as const
+
+export const CHAT_THREAD_TYPES = ["direct", "agent"] as const
+export type ChatThreadType = (typeof CHAT_THREAD_TYPES)[number]
 
 export const internalMessageKindValues = ["comment", "system"] as const
 export const internalMessageKinds = z.enum(internalMessageKindValues)

@@ -32,7 +32,7 @@ export const internalMessageKind = pgEnum(
   internalMessageKindValues,
 )
 
-/** A staff-only discussion: today the feed of one task, later staff chats. */
+/** Task feed or staff direct/agent chat in one workspace. */
 export const internalThreadModel = pgTable(
   "InternalThread",
   {
@@ -44,11 +44,23 @@ export const internalThreadModel = pgTable(
         onUpdate: "cascade",
       }),
     type: internalThreadType().notNull(),
+    title: text(),
+    directKey: text(),
+    lastMessageAt: timestamp(timestampConfig),
   },
   (table) => [
     index("InternalThread_workspaceId_idx").using(
       "btree",
       table.workspaceId.asc().nullsLast(),
+    ),
+    uniqueIndex("InternalThread_workspaceId_directKey_key").on(
+      table.workspaceId,
+      table.directKey,
+    ),
+    index("InternalThread_workspaceId_type_lastMessageAt_idx").on(
+      table.workspaceId,
+      table.type,
+      table.lastMessageAt.desc(),
     ),
   ],
 )

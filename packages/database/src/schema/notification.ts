@@ -1,7 +1,16 @@
 import { sql } from "drizzle-orm"
-import { index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import {
+  index,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core"
 import type {
-  NotificationPayload,
+  AnyNotificationPayload,
+  ChatNotificationType,
+  NotificationEntityType,
   TaskNotificationType,
 } from "../partials/notification"
 import {
@@ -28,10 +37,10 @@ export const notificationModel = pgTable(
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
-    type: text().$type<TaskNotificationType>().notNull(),
-    entityType: text().$type<"task">().notNull(),
+    type: text().$type<TaskNotificationType | ChatNotificationType>().notNull(),
+    entityType: text().$type<NotificationEntityType>().notNull(),
     entityId: bigintAsString().notNull(),
-    payload: jsonb().$type<NotificationPayload>().notNull(),
+    payload: jsonb().$type<AnyNotificationPayload>().notNull(),
     readAt: timestamp(timestampConfig),
   },
   (table) => [
@@ -49,5 +58,8 @@ export const notificationModel = pgTable(
       table.entityId,
     ),
     index("Notification_createdAt_idx").on(table.createdAt),
+    uniqueIndex("Notification_chat_unread_key")
+      .on(table.workspaceId, table.userId, table.entityId)
+      .where(sql`"entityType" = 'chat' AND "readAt" IS NULL`),
   ],
 )

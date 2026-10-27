@@ -199,6 +199,54 @@ describe("notificationService.notifyTask", () => {
   })
 })
 
+describe("notificationService.listForUser", () => {
+  test("requests and returns only task notifications", async () => {
+    const taskNotification = {
+      id: "n-1",
+      type: "taskCommented",
+      entityType: "task",
+      payload: {
+        taskTitle: "Title",
+        actorUserId: "u-1",
+        actorLabel: "Member",
+        excerpt: null,
+      },
+    }
+    repo.notification.listForUser.mockResolvedValue([
+      taskNotification,
+      {
+        id: "n-2",
+        type: "chatMessage",
+        entityType: "chat",
+        payload: {
+          actorUserId: "u-2",
+          actorLabel: "Member",
+          excerpt: "Hello",
+          count: 1,
+          lastMessageId: "m-1",
+          lastMessageAt: "2026-10-27T12:00:00.000Z",
+        },
+      },
+    ])
+
+    const result = await notificationService.listForUser({
+      workspaceId: "ws-1",
+      userId: "u-1",
+      limit: 20,
+      unreadOnly: true,
+    })
+
+    expect(repo.notification.listForUser).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      userId: "u-1",
+      limit: 20,
+      unreadOnly: true,
+      entityType: "task",
+    })
+    expect(result).toEqual([taskNotification])
+  })
+})
+
 describe("notificationService.processDueTaskNotifications", () => {
   const dueTask = (id: string) => ({
     id,
