@@ -73,6 +73,8 @@ The **`createTask`** step lives inside the **Perform action** node (same menu as
 
 The step always links the current **contact** and **conversation** (`messageId` is not set). The actor is `{ kind: "flow", label: <active flow name> }` (fallback label **Flow**). Outputs: **success** (result includes `taskId`) and **error** (assignee not in workspace, team missing or empty, conversation unassigned, empty title, or other create failure).
 
+Like other non-idempotent flow steps, a retried flow job can run **Create task** again and create a duplicate task.
+
 **Notifications:** the **integration** worker registers `registerNotificationRealtime()` (like the schedule worker), so assignees get **`notificationCreated`** in the bell without reload.
 
 **Flow import:** `outputFieldId` is remapped; assignee `userId` / `teamId` are **not** remapped across workspaces (same as `autoAssignConversation`) — the step may take the **error** output after import.

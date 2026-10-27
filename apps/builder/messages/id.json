@@ -9267,6 +9267,7 @@
       "outputFieldHint": "The new task id is saved to this field when selected",
       "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
       "validation": {
+        "dueAmountRequired": "Enter a due amount",
         "remindNeedsDue": "Set a due date before adding a reminder",
         "remindAfterDue": "The reminder must not be later than the due date"
       }

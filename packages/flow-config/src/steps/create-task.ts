@@ -1,4 +1,8 @@
-import { createId, zodBigintAsString } from "@chatbotx.io/utils"
+import {
+  createId,
+  zodBigintAsString,
+  zodBigintIdAsString,
+} from "@chatbotx.io/utils"
 import { z } from "zod"
 import { zodFieldReference } from "../field-reference"
 import {
@@ -27,8 +31,8 @@ export const createTaskUnitMinutes = {
 } as const satisfies Record<CreateTaskDueUnit, number>
 
 export const createTaskAssigneeSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("user"), userId: zodBigintAsString() }),
-  z.object({ type: z.literal("team"), teamId: zodBigintAsString() }),
+  z.object({ type: z.literal("user"), userId: zodBigintIdAsString() }),
+  z.object({ type: z.literal("team"), teamId: zodBigintIdAsString() }),
   z.object({ type: z.literal("conversation") }),
 ])
 export type CreateTaskAssignee = z.infer<typeof createTaskAssigneeSchema>
@@ -84,7 +88,7 @@ export const createTaskStepSchema = z
     outputFieldId: zodFieldReference()
       .or(z.literal(""))
       .describe(
-        "Optional field (custom field id or `bot_field:<id>`) that receives the new task id; empty string to skip.",
+        "Optional field that receives the new task id: a custom field id from `customFields.list`, or `bot_field:<id>` from `botFields.list`; empty string to skip.",
       ),
     states: z.tuple([successStateSchema, errorStateSchema]),
   })

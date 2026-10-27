@@ -80,10 +80,16 @@ const useContactAssigneeOptionsState = (
       {
         label: t("users.options.agents"),
         value: "agents",
-        children: workspaceMembers.map((v) => ({
-          label: v.user?.name ?? "--",
-          value: `u_${v.user?.id}`,
-        })),
+        children: workspaceMembers.flatMap((v) =>
+          v.user?.id
+            ? [
+                {
+                  label: v.user.name ?? "--",
+                  value: `u_${v.user.id}`,
+                },
+              ]
+            : [],
+        ),
       },
       {
         label: t("inboxTeams.title"),
@@ -138,18 +144,30 @@ export const useContactAssigneeOptions = (
   props?: ContactAssigneeOptionsProps,
 ) => useContactAssigneeOptionsState(props).options
 
-export const useContactAssigneeMultiSelectOptions = (): MultiSelectGroup[] => {
+export const useContactAssigneeMultiSelectOptions = (props?: {
+  enabled?: boolean
+}): MultiSelectGroup[] => {
   const workspaceId = useWorkspaceId()
-  const { data: workspaceMembers = [] } = useWorkspaceMembers(workspaceId)
-  const { data: inboxTeams = [] } = useInboxTeams(workspaceId)
+  const { data: workspaceMembers = [] } = useWorkspaceMembers(workspaceId, {
+    enabled: props?.enabled,
+  })
+  const { data: inboxTeams = [] } = useInboxTeams(workspaceId, {
+    enabled: props?.enabled,
+  })
   return useMemo(
     () => [
       {
         heading: "Agents",
-        options: workspaceMembers.map((v) => ({
-          label: v.user?.name ?? "--",
-          value: `u_${v.user?.id}`,
-        })),
+        options: workspaceMembers.flatMap((v) =>
+          v.user?.id
+            ? [
+                {
+                  label: v.user.name ?? "--",
+                  value: `u_${v.user.id}`,
+                },
+              ]
+            : [],
+        ),
       },
       {
         heading: "Inbox Teams",

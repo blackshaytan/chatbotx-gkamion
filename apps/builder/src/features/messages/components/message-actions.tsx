@@ -430,7 +430,7 @@ export const MessageActions = ({
           ) : null}
         </PopoverContent>
       </Popover>
-      {showCreateTask && activeConversation ? (
+      {isCreateTaskOpen && activeConversation ? (
         <CreateTaskDialog
           defaultDescription={toMarkdownQuote(message.text ?? "")}
           defaultTargets={{

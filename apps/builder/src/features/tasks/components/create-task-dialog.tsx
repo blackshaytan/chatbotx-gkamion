@@ -22,7 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "@tanstack/react-query"
 import { Loader2Icon } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { type ReactElement, useEffect, useMemo, useState } from "react"
+import { type ReactElement, useEffect, useMemo, useRef, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -114,6 +114,7 @@ export const CreateTaskDialog = ({
   const [internalOpen, setInternalOpen] = useState(false)
   const isControlled = openProp !== undefined
   const open = isControlled ? openProp : internalOpen
+  const wasOpenRef = useRef(false)
   const setOpen = (nextOpen: boolean) => {
     if (!isControlled) {
       setInternalOpen(nextOpen)
@@ -121,7 +122,9 @@ export const CreateTaskDialog = ({
     onOpenChange?.(nextOpen)
   }
   const assigneeOptions = useContactAssigneeOptions({ enabled: open })
-  const assigneeMultiSelectOptions = useContactAssigneeMultiSelectOptions()
+  const assigneeMultiSelectOptions = useContactAssigneeMultiSelectOptions({
+    enabled: open,
+  })
   const invalidateTasks = useInvalidateTasks()
   const initialValues = useMemo(
     () => ({
@@ -152,9 +155,10 @@ export const CreateTaskDialog = ({
   const dueAt = useWatch({ control: form.control, name: "dueAt" })
 
   useEffect(() => {
-    if (open) {
+    if (open && !wasOpenRef.current) {
       form.reset(initialValues)
     }
+    wasOpenRef.current = open
   }, [form, initialValues, open])
 
   const watcherOptions = useMemo(
@@ -181,7 +185,6 @@ export const CreateTaskDialog = ({
         toast.success(t("toasts.created"))
         await invalidateTasks()
         onCreated?.(task)
-        form.reset(initialValues)
         setOpen(false)
       },
     }),
@@ -189,10 +192,6 @@ export const CreateTaskDialog = ({
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
-
-    if (!nextOpen) {
-      form.reset(initialValues)
-    }
   }
 
   const handleReminderPreset = (preset: ReminderPreset) => {

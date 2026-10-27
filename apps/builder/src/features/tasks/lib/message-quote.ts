@@ -26,5 +26,5 @@ export const toMarkdownQuote = (
 
 export const canCreateTaskFromMessage = (message: {
   messageType: string
-  deletedAt: Date | string | null
-}): boolean => message.messageType === "incoming" && message.deletedAt === null
+  deletedAt?: Date | string | null
+}): boolean => message.messageType === "incoming" && message.deletedAt == null

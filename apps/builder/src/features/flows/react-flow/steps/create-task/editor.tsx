@@ -84,17 +84,29 @@ const CreateTaskDialog = ({ parentName }: { parentName: string }) => {
         unknown,
         CreateTaskStepSchema
       >
-      const result = await base(values, context, options)
+      const normalizedValues = {
+        ...values,
+        remindBeforeMinutes: values.remindBeforeMinutes ?? null,
+      }
+      const result = await base(normalizedValues, context, options)
       const reminderError = result.errors.remindBeforeMinutes
+      const dueAmountError = result.errors.dueIn?.amount
 
       if (reminderError?.type === "custom") {
         result.errors.remindBeforeMinutes = {
           type: "manual",
           message:
-            values.dueIn === null
+            normalizedValues.dueIn === null
               ? t("tasks.flowStep.validation.remindNeedsDue")
               : t("tasks.flowStep.validation.remindAfterDue"),
         }
+      }
+
+      if (normalizedValues.dueIn?.amount === undefined && dueAmountError) {
+        dueAmountError.type = "manual"
+        dueAmountError.message = t(
+          "tasks.flowStep.validation.dueAmountRequired",
+        )
       }
 
       return result
@@ -112,6 +124,7 @@ const CreateTaskDialog = ({ parentName }: { parentName: string }) => {
 
   const assignee = useWatch({ control: form.control, name: "assignee" })
   const dueIn = useWatch({ control: form.control, name: "dueIn" })
+  const assigneeError = form.formState.errors.assignee?.message
   const auxiliaryForm = useForm<AuxiliaryFormValues>({
     defaultValues: {
       assigneeValue: assigneeToValue(assignee),
@@ -242,6 +255,11 @@ const CreateTaskDialog = ({ parentName }: { parentName: string }) => {
                 options={combinedAssigneeOptions}
                 triggerValueChange={handleAssigneeChange}
               />
+              {assigneeError ? (
+                <p className="text-destructive text-sm" role="alert">
+                  {t("tasks.validation.assigneeRequired")}
+                </p>
+              ) : null}
               <SelectField
                 label={t("tasks.flowStep.dueMode")}
                 name="dueMode"

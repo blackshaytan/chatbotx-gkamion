@@ -46,6 +46,14 @@ describe("canCreateTaskFromMessage", () => {
     ).toBe(true)
   })
 
+  test("allows an incoming message without deletedAt", () => {
+    expect(
+      canCreateTaskFromMessage({
+        messageType: "incoming",
+      }),
+    ).toBe(true)
+  })
+
   test.each([
     "outgoing",
     "activity",

@@ -59,6 +59,17 @@ describe("Create task flow contract", () => {
     expect(createTaskStepSchema.safeParse(value).success).toBe(true)
   })
 
+  test.each([
+    { type: "user", userId: "1234567890123456789" },
+    { type: "team", teamId: "1234567890123456789" },
+  ])("rejects an assignee id that can overflow bigint", (assignee) => {
+    const value = {
+      ...validBase(),
+      assignee,
+    }
+    expect(createTaskStepSchema.safeParse(value).success).toBe(false)
+  })
+
   test("conversation assignee passes", () => {
     expect(createTaskStepSchema.safeParse(validBase()).success).toBe(true)
   })

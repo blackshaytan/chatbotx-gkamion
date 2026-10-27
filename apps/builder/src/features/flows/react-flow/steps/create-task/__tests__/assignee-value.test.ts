@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { assigneeToValue, valueToAssignee } from "./assignee-value"
+import { assigneeToValue, valueToAssignee } from "../assignee-value"
 
 describe("create task assignee value adapter", () => {
   test.each([
