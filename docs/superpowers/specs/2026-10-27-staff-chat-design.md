@@ -2,7 +2,7 @@
 
 Дата: 2026-10-27
 Ветка: `feature/ru-channels-max-zzap-drom`
-Статус: решения раздела 12 зафиксированы (D1, D4–D6, D9); реализация по этапам раздела 10
+Статус: решения раздела 12 зафиксированы (D1, D4–D6, D9–D11); реализация по этапам раздела 10; ассистент сотрудников (Hermes в чате) — раздел 13, этап 6
 
 ## 1. Цель и контекст
 
@@ -15,7 +15,8 @@
 - уведомление в колокольчике (одно непрочитанное на чат) и обновление интерфейса в реальном времени;
 - «Создать задачу» из сообщения;
 - публичный API со scope `chats` (opt-in, см. D6; полный доступ ко всем чатам пространства для токенов с явным `"chats"`), включая личные сообщения от агента сотруднику;
-- только чтение для сессий поддержки платформы.
+- только чтение для сессий поддержки платформы;
+- **ассистент сотрудников (этап 6, раздел 13):** сотрудник сам начинает чат с Hermes («Новый чат» → первый пункт), сообщения пересылаются отдельному профилю Hermes через существующий мост external-agent, ответ приходит в тот же `agent`-чат, в который Hermes пишет первым.
 
 **Не входит:** групповые чаты (схема их не блокирует, раздел 3.4), упоминания `@` в личных чатах и тип `chatMentioned` (решение D3), реакции, ответы-цитаты, поиск по чатам, push/MAX-доставка (ждут этапов 5–6 задач), шаг сценария «написать сотруднику», чат с самим собой, закрепление и архив, очистка файлов удалённых чатов.
 
@@ -49,8 +50,8 @@
 ### 3.1 `InternalThread` — новые поля и значения
 
 - `type` (enum `internalThreadType`): к `task` добавляются `direct` (чат двух сотрудников) и `agent` (личный канал «API-клиент → один сотрудник», решение D1). `group` добавится позже одним `ALTER TYPE … ADD VALUE`. **Новые значения нельзя использовать в той же миграции** (PostgreSQL: «unsafe use of new enum value» внутри транзакции) — поэтому в индексах миграции нет предикатов по `type`.
-- `title` text, пусто — название для `agent`-чата (подпись токена); для `direct` не заполняется (имя — собеседник). Пригодится группам.
-- `directKey` text, пусто — ключ дедупликации: для `direct` — `<меньший userId>:<больший userId>` (сравнение как `BigInt`), для `agent` — `agent:<userId>:<подпись токена>`. У лент задач `NULL`.
+- `title` text, пусто — название для `agent`-чата (подпись токена, а для чата ассистента сотрудников — имя ассистента, 13.3); для `direct` не заполняется (имя — собеседник). Пригодится группам.
+- `directKey` text, пусто — ключ дедупликации: для `direct` — `<меньший userId>:<больший userId>` (сравнение как `BigInt`), для `agent` — `agent:<userId>:staff`, если чат принадлежит ассистенту сотрудников (13.3), иначе `agent:<userId>:token:<подпись токена>`. Ключ ассистента не зависит от подписи токена, поэтому чат, начатый сотрудником, и чат, в который Hermes пишет первым, — один и тот же. У лент задач `NULL`.
 - `lastMessageAt` timestamp, пусто — время последнего сообщения-комментария; обновляется атомарно с вставкой сообщения (3.5).
 - Индексы: `uniqueIndex("InternalThread_workspaceId_directKey_key").on(workspaceId, directKey)` (`NULL` не конфликтуют — задачи не затронуты); `index("InternalThread_workspaceId_type_lastMessageAt_idx").on(workspaceId, type, lastMessageAt desc)`.
 - Колонки без `.default()` — вставки пишут значения явно (AGENTS.md: «`.default()` — не гарантия БД»); новые колонки допускают `NULL`, так что существующие вставки задач не ломаются.
@@ -62,7 +63,7 @@
 
 ### 3.3 `InternalMessage`
 
-Без изменений схемы. Чат использует только `kind = comment`; `mentions` всегда пишется явно как `{ userIds: [], teamIds: [] }` (в личных чатах упоминания не распознаются, D3), `attachments` — явно. `systemEvent` не используется. Лимит текста — тот же, что у комментария (10 000), константа `CHAT_LIMITS` рядом с `TASK_LIMITS`.
+Без изменений схемы. Чат использует только `kind = comment`; `mentions` всегда пишется явно как `{ userIds: [], teamIds: [] }` (в личных чатах упоминания не распознаются, D3), `attachments` — явно. `systemEvent` в v1 (этапы 1–5) не используется; этап 6 пишет в него `{ type: "assistantFailed", reason }` для сообщений `kind = system` о сбое ассистента (13.6; это расширение TS-типа jsonb-колонки, миграции данных нет). Лимит текста — тот же, что у комментария (10 000), константа `CHAT_LIMITS` рядом с `TASK_LIMITS`.
 
 ### 3.4 Совместимость с будущими групповыми чатами
 
@@ -97,7 +98,7 @@ CREATE UNIQUE INDEX "Notification_chat_unread_key"
 
 - Вход: `{ workspaceId, userIds: [a] | [a, b], actorLabel? }`.
   - Приватный API: `userId` собеседника; пара = (сессия, `userId`); `userId` ≠ сессия (чат с собой — запрещён).
-  - Публичный API (токен): `userIds: [a, b]` — чат между двумя сотрудниками; `userIds: [a]` — личный канал агента сотруднику `a` (D1), подпись берётся из имени токена.
+  - Публичный API (токен): `userIds: [a, b]` — чат между двумя сотрудниками; `userIds: [a]` — личный канал агента сотруднику `a` (D1); подпись берётся из имени токена, а если токен привязан к ассистенту сотрудников (`ExternalAgent.apiTokenId`, 13.3), то это чат ассистента с ключом `agent:<a>:staff` и именем ассистента.
 - Проверки: все `userIds` — текущие `WorkspaceMember` этого пространства (реальные строки; синтетические участники поддержки — нет), без дублей; иначе `validationException`.
 - **Get-or-create без гонок:** в транзакции `INSERT INTO "InternalThread" (…, directKey) … ON CONFLICT (workspaceId, directKey) DO NOTHING RETURNING *`. Если строка вернулась — вставляем участников (в том же `tx`). Если нет — конфликт: параллельная транзакция владеет ключом, `ON CONFLICT` дожидается её завершения, после чего обычный `SELECT` по `(workspaceId, directKey)` видит зафиксированный чат вместе с участниками (READ COMMITTED). Результат — один и тот же чат при любом числе одновременных вызовов.
 - Пустой чат (`lastMessageAt IS NULL`) в списках по умолчанию скрыт (в том числе от создателя: интерфейс переходит прямо на `/chats/<id>`); после первого сообщения чат появляется у обоих.
@@ -148,7 +149,7 @@ RETURNING "id", "userId";
 ### 4.5 Realtime
 
 - Новый топик `RealtimeTopic.staffChats = "staffChats"` (D9; **не путать** с существующим `chat` — события входящих диалогов клиентов) и событие `chatChanged { threadId }` — только id, данные клиент перечитывает со своими правами; `durability: "ephemeral"` в `packages/partysocket-config/src/schemas.ts` + тест реестра. Одного события достаточно для ленты, списка, бейджа и маркера «прочитано».
-- **Адресная доставка:** `sendToWorkspaceMember` обоим участникам чата (а не всему пространству) — иначе остальные сотрудники узнавали бы о факте переписки. Публикует слой builder (`features/chats/lib/chat-realtime.ts`, огонь-и-забыть, ошибки не ломают ответ): после `send`, `edit`, `delete` и `markRead` (только если указатель сдвинулся).
+- **Адресная доставка:** `sendToWorkspaceMember` обоим участникам чата (а не всему пространству) — иначе остальные сотрудники узнавали бы о факте переписки. Публикует слой builder (`features/chats/lib/chat-realtime.ts`, огонь-и-забыть, ошибки не ломают ответ): после `send`, `edit`, `delete` и `markRead` (только если указатель сдвинулся). На этапе 6 публикация и уведомление (4.4) выносятся в `packages/business/src/chat-delivery/` (не в `chat/`, чтобы не нарушить запрет импортов из шапки раздела 4), потому что сообщения ассистента пишет worker (13.5); обработчики builder вызывают ту же функцию.
 - Клиент: `chats-realtime-sync.tsx` в `workspace-realtime-shell.tsx`, инвалидация `orpc.chatsAPI.key()` с объединением событий за 300 мс (инвариант 21). Деплой `apps/realtime` вместе с builder (реестр топиков).
 - Онлайн-точки: событий присутствия нет; приватный запрос `presence` с `refetchInterval` 20 с (TTL присутствия — 20 с) только пока открыта страница чатов. Результат ∩ текущие сотрудники пространства (в Redis присутствуют и сессии поддержки по `userId` — отсекаем). Ошибка Redis → пустой список (`withRedisFallback`).
 
@@ -172,7 +173,7 @@ RETURNING "id", "userId";
 Все строки — через `useTranslations()` (ключи сразу во все 22 файла `messages/*.json`, русский и английский переведены), мутации инвалидируют TanStack Query (инвариант 21): новый `useInvalidateChats` (список, сообщения, `unreadTotal`) и `useInvalidateNotifications` при отметке прочитанным. Строки — Tailwind-классы, доступность (`aria-label`, клавиатура).
 
 - **Боковое меню:** пункт «Чаты» (иконка `MessagesSquareIcon`, виден всем, рядом с «Задачи») с бейджем = `chats.unreadTotal` (99+). Запрос `unreadTotal` обновляется realtime-событием.
-- **Страница** `/space/[workspaceId]/chats` и `/chats/[threadId]`: слева список (ширина ~320 px), справа лента; на узких экранах одна панель с кнопкой «Назад». Список: аватар/инициалы собеседника, **онлайн-точка** (зелёная при присутствии), имя, время последнего сообщения, превью (вложения без текста — «Вложение»; удалено — «Сообщение удалено»; автор «Вы:»), бейдж непрочитанных, выделение активного. Кнопка «Новый чат» → выбор сотрудника (поиск по имени, онлайн-точки, текущий пользователь исключён) → `chats.open` → переход на `/chats/<id>`. Для `agent`-чата — иконка бота и `title`.
+- **Страница** `/space/[workspaceId]/chats` и `/chats/[threadId]`: слева список (ширина ~320 px), справа лента; на узких экранах одна панель с кнопкой «Назад». Список: аватар/инициалы собеседника, **онлайн-точка** (зелёная при присутствии), имя, время последнего сообщения, превью (вложения без текста — «Вложение»; удалено — «Сообщение удалено»; автор «Вы:»), бейдж непрочитанных, выделение активного. Кнопка «Новый чат» → выбор сотрудника (поиск по имени, онлайн-точки, текущий пользователь исключён) → `chats.open` → переход на `/chats/<id>`. **Первым пунктом списка — ассистент сотрудников** (иконка бота, имя из настроек), только когда он настроен и включён (13.1); выбор открывает/создаёт личный `agent`-чат ассистента. Для `agent`-чата — иконка бота и `title`.
 - **Лента:** пузыри (свои справа, чужие слева), группировка подряд идущих сообщений одного автора (5 минут) и разделители дней; подгрузка старых при прокрутке вверх (курсор `beforeId`); автопрокрутка вниз, если пользователь у нижней границы; для сообщений токена — подпись `authorLabel` и значок «API». Свои сообщения: «изменено», маркер **«Прочитано»** (по `peerLastReadAt` собеседника; для `agent`-чата маркера нет). Меню сообщения: «Изменить», «Удалить» (по правилам 4.2, на клиенте — те же условия), «Создать задачу» (раздел 7).
 - **Поле ввода:** общий `CommentComposer` с адаптерами `uploadAttachment` / `createMessage`; редактор TipTap **без** `@`-подсказок в чатах (D3); Enter — отправить, Shift+Enter — перенос (в задачах остаётся Ctrl/⌘+Enter), скрепка — до 10 файлов по 25 МБ, превью выбранных файлов.
 - **Отметка прочитанного:** когда вкладка видима и есть непрочитанные, `markRead({ upToMessageId: самое новое загруженное })` не чаще раза в 2 секунды; в скрытой вкладке — нет.
@@ -191,7 +192,7 @@ RETURNING "id", "userId";
 |---|---|---|
 | `chats.list` | GET `/v1/chats` | все чаты пространства; фильтр `userId` (чаты, где участвует сотрудник), `includeEmpty`, `page`, `perPage` ≤ 50 |
 | `chats.get` | GET `/v1/chats/{id}` | чат с участниками и последним сообщением |
-| `chats.open` | POST `/v1/chats/open` | `userIds: [a, b]` — чат между двумя сотрудниками; `userIds: [a]` — личный канал токена к сотруднику `a` (D1); get-or-create, идемпотентно |
+| `chats.open` | POST `/v1/chats/open` | `userIds: [a, b]` — чат между двумя сотрудниками; `userIds: [a]` — личный канал токена к сотруднику `a` (D1; для токена ассистента сотрудников — его чат с ключом `agent:<a>:staff`, 13.3); get-or-create, идемпотентно |
 | `chats.messages.list` | GET `/v1/chats/{id}/messages` | сообщения, новые сверху; курсоры `beforeId` / `afterId`, `limit` ≤ 50 |
 | `chats.messages.create` | POST `/v1/chats/{id}/messages` | `text` и/или `attachments`; автор — токен: `authorUserId = null`, `authorLabel` = имя токена |
 | `chats.messages.update` | PATCH `/v1/chats/{id}/messages/{messageId}` | только `text`; только свои сообщения токена |
@@ -201,7 +202,7 @@ RETURNING "id", "userId";
 
 - В `summary`/`description` указано происхождение id: `userIds` — `workspaceMembers.list`; `id` чата — `chats.list` или `chats.open`; `messageId` — `chats.messages.list`; `attachments` — `chats.attachments.upload`. Формат упоминаний в чатах **не** поддерживается — это сказано в описании.
 - Ответы — машиночитаемые данные: чат `{ id, type, title, members[{ userId, name }], lastMessageAt, lastMessage, url }`, сообщение `{ id, chatId, authorUserId, authorLabel, text, attachments[{ index, name, size, mimeType, url }], createdAt, editedAt, deleted }`; `url` — ссылка на чат в интерфейсе, `attachments[].url` — подписанная ссылка на 1 час.
-- **Как токен открывает чат и пишет сотруднику.** Токен не имеет пользовательской идентичности, поэтому: между людьми — `chats.open({ userIds: [a, b] })` (и затем `messages.create`; обе стороны видят сообщение «от <имя токена>»); **личное сообщение Hermes сотруднику** — `chats.open({ userIds: [a] })` создаёт `agent`-чат «`<имя токена>` ↔ сотрудник `a`» с единственным участником `a` (D1). Сотрудник отвечает в этом чате в интерфейсе; агент читает ответы опросом `chats.messages.list?afterId=<последний известный>`. Отдельного пользователя-бота нет.
+- **Как токен открывает чат и пишет сотруднику.** Токен не имеет пользовательской идентичности, поэтому: между людьми — `chats.open({ userIds: [a, b] })` (и затем `messages.create`; обе стороны видят сообщение «от <имя токена>»); **личное сообщение Hermes сотруднику** — `chats.open({ userIds: [a] })` создаёт `agent`-чат «`<имя токена>` ↔ сотрудник `a`» с единственным участником `a` (D1). Сотрудник отвечает в этом чате в интерфейсе; агент читает ответы опросом `chats.messages.list?afterId=<последний известный>`. Отдельного пользователя-бота нет. **Исключение — токен ассистента сотрудников** (привязан в настройках, 13.3): его чат — тот же, что открывает сотрудник кнопкой «Новый чат», ответы сотрудника уходят ассистенту автоматически мостом (13.6), опрос не нужен, а `authorLabel` его сообщений всегда равен имени ассистента.
 - Не отдаётся публично и не имеет публичных процедур (исключения инварианта 23): `markRead` и `unreadCount` / `peerLastReadAt` (личное состояние сессии, как у задач), `unreadTotal` (бейдж меню), уведомления и настройки (личный центр уведомлений).
 - После изменения API — навык `cli-mcp-docs`: `apps/cli/README.md`, `apps/mcp-server/README.md`, снимок `public-spec-operations`, тест «не в наборе по умолчанию»; навык Hermes (`/opt/hermes-data/skills/chatbotx/SKILL.md`) — `chats.open`, `chats.messages.create`, правило «личное сообщение сотруднику = `userIds: [a]`», опрос ответов (после выкатки, как для задач).
 
@@ -249,6 +250,19 @@ Vitest; Redis, S3 и PartyKit подменяются; тесты — в `__tests
 - Миграция: `db:check-drift` чист; тест на `information_schema` (колонки и индексы — `test:db`); регистрационный тест реестра событий (`chatChanged`, топик `staffChats`, D9).
 - Интерфейс: компоненты общего каталога (`CommentComposer` с адаптерами, задачи не сломаны), i18n-тесты 22 файлов.
 
+**Этап 6 — ассистент сотрудников (раздел 13).** Тесты клиентского моста (`packages/business/__tests__/external-agent/`, `apps/worker/__tests__/external-agent-*.test.ts`, `apps/builder/__tests__/external-agent-api.test.ts`) остаются без правок и зелёными после выноса общего наблюдателя run (13.2) — это условие начала работ над ассистентом.
+- Профиль (`purpose`): `externalAgentRepository.findByWorkspace/updateCheck/upsert` принимают `purpose` обязательным параметром; две строки (`client` + `staff`) одного пространства сосуществуют; `upsert(staff)` не затрагивает `client` и наоборот; `findActiveForInbox` и `findResumePolicyForConversations` никогда не возвращают `staff`; `updateCheck(staff)` не меняет проверку `client`; `inboxIds` для `staff` отклоняются; миграция: существующие строки получают `client`, индекс `ExternalAgent_workspaceId_purpose_key`, `db:check-drift` чист, `test:db` читает `information_schema` (`purpose`, `apiTokenId`, `ExternalAgentChatState`, `InternalMessage.dedupeKey`, частичный индекс).
+- Настройки: `staffAssistantService.get/update/test` — ключ API не возвращается (`hasApiKey`), AAD отличается от клиентского (ключ клиентского профиля не расшифровывается как staff и наоборот), `enabled = true` без `baseUrl`/ключа/имени/`apiTokenId` — 400, токен без явного `"chats"` (в т. ч. `scopes = null`) — 400 при привязке, `test` ограничен 10 с отдельно от клиентского, кэш и теги не пересекаются, публичные `staffAssistant.*` требуют scope `settings` и не входят в набор MCP по умолчанию, формулировки без названия продукта (`public-spec-operations`).
+- Сходимость чата (13.3): `chats.open({userIds:[a]})` привязанным токеном и `chatsAPI.openAssistant` сотрудником `a` дают **один** `InternalThread` с `directKey = agent:<a>:staff` (параллельный `Promise.all` из обоих путей → одна строка, одна строка участника); токен без привязки — другой чат `agent:<a>:token:<подпись>`; смена `apiTokenId` или переименование ассистента не создаёт второй чат; `authorLabel` сообщений привязанного токена = имя ассистента; пункт «ассистент» в «Новом чате» скрыт при `enabled = false` или не настроенном профиле; `openAssistant` при выключенном — 400.
+- Очередь (`packages/worker-config`): схемы `staffAssistantReply` / `staffAssistantWatch`, дедупликация `staffAssistantReply-<threadId>` с `replace` и `keepLastIfActive`, задержка короче клиентской, исчерпывающий `switch` в `worker.ts` компилируется.
+- Ответ (`staff-assistant-reply`): новые сообщения сотрудника → `startRun` с `X-Hermes-Session-Key = chatbotx:<ws>:staff:<userId>`, `Idempotency-Key = staff:<threadId>:<messageId>`, кэш тела run (повтор шлёт тот же body); сообщения самого ассистента и токена в выборку не попадают; курсор двигается только после принятия Hermes; активный run → `steer`, 409/`accepted: false` → повторная постановка; «осиротевший» run сбрасывается; первый ход содержит до 10 сообщений истории, включая написанное Hermes первым; **блокировка владельца → голый `return`**, run не стартует, ничего не публикуется (`withBlockedOwnerGuard`); сотрудник уже не в пространстве / ассистент выключен → тихий выход; сообщение сотрудника не из `agent`-чата ассистента не пересылается; два сотрудника — две независимые сессии и две независимые строки `ExternalAgentChatState`.
+- Контекст-блок: имя, роль, список включённых прав, `workspaceId`, `userId` присутствуют; помечен как данные ChatbotX; текст сотрудника не смешивается с блоком; длина ограничена `EXTERNAL_AGENT_INPUT_MAX_CHARS`; имя с переводами строк и управляющими символами очищается.
+- Наблюдатель (`staff-assistant-watch`): `run.completed` → одно итоговое сообщение с `authorLabel` = имя ассистента и `authorUserId = null`; **повторный шаг не публикует дубль** (`InternalMessage.dedupeKey` и `ON CONFLICT DO NOTHING`); пустой ответ ничего не публикует, курсор двигается; `message.interim` проходит `decideInterim` (интервал 30 с, повтор текста, пустой текст) и публикуется сообщением; при остановке (ассистент выключен / сотрудник удалён) run останавливается без публикации; новые сообщения сотрудника во время run ставят следующий ответ после завершения.
+- Сбои: 5xx/таймаут `POST /v1/runs` → повторы BullMQ и после последней попытки одно system-сообщение `assistantFailed`/`unavailable`; 401/403/прочие 4xx → без повторов, system-сообщение, `UnrecoverableError`, запись в журнал ошибок провайдера; `run.failed`/`cancelled`/`interrupted`, запрос одобрения инструмента → system-сообщение; тишина 5 минут или `maxRunMinutes` → `stop` и `assistantFailed`/`timeout`; system-сообщение не создаёт уведомление в колокольчике и не увеличивает непрочитанные; повтор в ту же минуту не дублируется; **понятия «передача менеджеру» нет** (в коде staff-пути нет вызовов `failToHuman`/`disableBotState`); логи — `{ err }`.
+- «Печатает…»: `chatTyping { threadId, typing: true, seconds }` публикуется при старте run и в каждом окне наблюдателя, `typing: false` — при завершении, сбое, остановке и осиротевшем run; доставка **только** сотруднику (`sendToWorkspaceMember`), не участникам других чатов и не всему пространству; `chats.get` возвращает `assistantRunning`; событие `ephemeral` в реестре, топик `staffChats`.
+- Права (D11): Hermes получает полный доступ токена независимо от прав сотрудника — тест фиксирует, что контекст-блок описывает права **справочно**, а API-вызовы ассистента не фильтруются правами сотрудника; в форме настроек всегда виден неубираемый блок-предупреждение (компонентный тест + ключи i18n во всех 22 файлах); описание `staffAssistant.update` в спецификации содержит то же предупреждение.
+- Триал и сессия поддержки: отправка сотрудником при истёкшем триале закрыта (4.6), поэтому новый `staffAssistantReply` не ставится; сессия поддержки не ставит задач и не получает события «печатает…».
+
 ## 10. Этапы реализации
 
 Каждый этап закрывается зелёными `pnpm lint`, проверкой типов и тестами и может быть выкачен отдельно. Миграции генерируются и показываются пользователю; применяются только после явного разрешения.
@@ -258,6 +272,14 @@ Vitest; Redis, S3 и PartyKit подменяются; тесты — в `__tests
 3. **Страница чатов.** Вынос общих компонентов ленты, приватный `chatsAPI` (+ `markRead`, `unreadTotal`, `presence`, путь в `READ_ONLY_POST_PATHS`), пункт меню с бейджем, список, лента, редактор, вложения, онлайн-точки, «Новый чат», плашки (выход сотрудника, триал), режим поддержки.
 4. **Realtime и уведомления.** Топик `staffChats` (D9) и `chatChanged`, `chats-realtime-sync`, `notifyChatMessage` со склейкой, тип `chatMessage` в колокольчике и настройках, прочтение уведомления при `markRead`. Деплой `builder` + `realtime` вместе.
 5. **«Создать задачу» и завершение.** Пункт меню сообщения, подсказка о видимости цитаты, обновление `docs/staff-chat.md`, `docs/tasks.md` (ссылка), `AGENTS.md` (строка в «Docs»), навык Hermes, финальный `invariant-guard`.
+6. **Hermes в чате сотрудников (ассистент).** Требует этапов 1–4 (чаты, `agent`-чат, realtime, уведомления); от этапа 5 не зависит. Отдельная миграция `staff_assistant` (не смешивается с миграцией этапа 1; показывается пользователю, применяется только после явного «да»). Порядок внутри этапа (каждый шаг закрывается зелёными `pnpm lint`, типами и тестами и выкатывается отдельно):
+   1. **Вынос общего наблюдателя run** из `external-agent-watch.ts` (13.2) без изменения поведения клиентского пути; существующие тесты не правятся.
+   2. **Схема и репозитории:** миграция (`ExternalAgent.purpose` + `apiTokenId`, уникальный индекс `(workspaceId, purpose)`, `ExternalAgentChatState`, `InternalMessage.dedupeKey`), параметр `purpose` во всех методах `externalAgentRepository`, `externalAgentChatStateRepository`.
+   3. **Сервис `staffAssistantService`** (`packages/business/src/staff-assistant/`): настройки, `test`, runtime, открытие чата, контекст-блок, `postAssistantMessage`; вынос `chat-delivery`; правило ключа `agent:<userId>:staff` в `chatService.open` (13.3).
+   4. **Очередь и worker:** задачи `staffAssistantReply` / `staffAssistantWatch`, обработчики, `withBlockedOwnerGuard`, постановка из обработчика отправки сообщения сотрудником.
+   5. **Публичный API** `staffAssistant.get/update/test` (scope `settings`, до интерфейса), `id` в ответе `token.get`, `cli-mcp-docs`.
+   6. **Интерфейс:** страница настроек (superAdmin) с обязательным предупреждением D11, пункт ассистента в «Новом чате», индикатор «печатает…», баннеры «ассистент выключен».
+   7. **Деплой и ops** (13.11): профиль Hermes на сервере, токен с явным `chats`, проверка «Hermes пишет первым → сотрудник отвечает → ответ в том же чате», обновление `docs/external-agent.md` / `docs/staff-chat.md`, навык Hermes, `invariant-guard`.
 
 ## 11. Не входит (для справки)
 
@@ -269,7 +291,7 @@ Vitest; Redis, S3 и PartyKit подменяются; тесты — в `__tests
 
 | № | Вопрос | Решение |
 |---|---|---|
-| D1 | Как Hermes пишет сотруднику лично (пользователя-бота нет) | **Принято:** `chats.open({ userIds: [a] })` → отдельный чат `type = agent` с одним участником (сотрудник `a`); один чат на пару (сотрудник, подпись токена), `title` = имя токена |
+| D1 | Как Hermes пишет сотруднику лично (пользователя-бота нет) | **Принято:** `chats.open({ userIds: [a] })` → отдельный чат `type = agent` с одним участником (сотрудник `a`); один чат на пару (сотрудник, подпись токена), `title` = имя токена. **Уточнено этапом 6 (13.3):** для токена ассистента сотрудников ключ — `agent:<a>:staff` (по идентичности ассистента, не по подписи), `title` = имя ассистента; для остальных токенов — `agent:<a>:token:<подпись>` |
 | D2 | Пустые чаты | **Принято:** скрыты из списков, пока нет первого сообщения |
 | D3 | Упоминания в личных чатах | **Принято:** не поддерживаются, `chatMentioned` не вводится |
 | D4 | Сессии поддержки | **Принято:** видят раздел и **все** чаты пространства только на чтение; не участники, не пишут, не отмечают прочитанным |
@@ -278,3 +300,189 @@ Vitest; Redis, S3 и PartyKit подменяются; тесты — в `__tests
 | D7 | «Создать задачу» | **Принято:** только цитата в описании, без нового вида `TaskTarget`, без ссылки на чат |
 | D8 | Уход сотрудника | **Принято:** чат сохраняется и читается оставшимся, отправка закрыта; возврат сотрудника восстанавливает чат |
 | D9 | Название топика realtime | **Принято:** `staffChats` (`RealtimeTopic.staffChats = "staffChats"`), не путать с `chat` (входящие диалоги клиентов) |
+| D10 | Профиль Hermes для сотрудников | **Принято:** **отдельный** профиль (свои `baseUrl`, `apiKey`, имя, `enabled`), не клиентский. Хранение — строка `ExternalAgent` с дискриминатором `purpose` (`client` \| `staff`) и уникальностью `(workspaceId, purpose)` вместо `workspaceId` (13.4); состояние run — новая таблица `ExternalAgentChatState` по `threadId`. Миграция — этапа 6, отдельная от этапа 1 |
+| D11 | Права ассистента | **Принято:** Hermes видит всё — действует с **полными правами своего токена ChatbotX независимо от прав сотрудника**, который с ним пишет. Права сотрудника передаются ему только справочно. Обязателен видимый неубираемый блок-предупреждение в настройках и в описании публичного API (13.7) |
+
+## 13. Ассистент сотрудников — Hermes в чате (этап 6)
+
+Раздел описывает, как существующий мост external-agent (`docs/external-agent.md`) обслуживает **личный чат сотрудника с Hermes**. Клиентский путь не меняется; код в `file:line` приведён по состоянию репозитория на дату спеки.
+
+### 13.1 Поведение
+
+- **Кто начинает.** Сотрудник — «Новый чат» → первый пункт «ассистент» (имя из настроек). Пункт виден, только если профиль `staff` настроен и `enabled = true`; запрос состояния — приватный `chatsAPI.assistantStatus` → `{ available, name }` (`available = enabled && baseUrl && apiKey && botName && apiTokenId`). Либо Hermes пишет первым: `chats.open({ userIds: [a] })` токеном ассистента (`apiTokenId`, 13.3). Оба пути сходятся в одном чате (13.3).
+- **Что пересылается.** Каждое сообщение **сотрудника** (`authorUserId` = единственный участник чата, `kind = comment`, не удалено) в `agent`-чате ассистента ставит задачу `staffAssistantReply`. Сообщения Hermes/токена (`authorUserId = null`) — никогда: иначе ассистент отвечал бы сам себе.
+- **Ответ.** Итоговый текст run публикуется в чат как сообщение ассистента: `authorUserId = null`, `authorLabel = имя ассистента` (`ExternalAgent.botName` профиля `staff`); для сотрудника — обычное непрочитанное и запись в колокольчике (4.4). Промежуточные сообщения Hermes (`message.interim`) публикуются тоже сообщениями по тем же правилам частоты, что у клиентского моста (13.6).
+- **«Hermes печатает…»** — пока run активен, только сотруднику (13.8).
+- **Сбой** — короткое сообщение `kind = system` в этом чате; понятия «передача менеджеру» нет (13.6).
+- **Сессия Hermes отдельная для сотрудника:** `X-Hermes-Session-Key: chatbotx:<workspaceId>:staff:<userId>` (клиентский — `chatbotx:<workspaceId>:<conversationId>`, `external-agent-reply.ts:176`).
+- **Выключен/не настроен.** Существующий чат остаётся читаемым; поле ввода заменено плашкой «Ассистент недоступен», `send` сотрудника в такой чат — 400 (`staffAssistantUnavailable`); новые чаты создать нельзя (`openAssistant` — 400), пункт в «Новом чате» скрыт.
+
+### 13.2 Что переиспользуем и что меняем
+
+| Узел моста | Где | Как используется для ассистента |
+|---|---|---|
+| Клиент Hermes (`startRun`, `getRun`, `steer`, `stop`, `readEvents`, `health`) | `packages/business/src/external-agent/hermes-client.ts:143-279`; заголовки `X-Hermes-Session-Key` / `Idempotency-Key` — `:183-203` | без изменений; создаётся из строки профиля `staff` (`createClient`, `service.ts:681-688`) |
+| Ошибки Hermes (`HermesAuthError`, `HermesRequestError`, `HermesUnavailableError`) и их обработка | `external-agent-reply.ts:230-247`, `external-agent-watch.ts:317-338` | та же классификация, меняется только действие при сбое (13.6) |
+| Чистые решения `decideInterim` / `decideFallback` / `decideLimit`, константы 30 с / 90 с / 5 мин | `external-agent/progress.ts:1-3`, `:118-150`, `:152-175`, `:177-199` | без изменений; `decideFallback` для ассистента всегда `false` (пустой `progressMessage`, `progress.ts:165-167`), потому что вместо резервного сообщения есть «печатает…» |
+| Очередь run: отложенная задача, дедупликация, повторы | `packages/worker-config/src/queues/ai-agent/index.ts:226-244` (reply), `:246-259` (watch); схемы задач `:140-158`; объединение `:171-172`; обработка в `apps/worker/src/ai-agent/worker.ts:134-148` | копия по образцу: `staffAssistantReply` / `staffAssistantWatch`, дедупликационный id `staffAssistantReply-<threadId>`, те же `attempts`/`backoff`, `deferOnLockContention` |
+| Блокировка по сущности | `external-agent-shared.ts:41-50` (`withExternalAgentLock`) | обобщается до `withRunLock(key, fn)`; ключ ассистента `staffAssistant:<threadId>` |
+| Защита заблокированного владельца | `external-agent-reply.ts:312`, `external-agent-watch.ts:511` | `withBlockedOwnerGuard(data.workspaceId, …)` на обеих новых задачах (инвариант 15, 13.9) |
+| Курсор и выборка новых сообщений | `external-agent-shared.ts:95-124` (`selectNewMessages`), `:127-140` (`selectHistory`) | своя чистая `selectNewEmployeeMessages` (13.6): сообщения **сотрудника** после курсора; логики «резюма бота» нет |
+| Steer активного run, «осиротевший» run, кэш тела run | `external-agent-reply.ts:126-169`, `:116-123`, `:88-104` | та же логика поверх `ExternalAgentChatState`; ключ кэша `staffAssistant:runInput:<idempotencyKey>` |
+| Старт run, сохранение состояния, постановка наблюдателя | `external-agent-reply.ts:171-202` | то же; `sessionKey` — staff (выше), `idempotencyKey = staff:<threadId>:<messageId>` |
+| Наблюдение: окно 15 с, события, `settleFromRunStatus`, `checkRunProgress`, `abandonRun`, остановка «отвязанного» run | `external-agent-watch.ts:39`, `:183-239`, `:242-266`, `:269-315`, `:89-97`, `:442-456`, `:340-369` | **выносится в общий наблюдатель** `external-agent-run-follower.ts` с портом (ниже); клиентский путь становится адаптером без изменения поведения |
+| Состояние run | `ExternalAgentConversationState` (`schema/external-agent.ts:106-141`; репозиторий `repositories/external-agent/repository.ts:226-330`) | по `conversationId` (внешний ключ на `Conversation`) — непригодно; новая таблица `ExternalAgentChatState` по `threadId` (13.4) |
+| Контекст-блок | `external-agent/input.ts:67-74` (`buildInstructions`), `:80-103` (`buildRunInput`, лимит `:1`) | текст про клиента и handover не подходит; новая `buildStaffRunInput` рядом, лимит `EXTERNAL_AGENT_INPUT_MAX_CHARS` общий |
+| Настройки: нормализация URL, шифрование ключа, `test` с троттлингом 10 с, кэш с тегом | `service.ts:189-210`, `:227-237`, `:304-398`, `:400-435`, `:80-90`, `:54` | те же функции с параметром `purpose`; ключи кэша/троттлинга/AAD получают суффикс `:staff` |
+| Журнал ошибок провайдера | `service.ts:672-678` (`logProviderError({ provider: "hermes", contactId: null … })`) | то же, `contactId = null` |
+| Передача менеджеру | `service.ts:540-631` (`handover`), `:634-678` (`failToHuman`), `external-agent-shared.ts:204-223` | **не используется**: у сотрудника нет бота, который можно выключить |
+
+**Порт общего наблюдателя** (`RunFollowerPort`, реализуют два адаптера): `loadState()` / `patch(values)` с защитой `expectedRunId` (`watch.ts:75-84`); `isActive()` (клиент — `conversation.botEnabled`, `watch.ts:385-391`; ассистент — профиль включён и сотрудник — текущий член пространства); `postInterim(text, step)` и `postFinal(text)` (клиент — `chatQueue.add` с детерминированным `jobId`, `shared.ts:180-202`; ассистент — вставка с `dedupeKey`, 13.5); `fail(event, error)` (клиент — `handOverToHuman`, `watch.ts:99-120`; ассистент — system-сообщение, 13.6); `afterComplete()` (клиент — `enqueueNewMessagesReply`, `watch.ts:125-142`; ассистент — то же по сообщениям сотрудника); `onWindow()` (ассистент — продление «печатает…», клиент — пусто); `enqueueWatch(delay)`. Выделение — отдельным первым шагом этапа 6 с неизменёнными тестами клиентского пути (раздел 9); если изменение окажется слишком крупным, запасной вариант — копия `external-agent-watch.ts` для ассистента с общими `progress.ts` и константами (дублирование ~300 строк, зафиксировать в PR).
+
+### 13.3 Идентичность чата: один чат на сотрудника
+
+Проблема. Правило этапа 1 — `directKey = agent:<userId>:<подпись токена>` (3.1): чат Hermes, начатый токеном, и чат, который открыл бы сотрудник, получили бы разные ключи (у сотрудника токена нет), а переименование токена порождало бы второй чат.
+
+Правило этапа 6 (обновлены 3.1, 4.1, D1):
+- **Ключ ассистента — `agent:<userId>:staff`**; ключ прочих токенов — `agent:<userId>:token:<подпись>` (префикс `token:` исключает совпадение подписи токена со словом `staff`). Ключ не зависит ни от подписи токена, ни от имени ассистента.
+- **Как определить, что чат — ассистента.** `ExternalAgent.apiTokenId` профиля `staff` — id `WorkspaceApiToken`, которым работает Hermes-ассистент (`context.apiToken.id`, `apps/builder/src/middlewares/context.ts:17`). Публичный `chats.open({ userIds:[a] })` вызывает `chatService.openAgentChannel({ workspaceId, userId: a, channel })`, где `channel = apiToken.id === staffProfile.apiTokenId ? { kind: "staff" } : { kind: "token", label: apiToken.name }`. (Это ветка `userIds: [a]` метода `chatService.open` из 4.1, вынесенная в отдельный метод.) Приватный `chatsAPI.openAssistant` (сессия сотрудника `a`) вызывает **тот же метод** с `{ kind: "staff" }`. Метод — единственное место, где строится ключ; оба пути работают через `INSERT … ON CONFLICT (workspaceId, directKey) DO NOTHING` из 4.1, поэтому одновременное открытие с двух сторон даёт одну строку.
+- `title` чата = имя ассистента на момент создания; интерфейс для чата с ключом `agent:*:staff` показывает **текущее** имя профиля (`botName`), поэтому переименование не требует правки таблицы; `title` — запасное значение, если профиль удалён.
+- **Подпись сообщений.** `authorLabel` сообщений, которые пишет привязанный токен (`chats.messages.create`) и worker (13.5), всегда равен имени ассистента (определяет `chatService.send` по `channel`/привязке токена), поэтому вид чата не зависит от того, чем написано.
+- **Привязка обязательна для включения** (`enabled = true` без `apiTokenId` — 400, 13.4) и проверяется на явный `"chats"` в `scopes` токена (D6: `null` не проходит); иначе Hermes не смог бы «писать первым». При удалении токена FK `ON DELETE SET NULL` обнуляет `apiTokenId`, профиль остаётся, но `available = false` и пункт в «Новом чате» скрыт, пока токен не будет назначен снова.
+- Исторические `agent`-чаты, созданные до привязки (ключ `…:token:<подпись>`), не сливаются автоматически: ассистент отвечает только в чате с ключом `staff`. Миграции данных нет — этап 1 ещё не выкатывался на момент спеки; если выкатится раньше, одноразовый data-step «переписать ключ чата токена Hermes на `staff`» выполняется после явного одобрения.
+- Несколько ассистентов/профилей на пространство в v1 нет (`purpose` допускает только `client` и `staff`).
+
+### 13.4 Хранение профиля и состояние run
+
+**Выбор.** Строка `ExternalAgent` с дискриминатором — **наименее инвазивный** вариант: профиль `staff` использует те же колонки (`baseUrl`, зашифрованный `apiKey`, `enabled`, `maxRunMinutes`, `botName`, поля проверки), а код `test`, `createClient`, нормализации и кэша переиспользуется целиком. Отдельная таблица `StaffAssistant` не меняет ни одного существующего запроса, но дублирует колонки и ~150 строк сервиса; отвергнута. Цена дискриминатора — текущий уникальный индекс `ExternalAgent_workspaceId_key` (`schema/external-agent.ts:61`) и пять мест, которые ищут строку только по `workspaceId`:
+
+| Место | Сегодня | Правка |
+|---|---|---|
+| `findByWorkspace` (`repository.ts:78-94`, `findFirst where workspaceId`) | вернул бы любую из двух строк | обязательный параметр `purpose` |
+| `updateCheck` (`repository.ts:164-181`, `where workspaceId`) | обновил бы обе строки | `purpose` в `where` |
+| `upsert` (`repository.ts:187-223`, `onConflict target workspaceId`, `:205`) | конфликт по `workspaceId` невозможен для второй строки | `target: [workspaceId, purpose]`, `purpose` в `values` явно |
+| `findActiveForInbox` (`:96-117`), `findResumePolicyForConversations` (`:123-162`) | выбирают через `ExternalAgentInbox`; у `staff` связей нет, строка не вернётся | добавить `eq(purpose, "client")` как явную защиту |
+| сервис: `get`/`update`/`test`/`getRuntimeForWorkspace` (`service.ts:293`, `:304`, `:400`, `:448`), `settingsCacheKey` `:83`, тег `:80`, троттлинг `:89`, AAD `:86` | ключи по `workspaceId` | `purpose` в сигнатурах (обязательный → пропущенный вызов не скомпилируется); ключи с суффиксом `:staff`, для `client` — прежние строки (кэш и зашифрованные ключи существующих строк остаются валидными) |
+
+Потребители, которые ищут строку по `workspaceId` (`getRuntimeForWorkspace` в `external-agent-watch.ts:444-446`, `:479`; `get`/`update`/`test` и публичный `externalAgent.*`, `features/external-agent/api/public.ts:37-70`), передают `purpose: "client"`. Пути через inbox (`getRuntime` → `findActiveForInbox`: `external-agent-reply.ts:260`, `external-agent-watch.ts:473`, `apps/worker/src/integration/external-agent-inbox.ts:25`, `conversation/service.ts:1166`; `findResumePolicyForConversations`: `:1533`, `:1577`) не получают параметра — `purpose = 'client'` зашит в самих запросах. Тест раздела 9 фиксирует, что `findByWorkspace` без `purpose` не компилируется/не существует.
+
+**Миграция этапа 6** (`make:migration staff_assistant`; отдельно от миграции этапа 1; показывается пользователю, применяется после явного «да»; в ней нет новых значений enum, поэтому ограничение PostgreSQL на «unsafe use of new enum value» не затрагивается):
+
+```sql
+ALTER TABLE "ExternalAgent" ADD COLUMN "purpose" text DEFAULT 'client' NOT NULL;
+ALTER TABLE "ExternalAgent" ADD COLUMN "apiTokenId" bigint
+  REFERENCES "WorkspaceApiToken" ("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DROP INDEX "ExternalAgent_workspaceId_key";
+CREATE UNIQUE INDEX "ExternalAgent_workspaceId_purpose_key"
+  ON "ExternalAgent" ("workspaceId", "purpose");
+
+CREATE TABLE "ExternalAgentChatState" ( -- по образцу ExternalAgentConversationState
+  "threadId" bigint PRIMARY KEY REFERENCES "InternalThread" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "workspaceId" bigint NOT NULL REFERENCES "Workspace" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "cursorAt" timestamp, "cursorMessageId" bigint,
+  "includeHistory" boolean NOT NULL,
+  "runId" text, "runStartedAt" timestamp, "lastEventAt" timestamp,
+  "lastEventSeq" integer NOT NULL,
+  "lastProgressSentAt" timestamp, "lastProgressText" text, "lastClientSendAt" timestamp,
+  "failureCount" integer NOT NULL, "lastError" text,
+  "updatedAt" timestamp NOT NULL
+);
+CREATE INDEX "ExternalAgentChatState_workspaceId_idx" ON "ExternalAgentChatState" ("workspaceId");
+
+ALTER TABLE "InternalMessage" ADD COLUMN "dedupeKey" text;
+CREATE UNIQUE INDEX "InternalMessage_threadId_dedupeKey_key"
+  ON "InternalMessage" ("threadId", "dedupeKey") WHERE "dedupeKey" IS NOT NULL;
+```
+
+- Существующие строки получают `purpose = 'client'` значением по умолчанию (константное значение — без перезаписи таблицы); конфликтов нового уникального индекса нет, так как строк `staff` ещё нет. Drop + create выполняются в одной транзакции миграции.
+- **Порядок выкатки:** схема и код с `purpose`-осведомлённым `upsert` выкатываются **вместе** (builder и worker перезапускаются сразу после миграции); между `DROP INDEX` и перезапуском старый `upsert` (`ON CONFLICT (workspaceId)`) падает с «no unique or exclusion constraint matching» — это затрагивает только сохранение настроек клиентского агента (редкое действие); пути чтения/ответа/наблюдения не зависят от индекса.
+- `purpose` пишется явно при каждой вставке (AGENTS.md: `.default()` не гарантия БД); `apiTokenId` — `NULL` допустим; `includeHistory`, `lastEventSeq`, `failureCount`, `updatedAt` пишутся явно (как `externalAgentStateRepository.upsert`, `repository.ts:250-261`). Колонок `progressFallbackSentAt` нет (резервного сообщения у ассистента нет), остальные имена совпадают с `ExternalAgentConversationState`, поэтому тип `RunTracking` (`watch.ts:52-59`) общий.
+- `ExternalAgentInbox` для `staff` не создаётся: сервис отклоняет `inboxIds` в `staffAssistantService.update` (400), `resumeAfterHours`, `signMessages`, `announceManager` хранятся `NULL`/`false`, не используются и в публичный ответ `staff` не входят.
+- Связи Drizzle: запросы строятся через `select` (как `externalAgentStateRepository.find`, `repository.ts:227-248`), поэтому `relations/index.ts` не затрагивается; если понадобится relational-запрос — две правки (инвариант 2).
+- `dedupeKey` — аналог детерминированных `jobId` отправки клиентских сообщений (`watch.ts:86-87`): повтор шага наблюдателя вставляет то же сообщение с тем же ключом, `ON CONFLICT DO NOTHING` — дубля нет, побочные эффекты (уведомление, realtime) для не вставленной строки не выполняются. Значения: `staffAssistant:<runId>:final`, `staffAssistant:<runId>:interim-<seq>`, `staffAssistant:<runId>:failed`, для сбоя до старта run — `staffAssistant:<threadId>:<messageId>:failed`. У обычных сообщений колонка `NULL`; существующие вставки не ломаются.
+- Состояние чата удаляется каскадом вместе с `InternalThread` (в том числе при очистке пространства).
+
+### 13.5 Сервис `staffAssistantService` и слой доставки
+
+Цепочка `action | API handler | worker → service → repository → DB` (инвариант 9): `packages/business/src/staff-assistant/` (`service.ts`, `input.ts`, `messages.ts`, `index.ts`), `packages/database/src/repositories/external-agent/chat-state.ts`; **прямого `db` в worker и builder нет.**
+
+- `get/update/test(workspaceId)` — настройки профиля `staff` (13.4); `update` валидирует: `baseUrl` (те же правила, что `normalizeBaseUrl`), `botName` обязателен (1–40 символов), `maxRunMinutes` (1–240), `apiTokenId` — токен этого пространства с явным `"chats"`; `enabled = true` требует всех полей.
+- `getRuntime(workspaceId)` → `{ agent, client } | null` (профиль включён) — аналог `getRuntimeForWorkspace` (`service.ts:448-456`).
+- `chatService.openAgentChannel` — единственная точка ключа (13.3); `staffAssistantService.openForEmployee(workspaceId, userId)` проверяет `available` и вызывает его.
+- `enqueueReplyIfNeeded({ thread, message })` — вызывается обработчиком отправки (`features/chats/lib/after-send.ts` рядом с уведомлением и realtime) **только** для сообщений сотрудника в чате с ключом `agent:*:staff` при включённом профиле; задачи `staffAssistantReply` ставит `enqueueStaffAssistantReply({ workspaceId, threadId, messageId })`. Токен-автор (`authorUserId = null`) задачу не ставит. Ошибка постановки логируется `logger.error({ err }, …)` и не ломает отправку (сообщение сохранено; сотрудник может отправить ещё одно).
+- `postAssistantMessage({ workspaceId, threadId, text, dedupeKey, kind })` — единственная точка записи сообщений ассистента: `chatService.send` с актором «ассистент» (`authorUserId = null`, `authorLabel = botName`, `mentions = { userIds: [], teamIds: [] }`, `attachments = []` — явно), затем `chat-delivery` (уведомление `notifyChatMessage` для текстовых сообщений, realtime `chatChanged` сотруднику). Для `kind = system` уведомление не создаётся.
+- `buildContext({ workspaceId, userId })` — контекст-блок (13.7), `getEmployeeSnapshot` читает `WorkspaceMember.role` и `permissions` (`schema/workspace-member.ts:36`, `:45-48`) и `User.name`.
+- `chat-delivery` (`packages/business/src/chat-delivery/`): `deliverChatMessageEffects({ workspaceId, thread, message, recipients })` = `notificationService.notifyChatMessage` (4.4) + `sendToWorkspaceMember` на `RealtimeEventType.chatChanged` (`platform/realtime-broadcast.ts:279-285`; тот же приём, что у `apps/worker/src/lib/notification-realtime.ts:18`). Вызывается и обработчиками builder (этапы 3–4), и worker. Ошибки — `logger.warn({ err }, …)`.
+
+### 13.6 Поток и сбои
+
+1. **Сообщение сотрудника** → `chatsAPI.messages.create` → `chatService.send` → `staffAssistantService.enqueueReplyIfNeeded` → задача `staffAssistantReply { workspaceId, threadId, messageId }`; отложенная с дедупликацией по `threadId` (`replace`, `keepLastIfActive`, как `queues/ai-agent/index.ts:226-244`); задержка `STAFF_ASSISTANT_REPLY_DELAY_MS = 1500` (клиентская — 5 с, `:29`): склеивает серию сообщений (Enter-вброс, вложения подряд), но не заставляет сотрудника ждать «как клиента».
+2. **`staffAssistantReply`** (`withBlockedOwnerGuard` → `withRunLock("staffAssistant:<threadId>")`, как `external-agent-reply.ts:308-315`): загрузить чат (тип `agent`, ключ `agent:<u>:staff`, единственный участник — текущий `WorkspaceMember`) и профиль `staff` включён, иначе тихий выход (`:253-266`); состояние `ExternalAgentChatState`; сообщения чата за 30 дней, выборка `selectNewEmployeeMessages` (сообщения с `authorUserId = u`, `kind = comment`, не удалены, после `cursorAt`/`cursorMessageId`; первый ход — после последнего сообщения ассистента, не более 10, плюс до 10 предшествующих как история, в том числе написанное Hermes первым через `chats.messages.create`, о чём в его сессии нет памяти); нет новых — выход.
+   - Есть `runId` → `steer` (неосиротевший run): принят — курсор вперёд; `accepted: false` — повторная постановка; 404 — run очищается и стартует новый (`:126-169`).
+   - Иначе `startRun`: `sessionKey = chatbotx:<ws>:staff:<userId>`, `Idempotency-Key = staff:<threadId>:<messageId>`, тело — `buildStaffRunInput` (кэш на 24 ч, повтор шлёт то же тело); вложения — подписанные ссылки `chatAttachment` со сроком 24 ч (параметр срока; для чатов между людьми остаётся 1 час, 4.7). Сохранить `runId`/`runStartedAt`, курсор, `includeHistory = false`; поставить `staffAssistantWatch`; **опубликовать «печатает…»** (13.8).
+3. **`staffAssistantWatch { workspaceId, threadId, runId }`** (`withBlockedOwnerGuard`): общий наблюдатель окнами по 15 с (`watch.ts:39`, `:507-511`) с портом ассистента:
+   - `message.interim` → `decideInterim` (≥ 30 с между сообщениями, не повтор, не пусто; `progress.ts:118-150`) → `postAssistantMessage(dedupeKey = interim-<seq>)`;
+   - `tool.*`, `message.delta` → только обновляют таймер простоя;
+   - `run.completed` → итог (или `output` из `getRun`, `watch.ts:144-180`) → `postAssistantMessage(dedupeKey = final)`, затем закрыть run (`failureCount = 0`), «печатает» → `false`; если за время run появились новые сообщения сотрудника, не перешедшие в `steer`, — ставится следующий `staffAssistantReply`;
+   - пустой итог — ничего не публикуется, курсор двигается;
+   - `isActive() = false` (ассистент выключен / сотрудник вышел из пространства) → run останавливается без публикации (`abandonRun`, `watch.ts:89-97`), «печатает» → `false`;
+   - тишина 5 минут или run старше `maxRunMinutes` → `stop` и сбой `timeout` (`decideLimit`, `progress.ts:177-199`).
+4. **Сбой.** Сообщения-сбои публикуются **системными** (`kind = system`, `authorUserId = null`, `systemEvent = { type: "assistantFailed", reason: "unavailable" | "timeout" }`): текст рисует интерфейс через `useTranslations()` («Ассистент сейчас недоступен. Повторите запрос позже.» / «Ассистент не успел ответить. Попробуйте ещё раз.»), в базе нет русского текста (в отличие от клиентского `EXTERNAL_AGENT_HANDOVER_CLIENT_TEXT`, `service.ts:63-64`, — здесь действует инвариант 7). Системное сообщение не считается непрочитанным и не создаёт уведомление; realtime `chatChanged` обновляет открытый чат. Условия те же, что в таблице «Failures» `docs/external-agent.md`: `POST /v1/runs` 5xx/сеть — 4 попытки BullMQ, после последней сбой; чтение событий — 3 попытки с возобновлением с `lastEventSeq`; 401/403 и прочие 4xx — без повторов, `UnrecoverableError`; `run.failed` / `cancelled` / `interrupted` и запрос одобрения инструмента — сбой. Дополнительно: `logProviderError({ provider: "hermes", workspaceId, contactId: null, error })` (`service.ts:672-678`), `failureCount` / `lastError` в состоянии чата, `logger.error({ err, workspaceId, threadId }, …)` — **ключ `err`** (инвариант 20). Повторные сообщения сотрудника после сбоя стартуют новый run; ограничения «после сбоя отключить» нет.
+5. **Что не переносится:** `ensureActive`/авто-возобновление бота, `handoverCategory`, push менеджерам, подпись `signAs: "externalAgent"`, `announceManager`, резервное сообщение, `resumeAfterHours`.
+
+### 13.7 Контекст-блок и «Hermes видит всё» (D11)
+
+Тело run — `{ input, instructions }` (как `ExternalAgentRunInput`, `input.ts:30-33`): `input` — сообщения сотрудника (текст и строки `[Вложение: <url>]` как `input.ts:35-48`; роли истории — «Сотрудник» / «Ассистент»; лимит `EXTERNAL_AGENT_INPUT_MAX_CHARS`, сначала отбрасывается старая история, `input.ts:80-103`); `instructions` — блок, помеченный как данные ChatbotX, а не слова сотрудника (по образцу `input.ts:67-74`): имя сотрудника (`User.name`, очищенное от переводов строк и управляющих символов, до 100 символов), `userId`, роль и **справочный** перечень включённых прав (`WorkspaceMember.role`, ключи `permissions` со значением `true`), `workspaceId`, `threadId`; пометка «чат внутри ChatbotX, отвечай сотруднику по-русски; не публикуй ответ сам через `chats.messages.create` — ответ в этот чат отправит платформа».
+
+**D11 — Hermes видит всё.** Профиль и токен ассистента не ограничиваются правами того, кто пишет: сотрудник без права управлять настройками может попросить ассистента сделать то, что сам сделать не вправе, и ассистент **это выполнит в пределах scope своего токена**. Решение принято осознанно (ассистент — инструмент владельца пространства). Последствия, которые нужно отразить в продукте и документах:
+- в форме настроек профиля `staff` **всегда** виден неубираемый блок-предупреждение (`Alert`, не закрывается, не скрывается состоянием формы), ключ `staffAssistant.fullAccessNotice` во всех 22 файлах `messages/*.json`, русский текст: «Ассистент действует с полными правами своего токена ChatbotX и видит все данные пространства — независимо от прав сотрудника, который ему пишет. Включайте его, только если все сотрудники пространства могут пользоваться таким доступом.»; то же предложение — в `description` публичных `staffAssistant.get/update`;
+- включать профиль и менять токен/ключ может только `superAdmin` (как `external-agent/page.tsx:14`) либо токен со scope `settings`;
+- в аудите (`withAuditContext`, `middlewares/workspace-token-auth.ts:5`) действия ассистента видны под именем **токена**; «кого он слушал» в аудит не попадает (идентификатор сотрудника в вызовы не передаётся) — зафиксировано, не решается в v1;
+- рекомендации по токену (раздел ops, 13.11): минимально необходимый явный список scope + `chats`, без `settings`; профиль не получает `terminal`.
+
+### 13.8 «Hermes печатает…»
+
+- Событие `RealtimeEventType.chatTyping`: `{ threadId, typing: boolean, seconds: number }`, топик `staffChats` (D9), `durability: "ephemeral"` (`partysocket-config/src/schemas.ts`; существующее `typing` — для диалогов клиентов, `conversationId`, топик `chat`, `:85-88`, `:248-254`, не переиспользуется).
+- Доставка **только сотруднику-участнику** — `sendToWorkspaceMember({ workspaceId, userId }, …)` (`realtime-broadcast.ts:279-285`); сессия поддержки событий не получает.
+- Публикует `staffAssistantService.publishTyping`: `typing: true` (`seconds = 20`) при старте run и в каждом окне наблюдателя (`onWindow`, каждые ≤ 15 с); `typing: false` — при завершении, сбое, остановке, осиротевшем run. Клиент гасит индикатор сам через `seconds` без обновления (если событие `false` потеряно).
+- `chats.get` (приватный) возвращает `assistantRunning = состояние.runId != null`: индикатор появляется и при открытии чата во время run. Клиент: `chats-realtime-sync.tsx` обновляет локальное состояние «печатает», инвалидации TanStack Query не требует (состояние не кэшируется на сервере; итоговое сообщение приходит через `chatChanged`, инвариант 21).
+- Индикатор в списке чатов — подпись «печатает…» вместо превью (`aria-live="polite"`); в ленте — пузырь с анимированными точками и `aria-label`.
+
+### 13.9 Блокировка владельца, триал, поддержка
+
+- `staffAssistantReply` и `staffAssistantWatch` — обёрнуты в `withBlockedOwnerGuard(workspaceId, …)` (инвариант 15): заблокированный владелец → **голый `return`** без повторов и dead-letter; публикуются «печатает» и сообщения только внутри защищённой функции. Ассистент — рабочий процесс пространства, к исключениям системных задач (аудит, квоты, расписания) не относится.
+- Триал истёк: `send` сотрудника закрыт (4.6), новые задачи не ставятся; идущий run догружается через ту же защиту. Публикация ответа выполняется службой без HTTP-проверки метода — как у токена и существующих worker-публикаций.
+- Сессия поддержки (D4) не может писать, значит ассистента не вызывает; чат читает как любой другой.
+
+### 13.10 Настройки, публичный API, интерфейс
+
+- **Страница:** `/space/[workspaceId]/settings/integrations/staff-assistant` рядом со страницей «External AI agent» (`.../integrations/external-agent/page.tsx`); `requireWorkspacePermission(workspaceId, "superAdmin")`; форма `features/staff-assistant/components/staff-assistant-settings-form.tsx` по образцу `external-agent-settings-form.tsx`: включено, имя, адрес Hermes (источник без пути, `external-agent.md`: «Settings and connection check»), ключ API (write-only), максимум минут, токен ChatbotX ассистента (выбор из токенов пространства с явным `chats`; без такого — подсказка создать токен), кнопка «Проверить подключение» (результат, 10 с троттлинг), **блок D11 (13.7)**. Строки — `useTranslations()`, мутации инвалидируют `orpc.staffAssistant.key()` и `orpc.chatsAPI.key()` (пункт в «Новом чате», инвариант 21).
+- **Публичный API (до интерфейса, инвариант 23)** — `features/staff-assistant/api/public.ts`, вложено в `routers/public.ts`, `workspaceTokenAuthAPIForScope("settings")`; процедуры вызывают `staffAssistantService`, приватный `staffAssistantAPI` — те же методы:
+
+| Процедура | Метод и путь | Назначение |
+|---|---|---|
+| `staffAssistant.get` | GET `/v1/staff-assistant` | настройки профиля `staff` или `null`; `hasApiKey`, `apiTokenId`, `tokenHasChatsScope`, `available`, результат последней проверки; ключ не возвращается |
+| `staffAssistant.update` | PATCH `/v1/staff-assistant` | `enabled`, `baseUrl`, `apiKey` (write-only), `botName`, `maxRunMinutes`, `apiTokenId` (nullable); в описании — предупреждение D11 и «id токена — из `token.get`» |
+| `staffAssistant.test` | POST `/v1/staff-assistant/test` | `GET {baseUrl}/health` с ключом; `{ status, error, checkedAt }`; 429 при повторе в течение 10 с; 404, пока профиль не настроен |
+
+  Дополнительно `token.get` (`/v1/token`, `features/token/api/public.ts:32`) возвращает `id` вызывающего токена — чтобы агент мог узнать значение `apiTokenId` (в публичном API нет списка токенов: управление токенами — исключение инварианта 23). Ни одна процедура не `visibility: "default"` (набор MCP по умолчанию из раздела 6 не меняется); после изменений — `cli-mcp-docs` (`apps/cli/README.md`, `apps/mcp-server/README.md`, снимок `public-spec-operations`, запрет названия продукта в описаниях). **Открытие чата ассистента** сотрудником (`chatsAPI.openAssistant`, `assistantStatus`) — личное действие сессии и вызывает тот же `openAgentChannel`, что публичный `chats.open` токена ассистента (13.3), отдельной публичной процедуры не требуется.
+- **Интерфейс чата** (раздел 5): пункт ассистента в «Новом чате» первым; в списке и ленте — иконка бота и текущее имя; сообщения ассистента — как сообщения токена (значок «API» не показывается для ассистента: подпись — имя); `system`-сообщение сбоя — центрированная строка с иконкой и локализованным текстом; плашка «Ассистент недоступен» (13.1).
+- **Уведомления:** сообщения ассистента уведомляют сотрудника по общим правилам 4.4 (одна непрочитанная запись на чат).
+
+### 13.11 Ops: что нужно на сервере (не в репозитории)
+
+Не проверяется кодом (как «Hermes side configuration» в `docs/external-agent.md`); выполняется владельцем сервера.
+- **Новый профиль Hermes** (например `staff`) рядом с профилем `assistant` в `/opt/hermes-data/profiles/staff/`: `config.yaml` с `api_server` (`enabled: true`, `extra.host: 127.0.0.1`, **свободный порт**, отличный от порта клиентского профиля — в `docs/external-agent.md` для него указан проектный порт 8647, `extra.key` — **новый** ключ; не выводить в логи). Тулсеты: `memory`, `chatbotx`; **без** `terminal`.
+- **Сервис systemd (user)** по образцу `hermes-gateway-assistant.service`: `hermes-gateway-staff.service` с `Restart=on-failure`; включить через `systemctl --user enable --now …`; проверить, что порт слушает только loopback (`ss -ltnp`). Воркер ChatbotX работает с host networking (`deploy/gkamion/docker-compose.prod.yml`), поэтому `http://127.0.0.1:<порт>` достижим. Перезапуск профиля — только с одобрения владельца (короткий перерыв).
+- **MCP-сервер `chatbotx` профиля** — со **своим** токеном ChatbotX (создаёт `superAdmin` в интерфейсе): явный список scope (не `null`!) с обязательным `chats` (D6) и теми областями, которые нужны ассистенту; `settings` не выдавать без необходимости. Этот токен выбирается в настройках как `apiTokenId`. Токен клиентского профиля не использовать: у профилей разные наборы scope, а привязка к `apiTokenId` должна однозначно указывать на ассистента сотрудников.
+- **Инструкции профиля (`SOUL.md` / skill):** отвечать сотруднику текстом по-русски; **не** публиковать ответ в этот чат через `chats.messages.create` (его отправит платформа; иначе дубль); для долгих задач сначала коротко сказать, что происходит и сколько займёт, и присылать промежуточные сообщения (они становятся interim-сообщениями, не чаще раза в 30 с); `chats.open` + `chats.messages.create` использовать только для **проактивных** сообщений сотруднику вне run; считать блок данных ChatbotX справочным; ключи и токены не раскрывать.
+- **Проверка после выкатки:** «Проверить подключение» → `ok`; Hermes пишет первым (`chats.open({userIds:[a]})`) → сотрудник видит чат; сотрудник отвечает → «печатает…» → итоговое сообщение в **том же** чате; второй сотрудник получает независимый чат и независимую сессию.
+
+### 13.12 Не входит (этап 6)
+
+Несколько ассистентов на пространство, групповые чаты с ассистентом, `@`-упоминание ассистента в чатах между людьми, ограничение действий ассистента правами сотрудника (D11 — наоборот), память ассистента о сотруднике на стороне ChatbotX (память — внутри Hermes, ключ сессии), потоковая публикация токенов ответа (`message.delta`), передача диалога человеку.
+
+### 13.13 Открытые вопросы
+
+1. **Общая память профиля Hermes между сотрудниками.** Сессии разделены ключом (`…:staff:<userId>`), но память профиля (`memory`) может быть общей: ассистент способен пересказать одному сотруднику то, что узнал от другого. Принять как следствие D11 (ассистент — общий инструмент владельца) или выключить тулсет `memory` у профиля `staff` / включить память по сессии, если Hermes это поддерживает? До решения в инструкции профиля рекомендуется: не раскрывать данные одного сотрудника другому.
+2. **Задержка склейки 1,5 с** (`STAFF_ASSISTANT_REPLY_DELAY_MS`) выбрана компромиссом между «сразу» и склейкой серии; нужна ли настройка (поле профиля) или хватает константы?
