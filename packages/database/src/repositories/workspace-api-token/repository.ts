@@ -63,6 +63,25 @@ type SetEncryptedTokenInput = {
 }
 
 class WorkspaceApiTokenRepository {
+  /** Project only the authorization metadata needed to bind a staff assistant. */
+  async findScopesForWorkspace(
+    input: { id: string; workspaceId: string; lock?: boolean },
+    tx: DatabaseClient = db,
+  ): Promise<{ scopes: WorkspaceApiTokenScope[] | null } | null> {
+    const query = tx
+      .select({ scopes: workspaceApiTokenModel.scopes })
+      .from(workspaceApiTokenModel)
+      .where(
+        and(
+          eq(workspaceApiTokenModel.id, input.id),
+          eq(workspaceApiTokenModel.workspaceId, input.workspaceId),
+        ),
+      )
+      .limit(1)
+    const [row] = input.lock ? await query.for("share") : await query
+    return row ? { scopes: normalizeWorkspaceApiTokenScopes(row.scopes) } : null
+  }
+
   async findByTokenHash(
     tokenHash: TokenHash,
     tx: DatabaseClient = db,

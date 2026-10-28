@@ -186,7 +186,7 @@ const ACTIVITY_TEXT: Record<
 const badRequest = (message: string, code: string): ChatbotXException =>
   new ChatbotXException(message, code, 400)
 
-const normalizeBaseUrl = (raw: string): string => {
+export const normalizeExternalAgentBaseUrl = (raw: string): string => {
   const trimmed = raw.trim()
   let url: URL
   try {
@@ -224,7 +224,9 @@ const normalizeReason = (reason: string | undefined): string | undefined => {
   return trimmed ? trimmed.slice(0, REASON_MAX_LENGTH) : undefined
 }
 
-const normalizeBotName = (value: string | null): string | null => {
+export const normalizeExternalAgentBotName = (
+  value: string | null,
+): string | null => {
   const name = value?.trim()
   if (!name) {
     return null
@@ -239,7 +241,7 @@ const normalizeBotName = (value: string | null): string | null => {
 }
 
 /** Hermes errors carry no secrets; anything else is reported generically. */
-const describeCheckError = (error: unknown): string => {
+export const describeExternalAgentCheckError = (error: unknown): string => {
   if (
     error instanceof HermesAuthError ||
     error instanceof HermesUnavailableError ||
@@ -316,7 +318,7 @@ export class ExternalAgentService extends BaseService {
     const baseUrl =
       input.baseUrl === undefined
         ? existing?.baseUrl
-        : normalizeBaseUrl(input.baseUrl)
+        : normalizeExternalAgentBaseUrl(input.baseUrl)
     if (!baseUrl) {
       throw badRequest("Base URL is required", "externalAgentBaseUrlRequired")
     }
@@ -324,7 +326,7 @@ export class ExternalAgentService extends BaseService {
     const botName =
       input.botName === undefined
         ? (existing?.botName ?? null)
-        : normalizeBotName(input.botName)
+        : normalizeExternalAgentBotName(input.botName)
     if (input.maxRunMinutes !== undefined) {
       assertIntegerInRange(
         input.maxRunMinutes,
@@ -434,7 +436,7 @@ export class ExternalAgentService extends BaseService {
       logger.warn({ err, workspaceId }, "External agent: check failed")
       result = {
         status: "error",
-        error: describeCheckError(err),
+        error: describeExternalAgentCheckError(err),
         checkedAt: new Date(),
       }
     }

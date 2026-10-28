@@ -29,6 +29,7 @@ vi.mock("../src/schema", () => ({
     tokenPrefix: "tokenPrefix-column",
     isDefault: "isDefault-column",
     encryptedToken: "encryptedToken-column",
+    scopes: "scopes-column",
   },
 }))
 
@@ -42,6 +43,29 @@ const { workspaceApiTokenRepository } = await import(
 
 beforeEach(() => {
   vi.clearAllMocks()
+})
+
+describe("workspaceApiTokenRepository.findScopesForWorkspace", () => {
+  test("projects scopes only and locks a token scoped to its workspace", async () => {
+    const lock = vi.fn().mockResolvedValue([{ scopes: ["chats"] }])
+    const limit = vi.fn(() => ({ for: lock }))
+    const where = vi.fn(() => ({ limit }))
+    const from = vi.fn(() => ({ where }))
+    const select = vi.fn(() => ({ from }))
+    const tx = { select } as never
+
+    await expect(
+      workspaceApiTokenRepository.findScopesForWorkspace(
+        { id: "token-1", workspaceId: "ws-1", lock: true },
+        tx,
+      ),
+    ).resolves.toEqual({ scopes: ["chats"] })
+    expect(select).toHaveBeenCalledWith({ scopes: "scopes-column" })
+    expect(where).toHaveBeenCalledWith({
+      and: [{ eq: ["id", "token-1"] }, { eq: ["workspaceId-column", "ws-1"] }],
+    })
+    expect(lock).toHaveBeenCalledWith("share")
+  })
 })
 
 describe("workspaceApiTokenRepository.findByTokenHash", () => {
@@ -157,6 +181,7 @@ describe("workspaceApiTokenRepository.countByWorkspaceId", () => {
         tokenPrefix: "tokenPrefix-column",
         isDefault: "isDefault-column",
         encryptedToken: "encryptedToken-column",
+        scopes: "scopes-column",
       },
       { eq: ["workspaceId-column", "ws-1"] },
     )

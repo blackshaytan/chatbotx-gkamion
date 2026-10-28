@@ -144,6 +144,7 @@ export * from "./saved-reply"
 // `@chatbotx.io/business/sequence` instead.
 export * from "./smart-delay"
 export * from "./spreadsheet"
+export * from "./staff-assistant"
 export * from "./tag"
 export * from "./task"
 export * from "./template"
