@@ -3,10 +3,7 @@ import {
   decideFallback,
   type ExternalAgentRuntime,
   externalAgentService,
-  HermesAuthError,
-  HermesRequestError,
   type HermesSseEvent,
-  HermesUnavailableError,
   withBlockedOwnerGuard,
 } from "@chatbotx.io/business"
 import type { ExternalAgentConversationStatePatch } from "@chatbotx.io/database/repositories"
@@ -21,11 +18,12 @@ import { logger } from "../../lib/logger"
 import {
   applyRunEvent,
   checkRunLimit,
+  handleRunWatchError,
   processRunWindow,
+  type ReadOutcome,
   readOutputText,
   readRunEvents,
   settleRunStatus,
-  type ReadOutcome,
 } from "./external-agent-run-follower"
 import {
   type ExternalAgentConversationContext,
@@ -43,6 +41,7 @@ import {
  * window stays 15 s below it; events are read outside the conversation lock.
  */
 export { EXTERNAL_AGENT_WATCH_WINDOW_MS } from "./external-agent-run-follower"
+
 type WatchOptions = { isFinalAttempt: boolean }
 
 type RunTracking = Pick<
@@ -170,8 +169,8 @@ const completeRun = async (
 const applyEvent = async (
   batch: WatchBatch,
   event: HermesSseEvent,
-): Promise<boolean> => {
-  return await applyRunEvent(
+): Promise<boolean> =>
+  await applyRunEvent(
     {
       tracking: batch.tracking,
       postInterim: (text, step) =>
@@ -187,7 +186,6 @@ const applyEvent = async (
     },
     event,
   )
-}
 
 /** The stream ended without a terminal event: the run status decides. `true` when the run ended. */
 const settleFromRunStatus = async (batch: WatchBatch): Promise<boolean> => {
@@ -248,22 +246,11 @@ const handleWatchError = async (
   error: unknown,
   options: WatchOptions,
 ): Promise<void> => {
-  if (error instanceof HermesAuthError) {
-    await failRun(batch, "unavailable", error)
-    throw new UnrecoverableError(error.message)
-  }
-  if (error instanceof HermesRequestError) {
-    await failRun(batch, "unavailable", error)
-    return
-  }
-  if (error instanceof HermesUnavailableError) {
-    if (!options.isFinalAttempt) {
-      throw error
-    }
-    await failRun(batch, "unavailable", error)
-    return
-  }
-  throw error
+  await handleRunWatchError({
+    error,
+    isFinalAttempt: options.isFinalAttempt,
+    fail: (failure) => failRun(batch, "unavailable", failure),
+  })
 }
 
 const processBatch = async (
@@ -385,7 +372,11 @@ const runWatch = async (
     return
   }
 
-  const read = await readRunEvents(runtime.client, data.runId, state.lastEventSeq)
+  const read = await readRunEvents(
+    runtime.client,
+    data.runId,
+    state.lastEventSeq,
+  )
   await withExternalAgentLock(data.conversationId, () =>
     processUnderLock(data, context, runtime, read, options),
   )

@@ -2,9 +2,13 @@ import {
   decideInterim,
   decideLimit,
   type ExternalAgentRuntime,
+  HermesAuthError,
   type HermesReadEventsResult,
+  HermesRequestError,
   type HermesSseEvent,
+  HermesUnavailableError,
 } from "@chatbotx.io/business"
+import { UnrecoverableError } from "bullmq"
 
 export type RunTracking = {
   lastEventSeq: number
@@ -45,12 +49,14 @@ export const applyRunEvent = async (
   const type = event.data.event ?? ""
   if (type === "message.interim") {
     const text = readOutputText(event.data.text)
-    if (decideInterim({
-      text,
-      now,
-      lastProgressSentAt: port.tracking.lastProgressSentAt,
-      lastProgressText: port.tracking.lastProgressText,
-    }) === "send") {
+    if (
+      decideInterim({
+        text,
+        now,
+        lastProgressSentAt: port.tracking.lastProgressSentAt,
+        lastProgressText: port.tracking.lastProgressText,
+      }) === "send"
+    ) {
       await port.postInterim(text, `interim-${event.id ?? now.getTime()}`)
       port.tracking.lastProgressSentAt = now
       port.tracking.lastProgressText = text
@@ -66,7 +72,9 @@ export const applyRunEvent = async (
     return true
   }
   if (FAILED_RUN_EVENTS.has(type)) {
-    await port.fail(new Error(readOutputText(event.data.error) || `Hermes ${type}`))
+    await port.fail(
+      new Error(readOutputText(event.data.error) || `Hermes ${type}`),
+    )
     return true
   }
   if (type === "approval.request") {
@@ -118,6 +126,30 @@ export const checkRunLimit = async (input: {
     ),
   )
   return false
+}
+
+export const handleRunWatchError = async (input: {
+  error: unknown
+  isFinalAttempt: boolean
+  fail: (error: unknown) => Promise<void>
+}): Promise<void> => {
+  const { error } = input
+  if (error instanceof HermesAuthError) {
+    await input.fail(error)
+    throw new UnrecoverableError(error.message)
+  }
+  if (error instanceof HermesRequestError) {
+    await input.fail(error)
+    return
+  }
+  if (error instanceof HermesUnavailableError) {
+    if (!input.isFinalAttempt) {
+      throw error
+    }
+    await input.fail(error)
+    return
+  }
+  throw error
 }
 
 /** Keep the read window shorter than BullMQ's default 30-second job lock. */
