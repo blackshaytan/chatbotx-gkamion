@@ -53,6 +53,7 @@ type SidebarNavItem = {
   icon: LucideIcon
   permission?: WorkspacePermissionKey
   badge?: number | string
+  badgeLabel?: string
   /** Only present for items with an extra visibility rule beyond the
    * permission check below — computed once in the workspace layout via
    * `resolveWorkspaceRealtimeGates`. */
@@ -87,12 +88,12 @@ export function AppSidebar({
 }) {
   const t = useTranslations()
   const { data: session } = authClient.useSession()
-  const { data: overdueTasks } = useQuery(
+  const { data: openTasks } = useQuery(
     orpc.tasksAPI.count.queryOptions({
       input: {
         workspaceId,
         tab: "mine",
-        due: "overdue",
+        status: "open",
       },
       enabled: !scheduledForDeletion,
     }),
@@ -139,7 +140,11 @@ export function AppSidebar({
         title: t("tasks.title"),
         url: `/space/${workspaceId}/tasks`,
         icon: ListChecksIcon,
-        badge: overdueTasks?.total,
+        badge:
+          openTasks?.total && openTasks.total > 99 ? "99+" : openTasks?.total,
+        badgeLabel: openTasks?.total
+          ? t("tasks.openCount", { count: openTasks.total })
+          : undefined,
         visible: true,
       },
       {

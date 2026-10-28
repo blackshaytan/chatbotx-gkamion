@@ -22,6 +22,7 @@ type NavItem = {
   crossZone?: boolean
   disabled?: boolean
   badge?: number | string
+  badgeLabel?: string
 }
 
 function NavItemContent({
@@ -114,7 +115,9 @@ export function NavMain({
                 />
               </SidebarMenuButton>
               {item.badge ? (
-                <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                <SidebarMenuBadge aria-label={item.badgeLabel}>
+                  {item.badge}
+                </SidebarMenuBadge>
               ) : null}
             </SidebarMenuItem>
           )
