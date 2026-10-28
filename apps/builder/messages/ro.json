@@ -68,7 +68,7 @@
       "blockContact": "Blochează contactul",
       "broadcastActions": "Acțiuni de difuzare",
       "callApi": "Solicitare API externă",
-      "createTask": "Create Task",
+      "createTask": "Creează o sarcină",
       "make": "Make",
       "triggers": "Declanșatoare",
       "questionnaires": "Chestionare",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "Poți folosi variabilele contactului",
+      "assigneeConversation": "Responsabilul conversației",
+      "assigneeHint": "Dacă conversația nu are un responsabil, se folosește ieșirea de eroare",
+      "dueMode": "Data scadentă",
+      "dueNone": "Fără dată scadentă",
+      "dueIn": "Scadentă în",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "minute",
+        "hours": "ore",
+        "days": "zile"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "Memento înainte de scadență (minute)",
+      "outputField": "Salvează ID-ul sarcinii într-un câmp",
+      "outputFieldHint": "ID-ul noii sarcini este salvat în acest câmp dacă este selectat",
+      "errorsHint": "Ieșirea de eroare este folosită dacă responsabilul nu aparține spațiului de lucru, echipa nu are membri, conversația nu are responsabil sau sarcina nu poate fi creată",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "Introdu timpul până la scadență",
+        "remindNeedsDue": "Setează o dată scadentă înainte de a adăuga un memento",
+        "remindAfterDue": "Mementoul nu poate fi după data scadentă"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "Creează o sarcină din mesaj",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

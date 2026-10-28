@@ -2568,7 +2568,7 @@
       "blockContact": "Blokir Kontak",
       "broadcastActions": "Tindakan Siaran",
       "callApi": "Permintaan API Eksternal",
-      "createTask": "Create Task",
+      "createTask": "Buat tugas",
       "make": "Make",
       "triggers": "Pemicu",
       "questionnaires": "Kuesioner",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "Anda dapat menggunakan variabel kontak",
+      "assigneeConversation": "Penanggung jawab percakapan",
+      "assigneeHint": "Jika percakapan belum memiliki penanggung jawab, keluaran error akan digunakan",
+      "dueMode": "Tanggal jatuh tempo",
+      "dueNone": "Tanpa tanggal jatuh tempo",
+      "dueIn": "Jatuh tempo dalam",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "menit",
+        "hours": "jam",
+        "days": "hari"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "Pengingat sebelum jatuh tempo (menit)",
+      "outputField": "Simpan ID tugas ke kolom",
+      "outputFieldHint": "ID tugas baru akan disimpan ke kolom ini jika dipilih",
+      "errorsHint": "Keluaran error digunakan jika penanggung jawab bukan anggota ruang kerja, tim tidak memiliki anggota, percakapan tidak memiliki penanggung jawab, atau tugas tidak dapat dibuat",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "Masukkan waktu hingga jatuh tempo",
+        "remindNeedsDue": "Tetapkan tanggal jatuh tempo sebelum menambahkan pengingat",
+        "remindAfterDue": "Pengingat tidak boleh melewati tanggal jatuh tempo"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "Buat tugas dari pesan",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

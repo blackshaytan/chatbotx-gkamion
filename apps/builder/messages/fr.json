@@ -2568,7 +2568,7 @@
       "blockContact": "Bloquer le contact",
       "broadcastActions": "Actions de diffusion",
       "callApi": "Requête API externe",
-      "createTask": "Create Task",
+      "createTask": "Créer une tâche",
       "make": "Make",
       "triggers": "Déclencheurs",
       "questionnaires": "Questionnaires",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "Vous pouvez utiliser les variables du contact",
+      "assigneeConversation": "Responsable de la conversation",
+      "assigneeHint": "Si la conversation n’a pas de responsable, la sortie d’erreur est utilisée",
+      "dueMode": "Date d’échéance",
+      "dueNone": "Aucune échéance",
+      "dueIn": "Échéance dans",
       "units": {
         "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "hours": "heures",
+        "days": "jours"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "Rappel avant l’échéance (minutes)",
+      "outputField": "Enregistrer l’identifiant de la tâche dans un champ",
+      "outputFieldHint": "L’identifiant de la nouvelle tâche est enregistré dans ce champ s’il est sélectionné",
+      "errorsHint": "La sortie d’erreur est utilisée si le responsable ne fait pas partie de l’espace de travail, si l’équipe n’a aucun membre, si la conversation n’a pas de responsable ou si la tâche ne peut pas être créée",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "Saisissez le délai avant l’échéance",
+        "remindNeedsDue": "Définissez une échéance avant d’ajouter un rappel",
+        "remindAfterDue": "Le rappel ne peut pas être après l’échéance"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "Créer une tâche depuis le message",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

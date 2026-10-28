@@ -2714,7 +2714,7 @@
       "blockContact": "Kişiyi Engelle",
       "broadcastActions": "Yayın İşlemleri",
       "callApi": "Harici API İsteği",
-      "createTask": "Create Task",
+      "createTask": "Görev oluştur",
       "make": "Make",
       "triggers": "Tetikleyiciler",
       "questionnaires": "Anketler",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "Kişi değişkenlerini kullanabilirsiniz",
+      "assigneeConversation": "Görüşmenin atanan kişisi",
+      "assigneeHint": "Görüşmeye kimse atanmamışsa hata çıkışı kullanılır",
+      "dueMode": "Son tarih",
+      "dueNone": "Son tarih yok",
+      "dueIn": "Son tarih",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "dakika",
+        "hours": "saat",
+        "days": "gün"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "Son tarihten önce hatırlat (dakika)",
+      "outputField": "Görev kimliğini alana kaydet",
+      "outputFieldHint": "Seçildiğinde yeni görev kimliği bu alana kaydedilir",
+      "errorsHint": "Atanan kişi çalışma alanında değilse, ekipte üye yoksa, görüşmeye kimse atanmamışsa veya görev oluşturulamıyorsa hata çıkışı kullanılır",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "Son tarihe kalan süreyi girin",
+        "remindNeedsDue": "Hatırlatıcı eklemeden önce bir son tarih belirleyin",
+        "remindAfterDue": "Hatırlatıcı son tarihten sonraya ayarlanamaz"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "Mesajdan görev oluştur",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

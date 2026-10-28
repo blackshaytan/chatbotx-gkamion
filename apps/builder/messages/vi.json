@@ -2757,7 +2757,7 @@
       "blockContact": "Chặn liên hệ",
       "broadcastActions": "Hành động phát sóng",
       "callApi": "Yêu cầu bên ngoài",
-      "createTask": "Create Task",
+      "createTask": "Tạo nhiệm vụ",
       "make": "Make",
       "triggerN8n": "Trigger n8n",
       "triggers": "Trigger",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "Bạn có thể dùng biến liên hệ",
+      "assigneeConversation": "Người được giao cuộc trò chuyện",
+      "assigneeHint": "Nếu cuộc trò chuyện chưa có người được giao, luồng sẽ đi theo nhánh lỗi",
+      "dueMode": "Hạn chót",
+      "dueNone": "Không có hạn chót",
+      "dueIn": "Đến hạn sau",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "phút",
+        "hours": "giờ",
+        "days": "ngày"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "Nhắc trước hạn chót (phút)",
+      "outputField": "Lưu ID nhiệm vụ vào trường",
+      "outputFieldHint": "ID nhiệm vụ mới sẽ được lưu vào trường này nếu được chọn",
+      "errorsHint": "Luồng sẽ đi theo nhánh lỗi nếu người được giao không thuộc không gian làm việc, nhóm không có thành viên, cuộc trò chuyện chưa có người được giao hoặc không thể tạo nhiệm vụ",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "Nhập thời gian đến hạn",
+        "remindNeedsDue": "Đặt hạn chót trước khi thêm lời nhắc",
+        "remindAfterDue": "Thời gian nhắc không được sau hạn chót"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "Tạo nhiệm vụ từ tin nhắn",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

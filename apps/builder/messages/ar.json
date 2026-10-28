@@ -2714,7 +2714,7 @@
       "blockContact": "حظر جهة الاتصال",
       "broadcastActions": "إجراءات البث",
       "callApi": "طلب API خارجي",
-      "createTask": "Create Task",
+      "createTask": "إنشاء مهمة",
       "make": "Make",
       "triggers": "المحفزات",
       "questionnaires": "الاستبيانات",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "يمكنك استخدام متغيرات جهة الاتصال",
+      "assigneeConversation": "المعيّن للمحادثة",
+      "assigneeHint": "إذا لم يكن للمحادثة معيّن، فسيُستخدم مخرج الخطأ",
+      "dueMode": "تاريخ الاستحقاق",
+      "dueNone": "بلا تاريخ استحقاق",
+      "dueIn": "تستحق بعد",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "دقائق",
+        "hours": "ساعات",
+        "days": "أيام"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "التذكير قبل الاستحقاق (بالدقائق)",
+      "outputField": "حفظ معرّف المهمة في حقل",
+      "outputFieldHint": "سيُحفظ معرّف المهمة الجديدة في هذا الحقل عند اختياره",
+      "errorsHint": "يُستخدم مخرج الخطأ إذا كان المعيّن خارج مساحة العمل، أو كان الفريق بلا أعضاء، أو لم يكن للمحادثة معيّن، أو تعذّر إنشاء المهمة",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "أدخل المدة حتى الاستحقاق",
+        "remindNeedsDue": "حدّد تاريخ الاستحقاق قبل إضافة تذكير",
+        "remindAfterDue": "يجب ألا يكون التذكير بعد تاريخ الاستحقاق"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "إنشاء مهمة من الرسالة",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

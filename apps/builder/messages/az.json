@@ -3397,7 +3397,7 @@
       "blockContact": "Kontaktı blokla",
       "broadcastActions": "Kütləvi göndəriş əməliyyatları",
       "callApi": "Xarici API sorğusu",
-      "createTask": "Create Task",
+      "createTask": "Tapşırıq yarat",
       "make": "Make",
       "triggerN8n": "n8n-i işə sal",
       "triggers": "Tətikləyicilər",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "Əlaqə dəyişənlərindən istifadə edə bilərsiniz",
+      "assigneeConversation": "Söhbətə təyin edilmiş şəxs",
+      "assigneeHint": "Söhbətə heç kim təyin edilməyibsə, xəta çıxışı istifadə olunur",
+      "dueMode": "Son tarix",
+      "dueNone": "Son tarix yoxdur",
+      "dueIn": "Son tarixə qalan",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "dəqiqə",
+        "hours": "saat",
+        "days": "gün"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "Son tarixdən əvvəl xatırlatma (dəqiqə)",
+      "outputField": "Tapşırıq ID-sini sahəyə yaz",
+      "outputFieldHint": "Seçildikdə yeni tapşırıq ID-si bu sahəyə yazılır",
+      "errorsHint": "İcraçı iş sahəsindən kənardadırsa, komandada üzv yoxdursa, söhbətə heç kim təyin edilməyibsə və ya tapşırıq yaradıla bilmirsə, xəta çıxışı istifadə olunur",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "Son tarixə qədər olan müddəti daxil edin",
+        "remindNeedsDue": "Xatırlatma əlavə etməzdən əvvəl son tarix təyin edin",
+        "remindAfterDue": "Xatırlatma son tarixdən sonraya təyin edilə bilməz"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "Mesajdan tapşırıq yarat",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

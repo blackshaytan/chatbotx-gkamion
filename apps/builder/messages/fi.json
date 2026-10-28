@@ -2568,7 +2568,7 @@
       "blockContact": "Estä yhteystieto",
       "broadcastActions": "Joukkolähetystoiminnot",
       "callApi": "Ulkoinen API-pyyntö",
-      "createTask": "Create Task",
+      "createTask": "Luo tehtävä",
       "make": "Make",
       "triggers": "Käynnistimet",
       "questionnaires": "Kyselyt",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "Voit käyttää yhteyshenkilön muuttujia",
+      "assigneeConversation": "Keskustelun vastuuhenkilö",
+      "assigneeHint": "Jos keskustelulle ei ole määritetty vastuuhenkilöä, käytetään virhehaaraa",
+      "dueMode": "Määräpäivä",
+      "dueNone": "Ei määräpäivää",
+      "dueIn": "Määräaika",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "minuutin kuluttua",
+        "hours": "tunnin kuluttua",
+        "days": "päivän kuluttua"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "Muistutus ennen määräaikaa (minuuttia)",
+      "outputField": "Tallenna tehtävän tunnus kenttään",
+      "outputFieldHint": "Uuden tehtävän tunnus tallennetaan tähän kenttään, kun se valitaan",
+      "errorsHint": "Virhehaaraa käytetään, jos vastuuhenkilö ei kuulu työtilaan, tiimissä ei ole jäseniä, keskustelulla ei ole vastuuhenkilöä tai tehtävää ei voi luoda",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "Anna aika määräpäivään",
+        "remindNeedsDue": "Aseta määräpäivä ennen muistutuksen lisäämistä",
+        "remindAfterDue": "Muistutus ei voi olla määräpäivän jälkeen"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "Luo tehtävä viestistä",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

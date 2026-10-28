@@ -2568,7 +2568,7 @@
       "blockContact": "Blocca contatto",
       "broadcastActions": "Azioni broadcast",
       "callApi": "Richiesta API esterna",
-      "createTask": "Create Task",
+      "createTask": "Crea attività",
       "make": "Make",
       "triggers": "Trigger",
       "questionnaires": "Questionari",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "Puoi usare le variabili del contatto",
+      "assigneeConversation": "Assegnatario della conversazione",
+      "assigneeHint": "Se la conversazione non ha un assegnatario, viene usata l’uscita di errore",
+      "dueMode": "Data di scadenza",
+      "dueNone": "Nessuna data di scadenza",
+      "dueIn": "Scade tra",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "minuti",
+        "hours": "ore",
+        "days": "giorni"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "Promemoria prima della scadenza (minuti)",
+      "outputField": "Salva l’ID dell’attività in un campo",
+      "outputFieldHint": "Se selezionato, l’ID della nuova attività viene salvato in questo campo",
+      "errorsHint": "L’uscita di errore viene usata se l’assegnatario non appartiene allo spazio di lavoro, il team non ha membri, la conversazione non ha un assegnatario o non è possibile creare l’attività",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "Inserisci il tempo fino alla scadenza",
+        "remindNeedsDue": "Imposta una data di scadenza prima di aggiungere un promemoria",
+        "remindAfterDue": "Il promemoria non può essere successivo alla data di scadenza"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "Crea attività dal messaggio",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

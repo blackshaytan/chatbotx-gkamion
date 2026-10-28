@@ -2568,7 +2568,7 @@
       "blockContact": "Kontakt blockieren",
       "broadcastActions": "Broadcast-Aktionen",
       "callApi": "Externe API-Anfrage",
-      "createTask": "Create Task",
+      "createTask": "Aufgabe erstellen",
       "make": "Make",
       "triggers": "Trigger",
       "questionnaires": "Fragebögen",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "Du kannst Kontaktvariablen verwenden",
+      "assigneeConversation": "Zuständige Person des Gesprächs",
+      "assigneeHint": "Wenn dem Gespräch keine Person zugewiesen ist, wird der Fehlerausgang verwendet",
+      "dueMode": "Fälligkeitsdatum",
+      "dueNone": "Kein Fälligkeitsdatum",
+      "dueIn": "Fällig in",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "Minuten",
+        "hours": "Stunden",
+        "days": "Tagen"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "Erinnerung vor Fälligkeit (Minuten)",
+      "outputField": "Aufgaben-ID in Feld speichern",
+      "outputFieldHint": "Die neue Aufgaben-ID wird in diesem Feld gespeichert, wenn es ausgewählt ist",
+      "errorsHint": "Der Fehlerausgang wird verwendet, wenn die zuständige Person nicht zum Arbeitsbereich gehört, ein Team keine Mitglieder hat, dem Gespräch niemand zugewiesen ist oder die Aufgabe nicht erstellt werden kann",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "Zeit bis zur Fälligkeit eingeben",
+        "remindNeedsDue": "Lege ein Fälligkeitsdatum fest, bevor du eine Erinnerung hinzufügst",
+        "remindAfterDue": "Die Erinnerung darf nicht nach dem Fälligkeitsdatum liegen"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "Aufgabe aus Nachricht erstellen",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

@@ -373,7 +373,7 @@
       "blockContact": "חסימת איש קשר",
       "broadcastActions": "פעולות שידור",
       "callApi": "בקשת API חיצונית",
-      "createTask": "Create Task",
+      "createTask": "יצירת משימה",
       "make": "Make",
       "triggers": "גורמים מפעילים",
       "questionnaires": "שאלונים",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "אפשר להשתמש במשתנים של איש הקשר",
+      "assigneeConversation": "האחראי על השיחה",
+      "assigneeHint": "אם לא הוקצה אחראי לשיחה, ייעשה שימוש ביציאת השגיאה",
+      "dueMode": "תאריך יעד",
+      "dueNone": "ללא תאריך יעד",
+      "dueIn": "תאריך יעד בעוד",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "דקות",
+        "hours": "שעות",
+        "days": "ימים"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "תזכורת לפני תאריך היעד (בדקות)",
+      "outputField": "שמירת מזהה המשימה בשדה",
+      "outputFieldHint": "מזהה המשימה החדשה יישמר בשדה הזה אם הוא נבחר",
+      "errorsHint": "ייעשה שימוש ביציאת השגיאה אם האחראי אינו חבר בסביבת העבודה, אם אין חברים בצוות, אם לא הוקצה אחראי לשיחה או אם לא ניתן ליצור את המשימה",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "יש להזין את הזמן עד לתאריך היעד",
+        "remindNeedsDue": "יש להגדיר תאריך יעד לפני הוספת תזכורת",
+        "remindAfterDue": "התזכורת לא יכולה להיות אחרי תאריך היעד"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "יצירת משימה מהודעה",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

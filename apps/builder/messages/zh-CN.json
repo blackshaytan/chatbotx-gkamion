@@ -3458,7 +3458,7 @@
       "blockContact": "封锁联系人",
       "broadcastActions": "广播操作",
       "callApi": "外部API 请求",
-      "createTask": "Create Task",
+      "createTask": "创建任务",
       "chooseChannel": "选择频道",
       "clearCustomField": "清除自订字段",
       "condition": "条件",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "可以使用联系人变量",
+      "assigneeConversation": "对话负责人",
+      "assigneeHint": "如果对话没有负责人，则使用错误出口",
+      "dueMode": "截止日期",
+      "dueNone": "无截止日期",
+      "dueIn": "将在此后到期",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "分钟",
+        "hours": "小时",
+        "days": "天"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "截止前提醒（分钟）",
+      "outputField": "将任务 ID 保存到字段",
+      "outputFieldHint": "选中后，新的任务 ID 将保存到此字段",
+      "errorsHint": "如果负责人不属于此工作区、团队没有成员、对话没有负责人或任务无法创建，则使用错误出口",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "输入距离截止的时间",
+        "remindNeedsDue": "添加提醒前请先设置截止日期",
+        "remindAfterDue": "提醒时间不能晚于截止日期"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "从消息创建任务",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

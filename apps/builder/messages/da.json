@@ -2568,7 +2568,7 @@
       "blockContact": "Bloker kontakt",
       "broadcastActions": "Broadcast Handlinger",
       "callApi": "External API Anmodning",
-      "createTask": "Create Task",
+      "createTask": "Opret opgave",
       "make": "Make",
       "triggers": "Triggers",
       "questionnaires": "Questionnaires",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "Du kan bruge kontaktvariabler",
+      "assigneeConversation": "Samtalens ansvarlige",
+      "assigneeHint": "Hvis samtalen ikke har en ansvarlig, bruges fejludgangen",
+      "dueMode": "Forfaldsdato",
+      "dueNone": "Ingen forfaldsdato",
+      "dueIn": "Forfalder om",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "minutter",
+        "hours": "timer",
+        "days": "dage"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "Påmindelse før forfald (minutter)",
+      "outputField": "Gem opgave-id i felt",
+      "outputFieldHint": "Det nye opgave-id gemmes i dette felt, når det er valgt",
+      "errorsHint": "Fejludgangen bruges, hvis den ansvarlige er uden for arbejdsområdet, et team ikke har medlemmer, samtalen mangler en ansvarlig, eller opgaven ikke kan oprettes",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "Angiv tid til forfald",
+        "remindNeedsDue": "Angiv en forfaldsdato, før du tilføjer en påmindelse",
+        "remindAfterDue": "Påmindelsen må ikke ligge efter forfaldsdatoen"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "Opret opgave fra besked",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

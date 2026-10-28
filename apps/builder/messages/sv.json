@@ -3455,7 +3455,7 @@
       "blockContact": "Blockera kontakt",
       "broadcastActions": "Utskicksåtgärder",
       "callApi": "Extern API-begäran",
-      "createTask": "Create Task",
+      "createTask": "Skapa uppgift",
       "chooseChannel": "Välj kanal",
       "clearCustomField": "Rensa anpassat fält",
       "condition": "Villkor",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "Du kan använda kontaktvariabler",
+      "assigneeConversation": "Samtalets ansvariga",
+      "assigneeHint": "Om samtalet saknar ansvarig används felutgången",
+      "dueMode": "Förfallodatum",
+      "dueNone": "Inget förfallodatum",
+      "dueIn": "Förfaller om",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "minuter",
+        "hours": "timmar",
+        "days": "dagar"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "Påminnelse före förfallodatum (minuter)",
+      "outputField": "Spara uppgiftens ID i ett fält",
+      "outputFieldHint": "Det nya uppgifts-ID:t sparas i det här fältet om det väljs",
+      "errorsHint": "Felutgången används om den ansvariga inte tillhör arbetsytan, ett team saknar medlemmar, samtalet saknar ansvarig eller uppgiften inte kan skapas",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "Ange tiden till förfallodatum",
+        "remindNeedsDue": "Ange ett förfallodatum innan du lägger till en påminnelse",
+        "remindAfterDue": "Påminnelsen får inte ligga efter förfallodatumet"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "Skapa uppgift från meddelande",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

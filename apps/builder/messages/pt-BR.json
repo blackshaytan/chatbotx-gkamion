@@ -2568,7 +2568,7 @@
       "blockContact": "Bloquear contato",
       "broadcastActions": "Ações de transmissão",
       "callApi": "Solicitação de API externa",
-      "createTask": "Create Task",
+      "createTask": "Criar tarefa",
       "make": "Make",
       "triggers": "Gatilhos",
       "questionnaires": "Questionários",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "Você pode usar variáveis do contato",
+      "assigneeConversation": "Responsável pela conversa",
+      "assigneeHint": "Se a conversa não tiver um responsável, a saída de erro será usada",
+      "dueMode": "Data de vencimento",
+      "dueNone": "Sem data de vencimento",
+      "dueIn": "Vence em",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "minutos",
+        "hours": "horas",
+        "days": "dias"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "Lembrete antes do vencimento (minutos)",
+      "outputField": "Salvar o ID da tarefa em um campo",
+      "outputFieldHint": "O ID da nova tarefa será salvo neste campo quando selecionado",
+      "errorsHint": "A saída de erro será usada se o responsável não pertencer ao espaço de trabalho, se a equipe não tiver membros, se a conversa não tiver responsável ou se não for possível criar a tarefa",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "Informe o tempo até o vencimento",
+        "remindNeedsDue": "Defina uma data de vencimento antes de adicionar um lembrete",
+        "remindAfterDue": "O lembrete não pode ser posterior à data de vencimento"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "Criar tarefa a partir da mensagem",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",

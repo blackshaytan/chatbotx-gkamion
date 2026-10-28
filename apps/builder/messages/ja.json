@@ -2568,7 +2568,7 @@
       "blockContact": "連絡先をブロック",
       "broadcastActions": "一斉配信アクション",
       "callApi": "外部APIリクエスト",
-      "createTask": "Create Task",
+      "createTask": "タスクを作成",
       "make": "Make",
       "triggers": "トリガー",
       "questionnaires": "アンケート",
@@ -9270,25 +9270,25 @@
       "createdBy": "Created by"
     },
     "flowStep": {
-      "variablesHint": "You can use contact variables",
-      "assigneeConversation": "Conversation assignee",
-      "assigneeHint": "If the conversation has no assignee, the error output is used",
-      "dueMode": "Due date",
-      "dueNone": "No due date",
-      "dueIn": "Due in",
+      "variablesHint": "コンタクト変数を使用できます",
+      "assigneeConversation": "会話の担当者",
+      "assigneeHint": "会話に担当者がいない場合は、エラー出力に進みます",
+      "dueMode": "期限",
+      "dueNone": "期限なし",
+      "dueIn": "期限まで",
       "units": {
-        "minutes": "minutes",
-        "hours": "hours",
-        "days": "days"
+        "minutes": "分",
+        "hours": "時間",
+        "days": "日"
       },
-      "remindBefore": "Remind before due (minutes)",
-      "outputField": "Save task id to field",
-      "outputFieldHint": "The new task id is saved to this field when selected",
-      "errorsHint": "The error output is used when the assignee is outside the workspace, a team has no members, the conversation has no assignee, or the task cannot be created",
+      "remindBefore": "期限前のリマインダー（分）",
+      "outputField": "タスク ID をフィールドに保存",
+      "outputFieldHint": "選択すると、新しいタスク ID がこのフィールドに保存されます",
+      "errorsHint": "担当者がワークスペースのメンバーでない、チームにメンバーがいない、会話に担当者がいない、またはタスクを作成できない場合はエラー出力に進みます",
       "validation": {
-        "dueAmountRequired": "Enter a due amount",
-        "remindNeedsDue": "Set a due date before adding a reminder",
-        "remindAfterDue": "The reminder must not be later than the due date"
+        "dueAmountRequired": "期限までの時間を入力",
+        "remindNeedsDue": "リマインダーを追加する前に期限を設定してください",
+        "remindAfterDue": "リマインダーを期限より後に設定することはできません"
       }
     },
     "reminder": {
@@ -9298,7 +9298,7 @@
     },
     "actions": {
       "create": "Create task",
-      "createFromMessage": "Create task from message",
+      "createFromMessage": "メッセージからタスクを作成",
       "take": "Take task",
       "delete": "Delete task",
       "complete": "Complete task",
