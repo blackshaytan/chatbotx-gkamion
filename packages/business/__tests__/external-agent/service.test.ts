@@ -111,8 +111,13 @@ vi.mock("../../src/logger", () => ({
   logger: { warn: mocks.loggerWarn, error: mocks.loggerError, info: vi.fn() },
 }))
 
-const { externalAgentService, EXTERNAL_AGENT_HANDOVER_CLIENT_TEXT } =
-  await import("../../src/external-agent/service")
+const { externalAgentService } = await import(
+  "../../src/external-agent/service"
+)
+const {
+  EXTERNAL_AGENT_HANDOVER_CLOSED_TEXT,
+  EXTERNAL_AGENT_HANDOVER_OPEN_TEXT,
+} = await import("../../src/external-agent/handover-text")
 const { HermesAuthError, HermesUnavailableError } = await import(
   "../../src/external-agent/hermes-client"
 )
@@ -622,9 +627,10 @@ describe("externalAgentService.handover", () => {
       data: {
         conversation: conversation(true),
         contactInbox: { id: "ci-1" },
-        text: EXTERNAL_AGENT_HANDOVER_CLIENT_TEXT,
+        text: EXTERNAL_AGENT_HANDOVER_OPEN_TEXT,
       },
     })
+    expect(mocks.chatQueueAdd).toHaveBeenCalledOnce()
     expect(mocks.notificationQueueAdd).toHaveBeenCalledOnce()
     expect(mocks.notificationQueueAdd).toHaveBeenCalledWith(
       "notifyAgentHandover",
@@ -667,6 +673,28 @@ describe("externalAgentService.handover", () => {
         data: expect.objectContaining({ category: "return" }),
       }),
     )
+  })
+
+  test("confirms the after-hours text outside working hours", async () => {
+    // Sunday 15:00:00 Moscow — closed.
+    vi.setSystemTime(new Date("2026-10-25T12:00:00.000Z"))
+    mocks.findByUncached.mockResolvedValue(conversation(true))
+
+    await externalAgentService.handover({
+      workspaceId: WORKSPACE_ID,
+      conversationId: "conv-1",
+      reason: "Client asks for a manager",
+    })
+
+    expect(mocks.chatQueueAdd).toHaveBeenCalledOnce()
+    expect(mocks.chatQueueAdd).toHaveBeenCalledWith("sendChatMessage", {
+      type: "sendChatMessage",
+      data: {
+        conversation: conversation(true),
+        contactInbox: { id: "ci-1" },
+        text: EXTERNAL_AGENT_HANDOVER_CLOSED_TEXT,
+      },
+    })
   })
 
   test("a failed handover notification does not fail the handover", async () => {
@@ -766,10 +794,8 @@ describe("externalAgentService.failToHuman", () => {
 
     await externalAgentService.failToHuman(input)
 
-    expect(sendText).toHaveBeenCalledWith(EXTERNAL_AGENT_HANDOVER_CLIENT_TEXT)
-    expect(EXTERNAL_AGENT_HANDOVER_CLIENT_TEXT).toBe(
-      "Передал ваш запрос менеджеру",
-    )
+    expect(sendText).toHaveBeenCalledOnce()
+    expect(sendText).toHaveBeenCalledWith(EXTERNAL_AGENT_HANDOVER_OPEN_TEXT)
     expect(mocks.disableBotState).toHaveBeenCalledWith({
       workspaceId: WORKSPACE_ID,
       conversations: [{ id: "conv-1", contactId: "contact-1" }],
@@ -814,6 +840,18 @@ describe("externalAgentService.failToHuman", () => {
       }),
     )
     expect(mocks.logProviderError).toHaveBeenCalled()
+  })
+
+  test("sends the after-hours text outside working hours", async () => {
+    // Friday 21:30:00 Moscow — closed.
+    vi.setSystemTime(new Date("2026-10-23T18:30:00.000Z"))
+    mocks.findByUncached.mockResolvedValue(conversation(true))
+    const sendText = vi.fn().mockResolvedValue(undefined)
+
+    await externalAgentService.failToHuman(failInput(sendText))
+
+    expect(sendText).toHaveBeenCalledOnce()
+    expect(sendText).toHaveBeenCalledWith(EXTERNAL_AGENT_HANDOVER_CLOSED_TEXT)
   })
 
   test("a failing step does not skip the rest", async () => {

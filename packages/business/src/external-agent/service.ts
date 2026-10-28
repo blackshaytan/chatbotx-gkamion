@@ -43,6 +43,7 @@ import { ChatbotXException, notFoundException } from "../errors"
 import { inboxService } from "../inbox/service"
 import { logger } from "../logger"
 import { publishToWorkspaceParty } from "../platform/realtime-broadcast"
+import { resolveExternalAgentHandoverClientText } from "./handover-text"
 import {
   createHermesClient,
   HermesAuthError,
@@ -61,9 +62,6 @@ const MINUTE_MS = 60_000
 const TRAILING_SLASHES = /\/+$/
 const ALLOWED_PROTOCOLS = new Set(["http:", "https:"])
 const GENERIC_CHECK_ERROR = "External agent check failed"
-
-export const EXTERNAL_AGENT_HANDOVER_CLIENT_TEXT =
-  "Передал ваш запрос менеджеру"
 
 const HANDOVER_TRIGGER_CONTEXT: TriggerContext = {
   triggerSource: "system",
@@ -594,7 +592,7 @@ export class ExternalAgentService extends BaseService {
             data: {
               conversation,
               contactInbox,
-              text: EXTERNAL_AGENT_HANDOVER_CLIENT_TEXT,
+              text: resolveExternalAgentHandoverClientText(new Date()),
             },
           })
           .catch((err: unknown) => {
@@ -666,7 +664,7 @@ export class ExternalAgentService extends BaseService {
 
     if (found?.botEnabled) {
       await runBestEffort("sendText", context, () =>
-        input.sendText(EXTERNAL_AGENT_HANDOVER_CLIENT_TEXT),
+        input.sendText(resolveExternalAgentHandoverClientText(new Date())),
       )
       await runBestEffort("disableBotState", context, () =>
         conversationService.disableBotState({
