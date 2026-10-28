@@ -45,8 +45,8 @@ export const chatMessagePublicResource = z.object({
     ])
     .nullable(),
   deleted: z.boolean(),
-  editedAt: z.date().nullable(),
-  createdAt: z.date(),
+  editedAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date(),
 })
 
 export const chatPublicResource = z.object({
@@ -60,7 +60,7 @@ export const chatPublicResource = z.object({
       removed: z.boolean(),
     }),
   ),
-  lastMessageAt: z.date().nullable(),
+  lastMessageAt: z.coerce.date().nullable(),
   lastMessage: chatMessagePublicResource.nullable(),
   url: z.string().describe("Link to this chat in the web app."),
 })
