@@ -22,7 +22,7 @@ const { useStaffAssistantTyping } = await import(
 )
 afterEach(() => vi.useRealTimers())
 
-test("typing is scoped to the selected chat and expires even without a stop event", async () => {
+test("typing is tracked by chat and expires even without a stop event", async () => {
   vi.useFakeTimers()
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
   const container = document.createElement("div")
@@ -41,26 +41,30 @@ test("typing is scoped to the selected chat and expires even without a stop even
       assistantRunning: running,
       isSupportSession: support,
     })
-    return <span>{String(typing)}</span>
+    return (
+      <span>
+        {String(Boolean(typing[chatId]))}:{String(Boolean(typing["2"]))}
+      </span>
+    )
   }
   await act(async () => root.render(<View chatId="1" />))
   await act(async () =>
     realtime.handler?.({ data: { threadId: "2", typing: true, seconds: 5 } }),
   )
-  expect(container.textContent).toBe("false")
+  expect(container.textContent).toBe("false:true")
   await act(async () =>
     realtime.handler?.({ data: { threadId: "1", typing: true, seconds: 5 } }),
   )
-  expect(container.textContent).toBe("true")
+  expect(container.textContent).toBe("true:true")
   await act(async () => vi.advanceTimersByTime(5000))
-  expect(container.textContent).toBe("false")
+  expect(container.textContent).toBe("false:false")
   await act(async () => root.render(<View chatId="2" running />))
-  expect(container.textContent).toBe("true")
+  expect(container.textContent).toBe("true:true")
   await act(async () => root.render(<View chatId="2" running support />))
-  expect(container.textContent).toBe("false")
+  expect(container.textContent).toBe("false:false")
   await act(async () =>
     realtime.handler?.({ data: { threadId: "2", typing: true, seconds: 5 } }),
   )
-  expect(container.textContent).toBe("false")
+  expect(container.textContent).toBe("false:false")
   await act(async () => root.unmount())
 })

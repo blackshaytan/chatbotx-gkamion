@@ -246,7 +246,17 @@ export const ChatsPage = ({
                 {chat.isStaffAssistant ? (
                   <BotIcon aria-hidden="true" className="size-4 shrink-0" />
                 ) : null}
-                <span className="truncate">{titleFor(chat)}</span>
+                <span className="min-w-0">
+                  <span className="block truncate">{titleFor(chat)}</span>
+                  {chat.isStaffAssistant && assistantTyping[chat.id] ? (
+                    <span
+                      aria-live="polite"
+                      className="block text-muted-foreground text-xs"
+                    >
+                      {t("staffAssistant.typing")}
+                    </span>
+                  ) : null}
+                </span>
               </span>
               {chat.unreadCount ? (
                 <span className="ms-2 rounded-full bg-primary px-2 text-primary-foreground text-xs">
@@ -470,10 +480,22 @@ export const ChatsPage = ({
                   })}
                 </time>
               ) : null}
-              {selectedChat.isStaffAssistant && assistantTyping ? (
-                <p aria-live="polite" className="text-muted-foreground text-sm">
-                  {t("staffAssistant.typing")}
-                </p>
+              {selectedChat.isStaffAssistant &&
+              assistantTyping[selectedChat.id] ? (
+                <div
+                  aria-label={t("staffAssistant.typing")}
+                  aria-live="polite"
+                  className="inline-flex gap-1 rounded-lg bg-muted p-3"
+                  role="status"
+                >
+                  {[0, 1, 2].map((dot) => (
+                    <span
+                      aria-hidden="true"
+                      className="size-1.5 animate-pulse rounded-full bg-muted-foreground"
+                      key={dot}
+                    />
+                  ))}
+                </div>
               ) : null}
             </div>
             {selectedChat.isStaffAssistant &&

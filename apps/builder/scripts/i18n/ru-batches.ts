@@ -105,6 +105,7 @@ export const ruBatches = {
     "openaiCompatible",
     "decision",
     "externalAgent",
+    "staffAssistant",
     "inboxAttention",
     "googleSheets",
     "activeCampaign",

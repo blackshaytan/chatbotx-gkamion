@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useWorkspaceRealtimeEvents } from "@/features/realtime/use-workspace-realtime-events"
 
 export function useStaffAssistantTyping({
@@ -10,47 +10,60 @@ export function useStaffAssistantTyping({
   isSupportSession: boolean
   selectedChatId?: string
 }) {
-  const [typing, setTyping] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [typingChats, setTypingChats] = useState<Record<string, boolean>>({})
+  const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const update = useCallback(
+    (threadId: string, typing: boolean, seconds: number) => {
+      clearTimeout(timers.current[threadId])
+      setTypingChats((current) => ({ ...current, [threadId]: typing }))
+      if (typing) {
+        timers.current[threadId] = setTimeout(
+          () => {
+            delete timers.current[threadId]
+            setTypingChats((current) => ({ ...current, [threadId]: false }))
+          },
+          Math.min(Math.max(seconds, 1), 60) * 1000,
+        )
+      } else {
+        delete timers.current[threadId]
+      }
+    },
+    [],
+  )
   const handlers = useMemo(
     () => ({
       chatTyping: (event: {
         data: { threadId: string; typing: boolean; seconds: number }
       }) => {
-        if (event.data.threadId !== selectedChatId || isSupportSession) {
-          return
-        }
-        if (timer.current) {
-          clearTimeout(timer.current)
-        }
-        setTyping(event.data.typing)
-        if (event.data.typing) {
-          timer.current = setTimeout(
-            () => setTyping(false),
-            Math.min(Math.max(event.data.seconds, 1), 60) * 1000,
-          )
+        if (!isSupportSession) {
+          update(event.data.threadId, event.data.typing, event.data.seconds)
         }
       },
     }),
-    [isSupportSession, selectedChatId],
+    [isSupportSession, update],
   )
   useWorkspaceRealtimeEvents(handlers)
   useEffect(() => {
-    const running = Boolean(
-      selectedChatId && assistantRunning && !isSupportSession,
-    )
-    setTyping(running)
-    if (timer.current) {
-      clearTimeout(timer.current)
+    if (selectedChatId && assistantRunning && !isSupportSession) {
+      update(selectedChatId, true, 20)
     }
-    if (running) {
-      timer.current = setTimeout(() => setTyping(false), 20_000)
+  }, [selectedChatId, assistantRunning, isSupportSession, update])
+  useEffect(() => {
+    if (isSupportSession) {
+      for (const [threadId, timer] of Object.entries(timers.current)) {
+        clearTimeout(timer)
+        delete timers.current[threadId]
+      }
+      setTypingChats({})
     }
+  }, [isSupportSession])
+  useEffect(() => {
+    const activeTimers = timers.current
     return () => {
-      if (timer.current) {
-        clearTimeout(timer.current)
+      for (const timer of Object.values(activeTimers)) {
+        clearTimeout(timer)
       }
     }
-  }, [selectedChatId, assistantRunning, isSupportSession])
-  return typing
+  }, [])
+  return isSupportSession ? {} : typingChats
 }
