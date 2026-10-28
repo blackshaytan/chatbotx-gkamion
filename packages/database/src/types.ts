@@ -242,6 +242,8 @@ export type ExternalAgentInboxModel =
   typeof schema.externalAgentInboxModel.$inferSelect
 export type ExternalAgentConversationStateModel =
   typeof schema.externalAgentConversationStateModel.$inferSelect
+export type ExternalAgentChatStateModel =
+  typeof schema.externalAgentChatStateModel.$inferSelect
 export type MessengerMessageTemplateModel =
   typeof schema.messengerMessageTemplateModel.$inferSelect
 export type WhatsappFlowModel = typeof schema.whatsappFlowModel.$inferSelect

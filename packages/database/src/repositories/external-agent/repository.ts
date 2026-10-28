@@ -22,7 +22,7 @@ import type {
 
 export type ExternalAgentUpsertValues = Omit<
   typeof externalAgentModel.$inferInsert,
-  "id" | "workspaceId" | "createdAt" | "updatedAt"
+  "id" | "workspaceId" | "purpose" | "createdAt" | "updatedAt"
 >
 
 export type ExternalAgentResumePolicy = {
@@ -77,10 +77,11 @@ const replaceInboxLinks = async (
 export const externalAgentRepository = {
   async findByWorkspace(
     workspaceId: string,
+    purpose: "client" | "staff",
     tx: DatabaseClient = db,
   ): Promise<(ExternalAgentModel & { inboxIds: string[] }) | null> {
     const row = await tx.query.externalAgentModel.findFirst({
-      where: { workspaceId },
+      where: { workspaceId, purpose },
       with: { inboxes: { columns: { inboxId: true } } },
     })
     if (!row) {
@@ -107,6 +108,7 @@ export const externalAgentRepository = {
       .where(
         and(
           eq(externalAgentModel.workspaceId, input.workspaceId),
+          eq(externalAgentModel.purpose, "client"),
           eq(externalAgentModel.enabled, true),
           eq(externalAgentInboxModel.workspaceId, input.workspaceId),
           eq(externalAgentInboxModel.inboxId, input.inboxId),
@@ -150,6 +152,7 @@ export const externalAgentRepository = {
         and(
           eq(externalAgentModel.id, externalAgentInboxModel.externalAgentId),
           eq(externalAgentModel.workspaceId, workspaceId),
+          eq(externalAgentModel.purpose, "client"),
           eq(externalAgentModel.enabled, true),
         ),
       )
@@ -164,6 +167,7 @@ export const externalAgentRepository = {
   async updateCheck(
     input: {
       workspaceId: string
+      purpose: "client" | "staff"
       status: z.infer<typeof externalAgentCheckStatuses>
       error: string | null
       checkedAt: Date
@@ -177,7 +181,12 @@ export const externalAgentRepository = {
         lastCheckError: input.error,
         lastCheckedAt: input.checkedAt,
       })
-      .where(eq(externalAgentModel.workspaceId, input.workspaceId))
+      .where(
+        and(
+          eq(externalAgentModel.workspaceId, input.workspaceId),
+          eq(externalAgentModel.purpose, input.purpose),
+        ),
+      )
   },
 
   /**
@@ -187,22 +196,24 @@ export const externalAgentRepository = {
   async upsert(
     input: {
       workspaceId: string
+      purpose: "client" | "staff"
       values: ExternalAgentUpsertValues
       inboxIds?: string[]
     },
     tx: DatabaseClient,
   ): Promise<ExternalAgentModel> {
-    const { workspaceId, values, inboxIds } = input
+    const { workspaceId, purpose, values, inboxIds } = input
     const [agent] = await tx
       .insert(externalAgentModel)
       .values({
         ...values,
         workspaceId,
+        purpose,
         signMessages: values.signMessages ?? false,
         announceManager: values.announceManager ?? false,
       })
       .onConflictDoUpdate({
-        target: externalAgentModel.workspaceId,
+        target: [externalAgentModel.workspaceId, externalAgentModel.purpose],
         set: { ...values, updatedAt: new Date() },
       })
       .returning()

@@ -294,7 +294,10 @@ export class ExternalAgentService extends BaseService {
     return await withCache(
       settingsCacheKey(workspaceId),
       async (): Promise<ExternalAgentSettings | null> => {
-        const agent = await externalAgentRepository.findByWorkspace(workspaceId)
+        const agent = await externalAgentRepository.findByWorkspace(
+          workspaceId,
+          "client",
+        )
         return agent ? toSettings(agent) : null
       },
       { tags: [externalAgentCacheTag(workspaceId)] },
@@ -305,7 +308,10 @@ export class ExternalAgentService extends BaseService {
     workspaceId: string,
     input: UpdateExternalAgentInput,
   ): Promise<ExternalAgentSettings> {
-    const existing = await externalAgentRepository.findByWorkspace(workspaceId)
+    const existing = await externalAgentRepository.findByWorkspace(
+      workspaceId,
+      "client",
+    )
 
     const baseUrl =
       input.baseUrl === undefined
@@ -360,6 +366,7 @@ export class ExternalAgentService extends BaseService {
         await externalAgentRepository.upsert(
           {
             workspaceId,
+            purpose: "client",
             values: {
               provider: existing?.provider ?? "hermes",
               baseUrl,
@@ -398,7 +405,10 @@ export class ExternalAgentService extends BaseService {
   }
 
   async test(workspaceId: string): Promise<ExternalAgentCheckResult> {
-    const agent = await externalAgentRepository.findByWorkspace(workspaceId)
+    const agent = await externalAgentRepository.findByWorkspace(
+      workspaceId,
+      "client",
+    )
     if (!agent) {
       throw notFoundException("External agent is not configured")
     }
@@ -429,7 +439,11 @@ export class ExternalAgentService extends BaseService {
       }
     }
 
-    await externalAgentRepository.updateCheck({ workspaceId, ...result })
+    await externalAgentRepository.updateCheck({
+      workspaceId,
+      purpose: "client",
+      ...result,
+    })
     await this.invalidateCacheTags(externalAgentCacheTag(workspaceId))
     return result
   }
@@ -448,7 +462,10 @@ export class ExternalAgentService extends BaseService {
   async getRuntimeForWorkspace(
     workspaceId: string,
   ): Promise<ExternalAgentRuntime | null> {
-    const agent = await externalAgentRepository.findByWorkspace(workspaceId)
+    const agent = await externalAgentRepository.findByWorkspace(
+      workspaceId,
+      "client",
+    )
     if (!agent?.enabled) {
       return null
     }

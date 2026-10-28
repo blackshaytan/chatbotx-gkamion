@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm"
 import {
   index,
   jsonb,
@@ -118,6 +119,7 @@ export const internalMessageModel = pgTable(
     }),
     // Token name or flow name when the author is not a person.
     authorLabel: text(),
+    dedupeKey: text(),
     text: text(),
     // No database defaults: every insert writes both values explicitly.
     mentions: jsonb().$type<InternalMessageMentions>().notNull(),
@@ -127,6 +129,9 @@ export const internalMessageModel = pgTable(
     deletedAt: timestamp(timestampConfig),
   },
   (table) => [
+    uniqueIndex("InternalMessage_threadId_dedupeKey_key")
+      .on(table.threadId, table.dedupeKey)
+      .where(sql`${table.dedupeKey} IS NOT NULL`),
     index("InternalMessage_threadId_createdAt_idx").using(
       "btree",
       table.threadId.asc().nullsLast(),

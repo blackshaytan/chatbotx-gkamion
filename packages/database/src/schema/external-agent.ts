@@ -21,7 +21,9 @@ import {
 } from "../partials/shared"
 import { conversationModel } from "./conversation"
 import { inboxModel } from "./inbox"
+import { internalThreadModel } from "./internal-thread"
 import { workspaceModel } from "./workspace"
+import { workspaceApiTokenModel } from "./workspace-api-token"
 
 /**
  * The external AI agent (Hermes) that answers client chats for a workspace.
@@ -38,6 +40,11 @@ export const externalAgentModel = pgTable(
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
+    purpose: text().$type<"client" | "staff">().notNull().default("client"),
+    apiTokenId: bigintAsString().references(() => workspaceApiTokenModel.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
     provider: text().$type<ExternalAgentProvider>().notNull().default("hermes"),
     baseUrl: text().notNull(),
     apiKey: jsonb().$type<EncryptedData>().notNull(),
@@ -58,7 +65,45 @@ export const externalAgentModel = pgTable(
     lastCheckError: text(),
   },
   (table) => [
-    uniqueIndex("ExternalAgent_workspaceId_key").on(table.workspaceId),
+    uniqueIndex("ExternalAgent_workspaceId_purpose_key").on(
+      table.workspaceId,
+      table.purpose,
+    ),
+  ],
+)
+
+/** Independent cursor and run state for a staff assistant chat. */
+export const externalAgentChatStateModel = pgTable(
+  "ExternalAgentChatState",
+  {
+    threadId: bigintAsString()
+      .primaryKey()
+      .references(() => internalThreadModel.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    workspaceId: bigintAsString()
+      .notNull()
+      .references(() => workspaceModel.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    cursorAt: timestamp(timestampConfig),
+    cursorMessageId: bigintAsString(),
+    includeHistory: boolean().notNull().default(true),
+    runId: text(),
+    runStartedAt: timestamp(timestampConfig),
+    lastEventAt: timestamp(timestampConfig),
+    lastEventSeq: integer().notNull().default(-1),
+    lastProgressSentAt: timestamp(timestampConfig),
+    lastProgressText: text(),
+    lastClientSendAt: timestamp(timestampConfig),
+    failureCount: integer().notNull().default(0),
+    lastError: text(),
+    updatedAt: sharedColumns.updatedAt,
+  },
+  (table) => [
+    index("ExternalAgentChatState_workspaceId_idx").on(table.workspaceId),
   ],
 )
 

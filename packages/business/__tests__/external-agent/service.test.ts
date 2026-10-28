@@ -278,6 +278,7 @@ describe("externalAgentService.update", () => {
     expect(mocks.upsert).toHaveBeenCalledWith(
       {
         workspaceId: WORKSPACE_ID,
+        purpose: "client",
         values: {
           provider: "hermes",
           baseUrl: "https://hermes.example.com/v1",
@@ -468,6 +469,7 @@ describe("externalAgentService.test", () => {
     })
     expect(mocks.updateCheck).toHaveBeenCalledWith({
       workspaceId: WORKSPACE_ID,
+      purpose: "client",
       status: "ok",
       error: null,
       checkedAt: NOW,
