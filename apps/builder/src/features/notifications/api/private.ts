@@ -1,8 +1,10 @@
 import "@/features/notifications/lib/notification-realtime"
+import type {
+  ChatNotificationPayload,
+  NotificationPayload,
+  TaskNotificationType,
+} from "@chatbotx.io/database/partials"
 import {
-  type ChatNotificationPayload,
-  type NotificationPayload,
-  type TaskNotificationType,
   notificationService,
   resolveTenantSettings,
 } from "@chatbotx.io/business"

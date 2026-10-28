@@ -298,7 +298,7 @@ export const chatsAuthenticatedAPI = {
     .output(z.object({ changed: z.boolean() }))
     .handler(async ({ context, input }) => {
       if (context.isSupportSession) {
-        return { changed: false, memberUserIds: [] }
+        return { changed: false }
       }
       const result = await chatService.markRead({
         workspaceId: input.workspaceId,

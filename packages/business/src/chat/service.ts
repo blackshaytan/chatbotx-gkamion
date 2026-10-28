@@ -272,7 +272,7 @@ class ChatService extends BaseService {
       userId: input.userId,
     })
     if (!chat) {
-      return { changed: false }
+      return { changed: false, memberUserIds: [] }
     }
     if (input.upToMessageId) {
       const found = await chatRepository.listMessagesByIds({
