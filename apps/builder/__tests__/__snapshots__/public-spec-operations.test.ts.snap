@@ -2773,6 +2773,21 @@ exports[`public API spec — operation naming guard > operation list (operationI
     "path": "/v1/spreadsheets/{id}",
   },
   {
+    "method": "GET",
+    "operationId": "staffAssistant.get",
+    "path": "/v1/staff-assistant",
+  },
+  {
+    "method": "POST",
+    "operationId": "staffAssistant.test",
+    "path": "/v1/staff-assistant/test",
+  },
+  {
+    "method": "PATCH",
+    "operationId": "staffAssistant.update",
+    "path": "/v1/staff-assistant",
+  },
+  {
     "method": "POST",
     "operationId": "tags.create",
     "path": "/v1/tags",

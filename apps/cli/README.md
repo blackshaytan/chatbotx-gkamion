@@ -930,6 +930,16 @@ chatbotx external-agent update --enabled <true|false> --baseUrl <url> --apiKey <
 chatbotx external-agent test                          # Health check of the Hermes address; stored as the last check
 ```
 
+### `staff-assistant` (scope `settings`)
+
+```bash
+chatbotx staff-assistant list                        # Settings; null until configured
+chatbotx staff-assistant update --enabled true --baseUrl <url> --apiKey <key> --botName <name> --apiTokenId <id>
+chatbotx staff-assistant test                        # Health check, limited to once per 10 seconds
+```
+
+The token id can be obtained from `token.get`; the bound token must explicitly include the `chats` scope. The assistant acts with the full permissions of its token, independently of the employee's permissions. These operations are available through MCP search rather than the default tool set.
+
 ### `whatsapp` calls (scope `integrations`)
 
 ```bash

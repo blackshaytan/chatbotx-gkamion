@@ -383,4 +383,9 @@ export const router = {
       default: m.externalAgentAPI,
     })),
   ),
+  staffAssistant: lazy(() =>
+    import("@/features/staff-assistant/api").then((m) => ({
+      default: m.staffAssistantAPI,
+    })),
+  ),
 }

@@ -40,7 +40,7 @@ Use `search_tools` when the task needs something outside the default set (e.g. d
 | Tool | Description |
 |---|---|
 | `capabilities_get` | Discover workspace entities and query `channel` before authoring a channel-bound FlowSpec to receive its supported blocks and limits. |
-| `token_get` | Get the calling token's workspace id, permission (`read_only`/`full`), and scopes — check before attempting a write. |
+| `token_get` | Get the calling token's id, workspace id, permission (`read_only`/`full`), and scopes — check before attempting a write. |
 | `schemas_flow_spec` | Get the JSON Schema for the `spec` object `flows_publish`/`flows_update_draft`/`flows_validate` accept — the authoritative reference for every flow step type. |
 
 ## Available tools
@@ -53,7 +53,7 @@ Tool names are derived from the OpenAPI `operationId` converted to `snake_case` 
 |---|---|
 | `capabilities_get` | Discover workspace entities and a requested channel's FlowSpec policy |
 | `schemas_flow_spec` | Get JSON Schema for flow-spec DSL |
-| `token_get` | Get calling token workspace id, permission, and scopes |
+| `token_get` | Get calling token id, workspace id, permission, and scopes |
 
 ### AI Agents
 
@@ -166,6 +166,8 @@ Tool names are derived from the OpenAPI `operationId` converted to `snake_case` 
 | `tasks_create` | Create task |
 
 Other task operations (`tasks_count`, `tasks_take`, `tasks_get`, updates, watchers, `tasks_comments_list` / `tasks_comments_create` / `tasks_comments_update` / `tasks_comments_delete`, `tasks_attachments_upload` [multipart file], etc.) are reachable via `search_tools` → `call_tool`, not `tools/list`.
+
+Staff assistant settings (`staff_assistant_get`, `staff_assistant_update`, `staff_assistant_test`) are reachable through `search_tools` → `call_tool` with the `settings` scope. The bound token must explicitly include `chats`; it grants the assistant its own token permissions, independently of the employee's permissions.
 
 Everything else — deletes, less-common resources (coupons, products, webhooks, saved replies, tags/triggers/inboxes/custom-fields management, integrations, workspace members, etc.), and channel-token-only or deprecated operations — is reachable via `search_tools` → `call_tool`, not `tools/list`.
 

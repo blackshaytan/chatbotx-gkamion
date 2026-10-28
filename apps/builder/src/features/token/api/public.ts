@@ -17,6 +17,9 @@ import { workspaceTokenAuthAPIForScope } from "@/orpc"
 const workspaceTokenAuthAPI = workspaceTokenAuthAPIForScope("contacts")
 
 const tokenPublicResponse = z.object({
+  id: z
+    .string()
+    .describe("The calling token id; use it when binding a staff assistant."),
   workspaceId: z.string(),
   permission: z.enum(["read_only", "full"]),
   scopes: z
@@ -32,9 +35,9 @@ export const tokenPublicRouter = {
     .route({
       method: "GET",
       path: "/v1/token",
-      summary: "Get calling token workspace id, permission, and scopes",
+      summary: "Get calling token id, workspace id, permission, and scopes",
       description:
-        "Reports the calling token's workspace id, permission, and scopes. `scopes: null` grants existing scopes but never Chats; Chat access always needs an explicit `chats` scope. Call `capabilities.get` to discover useful resources before using the token with another operation.",
+        "Reports the calling token's id, workspace id, permission, and scopes. `scopes: null` grants existing scopes but never Chats; Chat access always needs an explicit `chats` scope. Call `capabilities.get` to discover useful resources before using the token with another operation.",
       tags: ["Capabilities"],
       spec: mcpSpec({ visibility: "default", alwaysVisible: true }),
     })
@@ -48,6 +51,7 @@ export const tokenPublicRouter = {
       // `requireTokenScope` in `@/orpc`).
       const apiToken = context.apiToken as RequestApiToken
       return {
+        id: apiToken.id,
         workspaceId: context.workspace.id,
         permission: apiToken.permission as WorkspaceApiTokenPermission,
         scopes: apiToken.scopes,

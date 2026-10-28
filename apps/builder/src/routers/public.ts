@@ -85,6 +85,7 @@ import { savedRepliesPublicRouter } from "@/features/saved-replies/api/public"
 import { sequencesPublicRouter } from "@/features/sequences/api/public"
 import { commentAutomationsPublicRouter } from "@/features/shared/comment-automation/api/public"
 import { spreadsheetsPublicRouter } from "@/features/spreadsheets/api/public"
+import { staffAssistantPublicRouter } from "@/features/staff-assistant/api/public"
 import { tagsPublicRouter } from "@/features/tags/api/public"
 import { tasksPublicRouter } from "@/features/tasks/api/public"
 import { threadsCommentsPublicRouter } from "@/features/threads-comments/api/public"
@@ -169,6 +170,7 @@ export const publicRouter = {
   sequences: sequencesPublicRouter,
   smtpIntegrations: smtpIntegrationsPublicRouter,
   spreadsheets: spreadsheetsPublicRouter,
+  staffAssistant: staffAssistantPublicRouter,
   tags: tagsPublicRouter,
   tasks: tasksPublicRouter,
   templateMessages: templateMessagesPublicRouter,

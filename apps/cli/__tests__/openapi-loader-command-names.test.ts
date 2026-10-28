@@ -11,6 +11,19 @@ import { pathAndMethodToCommandName } from "../src/openapi-loader"
 // against a known baseline instead of a silent command-surface change.
 
 describe("pathAndMethodToCommandName — single-segment resource", () => {
+  test("staff assistant settings and test have distinct commands", () => {
+    const names = [
+      pathAndMethodToCommandName("/v1/staff-assistant", "GET"),
+      pathAndMethodToCommandName("/v1/staff-assistant", "PATCH"),
+      pathAndMethodToCommandName("/v1/staff-assistant/test", "POST"),
+    ]
+    expect(names).toEqual([
+      "staff-assistant:list",
+      "staff-assistant:update",
+      "staff-assistant:test",
+    ])
+    expect(new Set(names).size).toBe(3)
+  })
   test("GET on a plain collection resource is list", () => {
     expect(pathAndMethodToCommandName("/v1/tags", "GET")).toBe("tags:list")
   })
