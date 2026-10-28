@@ -22,12 +22,9 @@ post-checkout:
 
 pre-commit:
   jobs:
-    - run: pnpm ultracite fix
+    # Keep local hooks scoped to staged files; full lint and type checks run in CI.
+    - run: pnpm exec ultracite check {staged_files}
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
-      stage_fixed: true
-    - name: typecheck
-      run: pnpm turbo check-types
-      glob: "**/*.{ts,tsx}"
 
 commit-msg:
   jobs:

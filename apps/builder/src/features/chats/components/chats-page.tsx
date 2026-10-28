@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@chatbotx.io/ui/components/ui/button"
+import { Button, buttonVariants } from "@chatbotx.io/ui/components/ui/button"
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query"
 import { BotIcon, PlusIcon, TriangleAlertIcon } from "lucide-react"
 import Image from "next/image"
@@ -193,15 +193,11 @@ export const ChatsPage = ({
           <h1 className="font-semibold">{t("fields.tokenScopes.chats")}</h1>
           {canCreate ? (
             <details className="relative">
-              <summary className="list-none">
-                <Button
-                  aria-label={t("actions.addNew")}
-                  size="icon"
-                  type="button"
-                  variant="outline"
-                >
-                  <PlusIcon aria-hidden="true" />
-                </Button>
+              <summary
+                aria-label={t("actions.addNew")}
+                className={`${buttonVariants({ size: "icon", variant: "outline" })} list-none [&::-webkit-details-marker]:hidden`}
+              >
+                <PlusIcon aria-hidden="true" />
               </summary>
               <div className="absolute end-0 z-10 mt-2 max-h-72 w-64 overflow-auto rounded-md border bg-popover p-1 shadow-md">
                 {assistantStatus?.available ? (
