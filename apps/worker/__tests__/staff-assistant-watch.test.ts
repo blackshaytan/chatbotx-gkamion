@@ -125,6 +125,25 @@ test("publishes a deduplicated final reply and ends typing", async () => {
   )
 })
 
+test("limits oversized provider output so the run can finish", async () => {
+  mocks.read.mockResolvedValue({
+    events: [{ data: { output: "a".repeat(10_001) } }],
+    result: null,
+    error: null,
+  })
+  await processStaffAssistantWatch(data, { isFinalAttempt: false })
+  expect(mocks.post).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: { kind: "comment", text: "a".repeat(10_000) },
+    }),
+  )
+  expect(mocks.patch).toHaveBeenCalledWith(
+    expect.objectContaining({
+      values: expect.objectContaining({ runId: null }),
+    }),
+  )
+})
+
 test("stops a disabled assistant run and emits no message", async () => {
   mocks.load.mockResolvedValue(null)
   mocks.getClient.mockResolvedValue({ stop: vi.fn() })

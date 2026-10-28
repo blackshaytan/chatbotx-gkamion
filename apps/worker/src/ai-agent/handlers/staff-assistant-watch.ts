@@ -7,6 +7,7 @@ import {
   staffAssistantService,
   withBlockedOwnerGuard,
 } from "@chatbotx.io/business"
+import { CHAT_LIMITS } from "@chatbotx.io/database/partials"
 import {
   enqueueStaffAssistantReply,
   enqueueStaffAssistantWatch,
@@ -119,7 +120,10 @@ const completeRun = async (watch: Watch, output: string) => {
       userId: turn.userId,
       expectedRunId: data.runId,
       dedupeKey: `staffAssistant:${data.runId}:final`,
-      message: { kind: "comment", text },
+      message: {
+        kind: "comment",
+        text: text.slice(0, CHAT_LIMITS.maxMessageLength),
+      },
     })
   }
   const closed = await staffAssistantService.patchRunState({
@@ -210,7 +214,10 @@ const processLocked = async (
                 userId: turn.userId,
                 expectedRunId: data.runId,
                 dedupeKey: `staffAssistant:${data.runId}:interim-${watch.tracking.lastEventSeq}-${hash}`,
-                message: { kind: "comment", text },
+                message: {
+                  kind: "comment",
+                  text: text.slice(0, CHAT_LIMITS.maxMessageLength),
+                },
               })
             },
             patchTracking: async (values) =>
