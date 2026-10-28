@@ -3,11 +3,16 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 const repo = vi.hoisted(() => ({
   notification: {
     insertMany: vi.fn(),
+    upsertChatUnread: vi.fn(),
     listForUser: vi.fn(),
     countUnread: vi.fn(),
     markRead: vi.fn(),
+    markReadByEntity: vi.fn(),
     deleteByEntity: vi.fn(),
     deleteOlderThan: vi.fn(),
+  },
+  chat: {
+    listMembers: vi.fn(),
   },
   task: {
     listWatcherUserIds: vi.fn(),
@@ -27,6 +32,7 @@ vi.mock("@chatbotx.io/database/client", () => ({
 }))
 vi.mock("@chatbotx.io/database/repositories", () => ({
   notificationRepository: repo.notification,
+  chatRepository: repo.chat,
   taskRepository: repo.task,
   workspaceMemberRepository: repo.member,
 }))
@@ -66,6 +72,11 @@ beforeEach(() => {
     },
   ])
   repo.notification.insertMany.mockResolvedValue([{ id: "n-1", userId: "w-1" }])
+  repo.notification.upsertChatUnread.mockImplementation(
+    async ({ rows }: { rows: Array<{ userId: string }> }) =>
+      rows.map((row) => ({ id: `chat-${row.userId}`, userId: row.userId })),
+  )
+  repo.chat.listMembers.mockResolvedValue([])
   repo.member.updateNotificationTypes.mockResolvedValue(1)
 })
 
@@ -199,8 +210,113 @@ describe("notificationService.notifyTask", () => {
   })
 })
 
+describe("notificationService.notifyChatMessage", () => {
+  test("notifies active participants except the author and honours opt-out", async () => {
+    const listener = vi.fn()
+    onNotificationsCreated(listener)
+    repo.chat.listMembers.mockResolvedValue([
+      {
+        threadId: "chat-1",
+        userId: "author-1",
+        lastReadAt: null,
+        name: "Author",
+        isWorkspaceMember: true,
+      },
+      {
+        threadId: "chat-1",
+        userId: "member-1",
+        lastReadAt: null,
+        name: "Member",
+        isWorkspaceMember: true,
+      },
+      {
+        threadId: "chat-1",
+        userId: "member-2",
+        lastReadAt: null,
+        name: "Opted out",
+        isWorkspaceMember: true,
+      },
+      {
+        threadId: "chat-1",
+        userId: "former-member",
+        lastReadAt: null,
+        name: "Former member",
+        isWorkspaceMember: false,
+      },
+      {
+        threadId: "chat-1",
+        userId: "already-read",
+        lastReadAt: new Date("2026-10-28T12:00:01.000Z"),
+        name: "Already read",
+        isWorkspaceMember: true,
+      },
+    ])
+    repo.member.listNotificationTypesByUserIds.mockResolvedValue([
+      { userId: "member-1", notificationTypes: {} },
+      { userId: "member-2", notificationTypes: { chatMessage: false } },
+    ])
+
+    await notificationService.notifyChatMessage({
+      workspaceId: "ws-1",
+      threadId: "chat-1",
+      actorUserId: "author-1",
+      actorLabel: "Author",
+      excerpt: "x".repeat(240),
+      messageId: "message-1",
+      messageAt: new Date("2026-10-28T12:00:00.000Z"),
+    })
+
+    expect(repo.notification.upsertChatUnread).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rows: [
+          expect.objectContaining({
+            userId: "member-1",
+            entityId: "chat-1",
+            type: "chatMessage",
+            payload: expect.objectContaining({
+              count: 1,
+              excerpt: "x".repeat(200),
+              lastMessageId: "message-1",
+            }),
+          }),
+        ],
+      }),
+    )
+    expect(repo.notification.upsertChatUnread).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      notifications: [{ id: "chat-member-1", userId: "member-1" }],
+    })
+  })
+
+  test("does not look up preferences when no recipient remains", async () => {
+    repo.chat.listMembers.mockResolvedValue([
+      {
+        threadId: "chat-1",
+        userId: "author-1",
+        lastReadAt: null,
+        name: "Author",
+        isWorkspaceMember: true,
+      },
+    ])
+
+    await notificationService.notifyChatMessage({
+      workspaceId: "ws-1",
+      threadId: "chat-1",
+      actorUserId: "author-1",
+      actorLabel: "Author",
+      excerpt: "Hello",
+      messageId: "message-1",
+      messageAt: new Date("2026-10-28T12:00:00.000Z"),
+    })
+
+    expect(repo.member.listNotificationTypesByUserIds).not.toHaveBeenCalled()
+    expect(repo.notification.upsertChatUnread).not.toHaveBeenCalled()
+  })
+})
+
 describe("notificationService.listForUser", () => {
-  test("requests and returns only task notifications", async () => {
+  test("returns task and chat notifications", async () => {
     const taskNotification = {
       id: "n-1",
       type: "taskCommented",
@@ -241,9 +357,28 @@ describe("notificationService.listForUser", () => {
       userId: "u-1",
       limit: 20,
       unreadOnly: true,
-      entityType: "task",
     })
-    expect(result).toEqual([taskNotification])
+    expect(result).toEqual([taskNotification, expect.any(Object)])
+  })
+})
+
+describe("notificationService.markReadForEntity", () => {
+  test("marks the user's unread chat notification as read", async () => {
+    await notificationService.markReadForEntity({
+      workspaceId: "ws-1",
+      userId: "u-1",
+      entityType: "chat",
+      entityId: "chat-1",
+      upTo: new Date("2026-10-28T12:00:00.000Z"),
+    })
+
+    expect(repo.notification.markReadByEntity).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      userId: "u-1",
+      entityType: "chat",
+      entityId: "chat-1",
+      upTo: new Date("2026-10-28T12:00:00.000Z"),
+    })
   })
 })
 

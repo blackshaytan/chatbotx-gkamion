@@ -14,7 +14,7 @@ import {
   updateNotificationPreferencesRequest,
 } from "../schema/query"
 import {
-  notificationItemResource,
+  anyNotificationItemResource,
   notificationPreferencesResource,
 } from "../schema/resource"
 
@@ -30,7 +30,7 @@ export const notificationsAuthenticatedAPI = {
     })
     .input(listNotificationsRequest)
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
-    .output(z.object({ data: z.array(notificationItemResource) }))
+    .output(z.object({ data: z.array(anyNotificationItemResource) }))
     .handler(async ({ context, input }) => {
       const notifications = await notificationService.listForUser({
         workspaceId: input.workspaceId,
@@ -42,18 +42,31 @@ export const notificationsAuthenticatedAPI = {
         workspaceId: input.workspaceId,
       })
       return {
-        data: notifications.map((notification) => ({
-          id: notification.id,
-          type: notification.type,
-          taskId: notification.entityId,
-          payload: notification.payload,
-          readAt: notification.readAt,
-          createdAt: notification.createdAt,
-          url: buildTaskUrl(appUrl, {
-            id: notification.entityId,
-            workspaceId: input.workspaceId,
-          }),
-        })),
+        data: notifications.map((notification) => {
+          if (notification.entityType === "chat") {
+            return {
+              id: notification.id,
+              type: notification.type,
+              threadId: notification.entityId,
+              payload: notification.payload,
+              readAt: notification.readAt,
+              createdAt: notification.createdAt,
+              url: `${appUrl}/space/${input.workspaceId}/chats/${notification.entityId}`,
+            }
+          }
+          return {
+            id: notification.id,
+            type: notification.type,
+            taskId: notification.entityId,
+            payload: notification.payload,
+            readAt: notification.readAt,
+            createdAt: notification.createdAt,
+            url: buildTaskUrl(appUrl, {
+              id: notification.entityId,
+              workspaceId: input.workspaceId,
+            }),
+          }
+        }),
       }
     }),
 

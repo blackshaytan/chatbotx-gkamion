@@ -22,6 +22,11 @@ import {
 } from "../../schema"
 import type { InternalMessageModel, InternalThreadModel } from "../../types"
 
+export const chatMessagePageOrder = (props: {
+  afterId?: string
+  beforeId?: string
+}) => (props.beforeId || !props.afterId ? "desc" : "asc")
+
 const chatTypes = ["direct", "agent"] as const
 
 class ChatRepository {
@@ -326,7 +331,13 @@ class ChatRepository {
     const { workspaceId, threadId, beforeId, afterId, limit, tx = db } = props
     const cursor = beforeId ?? afterId
     const comparison = beforeId ? sql`<` : sql`>`
-    const direction = beforeId ? sql`DESC` : sql`ASC`
+    // The initial page must open at the newest message.  Pages requested with
+    // `beforeId` also scan backwards; both are reversed below so callers
+    // always receive messages in chronological order for bottom-anchored UIs.
+    const direction =
+      chatMessagePageOrder({ afterId, beforeId }) === "desc"
+        ? sql`DESC`
+        : sql`ASC`
     const cursorClause = cursor
       ? sql`AND (m."createdAt", m."id") ${comparison} (SELECT "createdAt", "id" FROM "InternalMessage" WHERE "id" = ${cursor}::bigint AND "threadId" = ${threadId}::bigint AND "workspaceId" = ${workspaceId}::bigint)`
       : sql``
@@ -338,7 +349,7 @@ class ChatRepository {
     `)
     const rows = result.rows.slice(0, limit)
     return {
-      rows: afterId ? rows.reverse() : rows,
+      rows: rows.reverse(),
       hasMore: result.rows.length > limit,
     }
   }
@@ -349,7 +360,7 @@ class ChatRepository {
     userId: string
     upToMessageId: string | null
     tx?: DatabaseClient
-  }): Promise<boolean> {
+  }): Promise<Date | null> {
     const { workspaceId, threadId, userId, upToMessageId, tx = db } = props
     const target =
       upToMessageId === null
@@ -380,8 +391,8 @@ class ChatRepository {
           ),
         ),
       )
-      .returning({ id: internalThreadMemberModel.id })
-    return rows.length > 0
+      .returning({ lastReadAt: internalThreadMemberModel.lastReadAt })
+    return rows[0]?.lastReadAt ?? null
   }
 
   async countUnreadTotal(props: {

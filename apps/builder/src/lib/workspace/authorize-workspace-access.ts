@@ -8,6 +8,7 @@ import { ORPCError } from "@orpc/server"
 import { isCloud } from "@/env"
 import { ADS_CAMPAIGNS_INSIGHTS_PATH } from "@/features/ads-campaign/lib/api-paths"
 import { BROADCAST_AUDIENCE_PREVIEW_TOKEN_PATH } from "@/features/broadcasts/lib/api-paths"
+import { CHATS_MARK_READ_PATH } from "@/features/chats/lib/api-paths"
 import {
   FILTER_VALUE_LABELS_POST_PATH,
   FILTER_VALUE_LABELS_TOKEN_PATH,
@@ -186,6 +187,7 @@ export const workspaceAccessDenialOrpcError = (
 export const BROADCAST_STOP_TOKEN_PATH = "/v1/broadcasts/{id}/stop"
 
 const READ_ONLY_POST_PATHS = new Set<string>([
+  CHATS_MARK_READ_PATH,
   CONVERSATIONS_LIST_POST_PATH,
   FILTER_VALUE_LABELS_POST_PATH,
   FILTER_VALUE_LABELS_TOKEN_PATH,

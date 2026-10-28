@@ -1,6 +1,9 @@
 "use client"
 
-import type { TaskNotificationType } from "@chatbotx.io/database/partials"
+import type {
+  ChatNotificationType,
+  TaskNotificationType,
+} from "@chatbotx.io/database/partials"
 import {
   Dialog,
   DialogContent,
@@ -23,7 +26,10 @@ const preferenceTypes = [
   "taskDueChanged",
   "taskReminder",
   "taskOverdue",
-] as const satisfies readonly TaskNotificationType[]
+  "chatMessage",
+] as const satisfies readonly (TaskNotificationType | ChatNotificationType)[]
+
+type NotificationPreferenceType = (typeof preferenceTypes)[number]
 
 const preferenceLabelKeyByType = {
   taskAssigned: "taskAssigned.label",
@@ -33,7 +39,8 @@ const preferenceLabelKeyByType = {
   taskDueChanged: "taskDueChanged.label",
   taskReminder: "taskReminder.label",
   taskOverdue: "taskOverdue.label",
-} as const satisfies Record<TaskNotificationType, string>
+  chatMessage: "chatMessage.label",
+} as const satisfies Record<NotificationPreferenceType, string>
 
 const preferenceDescriptionKeyByType = {
   taskAssigned: "taskAssigned.description",
@@ -43,7 +50,8 @@ const preferenceDescriptionKeyByType = {
   taskDueChanged: "taskDueChanged.description",
   taskReminder: "taskReminder.description",
   taskOverdue: "taskOverdue.description",
-} as const satisfies Record<TaskNotificationType, string>
+  chatMessage: "chatMessage.description",
+} as const satisfies Record<NotificationPreferenceType, string>
 
 type NotificationSettingsDialogProps = {
   onOpenChange: (open: boolean) => void
@@ -98,7 +106,10 @@ export const NotificationSettingsDialog = ({
     }),
   )
 
-  const handleToggle = (type: TaskNotificationType, checked: boolean) => {
+  const handleToggle = (
+    type: NotificationPreferenceType,
+    checked: boolean,
+  ) => {
     updateMutation.mutate({
       workspaceId,
       patch: { [type]: checked },

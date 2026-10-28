@@ -140,6 +140,48 @@ export const NotificationList = ({
       </div>
       <div className="max-h-[min(70dvh,32rem)] overflow-y-auto">
         {items.map((item) => {
+          if ("threadId" in item) {
+            return (
+              <Button
+                className="h-auto w-full justify-start whitespace-normal rounded-none border-b px-2 py-3 text-start"
+                key={item.id}
+                onClick={() => onSelect(item)}
+                variant="ghost"
+              >
+                <span className="mt-0.5 rounded-full bg-primary/10 p-2 text-primary">
+                  <MessageSquareIcon className="size-4" />
+                </span>
+                <span className="min-w-0 flex-1 space-y-1">
+                  <span className={item.readAt ? "block" : "block font-medium"}>
+                    {t(
+                      item.payload.count > 1
+                        ? "items.chatMessages"
+                        : "items.chatMessage",
+                      {
+                        actor: resolveActor(item),
+                        count: item.payload.count,
+                      },
+                    )}
+                    {item.readAt === null ? (
+                      <span className="sr-only"> {t("unread")}</span>
+                    ) : null}
+                  </span>
+                  {item.payload.excerpt ? (
+                    <span className="line-clamp-2 block text-muted-foreground text-xs">
+                      {item.payload.excerpt}
+                    </span>
+                  ) : null}
+                  <time
+                    className="block text-muted-foreground text-xs"
+                    dateTime={item.createdAt.toISOString()}
+                    suppressHydrationWarning
+                  >
+                    {formatter.relativeTime(item.createdAt, new Date())}
+                  </time>
+                </span>
+              </Button>
+            )
+          }
           const Icon = iconByType[item.type]
           return (
             <Button

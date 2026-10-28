@@ -121,6 +121,9 @@ export const router = {
       default: m.tasksAuthenticatedAPI,
     })),
   ),
+  chatsAPI: lazy(() =>
+    import("@/features/chats/api").then((m) => ({ default: m.chatsAPI })),
+  ),
   notificationsAPI: lazy(() =>
     import("@/features/notifications/api/private").then((m) => ({
       default: m.notificationsAuthenticatedAPI,

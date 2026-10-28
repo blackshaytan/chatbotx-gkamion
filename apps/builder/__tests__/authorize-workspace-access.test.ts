@@ -1,6 +1,7 @@
 import type { HTTPMethod } from "@orpc/server"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { FILTER_VALUE_LABELS_POST_PATH } from "@/features/contact-filter/lib/api-paths"
+import { CHATS_MARK_READ_PATH } from "@/features/chats/lib/api-paths"
 import { CONVERSATIONS_LIST_POST_PATH } from "@/features/conversations/lib/api-paths"
 
 const { getAccessState, isAtLimit, isCloud } = vi.hoisted(() => ({
@@ -121,7 +122,7 @@ describe("checkWorkspaceOwnerAccess", () => {
 })
 
 describe("assertWorkspaceOwnerAccessForMethod", () => {
-  test("allows the conversation list POST but denies other POST routes", async () => {
+  test("allows read-only POST routes but denies other POST routes", async () => {
     isCloud.mockReturnValue(true)
     getAccessState.mockResolvedValue({
       blocked: true,
@@ -135,6 +136,15 @@ describe("assertWorkspaceOwnerAccessForMethod", () => {
       assertWorkspaceOwnerAccessForMethod({
         method: "POST",
         path: CONVERSATIONS_LIST_POST_PATH,
+        ownerId: "owner-1",
+      }),
+    ).resolves.toBeUndefined()
+    expect(getAccessState).not.toHaveBeenCalled()
+
+    await expect(
+      assertWorkspaceOwnerAccessForMethod({
+        method: "POST",
+        path: CHATS_MARK_READ_PATH,
         ownerId: "owner-1",
       }),
     ).resolves.toBeUndefined()

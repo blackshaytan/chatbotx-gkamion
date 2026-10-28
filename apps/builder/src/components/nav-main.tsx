@@ -21,7 +21,7 @@ type NavItem = {
   items?: { title: string; url: string }[]
   crossZone?: boolean
   disabled?: boolean
-  badge?: number
+  badge?: number | string
 }
 
 function NavItemContent({

@@ -130,6 +130,40 @@ describe("notification private API", () => {
     )
   })
 
+  test("list maps chat notifications to their thread URL", async () => {
+    notificationService.listForUser.mockResolvedValue([
+      {
+        id: "notification-2",
+        type: "chatMessage",
+        entityId: "chat-3",
+        entityType: "chat",
+        payload: {
+          actorUserId: "user-8",
+          actorLabel: "Alex",
+          excerpt: "Hello",
+          count: 1,
+          lastMessageId: "message-1",
+          lastMessageAt: "2026-10-28T10:00:00.000Z",
+        },
+        readAt: null,
+        createdAt: new Date("2026-10-28T10:00:00Z"),
+      },
+    ])
+
+    const result = (await call(
+      "GET",
+      "/workspaces/{workspaceId}/notifications",
+      { workspaceId: "workspace-2", limit: 20 },
+    )) as { data: { threadId: string; url: string }[] }
+
+    expect(result.data[0]).toEqual(
+      expect.objectContaining({
+        threadId: "chat-3",
+        url: "https://app.test/space/workspace-2/chats/chat-3",
+      }),
+    )
+  })
+
   test("mutations always scope service calls to the signed-in user", async () => {
     await call("POST", "/workspaces/{workspaceId}/notifications/read", {
       workspaceId: "workspace-2",

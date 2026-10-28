@@ -1,4 +1,6 @@
 import {
+  chatNotificationTypes,
+  type ChatNotificationPayload,
   type NotificationPayload,
   taskNotificationTypes,
 } from "@chatbotx.io/database/partials"
@@ -23,7 +25,29 @@ export const notificationItemResource = z.object({
   url: z.string(),
 })
 
-export type NotificationItem = z.infer<typeof notificationItemResource>
+export const chatNotificationItemResource = z.object({
+  id: z.string(),
+  type: chatNotificationTypes,
+  threadId: z.string(),
+  payload: z.object({
+    actorUserId: z.string().nullable(),
+    actorLabel: z.string().nullable(),
+    excerpt: z.string().nullable(),
+    count: z.number().int(),
+    lastMessageId: z.string(),
+    lastMessageAt: z.string(),
+  }) satisfies z.ZodType<ChatNotificationPayload>,
+  readAt: z.date().nullable(),
+  createdAt: z.date(),
+  url: z.string(),
+})
+
+export const anyNotificationItemResource = z.union([
+  notificationItemResource,
+  chatNotificationItemResource,
+])
+
+export type NotificationItem = z.infer<typeof anyNotificationItemResource>
 
 export const notificationPreferencesResource = z.object({
   taskAssigned: z.boolean(),

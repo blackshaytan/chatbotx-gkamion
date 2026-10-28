@@ -9175,7 +9175,9 @@
       "taskDueChanged": "Срок задачи «{task}» изменён: {date}",
       "taskDueRemoved": "Срок задачи «{task}» удалён",
       "taskReminder": "Напоминание о задаче «{task}»",
-      "taskOverdue": "Задача «{task}» просрочена"
+      "taskOverdue": "Задача «{task}» просрочена",
+      "chatMessage": "Новое сообщение от {actor}",
+      "chatMessages": "{count} новых сообщений от {actor}"
     },
     "settings": {
       "title": "Настройки уведомлений",
@@ -9209,6 +9211,10 @@
       "taskOverdue": {
         "label": "Просроченные задачи",
         "description": "Когда открытая задача становится просроченной."
+      },
+      "chatMessage": {
+        "label": "Сообщения чата",
+        "description": "Когда участник чата отправляет сообщение."
       }
     }
   },

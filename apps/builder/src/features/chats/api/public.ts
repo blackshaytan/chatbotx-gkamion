@@ -17,6 +17,10 @@ import {
   withChatAttachmentUrls,
   withSingleChatAttachmentUrls,
 } from "../lib/attachment-url"
+import {
+  deliverChatMessage,
+  publishChatChanged,
+} from "../lib/chat-realtime"
 import { withChatUrl, withChatUrls } from "../lib/chat-url"
 import {
   chatIdPathParam,
@@ -103,21 +107,22 @@ const chatMessagesPublicRouter = {
     .input(createChatMessagePublicRequest)
     .output(chatMessagePublicResource)
     .errors(possibleErrorsOnMutatingResource)
-    .handler(
-      async ({ context, input }) =>
-        await toPublicMessage(
-          context.workspace.id,
-          (
-            await chatService.send({
-              workspaceId: context.workspace.id,
-              threadId: input.id,
-              text: input.text ?? "",
-              attachments: input.attachments ?? [],
-              actor: apiTokenChatActor(context.apiToken),
-            })
-          ).message,
-        ),
-    ),
+    .handler(async ({ context, input }) => {
+      const result = await chatService.send({
+        workspaceId: context.workspace.id,
+        threadId: input.id,
+        text: input.text ?? "",
+        attachments: input.attachments ?? [],
+        actor: apiTokenChatActor(context.apiToken),
+      })
+      deliverChatMessage({
+        workspaceId: context.workspace.id,
+        threadId: input.id,
+        memberUserIds: result.memberUserIds,
+        message: result.message,
+      })
+      return await toPublicMessage(context.workspace.id, result.message)
+    }),
   update: workspaceTokenAuthAPI
     .route({
       method: "PATCH",
@@ -129,21 +134,21 @@ const chatMessagesPublicRouter = {
     .input(updateChatMessagePublicRequest)
     .output(chatMessagePublicResource)
     .errors(possibleErrorsOnMutatingResource)
-    .handler(
-      async ({ context, input }) =>
-        await toPublicMessage(
-          context.workspace.id,
-          (
-            await chatService.edit({
-              workspaceId: context.workspace.id,
-              threadId: input.id,
-              messageId: input.messageId,
-              text: input.text ?? "",
-              actor: apiTokenChatActor(context.apiToken),
-            })
-          ).message,
-        ),
-    ),
+    .handler(async ({ context, input }) => {
+      const result = await chatService.edit({
+        workspaceId: context.workspace.id,
+        threadId: input.id,
+        messageId: input.messageId,
+        text: input.text ?? "",
+        actor: apiTokenChatActor(context.apiToken),
+      })
+      publishChatChanged({
+        workspaceId: context.workspace.id,
+        threadId: input.id,
+        memberUserIds: result.memberUserIds,
+      })
+      return await toPublicMessage(context.workspace.id, result.message)
+    }),
   delete: workspaceTokenAuthAPI
     .route({
       method: "DELETE",
@@ -156,11 +161,16 @@ const chatMessagesPublicRouter = {
     .input(messageIdPathParam)
     .errors(possibleErrorsOnDeletingResource)
     .handler(async ({ context, input }) => {
-      await chatService.deleteMessage({
+      const result = await chatService.deleteMessage({
         workspaceId: context.workspace.id,
         threadId: input.id,
         messageId: input.messageId,
         actor: apiTokenChatActor(context.apiToken),
+      })
+      publishChatChanged({
+        workspaceId: context.workspace.id,
+        threadId: input.id,
+        memberUserIds: result.memberUserIds,
       })
     }),
 }

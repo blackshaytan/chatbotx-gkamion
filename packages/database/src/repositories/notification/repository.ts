@@ -54,22 +54,35 @@ class NotificationRepository {
   }
 
   async upsertChatUnread(props: {
-    row: ChatNotificationInsert
+    rows: ChatNotificationInsert[]
     tx?: DatabaseClient
-  }): Promise<NotificationModel> {
-    const { row, tx = db } = props
+  }): Promise<NotificationModel[]> {
+    const { rows, tx = db } = props
+    if (rows.length === 0) {
+      return []
+    }
+    const values = sql.join(
+      rows.map(
+        (row) =>
+          sql`(${row.workspaceId}::bigint, ${row.userId}::bigint, ${row.type}, 'chat', ${row.entityId}::bigint, ${JSON.stringify(row.payload)}::jsonb)`,
+      ),
+      sql`, `,
+    )
     const result = await tx.execute<NotificationModel>(sql`
       INSERT INTO "Notification" ("workspaceId", "userId", "type", "entityType", "entityId", "payload")
-      VALUES (${row.workspaceId}::bigint, ${row.userId}::bigint, ${row.type}, 'chat', ${row.entityId}::bigint, ${JSON.stringify(row.payload)}::jsonb)
+      VALUES ${values}
       ON CONFLICT ("workspaceId", "userId", "entityId") WHERE "entityType" = 'chat' AND "readAt" IS NULL
-      DO UPDATE SET "payload" = EXCLUDED."payload", "updatedAt" = now()
+      DO UPDATE SET
+        "payload" = jsonb_set(
+          EXCLUDED."payload",
+          '{count}',
+          to_jsonb(COALESCE(("Notification"."payload"->>'count')::integer, 0) + 1)
+        ),
+        "createdAt" = now(),
+        "updatedAt" = now()
       RETURNING *
     `)
-    const rowResult = result.rows[0]
-    if (!rowResult) {
-      throw new Error("Chat notification upsert returned no row")
-    }
-    return rowResult
+    return result.rows
   }
 
   async listForUser(props: {
@@ -142,6 +155,30 @@ class NotificationRepository {
       ids ? inArray(notificationModel.id, ids) : sql`true`,
     )
     await tx.update(notificationModel).set({ readAt: sql`now()` }).where(scope)
+  }
+
+  async markReadByEntity(props: {
+    workspaceId: string
+    userId: string
+    entityType: NotificationEntityType
+    entityId: string
+    upTo: Date
+    tx?: DatabaseClient
+  }): Promise<void> {
+    const { tx = db, ...input } = props
+    await tx
+      .update(notificationModel)
+      .set({ readAt: sql`now()` })
+      .where(
+        and(
+          eq(notificationModel.workspaceId, input.workspaceId),
+          eq(notificationModel.userId, input.userId),
+          eq(notificationModel.entityType, input.entityType),
+          eq(notificationModel.entityId, input.entityId),
+          isNull(notificationModel.readAt),
+          sql`(${notificationModel.payload}->>'lastMessageAt')::timestamptz <= ${input.upTo}`,
+        ),
+      )
   }
 
   async deleteForUser(props: {

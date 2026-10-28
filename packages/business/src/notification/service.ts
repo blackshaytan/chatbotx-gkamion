@@ -1,8 +1,8 @@
 import { type DatabaseClient, db } from "@chatbotx.io/database/client"
 import type {
-  NotificationPayload,
-  ChatNotificationType,
   ChatNotificationPayload,
+  ChatNotificationType,
+  NotificationPayload,
   TaskNotificationType,
   WorkspaceMemberNotificationTypes,
 } from "@chatbotx.io/database/partials"
@@ -43,14 +43,6 @@ const notificationActorUserId = (actor: NotificationActor): string | null =>
 
 const notificationActorLabel = (actor: NotificationActor): string | null =>
   actor.kind === "system" ? null : actorLabel(actor)
-
-const isTaskNotificationRow = (
-  row: NotificationModel,
-): row is NotificationModel & {
-  type: TaskNotificationType
-  entityType: "task"
-  payload: NotificationPayload
-} => row.entityType === "task"
 
 class NotificationService extends BaseService {
   async notifyTask(props: {
@@ -178,10 +170,21 @@ class NotificationService extends BaseService {
       threadIds: [props.threadId],
       tx,
     })
-    const recipientIds = members
-      .filter((member) => member.isWorkspaceMember)
-      .map((member) => member.userId)
-      .filter((userId) => userId !== props.actorUserId)
+    const recipientIds = [
+      ...new Set(
+        members
+          .filter(
+            (member) =>
+              member.isWorkspaceMember &&
+              (member.lastReadAt === null || member.lastReadAt < props.messageAt),
+          )
+          .map((member) => member.userId)
+          .filter((userId) => userId !== props.actorUserId),
+      ),
+    ]
+    if (recipientIds.length === 0) {
+      return
+    }
     const preferences = await workspaceMemberRepository.listNotificationTypesByUserIds({
       workspaceId: props.workspaceId,
       userIds: recipientIds,
@@ -198,23 +201,21 @@ class NotificationService extends BaseService {
       lastMessageId: props.messageId,
       lastMessageAt: props.messageAt.toISOString(),
     }
-    const inserted = await Promise.all(
-      recipientIds
-        .filter((userId) => preferencesByUser.get(userId)?.chatMessage !== false)
-        .map((userId) =>
-          notificationRepository.upsertChatUnread({
-            row: {
-              workspaceId: props.workspaceId,
-              userId,
-              type: "chatMessage",
-              entityType: "chat",
-              entityId: props.threadId,
-              payload,
-            },
-            tx,
-          }),
-        ),
-    )
+    const rows = recipientIds
+      .filter((userId) => preferencesByUser.get(userId)?.chatMessage !== false)
+      .sort()
+      .map((userId) => ({
+        workspaceId: props.workspaceId,
+        userId,
+        type: "chatMessage" as const,
+        entityType: "chat" as const,
+        entityId: props.threadId,
+        payload,
+      }))
+    if (rows.length === 0) {
+      return
+    }
+    const inserted = await notificationRepository.upsertChatUnread({ rows, tx })
     emitNotificationsCreated({
       workspaceId: props.workspaceId,
       notifications: inserted.map((row) => ({ id: row.id, userId: row.userId })),
@@ -227,19 +228,12 @@ class NotificationService extends BaseService {
     limit: number
     unreadOnly?: boolean
   }): Promise<
-    Array<
-      NotificationModel & {
-        type: TaskNotificationType
-        entityType: "task"
-        payload: NotificationPayload
-      }
-    >
+    NotificationModel[]
   > {
     const rows = await notificationRepository.listForUser({
       ...input,
-      entityType: "task",
     })
-    return rows.filter(isTaskNotificationRow)
+    return rows
   }
 
   async countUnread(input: { workspaceId: string; userId: string }) {
@@ -260,6 +254,17 @@ class NotificationService extends BaseService {
     userId: string
   }): Promise<void> {
     await notificationRepository.markRead(input)
+  }
+
+  async markReadForEntity(input: {
+    workspaceId: string
+    userId: string
+    entityType: "chat"
+    entityId: string
+    upTo: Date
+    tx?: DatabaseClient
+  }): Promise<void> {
+    await notificationRepository.markReadByEntity(input)
   }
 
   async getPreferences(input: { workspaceId: string; userId: string }) {

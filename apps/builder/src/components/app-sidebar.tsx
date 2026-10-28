@@ -17,6 +17,7 @@ import {
   ListChecksIcon,
   type LucideIcon,
   MessageCircleMoreIcon,
+  MessagesSquareIcon,
   PhoneCallIcon,
   RadioIcon,
   SlidersHorizontalIcon,
@@ -51,7 +52,7 @@ type SidebarNavItem = {
   url: string
   icon: LucideIcon
   permission?: WorkspacePermissionKey
-  badge?: number
+  badge?: number | string
   /** Only present for items with an extra visibility rule beyond the
    * permission check below — computed once in the workspace layout via
    * `resolveWorkspaceRealtimeGates`. */
@@ -96,6 +97,12 @@ export function AppSidebar({
       enabled: !scheduledForDeletion,
     }),
   )
+  const { data: unreadChats } = useQuery(
+    orpc.chatsAPI.unreadTotal.queryOptions({
+      input: { workspaceId },
+      enabled: !scheduledForDeletion,
+    }),
+  )
 
   const data = {
     user: {
@@ -133,6 +140,16 @@ export function AppSidebar({
         url: `/space/${workspaceId}/tasks`,
         icon: ListChecksIcon,
         badge: overdueTasks?.total,
+        visible: true,
+      },
+      {
+        title: t("fields.tokenScopes.chats"),
+        url: `/space/${workspaceId}/chats`,
+        icon: MessagesSquareIcon,
+        badge:
+          unreadChats?.total && unreadChats.total > 99
+            ? "99+"
+            : unreadChats?.total,
         visible: true,
       },
       {
