@@ -31,12 +31,18 @@ export const chatMessagePublicResource = z.object({
   text: z.string().nullable(),
   attachments: z.array(attachmentResource),
   systemEvent: z
-    .object({
-      type: taskSystemEventTypes,
-      from: z.string().nullable(),
-      to: z.string().nullable(),
-      byUserId: z.string().nullable(),
-    })
+    .union([
+      z.object({
+        type: taskSystemEventTypes,
+        from: z.string().nullable(),
+        to: z.string().nullable(),
+        byUserId: z.string().nullable(),
+      }),
+      z.object({
+        type: z.literal("assistantFailed"),
+        reason: z.enum(["unavailable", "timeout"]),
+      }),
+    ])
     .nullable(),
   deleted: z.boolean(),
   editedAt: z.date().nullable(),

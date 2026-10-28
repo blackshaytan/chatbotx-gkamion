@@ -1,6 +1,7 @@
 import type {
   InternalMessageAttachment,
   InternalMessageMentions,
+  TaskSystemEvent,
 } from "@chatbotx.io/database/partials"
 import type { InternalMessageModel } from "@chatbotx.io/database/types"
 
@@ -25,6 +26,21 @@ export type InternalMessageView = Pick<
   deleted: boolean
   mentions: InternalMessageMentions
   attachments: InternalMessageAttachmentView[]
+}
+
+export type TaskMessageView = Omit<InternalMessageView, "systemEvent"> & {
+  systemEvent: TaskSystemEvent | null
+}
+
+export const toTaskMessageView = (
+  message: InternalMessageModel,
+): TaskMessageView => {
+  const view = toInternalMessageView(message)
+  return {
+    ...view,
+    systemEvent:
+      view.systemEvent?.type === "assistantFailed" ? null : view.systemEvent,
+  }
 }
 
 const toAttachmentViews = (

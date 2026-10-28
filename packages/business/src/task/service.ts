@@ -27,7 +27,7 @@ import {
 } from "../internal-thread/attachments"
 import { systemMessageRow } from "../internal-thread/message-rows"
 import { internalThreadService } from "../internal-thread/service"
-import type { InternalMessageView } from "../internal-thread/view"
+import type { TaskMessageView } from "../internal-thread/view"
 import { formatCommentExcerpt } from "../notification/excerpt"
 import {
   notificationService,
@@ -466,7 +466,7 @@ class TaskService extends BaseService {
     id: string
     page: number
     perPage: number
-  }): Promise<Paged<InternalMessageView>> {
+  }): Promise<Paged<TaskMessageView>> {
     const task = await this.findOrFail(input)
     return await internalThreadService.listMessages({
       workspaceId: input.workspaceId,
@@ -482,7 +482,7 @@ class TaskService extends BaseService {
     text: string
     attachments?: { key: string; name: string }[]
     actor: TaskActor
-  }): Promise<InternalMessageView> {
+  }): Promise<TaskMessageView> {
     const task = await this.findOrFail(input)
     const attachments = input.attachments?.length
       ? await resolveTaskAttachments({
@@ -544,7 +544,7 @@ class TaskService extends BaseService {
     commentId: string
     text: string
     actor: TaskActor
-  }): Promise<InternalMessageView> {
+  }): Promise<TaskMessageView> {
     const task = await this.findOrFail(input)
     const previousMessage = await internalThreadRepository.findMessage({
       workspaceId: input.workspaceId,
@@ -608,7 +608,7 @@ class TaskService extends BaseService {
     id: string
     commentId: string
     actor: TaskActor
-  }): Promise<InternalMessageView> {
+  }): Promise<TaskMessageView> {
     const task = await this.findOrFail(input)
     const isOwner = input.actor.kind === "user" && input.actor.isOwner
     return await internalThreadService.deleteComment({

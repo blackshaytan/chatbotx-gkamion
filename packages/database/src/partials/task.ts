@@ -65,6 +65,10 @@ export type TaskSystemEvent = {
   byUserId: string | null
 }
 
+export type InternalSystemEvent =
+  | TaskSystemEvent
+  | { type: "assistantFailed"; reason: "unavailable" | "timeout" }
+
 export type InternalMessageMentions = { userIds: string[]; teamIds: string[] }
 
 export const EMPTY_INTERNAL_MESSAGE_MENTIONS: InternalMessageMentions = {

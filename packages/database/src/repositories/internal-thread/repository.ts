@@ -95,6 +95,21 @@ class InternalThreadRepository {
     return await tx.insert(internalMessageModel).values(rows).returning()
   }
 
+  async insertDeduplicatedMessage(props: {
+    row: InternalMessageInsert & { dedupeKey: string }
+    tx: DatabaseClient
+  }): Promise<InternalMessageModel | undefined> {
+    const [row] = await props.tx
+      .insert(internalMessageModel)
+      .values(props.row)
+      .onConflictDoNothing({
+        target: [internalMessageModel.threadId, internalMessageModel.dedupeKey],
+        where: sql`${internalMessageModel.dedupeKey} IS NOT NULL`,
+      })
+      .returning()
+    return row
+  }
+
   /** Newest first. */
   async listMessages(props: {
     workspaceId: string

@@ -12,7 +12,7 @@ import type { TaskActor } from "../task/actor"
 import { taskForbiddenException } from "../task/permissions"
 import { canDeleteComment, canEditComment } from "./comment-permissions"
 import { commentRow } from "./message-rows"
-import { type InternalMessageView, toInternalMessageView } from "./view"
+import { type TaskMessageView, toTaskMessageView } from "./view"
 
 class InternalThreadService extends BaseService {
   async listMessages(input: {
@@ -20,7 +20,7 @@ class InternalThreadService extends BaseService {
     threadId: string
     page: number
     perPage: number
-  }): Promise<{ data: InternalMessageView[]; pageCount: number }> {
+  }): Promise<{ data: TaskMessageView[]; pageCount: number }> {
     const { rows, total } = await internalThreadRepository.listMessages({
       workspaceId: input.workspaceId,
       threadId: input.threadId,
@@ -28,7 +28,7 @@ class InternalThreadService extends BaseService {
       offset: (input.page - 1) * input.perPage,
     })
     return {
-      data: rows.map(toInternalMessageView),
+      data: rows.map(toTaskMessageView),
       pageCount: Math.ceil(total / input.perPage),
     }
   }
@@ -41,7 +41,7 @@ class InternalThreadService extends BaseService {
     actor: TaskActor
     parseMentions?: boolean
     tx?: DatabaseClient
-  }): Promise<InternalMessageView> {
+  }): Promise<TaskMessageView> {
     const trimmed = input.text.trim()
     if (trimmed.length === 0 && input.attachments.length === 0) {
       throw validationException("text", "Comment text or attachments required")
@@ -65,7 +65,7 @@ class InternalThreadService extends BaseService {
       ],
       tx,
     })
-    return toInternalMessageView(message)
+    return toTaskMessageView(message)
   }
 
   async editComment(input: {
@@ -77,7 +77,7 @@ class InternalThreadService extends BaseService {
     parseMentions?: boolean
     now?: Date
     tx?: DatabaseClient
-  }): Promise<InternalMessageView> {
+  }): Promise<TaskMessageView> {
     const now = input.now ?? new Date()
     const message = await this.requireComment(input)
     if (!canEditComment({ message, actor: input.actor, now })) {
@@ -106,7 +106,7 @@ class InternalThreadService extends BaseService {
     if (!updated) {
       throw validationException("comment", "Comment not found")
     }
-    return toInternalMessageView(updated)
+    return toTaskMessageView(updated)
   }
 
   async deleteComment(input: {
@@ -117,7 +117,7 @@ class InternalThreadService extends BaseService {
     isOwner: boolean
     now?: Date
     tx?: DatabaseClient
-  }): Promise<InternalMessageView> {
+  }): Promise<TaskMessageView> {
     const now = input.now ?? new Date()
     const message = await this.requireComment(input)
     if (
@@ -142,7 +142,7 @@ class InternalThreadService extends BaseService {
     if (!updated) {
       throw validationException("comment", "Comment not found")
     }
-    return toInternalMessageView(updated)
+    return toTaskMessageView(updated)
   }
 
   async markRead(input: {

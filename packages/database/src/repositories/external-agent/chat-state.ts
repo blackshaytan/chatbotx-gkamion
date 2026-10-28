@@ -10,6 +10,23 @@ export type ExternalAgentChatStatePatch = Partial<
 >
 
 export const externalAgentChatStateRepository = {
+  async findForUpdate(
+    input: { workspaceId: string; threadId: string },
+    tx: DatabaseClient,
+  ): Promise<ExternalAgentChatStateModel | undefined> {
+    const [row] = await tx
+      .select()
+      .from(externalAgentChatStateModel)
+      .where(
+        and(
+          eq(externalAgentChatStateModel.threadId, input.threadId),
+          eq(externalAgentChatStateModel.workspaceId, input.workspaceId),
+        ),
+      )
+      .for("update")
+    return row
+  },
+
   async find(
     input: { workspaceId: string; threadId: string },
     tx: DatabaseClient = db,

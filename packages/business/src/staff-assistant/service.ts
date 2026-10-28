@@ -1,5 +1,7 @@
 import { db } from "@chatbotx.io/database/client"
 import {
+  CHAT_LIMITS,
+  EMPTY_INTERNAL_MESSAGE_MENTIONS,
   EXTERNAL_AGENT_DEFAULT_MAX_RUN_MINUTES,
   EXTERNAL_AGENT_DEFAULT_PROGRESS_MESSAGE,
   EXTERNAL_AGENT_MAX_RUN_MINUTES_LIMIT,
@@ -7,7 +9,10 @@ import {
   externalAgentCheckStatuses,
 } from "@chatbotx.io/database/partials"
 import {
+  chatRepository,
+  externalAgentChatStateRepository,
   externalAgentRepository,
+  internalThreadRepository,
   workspaceApiTokenRepository,
 } from "@chatbotx.io/database/repositories"
 import type { ExternalAgentModel } from "@chatbotx.io/database/types"
@@ -16,6 +21,10 @@ import { distributedStore, withCache } from "@chatbotx.io/redis"
 import { BaseService } from "../base.service"
 import type { ChatAgentChannel } from "../chat/direct-key"
 import { chatService } from "../chat/service"
+import {
+  deliverStaffChatMessage,
+  publishStaffChatChanged,
+} from "../chat-delivery"
 import { ChatbotXException, notFoundException } from "../errors"
 import { createHermesClient } from "../external-agent/hermes-client"
 import {
@@ -25,7 +34,9 @@ import {
   normalizeExternalAgentBaseUrl,
   normalizeExternalAgentBotName,
 } from "../external-agent/service"
+import { toInternalMessageView } from "../internal-thread/view"
 import { logger } from "../logger"
+import { isStaffAssistantAvailable } from "./availability"
 
 const staffTag = (workspaceId: string) => `externalAgent:${workspaceId}:staff`
 const staffAad = (workspaceId: string) => `external-agent:${workspaceId}:staff`
@@ -82,6 +93,111 @@ const tokenHasChats = async (workspaceId: string, tokenId: string | null) => {
 }
 
 export class StaffAssistantService extends BaseService {
+  async postAssistantMessage(input: {
+    workspaceId: string
+    threadId: string
+    userId: string
+    dedupeKey: string
+    expectedRunId?: string
+    message:
+      | { kind: "comment"; text: string }
+      | { kind: "system"; reason: "unavailable" | "timeout" }
+  }) {
+    if (input.message.kind === "comment") {
+      if (!input.message.text.trim()) {
+        return null
+      }
+      if (input.message.text.length > CHAT_LIMITS.maxMessageLength) {
+        throw badRequest("Assistant message is too long")
+      }
+    }
+    const result = await db.transaction(async (tx) => {
+      const chat = await chatRepository.findAccessible({
+        workspaceId: input.workspaceId,
+        threadId: input.threadId,
+        userId: input.userId,
+        tx,
+      })
+      if (
+        chat?.thread.type !== "agent" ||
+        chat.thread.directKey !== `agent:${input.userId}:staff` ||
+        !(await isStaffAssistantAvailable(input.workspaceId, tx))
+      ) {
+        return null
+      }
+      const members = await chatRepository.listMembers({
+        workspaceId: input.workspaceId,
+        threadIds: [input.threadId],
+        tx,
+      })
+      if (
+        members.length !== 1 ||
+        members[0].userId !== input.userId ||
+        !members[0].isWorkspaceMember
+      ) {
+        return null
+      }
+      if (input.expectedRunId !== undefined) {
+        const state = await externalAgentChatStateRepository.findForUpdate(
+          input,
+          tx,
+        )
+        if (state?.runId !== input.expectedRunId) {
+          return null
+        }
+      }
+      const agent = await externalAgentRepository.findStaffAvailability(
+        input.workspaceId,
+        tx,
+      )
+      if (!agent?.botName) {
+        return null
+      }
+      const message = await internalThreadRepository.insertDeduplicatedMessage({
+        row: {
+          workspaceId: input.workspaceId,
+          threadId: input.threadId,
+          dedupeKey: input.dedupeKey,
+          kind: input.message.kind,
+          authorUserId: null,
+          authorLabel: agent.botName,
+          text: input.message.kind === "comment" ? input.message.text : null,
+          systemEvent:
+            input.message.kind === "system"
+              ? { type: "assistantFailed", reason: input.message.reason }
+              : null,
+          mentions: EMPTY_INTERNAL_MESSAGE_MENTIONS,
+          attachments: [],
+        },
+        tx,
+      })
+      if (!message) {
+        return null
+      }
+      await chatRepository.touchLastMessage({
+        workspaceId: input.workspaceId,
+        threadId: input.threadId,
+        messageId: message.id,
+        tx,
+      })
+      return toInternalMessageView(message)
+    })
+    if (!result) {
+      return null
+    }
+    const delivery = {
+      workspaceId: input.workspaceId,
+      threadId: input.threadId,
+      memberUserIds: [input.userId],
+    }
+    if (input.message.kind === "comment") {
+      deliverStaffChatMessage({ ...delivery, message: result })
+    } else {
+      publishStaffChatChanged(delivery)
+    }
+    return result
+  }
+
   async resolveAgentChannel(input: {
     workspaceId: string
     tokenId: string

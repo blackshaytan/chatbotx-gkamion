@@ -15,6 +15,14 @@ const mocks = vi.hoisted(() => ({
   openAgentChannel: vi.fn(),
   lockWorkspaceTokens: vi.fn(),
   findStaffAvailability: vi.fn(),
+  findChat: vi.fn(),
+  listMembers: vi.fn(),
+  insertMessage: vi.fn(),
+  touchLastMessage: vi.fn(),
+  findStateForUpdate: vi.fn(),
+  available: vi.fn(),
+  deliver: vi.fn(),
+  publish: vi.fn(),
 }))
 vi.mock("@chatbotx.io/database/client", () => ({
   db: { transaction: mocks.transaction },
@@ -30,6 +38,13 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
     findScopesForWorkspace: mocks.token,
     lockWorkspaceTokens: mocks.lockWorkspaceTokens,
   },
+  chatRepository: {
+    findAccessible: mocks.findChat,
+    listMembers: mocks.listMembers,
+    touchLastMessage: mocks.touchLastMessage,
+  },
+  internalThreadRepository: { insertDeduplicatedMessage: mocks.insertMessage },
+  externalAgentChatStateRepository: { findForUpdate: mocks.findStateForUpdate },
 }))
 vi.mock("@chatbotx.io/encryption", () => ({
   encryptUtils: { encryptObject: mocks.encrypt, decryptObject: mocks.decrypt },
@@ -50,6 +65,13 @@ vi.mock("../../src/external-agent/service", () => ({
 vi.mock("../../src/logger", () => ({ logger: { warn: vi.fn() } }))
 vi.mock("../../src/chat/service", () => ({
   chatService: { openAgentChannel: mocks.openAgentChannel },
+}))
+vi.mock("../../src/staff-assistant/availability", () => ({
+  isStaffAssistantAvailable: mocks.available,
+}))
+vi.mock("../../src/chat-delivery", () => ({
+  deliverStaffChatMessage: mocks.deliver,
+  publishStaffChatChanged: mocks.publish,
 }))
 
 const { staffAssistantService } = await import(
@@ -81,6 +103,91 @@ beforeEach(() => {
   mocks.decrypt.mockResolvedValue({ apiKey: "secret" })
   mocks.throttle.mockResolvedValue(true)
   mocks.upsert.mockResolvedValue(agent)
+  mocks.available.mockResolvedValue(true)
+  mocks.findStaffAvailability.mockResolvedValue(agent)
+  mocks.findChat.mockResolvedValue({
+    thread: { type: "agent", directKey: "agent:user:staff" },
+  })
+  mocks.listMembers.mockResolvedValue([
+    { userId: "user", isWorkspaceMember: true },
+  ])
+  mocks.findStateForUpdate.mockResolvedValue({ runId: "run" })
+})
+
+describe("assistant message persistence", () => {
+  const input = {
+    workspaceId: "ws",
+    threadId: "thread",
+    userId: "user",
+    dedupeKey: "run:final",
+    expectedRunId: "run",
+    message: { kind: "comment" as const, text: "Hello" },
+  }
+
+  test("only delivers effects for an inserted message", async () => {
+    mocks.insertMessage.mockResolvedValueOnce(undefined)
+    await expect(
+      staffAssistantService.postAssistantMessage(input),
+    ).resolves.toBeNull()
+    expect(mocks.deliver).not.toHaveBeenCalled()
+    expect(mocks.touchLastMessage).not.toHaveBeenCalled()
+  })
+
+  test("does not send a result for a replaced run", async () => {
+    mocks.findStateForUpdate.mockResolvedValue({ runId: "other" })
+    await expect(
+      staffAssistantService.postAssistantMessage(input),
+    ).resolves.toBeNull()
+    expect(mocks.insertMessage).not.toHaveBeenCalled()
+  })
+
+  test("delivers a single inserted assistant reply", async () => {
+    mocks.insertMessage.mockResolvedValue({
+      id: "message",
+      kind: "comment",
+      authorUserId: null,
+      authorLabel: "Assistant",
+      text: "Hello",
+      systemEvent: null,
+      createdAt: new Date(),
+      editedAt: null,
+      deletedAt: null,
+      mentions: { userIds: [], teamIds: [] },
+      attachments: [],
+    })
+    await staffAssistantService.postAssistantMessage(input)
+    expect(mocks.deliver).toHaveBeenCalledOnce()
+    expect(mocks.publish).not.toHaveBeenCalled()
+    expect(mocks.touchLastMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workspaceId: "ws",
+        threadId: "thread",
+        messageId: "message",
+      }),
+    )
+  })
+
+  test("system failures publish realtime without a notification", async () => {
+    mocks.insertMessage.mockResolvedValue({
+      id: "message",
+      kind: "system",
+      authorUserId: null,
+      authorLabel: "Assistant",
+      text: null,
+      systemEvent: { type: "assistantFailed", reason: "timeout" },
+      createdAt: new Date(),
+      editedAt: null,
+      deletedAt: null,
+      mentions: { userIds: [], teamIds: [] },
+      attachments: [],
+    })
+    await staffAssistantService.postAssistantMessage({
+      ...input,
+      message: { kind: "system", reason: "timeout" },
+    })
+    expect(mocks.publish).toHaveBeenCalledOnce()
+    expect(mocks.deliver).not.toHaveBeenCalled()
+  })
 })
 
 describe("staff assistant settings", () => {

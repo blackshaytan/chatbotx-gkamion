@@ -16,9 +16,9 @@ import {
 import {
   type InternalMessageAttachment,
   type InternalMessageMentions,
+  type InternalSystemEvent,
   internalMessageKindValues,
   internalThreadTypeValues,
-  type TaskSystemEvent,
 } from "../partials/task"
 import { userModel } from "./auth-user"
 import { workspaceModel } from "./workspace"
@@ -124,7 +124,7 @@ export const internalMessageModel = pgTable(
     // No database defaults: every insert writes both values explicitly.
     mentions: jsonb().$type<InternalMessageMentions>().notNull(),
     attachments: jsonb().$type<InternalMessageAttachment[]>().notNull(),
-    systemEvent: jsonb().$type<TaskSystemEvent>(),
+    systemEvent: jsonb().$type<InternalSystemEvent>(),
     editedAt: timestamp(timestampConfig),
     deletedAt: timestamp(timestampConfig),
   },
