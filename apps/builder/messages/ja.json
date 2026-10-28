@@ -9175,7 +9175,9 @@
       "taskDueChanged": "Due date for “{task}” changed to {date}",
       "taskDueRemoved": "Due date removed from “{task}”",
       "taskReminder": "Reminder for “{task}”",
-      "taskOverdue": "Task “{task}” is overdue"
+      "taskOverdue": "Task “{task}” is overdue",
+      "chatMessage": "New message from {actor}",
+      "chatMessages": "{count} new messages from {actor}"
     },
     "settings": {
       "title": "Notification settings",
@@ -9209,6 +9211,10 @@
       "taskOverdue": {
         "label": "Overdue tasks",
         "description": "When an open task passes its due date."
+      },
+      "chatMessage": {
+        "label": "Chat messages",
+        "description": "When a chat participant sends a message."
       }
     }
   },
