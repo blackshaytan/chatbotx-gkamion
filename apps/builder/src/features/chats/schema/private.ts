@@ -19,6 +19,8 @@ export const chatMessagePrivateResource = chatMessagePublicResource
 export const chatPrivateResource = chatPublicResource.extend({
   unreadCount: z.number().int().nonnegative(),
   peerLastReadAt: z.date().nullable(),
+  isStaffAssistant: z.boolean(),
+  assistantRunning: z.boolean(),
 })
 
 export const listChatsPrivateRequest =

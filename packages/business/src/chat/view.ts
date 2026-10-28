@@ -1,6 +1,7 @@
 import type { ChatThreadType } from "@chatbotx.io/database/partials"
 import type { InternalThreadModel } from "@chatbotx.io/database/types"
 import type { InternalMessageView } from "../internal-thread/view"
+import { isStaffChatKey } from "./direct-key"
 
 export type ChatMemberView = {
   userId: string
@@ -18,6 +19,8 @@ export type ChatView = {
   lastMessage: InternalMessageView | null
   unreadCount: number
   peerLastReadAt: Date | null
+  isStaffAssistant: boolean
+  assistantRunning: boolean
 }
 
 export const toChatView = (input: {
@@ -40,5 +43,7 @@ export const toChatView = (input: {
     lastMessage: input.lastMessage,
     unreadCount: input.viewerUserId === null ? 0 : input.unreadCount,
     peerLastReadAt: peer?.lastReadAt ?? null,
+    isStaffAssistant: isStaffChatKey(input.thread.directKey),
+    assistantRunning: false,
   }
 }

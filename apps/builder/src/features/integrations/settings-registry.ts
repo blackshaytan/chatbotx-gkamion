@@ -51,6 +51,11 @@ export const INTEGRATION_SETTINGS_REGISTRY: readonly IntegrationSettingsEntry[] 
       titleKey: "externalAgent.title",
       icon: BotIcon,
     },
+    {
+      slug: "staff-assistant",
+      titleKey: "staffAssistant.title",
+      icon: BotIcon,
+    },
     { slug: "google-sheets", titleKey: "googleSheets.title", icon: TableIcon },
     { slug: "facebook-ads", titleKey: "facebookAds.title", icon: SiFacebook },
     { slug: "google-ads", titleKey: "googleAds.title", icon: SiGoogleads },

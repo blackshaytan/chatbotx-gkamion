@@ -2,7 +2,8 @@
 
 import { Button } from "@chatbotx.io/ui/components/ui/button"
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query"
-import { PlusIcon } from "lucide-react"
+import { BotIcon, PlusIcon, TriangleAlertIcon } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useFormatter, useTranslations } from "next-intl"
@@ -14,6 +15,7 @@ import {
 } from "@/features/tasks/lib/message-quote"
 import { orpc } from "@/lib/orpc/query"
 import { useInvalidateChats } from "../hooks/use-invalidate-chats"
+import { useStaffAssistantTyping } from "../hooks/use-staff-assistant-typing"
 import { canMutateChat } from "../lib/chat-controls"
 import { groupChatMessages } from "../lib/message-groups"
 import { mergeChatMessagePages } from "../lib/message-pages"
@@ -47,7 +49,12 @@ export const ChatsPage = ({
   const previousScrollHeight = useRef<number | null>(null)
   const { data: chats } = useQuery(
     orpc.chatsAPI.list.queryOptions({
-      input: { includeEmpty: Boolean(selectedChatId), page: 1, perPage: 50, workspaceId },
+      input: {
+        includeEmpty: Boolean(selectedChatId),
+        page: 1,
+        perPage: 50,
+        workspaceId,
+      },
     }),
   )
   const { data: selectedChat } = useQuery(
@@ -56,6 +63,19 @@ export const ChatsPage = ({
       enabled: Boolean(selectedChatId),
     }),
   )
+  const { data: assistantStatus } = useQuery(
+    orpc.chatsAPI.assistantStatus.queryOptions({
+      input: { workspaceId },
+      enabled: !isSupportSession,
+    }),
+  )
+  const assistantTyping = useStaffAssistantTyping({
+    assistantRunning: Boolean(
+      selectedChat?.id === selectedChatId && selectedChat?.assistantRunning,
+    ),
+    isSupportSession,
+    selectedChatId,
+  })
   const messagePages = useInfiniteQuery(
     orpc.chatsAPI.messages.list.infiniteOptions({
       enabled: Boolean(selectedChatId),
@@ -66,8 +86,7 @@ export const ChatsPage = ({
         workspaceId,
       }),
       initialPageParam: undefined,
-      getNextPageParam: (page) =>
-        page.hasMore ? page.data[0]?.id : undefined,
+      getNextPageParam: (page) => (page.hasMore ? page.data[0]?.id : undefined),
     }),
   )
   const messages = messagePages.data
@@ -83,6 +102,14 @@ export const ChatsPage = ({
   )
   const open = useMutation(
     orpc.chatsAPI.open.mutationOptions({
+      onSuccess: async ({ chat }) => {
+        await invalidateChats()
+        router.push(`/space/${workspaceId}/chats/${chat.id}`)
+      },
+    }),
+  )
+  const openAssistant = useMutation(
+    orpc.chatsAPI.openAssistant.mutationOptions({
       onSuccess: async ({ chat }) => {
         await invalidateChats()
         router.push(`/space/${workspaceId}/chats/${chat.id}`)
@@ -120,13 +147,18 @@ export const ChatsPage = ({
 
   useEffect(() => {
     const newestMessage = messages?.at(-1)
-    if (!selectedChatId || !newestMessage || !canMarkChatRead({
-      hasMessage: Boolean(newestMessage),
-      isPending: markRead.isPending,
-      isSupportSession,
-      lastMarkedAt: lastMarkedReadAt.current,
-      now: Date.now(),
-    })) {
+    if (!(selectedChatId && newestMessage)) {
+      return
+    }
+    if (
+      !canMarkChatRead({
+        hasMessage: Boolean(newestMessage),
+        isPending: markRead.isPending,
+        isSupportSession,
+        lastMarkedAt: lastMarkedReadAt.current,
+        now: Date.now(),
+      })
+    ) {
       return
     }
     lastMarkedReadAt.current = Date.now()
@@ -135,14 +167,9 @@ export const ChatsPage = ({
       upToMessageId: newestMessage.id,
       workspaceId,
     })
-  }, [
-    isSupportSession,
-    markRead,
-    messages,
-    selectedChatId,
-    workspaceId,
-  ])
+  }, [isSupportSession, markRead, messages, selectedChatId, workspaceId])
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: restore scroll after message pages change
   useEffect(() => {
     if (!(threadRef.current && previousScrollHeight.current !== null)) {
       return
@@ -167,15 +194,40 @@ export const ChatsPage = ({
           {canCreate ? (
             <details className="relative">
               <summary className="list-none">
-                <Button aria-label={t("actions.addNew")} size="icon" type="button" variant="outline">
+                <Button
+                  aria-label={t("actions.addNew")}
+                  size="icon"
+                  type="button"
+                  variant="outline"
+                >
                   <PlusIcon aria-hidden="true" />
                 </Button>
               </summary>
               <div className="absolute end-0 z-10 mt-2 max-h-72 w-64 overflow-auto rounded-md border bg-popover p-1 shadow-md">
+                {assistantStatus?.available ? (
+                  <Button
+                    className="w-full justify-start"
+                    disabled={openAssistant.isPending}
+                    onClick={() => openAssistant.mutate({ workspaceId })}
+                    type="button"
+                    variant="ghost"
+                  >
+                    <BotIcon aria-hidden="true" />
+                    {assistantStatus.name ?? t("staffAssistant.title")}
+                  </Button>
+                ) : null}
                 {members?.data
                   .filter((member) => member.userId !== currentUserId)
                   .map((member) => (
-                    <Button className="w-full justify-start" key={member.id} onClick={() => open.mutate({ userIds: [member.userId], workspaceId })} type="button" variant="ghost">
+                    <Button
+                      className="w-full justify-start"
+                      key={member.id}
+                      onClick={() =>
+                        open.mutate({ userIds: [member.userId], workspaceId })
+                      }
+                      type="button"
+                      variant="ghost"
+                    >
                       {member.user.name ?? member.userId}
                     </Button>
                   ))}
@@ -185,9 +237,22 @@ export const ChatsPage = ({
         </div>
         <nav aria-label={t("fields.tokenScopes.chats")} className="p-1">
           {chats?.data.map((chat) => (
-            <Link className="flex items-center justify-between rounded-md px-3 py-2 hover:bg-muted" href={`/space/${workspaceId}/chats/${chat.id}`} key={chat.id}>
-              <span className="truncate">{titleFor(chat)}</span>
-              {chat.unreadCount ? <span className="ms-2 rounded-full bg-primary px-2 text-primary-foreground text-xs">{chat.unreadCount > 99 ? "99+" : chat.unreadCount}</span> : null}
+            <Link
+              className="flex items-center justify-between rounded-md px-3 py-2 hover:bg-muted"
+              href={`/space/${workspaceId}/chats/${chat.id}`}
+              key={chat.id}
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                {chat.isStaffAssistant ? (
+                  <BotIcon aria-hidden="true" className="size-4 shrink-0" />
+                ) : null}
+                <span className="truncate">{titleFor(chat)}</span>
+              </span>
+              {chat.unreadCount ? (
+                <span className="ms-2 rounded-full bg-primary px-2 text-primary-foreground text-xs">
+                  {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
+                </span>
+              ) : null}
             </Link>
           ))}
           {chats?.data.length === 0 ? (
@@ -201,16 +266,29 @@ export const ChatsPage = ({
         {selectedChat && selectedChatId ? (
           <>
             <header className="flex items-center justify-between border-b p-3 font-semibold">
-              <span>{titleFor(selectedChat)}</span>
+              <span className="flex items-center gap-2">
+                {selectedChat.isStaffAssistant ? (
+                  <BotIcon aria-hidden="true" className="size-4" />
+                ) : null}
+                {titleFor(selectedChat)}
+              </span>
               {isSupportSession ? (
                 <span className="text-muted-foreground text-sm">
                   {t("fields.tokenPermission.readOnly")}
                 </span>
               ) : null}
             </header>
-            <div className="flex-1 space-y-3 overflow-y-auto p-3" ref={threadRef}>
+            <div
+              className="flex-1 space-y-3 overflow-y-auto p-3"
+              ref={threadRef}
+            >
               {messagePages.hasNextPage ? (
-                <Button disabled={messagePages.isFetchingNextPage} onClick={loadOlderMessages} type="button" variant="ghost">
+                <Button
+                  disabled={messagePages.isFetchingNextPage}
+                  onClick={loadOlderMessages}
+                  type="button"
+                  variant="ghost"
+                >
                   {t("actions.more")}
                 </Button>
               ) : null}
@@ -225,78 +303,152 @@ export const ChatsPage = ({
                       {dateLabel(group[0].createdAt)}
                     </div>
                   ) : null}
-                  {group.map((message, messageIndex) => (
-                    <article className="space-y-1" key={message.id}>
-                  <div className="flex items-center justify-between gap-2 text-muted-foreground text-xs">
-                    <span>{messageIndex === 0 ? message.authorLabel : null}</span>
-                    <time>{format.dateTime(message.createdAt, { dateStyle: "medium", timeStyle: "short" })}</time>
-                  </div>
-                  {message.deleted ? <p className="text-muted-foreground text-sm">{t("actions.delete")}</p> : editingMessageId === message.id ? <div className="flex gap-2"><textarea className="min-h-20 flex-1 rounded-md border bg-background p-2 text-sm" onChange={(event) => setEditingText(event.target.value)} value={editingText} /><Button disabled={!editingText.trim() || updateMessage.isPending} onClick={() => updateMessage.mutate({ id: selectedChatId, messageId: message.id, text: editingText.trim(), workspaceId })} type="button">{t("actions.save")}</Button><Button onClick={() => setEditingMessageId(null)} type="button" variant="ghost">{t("actions.cancel")}</Button></div> : <p className="whitespace-pre-wrap text-sm">{message.text}</p>}
-                  {message.attachments.map((attachment) => (
-                    <div key={attachment.index}>
-                      {attachment.mimeType.startsWith("image/") ? (
-                        <a href={attachment.url} rel="noreferrer" target="_blank">
-                          <img
-                            alt={attachment.name}
-                            className="max-h-64 rounded-md object-contain"
-                            src={attachment.url}
-                          />
-                        </a>
-                      ) : null}
-                      <a
-                        className="block text-primary text-sm underline"
-                        href={attachment.url}
-                        rel="noreferrer"
-                        target="_blank"
+                  {group.map((message, messageIndex) =>
+                    message.kind === "system" &&
+                    message.systemEvent?.type === "assistantFailed" ? (
+                      <p
+                        className="flex items-center justify-center gap-2 text-center text-muted-foreground text-sm"
+                        key={message.id}
+                        role="status"
                       >
-                        {attachment.name}
-                      </a>
-                    </div>
-                  ))}
-                  {canCreate && canCreateTaskFromChatMessage(message) ? (
-                    <div className="flex gap-1">
-                      {message.authorUserId === currentUserId ? (
-                        <>
-                          <Button
-                            onClick={() => {
-                              setEditingMessageId(message.id)
-                              setEditingText(message.text ?? "")
-                            }}
-                            size="sm"
-                            type="button"
-                            variant="ghost"
-                          >
-                            {t("actions.edit")}
-                          </Button>
-                          <Button
-                            disabled={deleteMessage.isPending}
-                            onClick={() =>
-                              deleteMessage.mutate({
-                                id: selectedChatId,
-                                messageId: message.id,
-                                workspaceId,
-                              })
-                            }
-                            size="sm"
-                            type="button"
-                            variant="ghost"
-                          >
+                        <TriangleAlertIcon
+                          aria-hidden="true"
+                          className="size-4"
+                        />
+                        {message.systemEvent.reason === "timeout"
+                          ? t("staffAssistant.failedTimeout")
+                          : t("staffAssistant.failedUnavailable")}
+                      </p>
+                    ) : (
+                      <article className="space-y-1" key={message.id}>
+                        <div className="flex items-center justify-between gap-2 text-muted-foreground text-xs">
+                          <span>
+                            {messageIndex === 0 ? message.authorLabel : null}
+                          </span>
+                          <time>
+                            {format.dateTime(message.createdAt, {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            })}
+                          </time>
+                        </div>
+                        {message.deleted ? (
+                          <p className="text-muted-foreground text-sm">
                             {t("actions.delete")}
-                          </Button>
-                        </>
-                      ) : null}
-                      <Button
-                        onClick={() => setTaskMessageId(message.id)}
-                        size="sm"
-                        type="button"
-                        variant="ghost"
-                      >
-                        {t("tasks.actions.createFromMessage")}
-                      </Button>
-                    </div>
-                  ) : null}
-                  </article>
-                  ))}
+                          </p>
+                        ) : null}
+                        {!message.deleted && editingMessageId === message.id ? (
+                          <div className="flex gap-2">
+                            <textarea
+                              className="min-h-20 flex-1 rounded-md border bg-background p-2 text-sm"
+                              onChange={(event) =>
+                                setEditingText(event.target.value)
+                              }
+                              value={editingText}
+                            />
+                            <Button
+                              disabled={
+                                !editingText.trim() || updateMessage.isPending
+                              }
+                              onClick={() =>
+                                updateMessage.mutate({
+                                  id: selectedChatId,
+                                  messageId: message.id,
+                                  text: editingText.trim(),
+                                  workspaceId,
+                                })
+                              }
+                              type="button"
+                            >
+                              {t("actions.save")}
+                            </Button>
+                            <Button
+                              onClick={() => setEditingMessageId(null)}
+                              type="button"
+                              variant="ghost"
+                            >
+                              {t("actions.cancel")}
+                            </Button>
+                          </div>
+                        ) : null}
+                        {!message.deleted && editingMessageId !== message.id ? (
+                          <p className="whitespace-pre-wrap text-sm">
+                            {message.text}
+                          </p>
+                        ) : null}
+                        {message.attachments.map((attachment) => (
+                          <div key={attachment.index}>
+                            {attachment.mimeType.startsWith("image/") ? (
+                              <a
+                                href={attachment.url}
+                                rel="noreferrer"
+                                target="_blank"
+                              >
+                                <Image
+                                  alt={attachment.name}
+                                  className="max-h-64 rounded-md object-contain"
+                                  height={256}
+                                  src={attachment.url}
+                                  unoptimized
+                                  width={384}
+                                />
+                              </a>
+                            ) : null}
+                            <a
+                              className="block text-primary text-sm underline"
+                              href={attachment.url}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              {attachment.name}
+                            </a>
+                          </div>
+                        ))}
+                        {canCreate && canCreateTaskFromChatMessage(message) ? (
+                          <div className="flex gap-1">
+                            {message.authorUserId === currentUserId ? (
+                              <>
+                                <Button
+                                  onClick={() => {
+                                    setEditingMessageId(message.id)
+                                    setEditingText(message.text ?? "")
+                                  }}
+                                  size="sm"
+                                  type="button"
+                                  variant="ghost"
+                                >
+                                  {t("actions.edit")}
+                                </Button>
+                                <Button
+                                  disabled={deleteMessage.isPending}
+                                  onClick={() =>
+                                    deleteMessage.mutate({
+                                      id: selectedChatId,
+                                      messageId: message.id,
+                                      workspaceId,
+                                    })
+                                  }
+                                  size="sm"
+                                  type="button"
+                                  variant="ghost"
+                                >
+                                  {t("actions.delete")}
+                                </Button>
+                              </>
+                            ) : null}
+                            <Button
+                              onClick={() => setTaskMessageId(message.id)}
+                              size="sm"
+                              type="button"
+                              variant="ghost"
+                            >
+                              {t("tasks.actions.createFromMessage")}
+                            </Button>
+                          </div>
+                        ) : null}
+                      </article>
+                    ),
+                  )}
                 </div>
               ))}
               {messages?.length === 0 ? (
@@ -318,8 +470,22 @@ export const ChatsPage = ({
                   })}
                 </time>
               ) : null}
+              {selectedChat.isStaffAssistant && assistantTyping ? (
+                <p aria-live="polite" className="text-muted-foreground text-sm">
+                  {t("staffAssistant.typing")}
+                </p>
+              ) : null}
             </div>
-            {canMutateChat({
+            {selectedChat.isStaffAssistant &&
+            !isSupportSession &&
+            assistantStatus &&
+            !assistantStatus.available ? (
+              <p className="border-t p-3 text-muted-foreground text-sm">
+                {t("staffAssistant.unavailable")}
+              </p>
+            ) : null}
+            {(!selectedChat.isStaffAssistant || assistantStatus?.available) &&
+            canMutateChat({
               hasRemovedPeer: selectedChat.members.some(
                 (member) => member.userId !== currentUserId && member.removed,
               ),
@@ -331,7 +497,8 @@ export const ChatsPage = ({
             {taskMessage ? (
               <CreateTaskDialog
                 defaultDescription={toTaskDescriptionFromChatMessage({
-                  author: taskMessage.authorLabel ?? t("tasks.chat.unknownAuthor"),
+                  author:
+                    taskMessage.authorLabel ?? t("tasks.chat.unknownAuthor"),
                   date: format.dateTime(taskMessage.createdAt, {
                     dateStyle: "medium",
                     timeStyle: "short",

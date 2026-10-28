@@ -30,6 +30,36 @@ not provide real-time delivery.
 Attachment URLs returned with messages are signed download links. They expire
 after about one hour and authorize only the exact workspace, message, and file.
 
+## Staff assistant
+
+An administrator can configure the staff assistant in integration settings or
+with `staffAssistant.get`, `staffAssistant.update`, and `staffAssistant.test`
+(the public procedures require the `settings` scope). `token.get` returns the
+calling token's id for use as `apiTokenId`. Choose a dedicated token with an
+explicit `chats` scope; a legacy unscoped token cannot be bound. The assistant
+acts with all the permissions of that token, regardless of the permissions of
+the employee writing to it. Enable it only when that access is appropriate for
+all workspace employees. API keys are write-only.
+
+Each employee has one private assistant chat and a separate Hermes session.
+The employee can open it from New chat; a proactive `chats.open` call by the
+bound assistant token reaches the same chat. Messages sent by an employee are
+forwarded to Hermes, whose responses appear in the chat. A disabled assistant,
+or one whose token was revoked or lost the `chats` scope, cannot receive new
+requests. Existing chat history remains readable. Attachments supplied to
+Hermes use message-specific signed links valid for 24 hours. Provider responses
+longer than the chat's 10,000-character limit are truncated.
+
+The Hermes staff profile and its deployment are separate operational steps. It
+requires a separate loopback-only gateway and dedicated token. Its instructions
+must prohibit storing employees' personal data in shared profile memory or
+recounting another employee's conversations. The profile should return replies
+through the run rather than posting them to the same chat through the API;
+`chats.messages.create` is for proactive messages outside a run. See the ops
+checklist in `docs/superpowers/specs/2026-10-27-staff-chat-design.md` §13.11.
+The staff assistant database migration and coordinated builder/worker release
+must be approved before applying them to production.
+
 ## Create a task from a chat message
 
 In the signed-in chat UI, the actions for any non-deleted staff message include

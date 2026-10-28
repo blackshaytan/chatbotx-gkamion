@@ -4131,6 +4131,17 @@
     "contactContext": "سياق جهة الاتصال",
     "contextProviderWarning": "تُرسل قيم حقول جهة الاتصال المحددة إلى مزود موجه الذكاء الاصطناعي."
   },
+  "staffAssistant": {
+    "title": "Staff assistant",
+    "fullAccessNotice": "The assistant acts with all permissions of its workspace token and can access workspace data independently of the employee's permissions. Enable it only if all employees may use this access.",
+    "token": "Assistant token",
+    "tokenHint": "Choose a token with the explicit chats scope. Create one in workspace token settings if needed.",
+    "noTokens": "No tokens with chat access are available.",
+    "typing": "Assistant is typing…",
+    "unavailable": "The assistant is unavailable.",
+    "failedUnavailable": "The assistant is unavailable. Please try again later.",
+    "failedTimeout": "The assistant did not finish in time. Please try again."
+  },
   "externalAgent": {
     "title": "External AI agent",
     "description": "Replies to customers through the external Hermes agent. The agent replies while the bot is enabled in the conversation.",

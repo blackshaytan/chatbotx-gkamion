@@ -2,6 +2,10 @@ export type ChatAgentChannel =
   | { kind: "staff"; title: string }
   | { kind: "token"; id: string; label: string }
 
+const STAFF_CHAT_KEY = /^agent:[0-9]+:staff$/
+export const isStaffChatKey = (key: string | null): boolean =>
+  STAFF_CHAT_KEY.test(key ?? "")
+
 export const buildDirectKey = (first: string, second: string): string => {
   if (first === second) {
     throw new Error("A direct chat requires two users")

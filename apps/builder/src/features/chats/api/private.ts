@@ -67,6 +67,8 @@ const toPrivateChat = async (
   url: chat.url,
   unreadCount: chat.unreadCount,
   peerLastReadAt: chat.peerLastReadAt,
+  isStaffAssistant: chat.isStaffAssistant,
+  assistantRunning: chat.assistantRunning,
 })
 
 const chatMessagesPrivateRouter = {

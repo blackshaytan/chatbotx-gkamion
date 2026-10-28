@@ -4,7 +4,11 @@ import {
   type ChatThreadType,
   type InternalMessageAttachment,
 } from "@chatbotx.io/database/partials"
-import { chatRepository } from "@chatbotx.io/database/repositories"
+import {
+  chatRepository,
+  externalAgentChatStateRepository,
+  externalAgentRepository,
+} from "@chatbotx.io/database/repositories"
 import { BaseService } from "../base.service"
 import {
   ChatbotXException,
@@ -26,6 +30,7 @@ import {
   buildDirectKey,
   type ChatAgentChannel,
   chatAgentTitle,
+  isStaffChatKey,
 } from "./direct-key"
 import { type ChatView, toChatView } from "./view"
 
@@ -150,13 +155,21 @@ class ChatService extends BaseService {
           threadIds: result.rows.map((row) => row.id),
         })
       : new Map<string, number>()
+    const staffProfile = result.rows.some((thread) =>
+      isStaffChatKey(thread.directKey),
+    )
+      ? await externalAgentRepository.findByWorkspace(
+          input.workspaceId,
+          "staff",
+        )
+      : null
     return {
       data: result.rows.map((thread) => {
         const lastMessageId = lastMessageIds.get(thread.id)
         const lastMessage = lastMessageId
           ? messagesById.get(lastMessageId)
           : undefined
-        return toChatView({
+        const view = toChatView({
           thread,
           members: members
             .filter((member) => member.threadId === thread.id)
@@ -168,6 +181,9 @@ class ChatService extends BaseService {
           unreadCount: unread.get(thread.id) ?? 0,
           viewerUserId: memberUserId,
         })
+        return view.isStaffAssistant && staffProfile?.botName
+          ? { ...view, title: staffProfile.botName }
+          : view
       }),
       total: result.total,
       pageCount: Math.ceil(result.total / input.perPage),
@@ -207,7 +223,7 @@ class ChatService extends BaseService {
           threadIds: [input.threadId],
         })
       : new Map<string, number>()
-    return toChatView({
+    const view = toChatView({
       thread: found.thread,
       members: members.map((member) => ({
         ...member,
@@ -217,6 +233,21 @@ class ChatService extends BaseService {
       unreadCount: unread.get(input.threadId) ?? 0,
       viewerUserId: userId,
     })
+    if (!view.isStaffAssistant) {
+      return view
+    }
+    const [profile, state] = await Promise.all([
+      externalAgentRepository.findByWorkspace(input.workspaceId, "staff"),
+      externalAgentChatStateRepository.find({
+        workspaceId: input.workspaceId,
+        threadId: input.threadId,
+      }),
+    ])
+    return {
+      ...view,
+      title: profile?.botName ?? view.title,
+      assistantRunning: Boolean(state?.runId),
+    }
   }
 
   async countUnreadTotal(input: { workspaceId: string; userId: string }) {
