@@ -1,13 +1,25 @@
 "use client"
 
 import { Button, buttonVariants } from "@chatbotx.io/ui/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@chatbotx.io/ui/components/ui/tooltip"
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query"
-import { BotIcon, PlusIcon, TriangleAlertIcon } from "lucide-react"
+import {
+  BotIcon,
+  ListChecksIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  TriangleAlertIcon,
+} from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useFormatter, useTranslations } from "next-intl"
-import { useEffect, useRef, useState } from "react"
+import { type ReactNode, useEffect, useRef, useState } from "react"
 import { CreateTaskDialog } from "@/features/tasks/components/create-task-dialog"
 import {
   canCreateTaskFromChatMessage,
@@ -411,22 +423,21 @@ export const ChatsPage = ({
                           </div>
                         ))}
                         {canCreate && canCreateTaskFromChatMessage(message) ? (
-                          <div className="flex gap-1">
+                          <div className="flex gap-0.5">
                             {message.authorUserId === currentUserId ? (
                               <>
-                                <Button
+                                <ChatMessageIconButton
+                                  label={t("actions.edit")}
                                   onClick={() => {
                                     setEditingMessageId(message.id)
                                     setEditingText(message.text ?? "")
                                   }}
-                                  size="sm"
-                                  type="button"
-                                  variant="ghost"
                                 >
-                                  {t("actions.edit")}
-                                </Button>
-                                <Button
+                                  <PencilIcon aria-hidden="true" />
+                                </ChatMessageIconButton>
+                                <ChatMessageIconButton
                                   disabled={deleteMessage.isPending}
+                                  label={t("actions.delete")}
                                   onClick={() =>
                                     deleteMessage.mutate({
                                       id: selectedChatId,
@@ -434,22 +445,17 @@ export const ChatsPage = ({
                                       workspaceId,
                                     })
                                   }
-                                  size="sm"
-                                  type="button"
-                                  variant="ghost"
                                 >
-                                  {t("actions.delete")}
-                                </Button>
+                                  <TrashIcon aria-hidden="true" />
+                                </ChatMessageIconButton>
                               </>
                             ) : null}
-                            <Button
+                            <ChatMessageIconButton
+                              label={t("tasks.actions.createFromMessage")}
                               onClick={() => setTaskMessageId(message.id)}
-                              size="sm"
-                              type="button"
-                              variant="ghost"
                             >
-                              {t("tasks.actions.createFromMessage")}
-                            </Button>
+                              <ListChecksIcon aria-hidden="true" />
+                            </ChatMessageIconButton>
                           </div>
                         ) : null}
                       </article>
@@ -539,3 +545,36 @@ export const ChatsPage = ({
     </div>
   )
 }
+
+type ChatMessageIconButtonProps = {
+  children: ReactNode
+  disabled?: boolean
+  label: string
+  onClick: () => void
+}
+
+const ChatMessageIconButton = ({
+  children,
+  disabled,
+  label,
+  onClick,
+}: ChatMessageIconButtonProps) => (
+  <Tooltip>
+    <TooltipTrigger
+      render={
+        <Button
+          aria-label={label}
+          className="size-7"
+          disabled={disabled}
+          onClick={onClick}
+          size="icon"
+          type="button"
+          variant="ghost"
+        >
+          {children}
+        </Button>
+      }
+    />
+    <TooltipContent>{label}</TooltipContent>
+  </Tooltip>
+)
