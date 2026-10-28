@@ -1,12 +1,9 @@
 import {
   conversationService,
   decideFallback,
-  decideInterim,
-  decideLimit,
   type ExternalAgentRuntime,
   externalAgentService,
   HermesAuthError,
-  type HermesReadEventsResult,
   HermesRequestError,
   type HermesSseEvent,
   HermesUnavailableError,
@@ -22,6 +19,15 @@ import {
 import { UnrecoverableError } from "bullmq"
 import { logger } from "../../lib/logger"
 import {
+  applyRunEvent,
+  checkRunLimit,
+  processRunWindow,
+  readOutputText,
+  readRunEvents,
+  settleRunStatus,
+  type ReadOutcome,
+} from "./external-agent-run-follower"
+import {
   type ExternalAgentConversationContext,
   handOverToHuman,
   listRecentMessages,
@@ -36,17 +42,7 @@ import {
  * The aiAgent worker runs with BullMQ's default 30 s job lock, so one read
  * window stays 15 s below it; events are read outside the conversation lock.
  */
-export const EXTERNAL_AGENT_WATCH_WINDOW_MS = 15_000
-const EARLY_END_REWATCH_DELAY_MS = 5000
-
-const FAILED_RUN_EVENTS = new Set([
-  "run.failed",
-  "run.cancelled",
-  "run.interrupted",
-])
-const FAILED_RUN_STATUSES = new Set(["failed", "cancelled", "interrupted"])
-const APPROVAL_STATUS = "waiting_for_approval"
-
+export { EXTERNAL_AGENT_WATCH_WINDOW_MS } from "./external-agent-run-follower"
 type WatchOptions = { isFinalAttempt: boolean }
 
 type RunTracking = Pick<
@@ -64,12 +60,6 @@ type WatchBatch = {
   runtime: ExternalAgentRuntime
   state: ExternalAgentConversationStateModel
   tracking: RunTracking
-}
-
-type ReadOutcome = {
-  events: HermesSseEvent[]
-  result: HermesReadEventsResult | null
-  error: unknown
 }
 
 const patchRun = async (
@@ -118,9 +108,6 @@ const failRun = async (
     error,
   })
 }
-
-const readOutputText = (value: unknown): string =>
-  typeof value === "string" ? value.trim() : ""
 
 const enqueueNewMessagesReply = async (batch: WatchBatch): Promise<void> => {
   const messages = await listRecentMessages(batch.data)
@@ -184,108 +171,50 @@ const applyEvent = async (
   batch: WatchBatch,
   event: HermesSseEvent,
 ): Promise<boolean> => {
-  const now = new Date()
-  batch.tracking.lastEventAt = now
-  if (event.id !== null) {
-    batch.tracking.lastEventSeq = event.id
-  }
-  const type = event.data.event ?? ""
-
-  if (type === "message.interim") {
-    const text = readOutputText(event.data.text)
-    const decision = decideInterim({
-      text,
-      now,
-      lastProgressSentAt: batch.tracking.lastProgressSentAt,
-      lastProgressText: batch.tracking.lastProgressText,
-    })
-    if (decision === "send") {
-      await sendClientText({
-        context: batch.context,
-        text,
-        jobId: sendJobId(batch.data, `interim-${event.id ?? now.getTime()}`),
-      })
-      batch.tracking.lastProgressSentAt = now
-      batch.tracking.lastProgressText = text
-      batch.tracking.lastClientSendAt = now
-      if (!(await patchRun(batch, batch.tracking))) {
-        return true
-      }
-    }
-    return false
-  }
-  if (type === "run.completed") {
-    await completeRun(batch, readOutputText(event.data.output))
-    return true
-  }
-  if (FAILED_RUN_EVENTS.has(type)) {
-    await failRun(
-      batch,
-      "unavailable",
-      new Error(readOutputText(event.data.error) || `Hermes ${type}`),
-    )
-    return true
-  }
-  if (type === "approval.request") {
-    await stopRunQuietly(batch.runtime.client, batch.data.runId)
-    await failRun(
-      batch,
-      "unavailable",
-      new Error("Hermes requested a tool approval"),
-    )
-    return true
-  }
-  return false
+  return await applyRunEvent(
+    {
+      tracking: batch.tracking,
+      postInterim: (text, step) =>
+        sendClientText({
+          context: batch.context,
+          text,
+          jobId: sendJobId(batch.data, step),
+        }),
+      patchTracking: (tracking) => patchRun(batch, tracking),
+      complete: (output) => completeRun(batch, output),
+      fail: (error) => failRun(batch, "unavailable", error),
+      stop: () => stopRunQuietly(batch.runtime.client, batch.data.runId),
+    },
+    event,
+  )
 }
 
 /** The stream ended without a terminal event: the run status decides. `true` when the run ended. */
 const settleFromRunStatus = async (batch: WatchBatch): Promise<boolean> => {
   const run = await batch.runtime.client.getRun(batch.data.runId)
-  if (run.status === "completed") {
-    await completeRun(batch, readOutputText(run.output))
-    return true
-  }
-  if (FAILED_RUN_STATUSES.has(run.status)) {
-    await failRun(
-      batch,
-      "unavailable",
-      new Error(run.error ?? `Hermes run ${run.status}`),
-    )
-    return true
-  }
-  if (run.status === APPROVAL_STATUS) {
-    await stopRunQuietly(batch.runtime.client, batch.data.runId)
-    await failRun(
-      batch,
-      "unavailable",
-      new Error("Hermes requested a tool approval"),
-    )
-    return true
-  }
-  return false
+  return await settleRunStatus(
+    {
+      complete: (output) => completeRun(batch, output),
+      fail: (error) => failRun(batch, "unavailable", error),
+      stop: () => stopRunQuietly(batch.runtime.client, batch.data.runId),
+    },
+    run,
+  )
 }
 
 /** Fallback message and run limits once a window passed without a terminal event. */
 const checkRunProgress = async (batch: WatchBatch): Promise<boolean> => {
   const now = new Date()
   const runStartedAt = batch.state.runStartedAt ?? now
-  const limit = decideLimit({
+  const withinLimit = await checkRunLimit({
     now,
     runStartedAt,
     lastEventAt: batch.tracking.lastEventAt,
     maxRunMinutes: batch.runtime.agent.maxRunMinutes,
+    stop: () => stopRunQuietly(batch.runtime.client, batch.data.runId),
+    fail: (error) => failRun(batch, "timeout", error),
   })
-  if (limit !== "ok") {
-    await stopRunQuietly(batch.runtime.client, batch.data.runId)
-    await failRun(
-      batch,
-      "timeout",
-      new Error(
-        limit === "stalled"
-          ? "Hermes run stalled without events"
-          : "Hermes run exceeded the time limit",
-      ),
-    )
+  if (!withinLimit) {
     return false
   }
 
@@ -342,30 +271,16 @@ const processBatch = async (
   read: ReadOutcome,
   options: WatchOptions,
 ): Promise<void> => {
-  for (const event of read.events) {
-    if (event.id !== null && event.id <= batch.state.lastEventSeq) {
-      continue
-    }
-    if (await applyEvent(batch, event)) {
-      return
-    }
-  }
-
-  if (read.error !== null) {
-    await handleWatchError(batch, read.error, options)
-    return
-  }
-  const endedEarly = Boolean(read.result?.closed || read.result?.notFound)
-  if (endedEarly && (await settleFromRunStatus(batch))) {
-    return
-  }
-  if (!(await checkRunProgress(batch))) {
-    return
-  }
-  await enqueueExternalAgentWatch(
-    batch.data,
-    endedEarly ? EARLY_END_REWATCH_DELAY_MS : 0,
-  )
+  await processRunWindow(read, {
+    lastEventSeq: batch.state.lastEventSeq,
+    applyEvent: (event) => applyEvent(batch, event),
+    handleError: (error) => handleWatchError(batch, error, options),
+    settleFromRunStatus: () => settleFromRunStatus(batch),
+    checkRunProgress: () => checkRunProgress(batch),
+    enqueueWatch: async (delay) => {
+      await enqueueExternalAgentWatch(batch.data, delay)
+    },
+  })
 }
 
 const processUnderLock = async (
@@ -410,27 +325,6 @@ const processUnderLock = async (
       throw error
     }
     await handleWatchError(batch, error, options)
-  }
-}
-
-const readRunEvents = async (
-  runtime: ExternalAgentRuntime,
-  data: ExternalAgentWatchData,
-  lastSeq: number,
-): Promise<ReadOutcome> => {
-  const events: HermesSseEvent[] = []
-  try {
-    const result = await runtime.client.readEvents({
-      runId: data.runId,
-      lastSeq,
-      windowMs: EXTERNAL_AGENT_WATCH_WINDOW_MS,
-      onEvent: (event) => {
-        events.push(event)
-      },
-    })
-    return { events, result, error: null }
-  } catch (error) {
-    return { events, result: null, error }
   }
 }
 
@@ -491,7 +385,7 @@ const runWatch = async (
     return
   }
 
-  const read = await readRunEvents(runtime, data, state.lastEventSeq)
+  const read = await readRunEvents(runtime.client, data.runId, state.lastEventSeq)
   await withExternalAgentLock(data.conversationId, () =>
     processUnderLock(data, context, runtime, read, options),
   )
