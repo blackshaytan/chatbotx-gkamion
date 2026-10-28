@@ -1,4 +1,8 @@
-import { chatService, workspacePresenceService } from "@chatbotx.io/business"
+import {
+  type ChatView,
+  chatService,
+  workspacePresenceService,
+} from "@chatbotx.io/business"
 import { ORPCError } from "@orpc/server"
 import { z } from "zod"
 import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"
@@ -47,7 +51,7 @@ const toPrivateMessage = async (
 
 const toPrivateChat = async (
   workspaceId: string,
-  chat: Awaited<ReturnType<typeof withChatUrl>>,
+  chat: ChatView & { url: string },
 ) => ({
   id: chat.id,
   type: chat.type,
