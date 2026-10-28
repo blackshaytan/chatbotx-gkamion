@@ -2,6 +2,7 @@ import {
   type ChatView,
   chatService,
   type InternalMessageView,
+  staffAssistantService,
   workspacePresenceService,
 } from "@chatbotx.io/business"
 import { z } from "zod"
@@ -11,16 +12,14 @@ import {
   possibleErrorsOnListingResource,
   possibleErrorsOnMutatingResource,
 } from "@/lib/orpc/orpc-error-helper"
+import type { RequestApiToken } from "@/middlewares/context"
 import { workspaceTokenAuthAPIForScope } from "@/orpc"
 import { apiTokenChatActor } from "../lib/actor"
 import {
   withChatAttachmentUrls,
   withSingleChatAttachmentUrls,
 } from "../lib/attachment-url"
-import {
-  deliverChatMessage,
-  publishChatChanged,
-} from "../lib/chat-realtime"
+import { deliverChatMessage, publishChatChanged } from "../lib/chat-realtime"
 import { withChatUrl, withChatUrls } from "../lib/chat-url"
 import {
   chatIdPathParam,
@@ -41,6 +40,20 @@ import {
 const workspaceTokenAuthAPI = workspaceTokenAuthAPIForScope("chats")
 const tags = ["Chats"]
 const chatIdFrom = "Get chat ids from `chats.list` or `chats.open`."
+
+const resolveTokenActor = async (
+  workspaceId: string,
+  apiToken: RequestApiToken | undefined,
+) => {
+  const channel = await staffAssistantService.resolveAgentChannel({
+    workspaceId,
+    tokenId: apiToken?.id ?? "api",
+    tokenName: apiToken?.name ?? "API",
+  })
+  return channel.kind === "staff"
+    ? ({ kind: "api", label: channel.title } as const)
+    : apiTokenChatActor(apiToken)
+}
 
 const toPublicMessage = async (
   workspaceId: string,
@@ -113,7 +126,7 @@ const chatMessagesPublicRouter = {
         threadId: input.id,
         text: input.text ?? "",
         attachments: input.attachments ?? [],
-        actor: apiTokenChatActor(context.apiToken),
+        actor: await resolveTokenActor(context.workspace.id, context.apiToken),
       })
       deliverChatMessage({
         workspaceId: context.workspace.id,
@@ -140,7 +153,7 @@ const chatMessagesPublicRouter = {
         threadId: input.id,
         messageId: input.messageId,
         text: input.text ?? "",
-        actor: apiTokenChatActor(context.apiToken),
+        actor: await resolveTokenActor(context.workspace.id, context.apiToken),
       })
       publishChatChanged({
         workspaceId: context.workspace.id,
@@ -269,19 +282,21 @@ export const chatsPublicRouter = {
     .output(z.object({ chat: chatPublicResource, created: z.boolean() }))
     .errors(possibleErrorsOnMutatingResource)
     .handler(async ({ context, input }) => {
-      const result = await chatService.open({
-        workspaceId: context.workspace.id,
-        userIds: input.userIds,
-        ...(input.userIds.length === 1
-          ? {
-              channel: {
-                kind: "token" as const,
-                id: context.apiToken?.id ?? "api",
-                label: context.apiToken?.name ?? "API",
-              },
-            }
-          : {}),
-      })
+      const result =
+        input.userIds.length === 1
+          ? await chatService.openAgentChannel({
+              workspaceId: context.workspace.id,
+              userId: input.userIds[0],
+              channel: await staffAssistantService.resolveAgentChannel({
+                workspaceId: context.workspace.id,
+                tokenId: context.apiToken?.id ?? "api",
+                tokenName: context.apiToken?.name ?? "API",
+              }),
+            })
+          : await chatService.open({
+              workspaceId: context.workspace.id,
+              userIds: input.userIds,
+            })
       return {
         created: result.created,
         chat: await toPublicChat(

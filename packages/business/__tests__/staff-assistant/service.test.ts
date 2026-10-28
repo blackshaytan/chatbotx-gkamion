@@ -12,6 +12,9 @@ const mocks = vi.hoisted(() => ({
   invalidate: vi.fn(),
   throttle: vi.fn(),
   health: vi.fn(),
+  openAgentChannel: vi.fn(),
+  lockWorkspaceTokens: vi.fn(),
+  findStaffAvailability: vi.fn(),
 }))
 vi.mock("@chatbotx.io/database/client", () => ({
   db: { transaction: mocks.transaction },
@@ -21,8 +24,12 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
     findByWorkspace: mocks.find,
     upsert: mocks.upsert,
     updateCheck: mocks.updateCheck,
+    findStaffAvailability: mocks.findStaffAvailability,
   },
-  workspaceApiTokenRepository: { findScopesForWorkspace: mocks.token },
+  workspaceApiTokenRepository: {
+    findScopesForWorkspace: mocks.token,
+    lockWorkspaceTokens: mocks.lockWorkspaceTokens,
+  },
 }))
 vi.mock("@chatbotx.io/encryption", () => ({
   encryptUtils: { encryptObject: mocks.encrypt, decryptObject: mocks.decrypt },
@@ -41,6 +48,9 @@ vi.mock("../../src/external-agent/service", () => ({
   describeExternalAgentCheckError: () => "check failed",
 }))
 vi.mock("../../src/logger", () => ({ logger: { warn: vi.fn() } }))
+vi.mock("../../src/chat/service", () => ({
+  chatService: { openAgentChannel: mocks.openAgentChannel },
+}))
 
 const { staffAssistantService } = await import(
   "../../src/staff-assistant/service"
@@ -148,6 +158,39 @@ describe("staff assistant settings", () => {
     )
     mocks.token.mockResolvedValue(null)
     expect(await staffAssistantService.getRuntime("ws")).toBeNull()
+  })
+
+  test("both token and employee paths select the staff channel", async () => {
+    expect(
+      await staffAssistantService.resolveAgentChannel({
+        workspaceId: "ws",
+        tokenId: "token",
+        tokenName: "old name",
+      }),
+    ).toEqual({ kind: "staff", title: "Assistant" })
+    expect(
+      await staffAssistantService.resolveAgentChannel({
+        workspaceId: "ws",
+        tokenId: "other",
+        tokenName: "Other",
+      }),
+    ).toEqual({ kind: "token", id: "other", label: "Other" })
+    await staffAssistantService.openForEmployee({
+      workspaceId: "ws",
+      userId: "user",
+    })
+    expect(mocks.openAgentChannel).toHaveBeenCalledWith({
+      workspaceId: "ws",
+      userId: "user",
+      channel: { kind: "staff", title: "Assistant" },
+    })
+    mocks.token.mockResolvedValue(null)
+    await expect(
+      staffAssistantService.openForEmployee({
+        workspaceId: "ws",
+        userId: "user",
+      }),
+    ).rejects.toMatchObject({ httpStatusCode: 400 })
   })
 
   test("throttles connection checks separately for staff", async () => {

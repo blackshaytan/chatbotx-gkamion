@@ -14,6 +14,8 @@ import type { ExternalAgentModel } from "@chatbotx.io/database/types"
 import { encryptUtils } from "@chatbotx.io/encryption"
 import { distributedStore, withCache } from "@chatbotx.io/redis"
 import { BaseService } from "../base.service"
+import type { ChatAgentChannel } from "../chat/direct-key"
+import { chatService } from "../chat/service"
 import { ChatbotXException, notFoundException } from "../errors"
 import { createHermesClient } from "../external-agent/hermes-client"
 import {
@@ -80,6 +82,34 @@ const tokenHasChats = async (workspaceId: string, tokenId: string | null) => {
 }
 
 export class StaffAssistantService extends BaseService {
+  async resolveAgentChannel(input: {
+    workspaceId: string
+    tokenId: string
+    tokenName: string
+  }): Promise<ChatAgentChannel> {
+    const settings = await this.get(input.workspaceId)
+    if (settings?.apiTokenId === input.tokenId && settings.botName) {
+      return { kind: "staff", title: settings.botName }
+    }
+    return { kind: "token", id: input.tokenId, label: input.tokenName }
+  }
+
+  async openForEmployee(input: { workspaceId: string; userId: string }) {
+    const settings = await this.get(input.workspaceId)
+    if (!(settings?.available && settings.botName)) {
+      throw new ChatbotXException(
+        "Staff assistant is unavailable",
+        "staffAssistantUnavailable",
+        400,
+      )
+    }
+    return await chatService.openAgentChannel({
+      workspaceId: input.workspaceId,
+      userId: input.userId,
+      channel: { kind: "staff", title: settings.botName },
+    })
+  }
+
   async get(workspaceId: string): Promise<StaffAssistantSettings | null> {
     const settings = await withCache(
       `externalAgent:settings:${workspaceId}:staff`,
@@ -119,50 +149,53 @@ export class StaffAssistantService extends BaseService {
     if ("inboxIds" in input) {
       throw badRequest("Staff assistant does not support inboxes")
     }
-    const existing = await externalAgentRepository.findByWorkspace(
-      workspaceId,
-      "staff",
-    )
-    const baseUrl =
-      input.baseUrl === undefined
-        ? existing?.baseUrl
-        : normalizeExternalAgentBaseUrl(input.baseUrl)
-    const botName =
-      input.botName === undefined
-        ? (existing?.botName ?? null)
-        : normalizeExternalAgentBotName(input.botName)
-    const maxRunMinutes =
-      input.maxRunMinutes ??
-      existing?.maxRunMinutes ??
-      EXTERNAL_AGENT_DEFAULT_MAX_RUN_MINUTES
-    if (
-      !Number.isInteger(maxRunMinutes) ||
-      maxRunMinutes < 1 ||
-      maxRunMinutes > EXTERNAL_AGENT_MAX_RUN_MINUTES_LIMIT
-    ) {
-      throw badRequest("Invalid maximum run time")
-    }
-    const apiKey = input.apiKey?.trim()
-    const encryptedApiKey = apiKey
-      ? await encryptUtils.encryptObject(
-          externalAgentApiKeySchema.parse({ apiKey }),
-          staffAad(workspaceId),
-        )
-      : existing?.apiKey
-    const apiTokenId =
-      input.apiTokenId === undefined
-        ? (existing?.apiTokenId ?? null)
-        : input.apiTokenId
-    const enabled = input.enabled ?? existing?.enabled ?? false
-    if (
-      !(baseUrl && encryptedApiKey) ||
-      (enabled && !(botName && apiTokenId))
-    ) {
-      throw badRequest(
-        "Base URL and key are required; enabling also requires a name and token",
-      )
-    }
     await db.transaction(async (tx) => {
+      // Serialize first creates as well as updates.
+      await workspaceApiTokenRepository.lockWorkspaceTokens(workspaceId, tx)
+      const existing = await externalAgentRepository.findByWorkspace(
+        workspaceId,
+        "staff",
+        tx,
+      )
+      const baseUrl =
+        input.baseUrl === undefined
+          ? existing?.baseUrl
+          : normalizeExternalAgentBaseUrl(input.baseUrl)
+      const botName =
+        input.botName === undefined
+          ? (existing?.botName ?? null)
+          : normalizeExternalAgentBotName(input.botName)
+      const maxRunMinutes =
+        input.maxRunMinutes ??
+        existing?.maxRunMinutes ??
+        EXTERNAL_AGENT_DEFAULT_MAX_RUN_MINUTES
+      if (
+        !Number.isInteger(maxRunMinutes) ||
+        maxRunMinutes < 1 ||
+        maxRunMinutes > EXTERNAL_AGENT_MAX_RUN_MINUTES_LIMIT
+      ) {
+        throw badRequest("Invalid maximum run time")
+      }
+      const apiKey = input.apiKey?.trim()
+      const encryptedApiKey = apiKey
+        ? await encryptUtils.encryptObject(
+            externalAgentApiKeySchema.parse({ apiKey }),
+            staffAad(workspaceId),
+          )
+        : existing?.apiKey
+      const apiTokenId =
+        input.apiTokenId === undefined
+          ? (existing?.apiTokenId ?? null)
+          : input.apiTokenId
+      const enabled = input.enabled ?? existing?.enabled ?? false
+      if (
+        !(baseUrl && encryptedApiKey) ||
+        (enabled && !(botName && apiTokenId))
+      ) {
+        throw badRequest(
+          "Base URL and key are required; enabling also requires a name and token",
+        )
+      }
       if (apiTokenId && (enabled || input.apiTokenId !== undefined)) {
         const token = await workspaceApiTokenRepository.findScopesForWorkspace(
           { workspaceId, id: apiTokenId, lock: true },
@@ -174,6 +207,12 @@ export class StaffAssistantService extends BaseService {
           )
         }
       }
+      // Token first, then profile: deleting a token uses the same lock order.
+      await externalAgentRepository.findStaffAvailability(
+        workspaceId,
+        tx,
+        "update",
+      )
       await externalAgentRepository.upsert(
         {
           workspaceId,

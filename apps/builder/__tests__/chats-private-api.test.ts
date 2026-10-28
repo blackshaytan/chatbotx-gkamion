@@ -54,8 +54,10 @@ const chatService = {
   uploadAttachment: vi.fn(),
 }
 const workspacePresenceService = { listOnlineMembers: vi.fn() }
+const staffAssistantService = { get: vi.fn(), openForEmployee: vi.fn() }
 vi.mock("@chatbotx.io/business", () => ({
   chatService,
+  staffAssistantService,
   workspacePresenceService,
 }))
 vi.mock("@/features/chats/lib/attachment-url", () => ({
@@ -189,8 +191,60 @@ describe("chats private API", () => {
     expect(chatService.open).not.toHaveBeenCalled()
   })
 
+  test("keeps assistant status and opening private to the member", async () => {
+    staffAssistantService.get.mockResolvedValue({
+      available: true,
+      botName: "Assistant",
+    })
+    await expect(
+      call("GET", "/workspaces/{workspaceId}/chats/assistant-status", {
+        workspaceId: "workspace-1",
+      }),
+    ).resolves.toEqual({ available: true, name: "Assistant" })
+    await expect(
+      call(
+        "GET",
+        "/workspaces/{workspaceId}/chats/assistant-status",
+        { workspaceId: "workspace-1" },
+        true,
+      ),
+    ).resolves.toEqual({ available: false, name: null })
+    await expect(
+      call(
+        "POST",
+        "/workspaces/{workspaceId}/chats/open-assistant",
+        { workspaceId: "workspace-1" },
+        true,
+      ),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" })
+    expect(staffAssistantService.openForEmployee).not.toHaveBeenCalled()
+  })
+
+  test("opens the assistant for the current member through the shared service", async () => {
+    staffAssistantService.openForEmployee.mockResolvedValue({
+      created: true,
+      chat: {
+        id: "1",
+        type: "agent",
+        title: "Assistant",
+        members: [],
+        lastMessageAt: null,
+        lastMessage: null,
+        unreadCount: 0,
+        peerLastReadAt: null,
+      },
+    })
+    await call("POST", "/workspaces/{workspaceId}/chats/open-assistant", {
+      workspaceId: "workspace-1",
+    })
+    expect(staffAssistantService.openForEmployee).toHaveBeenCalledWith({
+      workspaceId: "workspace-1",
+      userId: "member-1",
+    })
+  })
+
   test("protects every private procedure with workspace middleware", () => {
-    expect(capturedProcedures).toHaveLength(11)
+    expect(capturedProcedures).toHaveLength(13)
     expect(capturedProcedures.every((procedure) => procedure.protected)).toBe(
       true,
     )

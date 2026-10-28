@@ -1,7 +1,8 @@
 import {
-  type InternalMessageView,
   type ChatView,
   chatService,
+  type InternalMessageView,
+  staffAssistantService,
   workspacePresenceService,
 } from "@chatbotx.io/business"
 import { ORPCError } from "@orpc/server"
@@ -12,10 +13,7 @@ import {
   withChatAttachmentUrls,
   withSingleChatAttachmentUrls,
 } from "../lib/attachment-url"
-import {
-  deliverChatMessage,
-  publishChatChanged,
-} from "../lib/chat-realtime"
+import { deliverChatMessage, publishChatChanged } from "../lib/chat-realtime"
 import { withChatUrl, withChatUrls } from "../lib/chat-url"
 import { sessionChatActor, sessionChatScope } from "../lib/session"
 import {
@@ -122,10 +120,7 @@ const chatMessagesPrivateRouter = {
         memberUserIds: result.memberUserIds,
         message: result.message,
       })
-      return await toPrivateMessage(
-        input.workspaceId,
-        result.message,
-      )
+      return await toPrivateMessage(input.workspaceId, result.message)
     }),
   update: authorizedAPI
     .route({
@@ -151,10 +146,7 @@ const chatMessagesPrivateRouter = {
         threadId: input.id,
         memberUserIds: result.memberUserIds,
       })
-      return await toPrivateMessage(
-        input.workspaceId,
-        result.message,
-      )
+      return await toPrivateMessage(input.workspaceId, result.message)
     }),
   delete: authorizedAPI
     .route({
@@ -183,6 +175,51 @@ const chatMessagesPrivateRouter = {
 }
 
 export const chatsAuthenticatedAPI = {
+  assistantStatus: authorizedAPI
+    .route({
+      method: "GET",
+      path: "/workspaces/{workspaceId}/chats/assistant-status",
+      summary: "Get assistant availability",
+      tags,
+    })
+    .input(chatUnreadTotalPrivateRequest)
+    .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
+    .output(z.object({ available: z.boolean(), name: z.string().nullable() }))
+    .handler(async ({ context, input }) => {
+      if (context.isSupportSession) {
+        return { available: false, name: null }
+      }
+      const settings = await staffAssistantService.get(input.workspaceId)
+      return {
+        available: settings?.available ?? false,
+        name: settings?.botName ?? null,
+      }
+    }),
+  openAssistant: authorizedAPI
+    .route({
+      method: "POST",
+      path: "/workspaces/{workspaceId}/chats/open-assistant",
+      summary: "Open assistant chat",
+      successStatus: 201,
+      tags,
+    })
+    .input(chatUnreadTotalPrivateRequest)
+    .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
+    .output(z.object({ chat: chatPrivateResource, created: z.boolean() }))
+    .handler(async ({ context, input }) => {
+      forbiddenForSupport(context)
+      const result = await staffAssistantService.openForEmployee({
+        workspaceId: input.workspaceId,
+        userId: context.user.id,
+      })
+      return {
+        created: result.created,
+        chat: await toPrivateChat(
+          input.workspaceId,
+          await withChatUrl(input.workspaceId, result.chat),
+        ),
+      }
+    }),
   list: authorizedAPI
     .route({
       method: "GET",

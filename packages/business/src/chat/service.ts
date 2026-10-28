@@ -6,14 +6,19 @@ import {
 } from "@chatbotx.io/database/partials"
 import { chatRepository } from "@chatbotx.io/database/repositories"
 import { BaseService } from "../base.service"
-import { notFoundException, validationException } from "../errors"
-import { notificationService } from "../notification/service"
+import {
+  ChatbotXException,
+  notFoundException,
+  validationException,
+} from "../errors"
 import {
   resolveChatAttachments,
   uploadChatAttachment,
 } from "../internal-thread/attachments"
 import { internalThreadService } from "../internal-thread/service"
 import { toInternalMessageView } from "../internal-thread/view"
+import { notificationService } from "../notification/service"
+import { isStaffAssistantAvailable } from "../staff-assistant/availability"
 import type { ChatScope } from "./actor"
 import { actorParticipantUserId, type ChatActor, toTaskActor } from "./actor"
 import {
@@ -25,6 +30,18 @@ import {
 import { type ChatView, toChatView } from "./view"
 
 class ChatService extends BaseService {
+  async openAgentChannel(input: {
+    workspaceId: string
+    userId: string
+    channel: ChatAgentChannel
+  }): Promise<{ chat: ChatView; created: boolean }> {
+    return await this.open({
+      workspaceId: input.workspaceId,
+      userIds: [input.userId],
+      channel: input.channel,
+    })
+  }
+
   async open(input: {
     workspaceId: string
     userIds: string[]
@@ -224,7 +241,19 @@ class ChatService extends BaseService {
       items: input.attachments.map(({ key, name }) => ({ key, name })),
     })
     const message = await db.transaction(async (tx) => {
-      await this.requireChat({ ...input, userId, tx })
+      const chat = await this.requireChat({ ...input, userId, tx })
+      if (
+        userId &&
+        chat.thread.type === "agent" &&
+        chat.thread.directKey === `agent:${userId}:staff` &&
+        !(await isStaffAssistantAvailable(input.workspaceId, tx))
+      ) {
+        throw new ChatbotXException(
+          "Staff assistant is unavailable",
+          "staffAssistantUnavailable",
+          400,
+        )
+      }
       const members = await chatRepository.listMembers({
         workspaceId: input.workspaceId,
         threadIds: [input.threadId],

@@ -75,6 +75,31 @@ const replaceInboxLinks = async (
 }
 
 export const externalAgentRepository = {
+  /** Lock the profile while authorizing a staff-chat message in a transaction. */
+  async findStaffAvailability(
+    workspaceId: string,
+    tx: DatabaseClient,
+    lock: "share" | "update" = "share",
+  ) {
+    const [row] = await tx
+      .select({
+        enabled: externalAgentModel.enabled,
+        botName: externalAgentModel.botName,
+        baseUrl: externalAgentModel.baseUrl,
+        apiKey: externalAgentModel.apiKey,
+        apiTokenId: externalAgentModel.apiTokenId,
+      })
+      .from(externalAgentModel)
+      .where(
+        and(
+          eq(externalAgentModel.workspaceId, workspaceId),
+          eq(externalAgentModel.purpose, "staff"),
+        ),
+      )
+      .for(lock)
+    return row ?? null
+  },
+
   async findByWorkspace(
     workspaceId: string,
     purpose: "client" | "staff",
