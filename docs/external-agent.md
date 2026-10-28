@@ -175,6 +175,11 @@ This routing decides only the automated-response route. Other automations that r
 
 These steps are done on the Hermes host, not in this repository. They come from the design record (section 9) and were not verified by the code. The ChatbotX side only needs the base URL and the key.
 
+This configuration is for the **client-facing** agent. The staff assistant
+requires its own Hermes profile, loopback port, API key, workspace token and
+privacy instructions; see [Staff assistant](staff-chat.md#staff-assistant).
+Do not reuse the client profile or token for staff chats.
+
 - **`api_server`** in the `assistant` profile (`/opt/hermes-data/profiles/assistant/config.yaml`): `enabled: true`, `extra.host: 127.0.0.1`, a free port (the design uses 8647), and `extra.key` set to a new key. The key lives in Hermes' secrets and in ChatbotX's encrypted settings; never print it.
 - **Toolsets** for `api_server`: `gkamion`, `memory`, `chatbotx`. No `terminal`.
 - **MCP server `chatbotx`** with its own workspace token. Give it only the scopes it needs: `inbox` for `externalAgent.handover`, plus the inbox and contact scopes that Hermes needs to read context. It must not carry `settings`, and it cannot create tokens (invariant 23).
