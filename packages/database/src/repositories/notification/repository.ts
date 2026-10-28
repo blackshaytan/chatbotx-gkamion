@@ -1,3 +1,4 @@
+import { createId } from "@chatbotx.io/utils"
 import {
   and,
   asc,
@@ -64,12 +65,12 @@ class NotificationRepository {
     const values = sql.join(
       rows.map(
         (row) =>
-          sql`(${row.workspaceId}::bigint, ${row.userId}::bigint, ${row.type}, 'chat', ${row.entityId}::bigint, ${JSON.stringify(row.payload)}::jsonb)`,
+          sql`(${createId()}::bigint, ${row.workspaceId}::bigint, ${row.userId}::bigint, ${row.type}, 'chat', ${row.entityId}::bigint, ${JSON.stringify(row.payload)}::jsonb)`,
       ),
       sql`, `,
     )
     const result = await tx.execute<NotificationModel>(sql`
-      INSERT INTO "Notification" ("workspaceId", "userId", "type", "entityType", "entityId", "payload")
+      INSERT INTO "Notification" ("id", "workspaceId", "userId", "type", "entityType", "entityId", "payload")
       VALUES ${values}
       ON CONFLICT ("workspaceId", "userId", "entityId") WHERE "entityType" = 'chat' AND "readAt" IS NULL
       DO UPDATE SET
