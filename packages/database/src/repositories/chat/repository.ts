@@ -6,6 +6,7 @@ import {
   desc,
   eq,
   exists,
+  gte,
   inArray,
   isNotNull,
   isNull,
@@ -30,6 +31,63 @@ export const chatMessagePageOrder = (props: {
 const chatTypes = ["direct", "agent"] as const
 
 class ChatRepository {
+  async listRecentStaffMessages(props: {
+    workspaceId: string
+    threadId: string
+    since: Date
+    limit: number
+    tx?: DatabaseClient
+  }): Promise<InternalMessageModel[]> {
+    const tx = props.tx ?? db
+    const rows = await tx
+      .select()
+      .from(internalMessageModel)
+      .where(
+        and(
+          eq(internalMessageModel.workspaceId, props.workspaceId),
+          eq(internalMessageModel.threadId, props.threadId),
+          gte(internalMessageModel.createdAt, props.since),
+        ),
+      )
+      .orderBy(
+        desc(internalMessageModel.createdAt),
+        desc(internalMessageModel.id),
+      )
+      .limit(props.limit)
+    return rows.reverse()
+  }
+
+  async listStaffEmployeeMessagesAfter(props: {
+    workspaceId: string
+    threadId: string
+    userId: string
+    since: Date
+    cursorAt: Date
+    cursorMessageId: string | null
+    limit: number
+    tx?: DatabaseClient
+  }): Promise<InternalMessageModel[]> {
+    const tx = props.tx ?? db
+    return await tx
+      .select()
+      .from(internalMessageModel)
+      .where(
+        and(
+          eq(internalMessageModel.workspaceId, props.workspaceId),
+          eq(internalMessageModel.threadId, props.threadId),
+          eq(internalMessageModel.authorUserId, props.userId),
+          eq(internalMessageModel.kind, "comment"),
+          isNull(internalMessageModel.deletedAt),
+          gte(internalMessageModel.createdAt, props.since),
+          props.cursorMessageId
+            ? sql`(${internalMessageModel.createdAt}, ${internalMessageModel.id}) > (${props.cursorAt}, ${props.cursorMessageId}::bigint)`
+            : sql`${internalMessageModel.createdAt} > ${props.cursorAt}`,
+        ),
+      )
+      .orderBy(internalMessageModel.createdAt, internalMessageModel.id)
+      .limit(props.limit)
+  }
+
   async getOrCreate(props: {
     workspaceId: string
     type: ChatThreadType
