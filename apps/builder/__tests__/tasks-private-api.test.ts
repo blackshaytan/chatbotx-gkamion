@@ -114,6 +114,21 @@ vi.mock("@chatbotx.io/business", () => ({
   resolveTenantSettings,
   onNotificationsCreated: vi.fn(),
   sendToWorkspaceMember: vi.fn(),
+  canDeleteTask: ({
+    actor,
+    task,
+  }: {
+    actor: {
+      kind: string
+      isOwner?: boolean
+      isWorkspaceAdmin?: boolean
+      userId?: string
+    }
+    task: { createdByUserId: string | null }
+  }) =>
+    actor.kind !== "user" ||
+    Boolean(actor.isOwner || actor.isWorkspaceAdmin) ||
+    task.createdByUserId === actor.userId,
 }))
 
 await import("@/features/tasks/api/private")
@@ -234,7 +249,12 @@ describe("handlers", () => {
     expect(taskService.create).toHaveBeenCalledWith(
       expect.objectContaining({
         workspaceId: "ws-1",
-        actor: { kind: "user", userId: "member-7", isOwner: false },
+        actor: {
+          kind: "user",
+          userId: "member-7",
+          isOwner: false,
+          isWorkspaceAdmin: false,
+        },
         title: "Follow up",
         assignee: { type: "user", userId: "member-7" },
         accessScope: { restrictToAssignedUserId: "member-7" },
@@ -258,6 +278,19 @@ describe("handlers", () => {
     )
   })
 
+  test("get hides delete for a member who did not create the task", async () => {
+    taskService.get.mockResolvedValue({
+      id: "t-1",
+      workspaceId: "ws-1",
+      createdByUserId: "someone-else",
+    })
+    const task = (await call("GET", "/workspaces/{workspaceId}/tasks/{id}", {
+      workspaceId: "ws-1",
+      id: "t-1",
+    })) as { canDelete: boolean }
+    expect(task.canDelete).toBe(false)
+  })
+
   test("take assigns to the signed-in member", async () => {
     taskService.take.mockResolvedValue({ id: "t-1" })
     await call("POST", "/workspaces/{workspaceId}/tasks/{id}/take", {
@@ -268,7 +301,12 @@ describe("handlers", () => {
       workspaceId: "ws-1",
       id: "t-1",
       userId: "member-7",
-      actor: { kind: "user", userId: "member-7", isOwner: false },
+      actor: {
+        kind: "user",
+        userId: "member-7",
+        isOwner: false,
+        isWorkspaceAdmin: false,
+      },
       accessScope: { restrictToAssignedUserId: "member-7" },
     })
   })

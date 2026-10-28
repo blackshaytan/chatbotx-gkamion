@@ -247,6 +247,11 @@ export const taskPrivateResource = taskPublicResource.extend({
     .int()
     .default(0)
     .describe("Unread comments for the signed-in member (private API only)."),
+  canDelete: z
+    .boolean()
+    .describe(
+      "Whether this signed-in member may delete the task: its creator, the workspace owner, or a member with the superAdmin permission.",
+    ),
 })
 
 export const listTasksPrivateResponse = publicListResponse(taskPrivateResource)

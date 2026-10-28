@@ -12,7 +12,7 @@ Workspace members, API tokens (for example the Hermes agent) and, later, flows a
 ## Rules
 
 - Everyone in the workspace sees every task. A member restricted to assigned contacts sees links to other contacts as `{ hidden: true }`.
-- Author, assignee (or any member of the assignee team) and the owner may change a task; only author and owner may delete it. API tokens and flows act with workspace authority.
+- Author, assignee (or any member of the assignee team) and the owner may change a task. Only the author, the workspace owner, and a member with the `superAdmin` permission may delete it. The task card hides **Delete task** for everyone else. API tokens and flows act with workspace authority.
 - Removing a member from the workspace, or deleting a team, hands their tasks to the workspace owner with a `system` feed entry.
 - Due filters `today` / `week` use the workspace time zone.
 

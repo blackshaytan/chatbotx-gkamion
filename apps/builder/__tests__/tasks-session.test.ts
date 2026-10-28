@@ -32,7 +32,27 @@ describe("sessionTaskActor", () => {
         user: { id: "7" },
         workspace: { ownerId: "7" },
       }),
-    ).toEqual({ kind: "user", userId: "7", isOwner: true })
+    ).toEqual({
+      kind: "user",
+      userId: "7",
+      isOwner: true,
+      isWorkspaceAdmin: false,
+    })
+  })
+
+  test("marks a workspace super admin who is not the owner", () => {
+    expect(
+      sessionTaskActor({
+        user: { id: "7" },
+        workspace: { ownerId: "1" },
+        workspaceMember: { permissions: { superAdmin: true } },
+      }),
+    ).toEqual({
+      kind: "user",
+      userId: "7",
+      isOwner: false,
+      isWorkspaceAdmin: true,
+    })
   })
 })
 

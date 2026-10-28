@@ -60,7 +60,7 @@ describe("canModifyTask", () => {
 })
 
 describe("canDeleteTask", () => {
-  test("only author, owner or a non-user actor", () => {
+  test("only author, owner, workspace admin or a non-user actor", () => {
     expect(canDeleteTask({ actor: member("author"), task })).toBe(true)
     expect(canDeleteTask({ actor: member("assignee"), task })).toBe(false)
     expect(
@@ -71,6 +71,17 @@ describe("canDeleteTask", () => {
     ).toBe(true)
     expect(
       canDeleteTask({ actor: { kind: "api", label: "Hermes" }, task }),
+    ).toBe(true)
+    expect(
+      canDeleteTask({
+        actor: {
+          kind: "user",
+          userId: "admin",
+          isOwner: false,
+          isWorkspaceAdmin: true,
+        },
+        task,
+      }),
     ).toBe(true)
   })
 })

@@ -1,5 +1,5 @@
 import "@/features/notifications/lib/notification-realtime"
-import { taskService } from "@chatbotx.io/business"
+import { canDeleteTask, taskService, type TaskActor } from "@chatbotx.io/business"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import { withWorkspaceIdSchema } from "@/features/workspaces/schema/resource"
 import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"
@@ -43,6 +43,14 @@ import {
 } from "../schema/public"
 
 const tags = ["Tasks"]
+
+const withCanDelete = <T extends { createdByUserId: string | null }>(
+  task: T,
+  actor: TaskActor,
+) => ({
+  ...task,
+  canDelete: canDeleteTask({ actor, task }),
+})
 
 const privateListFields = {
   workspaceId: zodBigintAsString(),
@@ -209,6 +217,7 @@ export const tasksAuthenticatedAPI = {
     .output(listTasksPrivateResponse)
     .handler(async ({ context, input }) => {
       const { workspaceId, tab, ...rest } = input
+      const actor = sessionTaskActor(context)
       const page = await taskService.list({
         ...rest,
         ...tabToFilter(tab, context.user.id),
@@ -216,7 +225,11 @@ export const tasksAuthenticatedAPI = {
         accessScope: sessionAccessScope(context),
         viewerUserId: context.user.id,
       })
-      return { ...page, data: await withTaskUrls(workspaceId, page.data) }
+      const data = await withTaskUrls(workspaceId, page.data)
+      return {
+        ...page,
+        data: data.map((task) => withCanDelete(task, actor)),
+      }
     }),
 
   count: authorizedAPI
@@ -248,16 +261,18 @@ export const tasksAuthenticatedAPI = {
     .input(taskIdPathParam.extend(withWorkspaceIdSchema.shape))
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(taskPrivateResource)
-    .handler(async ({ context, input }) =>
-      withTaskUrl(
+    .handler(async ({ context, input }) => {
+      const actor = sessionTaskActor(context)
+      const task = await withTaskUrl(
         await taskService.get({
           workspaceId: input.workspaceId,
           id: input.id,
           accessScope: sessionAccessScope(context),
           viewerUserId: context.user.id,
         }),
-      ),
-    ),
+      )
+      return withCanDelete(task, actor)
+    }),
 
   create: authorizedAPI
     .route({

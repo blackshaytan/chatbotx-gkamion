@@ -6,10 +6,12 @@ import type { TaskTab } from "../schema/public"
 export const sessionTaskActor = (context: {
   user: { id: string }
   workspace: { ownerId: string }
+  workspaceMember?: { permissions: { superAdmin?: boolean } }
 }): TaskActor => ({
   kind: "user",
   userId: context.user.id,
   isOwner: context.workspace.ownerId === context.user.id,
+  isWorkspaceAdmin: context.workspaceMember?.permissions.superAdmin === true,
 })
 
 export const sessionTaskAccessScope = (input: {

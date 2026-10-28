@@ -25,7 +25,10 @@ export const canDeleteTask = (input: {
   task: Pick<TaskModel, "createdByUserId">
 }): boolean => {
   const { actor, task } = input
-  if (actor.kind !== "user" || actor.isOwner) {
+  if (actor.kind !== "user") {
+    return true
+  }
+  if (actor.isOwner || actor.isWorkspaceAdmin) {
     return true
   }
   return task.createdByUserId === actor.userId

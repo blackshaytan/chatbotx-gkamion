@@ -628,35 +628,39 @@ export const TaskDetails = ({
           </time>
         </div>
 
-        <AlertDialog>
-          <AlertDialogTrigger
-            render={
-              <Button type="button" variant="destructive">
-                {t("actions.delete")}
-              </Button>
-            }
-          />
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t("actions.delete")}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {t("deleteConfirm")}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{commonT("actions.cancel")}</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive hover:bg-destructive/90"
-                disabled={deleteTaskMutation.isPending}
-                onClick={() =>
-                  deleteTaskMutation.mutate({ id: task.id, workspaceId })
-                }
-              >
-                {t("actions.delete")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {task.canDelete ? (
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button type="button" variant="destructive">
+                  {t("actions.delete")}
+                </Button>
+              }
+            />
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t("actions.delete")}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t("deleteConfirm")}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>
+                  {commonT("actions.cancel")}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive hover:bg-destructive/90"
+                  disabled={deleteTaskMutation.isPending}
+                  onClick={() =>
+                    deleteTaskMutation.mutate({ id: task.id, workspaceId })
+                  }
+                >
+                  {t("actions.delete")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        ) : null}
       </section>
       <TaskFeed taskId={task.id} workspaceId={workspaceId} />
     </div>

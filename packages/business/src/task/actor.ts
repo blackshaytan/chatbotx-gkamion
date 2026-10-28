@@ -1,6 +1,12 @@
 /** Who performs a task or feed action. API tokens and flows act with workspace authority. */
 export type TaskActor =
-  | { kind: "user"; userId: string; isOwner: boolean }
+  | {
+      kind: "user"
+      userId: string
+      isOwner: boolean
+      /** Workspace `superAdmin` permission, including a platform support session. */
+      isWorkspaceAdmin?: boolean
+    }
   | { kind: "api"; label: string }
   | { kind: "flow"; label: string }
 
