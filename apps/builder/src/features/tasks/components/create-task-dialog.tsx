@@ -50,6 +50,7 @@ type CreateTaskDialogProps = {
     messageId?: string
   }
   defaultDescription?: string
+  descriptionHint?: string
   open?: boolean
   onOpenChange?: (open: boolean) => void
   trigger?: ReactElement
@@ -104,6 +105,7 @@ export const CreateTaskDialog = ({
   workspaceId,
   defaultTargets,
   defaultDescription,
+  descriptionHint,
   open: openProp,
   onOpenChange,
   trigger,
@@ -276,6 +278,9 @@ export const CreateTaskDialog = ({
             ) : null}
             <InputField label={t("fields.title")} name="title" required />
             <TextareaField label={t("fields.description")} name="description" />
+            {descriptionHint ? (
+              <p className="text-muted-foreground text-sm">{descriptionHint}</p>
+            ) : null}
             <ComboboxField
               emptyText={t("empty")}
               label={t("fields.assignee")}

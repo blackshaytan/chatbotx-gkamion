@@ -29,3 +29,18 @@ not provide real-time delivery.
 
 Attachment URLs returned with messages are signed download links. They expire
 after about one hour and authorize only the exact workspace, message, and file.
+
+## Create a task from a chat message
+
+In the signed-in chat UI, the actions for any non-deleted staff message include
+**Create task** when the workspace is writable. The dialog starts with a
+Markdown quote of the message and an author/date attribution. It clearly warns
+that the quote will be visible to every workspace member who can view tasks.
+
+Creating a task does not create a `TaskTarget`, add a link back to the private
+chat, or reveal the chat's existence to other members. This is intentional:
+tasks are workspace-visible while direct chats are private.
+
+There is no extra public operation for this action. An agent can read a message
+with `chats.messages.list` and call `tasks.create` with an equivalent quoted
+description.

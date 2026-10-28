@@ -7,6 +7,11 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useFormatter, useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
+import { CreateTaskDialog } from "@/features/tasks/components/create-task-dialog"
+import {
+  canCreateTaskFromChatMessage,
+  toTaskDescriptionFromChatMessage,
+} from "@/features/tasks/lib/message-quote"
 import { orpc } from "@/lib/orpc/query"
 import { useInvalidateChats } from "../hooks/use-invalidate-chats"
 import { canMutateChat } from "../lib/chat-controls"
@@ -36,6 +41,7 @@ export const ChatsPage = ({
   const invalidateChats = useInvalidateChats()
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState("")
+  const [taskMessageId, setTaskMessageId] = useState<string | null>(null)
   const canCreate = canMutateChat({ isBlocked, isSupportSession })
   const threadRef = useRef<HTMLDivElement>(null)
   const previousScrollHeight = useRef<number | null>(null)
@@ -68,6 +74,7 @@ export const ChatsPage = ({
     ? mergeChatMessagePages(messagePages.data.pages.map((page) => page.data))
     : undefined
   const messageGroups = messages ? groupChatMessages(messages) : []
+  const taskMessage = messages?.find((message) => message.id === taskMessageId)
   const { data: members } = useQuery(
     orpc.workspaceMembersAPI.listWorkspaceMembersAuthenticatedAPI.queryOptions({
       input: { page: 1, perPage: 100, workspaceId },
@@ -246,7 +253,48 @@ export const ChatsPage = ({
                       </a>
                     </div>
                   ))}
-                  {canCreate && message.authorUserId === currentUserId && !message.deleted ? <div className="flex gap-1"><Button onClick={() => { setEditingMessageId(message.id); setEditingText(message.text ?? "") }} size="sm" type="button" variant="ghost">{t("actions.edit")}</Button><Button disabled={deleteMessage.isPending} onClick={() => deleteMessage.mutate({ id: selectedChatId, messageId: message.id, workspaceId })} size="sm" type="button" variant="ghost">{t("actions.delete")}</Button></div> : null}
+                  {canCreate && canCreateTaskFromChatMessage(message) ? (
+                    <div className="flex gap-1">
+                      {message.authorUserId === currentUserId ? (
+                        <>
+                          <Button
+                            onClick={() => {
+                              setEditingMessageId(message.id)
+                              setEditingText(message.text ?? "")
+                            }}
+                            size="sm"
+                            type="button"
+                            variant="ghost"
+                          >
+                            {t("actions.edit")}
+                          </Button>
+                          <Button
+                            disabled={deleteMessage.isPending}
+                            onClick={() =>
+                              deleteMessage.mutate({
+                                id: selectedChatId,
+                                messageId: message.id,
+                                workspaceId,
+                              })
+                            }
+                            size="sm"
+                            type="button"
+                            variant="ghost"
+                          >
+                            {t("actions.delete")}
+                          </Button>
+                        </>
+                      ) : null}
+                      <Button
+                        onClick={() => setTaskMessageId(message.id)}
+                        size="sm"
+                        type="button"
+                        variant="ghost"
+                      >
+                        {t("tasks.actions.createFromMessage")}
+                      </Button>
+                    </div>
+                  ) : null}
                   </article>
                   ))}
                 </div>
@@ -279,6 +327,26 @@ export const ChatsPage = ({
               isSupportSession,
             }) ? (
               <ChatComposer chatId={selectedChatId} workspaceId={workspaceId} />
+            ) : null}
+            {taskMessage ? (
+              <CreateTaskDialog
+                defaultDescription={toTaskDescriptionFromChatMessage({
+                  author: taskMessage.authorLabel ?? t("tasks.chat.unknownAuthor"),
+                  date: format.dateTime(taskMessage.createdAt, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  }),
+                  text: taskMessage.text ?? "",
+                })}
+                descriptionHint={t("tasks.chat.quoteVisibilityHint")}
+                onOpenChange={(open) => {
+                  if (!open) {
+                    setTaskMessageId(null)
+                  }
+                }}
+                open
+                workspaceId={workspaceId}
+              />
             ) : null}
           </>
         ) : null}

@@ -227,6 +227,7 @@ See **`.agents/rules/git.md`** for the full canonical rules (commit format, bran
 - Messenger welcome message flows (publish/rename/delete sync of a flow's starting step to Meta Click-to-Messenger welcome flows, ad-locked behavior, table/jobs/lock): `docs/messenger-welcome-message-flows.md`
 - External AI agent (Hermes answers client chats: run flow, cursor and history, progress messages, handover, failures, settings, Hermes setup): `docs/external-agent.md`
 - Staff tasks (assign tasks to members/teams, task feed, owner hand-over, public `tasks.*` API): `docs/tasks.md`
+- Staff chat (private staff conversations, API scope, task creation from messages): `docs/staff-chat.md`
 
 When unsure, search the codebase for an existing feature that resembles the request and mirror its structure, imports, and error-handling style.
 

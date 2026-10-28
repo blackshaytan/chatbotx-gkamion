@@ -44,6 +44,7 @@ Signed-in staff use the session `tasksAPI` router (same service methods as the p
 - **Contact panel** — **Tasks** block lists open tasks for the contact, **Create** opens the dialog with contact (and conversation when in inbox) prefilled; links open the task card or filtered task list.
 - **Conversation header** — when the active conversation has open tasks, a badge shows the count and links to the filtered Tasks page.
 - **Inbox message menu** — on an **incoming** client message (including comments), the message actions menu includes **Create task**. It opens the create dialog with a markdown **quote** of the message body (truncated to the task description limit) and prefilled links to the contact, conversation, and message. Outgoing messages and webchat preview without inbox context do not show the action. No new public API: the dialog calls existing `tasks.create` with `contactId`, `conversationId`, and `messageId`.
+- **Staff chat message menu** — on any non-deleted staff message, a writable member can choose **Create task**. The description contains a markdown quote plus its author and date, and the dialog warns that the quote is visible to all workspace members. It intentionally creates no `TaskTarget` and no chat link: a direct chat must not be disclosed through a workspace-visible task. Agents use `chats.messages.list` followed by `tasks.create` to achieve the same result.
 
 Lists and feeds refresh after mutations via TanStack Query invalidation (`useInvalidateTasks`) and **realtime** events (below).
 

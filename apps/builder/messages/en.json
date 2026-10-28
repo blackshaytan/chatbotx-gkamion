@@ -9298,6 +9298,10 @@
       "addWatcher": "Add watcher",
       "removeWatcher": "Remove watcher {name}"
     },
+    "chat": {
+      "quoteVisibilityHint": "A quote from this chat will be visible to all workspace members.",
+      "unknownAuthor": "Unknown user"
+    },
     "empty": "No tasks found",
     "deleteConfirm": "Are you sure you want to delete this task?",
     "feed": {
