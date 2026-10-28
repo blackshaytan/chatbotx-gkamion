@@ -60,6 +60,26 @@ checklist in `docs/superpowers/specs/2026-10-27-staff-chat-design.md` §13.11.
 The staff assistant database migration and coordinated builder/worker release
 must be approved before applying them to production.
 
+### Activation checklist
+
+1. Create a separate `staff` Hermes profile with `api_server` bound to a free
+   loopback port and a new API key. Enable the `memory` and `chatbotx` toolsets;
+   leave `terminal` disabled. Run it as a separate service with restart on
+   failure and verify that its port is not exposed on external interfaces.
+2. A workspace super administrator creates a dedicated token with an explicit
+   `chats` scope and any other scopes required for the intended work. Avoid
+   granting `settings` unless necessary. Configure that same token in the staff
+   profile's ChatbotX MCP server and select its id in the staff assistant
+   integration settings. Do not copy the client agent's token.
+3. Set the profile's memory and privacy rules described above, including the
+   instruction to return a run's answer instead of posting a duplicate chat
+   message. Configure the Hermes origin and write-only API key in the staff
+   assistant settings, enable the integration, and run its connection test.
+4. Verify a proactive assistant message and an employee reply arrive in the
+   same chat, including the typing indicator and final response. Repeat with a
+   second employee to verify separate chats and sessions. Never include token
+   values or API keys in logs or the verification report.
+
 ## Create a task from a chat message
 
 In the signed-in chat UI, the actions for any non-deleted staff message include
