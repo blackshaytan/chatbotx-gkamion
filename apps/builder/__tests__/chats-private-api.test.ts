@@ -54,7 +54,11 @@ const chatService = {
   uploadAttachment: vi.fn(),
 }
 const workspacePresenceService = { listOnlineMembers: vi.fn() }
-const staffAssistantService = { get: vi.fn(), openForEmployee: vi.fn() }
+const staffAssistantService = {
+  get: vi.fn(),
+  openForEmployee: vi.fn(),
+  enqueueReplyIfNeeded: vi.fn(),
+}
 vi.mock("@chatbotx.io/business", () => ({
   chatService,
   staffAssistantService,
@@ -240,6 +244,25 @@ describe("chats private API", () => {
     expect(staffAssistantService.openForEmployee).toHaveBeenCalledWith({
       workspaceId: "workspace-1",
       userId: "member-1",
+    })
+  })
+
+  test("schedules an assistant reply after saving the member message", async () => {
+    chatService.send.mockResolvedValue({
+      message: { id: "message-1" },
+      memberUserIds: ["member-1"],
+    })
+    await call("POST", "/workspaces/{workspaceId}/chats/{id}/messages", {
+      workspaceId: "workspace-1",
+      id: "chat-1",
+      text: "Hello",
+      attachments: [],
+    })
+    expect(staffAssistantService.enqueueReplyIfNeeded).toHaveBeenCalledWith({
+      workspaceId: "workspace-1",
+      threadId: "chat-1",
+      userId: "member-1",
+      messageId: "message-1",
     })
   })
 

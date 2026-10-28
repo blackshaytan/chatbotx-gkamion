@@ -24,9 +24,12 @@ export const AIJobAction = {
   processStoryMentionAutomation: "processStoryMentionAutomation",
   externalAgentReply: "externalAgentReply",
   externalAgentWatch: "externalAgentWatch",
+  staffAssistantReply: "staffAssistantReply",
+  staffAssistantWatch: "staffAssistantWatch",
 } as const
 
 const EXTERNAL_AGENT_REPLY_DELAY_MS = 5000
+export const STAFF_ASSISTANT_REPLY_DELAY_MS = 1500
 
 export const aiJobSummarizeConversationDataSchema = z.object({
   conversationId: z.string().min(1),
@@ -157,6 +160,19 @@ const aiJobExternalAgentWatchSchema = z.object({
   }),
 })
 
+const staffAssistantJobDataSchema = z.object({
+  workspaceId: z.string().min(1),
+  threadId: z.string().min(1),
+})
+const aiJobStaffAssistantReplySchema = z.object({
+  type: z.literal(AIJobAction.staffAssistantReply),
+  data: staffAssistantJobDataSchema.extend({ messageId: z.string().min(1) }),
+})
+const aiJobStaffAssistantWatchSchema = z.object({
+  type: z.literal(AIJobAction.staffAssistantWatch),
+  data: staffAssistantJobDataSchema.extend({ runId: z.string().min(1) }),
+})
+
 export const aiJobDataSchema = z.discriminatedUnion("type", [
   aiJobProcessFileSchema,
   aiJobProcessPendingEmbeddingSchema,
@@ -170,6 +186,8 @@ export const aiJobDataSchema = z.discriminatedUnion("type", [
   aiJobProcessStoryMentionAutomationSchema,
   aiJobExternalAgentReplySchema,
   aiJobExternalAgentWatchSchema,
+  aiJobStaffAssistantReplySchema,
+  aiJobStaffAssistantWatchSchema,
 ])
 
 export type AIJobData = z.infer<typeof aiJobDataSchema>
@@ -208,6 +226,12 @@ export type AIJobExternalAgentWatch = z.infer<
 >
 export type ExternalAgentReplyData = AIJobExternalAgentReply["data"]
 export type ExternalAgentWatchData = AIJobExternalAgentWatch["data"]
+export type StaffAssistantReplyData = z.infer<
+  typeof aiJobStaffAssistantReplySchema
+>["data"]
+export type StaffAssistantWatchData = z.infer<
+  typeof aiJobStaffAssistantWatchSchema
+>["data"]
 
 export const aiAgentQueue = isNoRedisEnv()
   ? fakeQueue
@@ -252,6 +276,43 @@ export const enqueueExternalAgentWatch = (
     { type: AIJobAction.externalAgentWatch, data },
     {
       jobId: `externalAgentWatch-${data.conversationId}-${data.runId}-${Date.now()}`,
+      delay,
+      attempts: 3,
+      backoff: { type: "exponential", delay: 10_000 },
+      removeOnComplete: true,
+      removeOnFail: 100,
+    },
+  )
+
+export const enqueueStaffAssistantReply = (data: StaffAssistantReplyData) =>
+  aiAgentQueue.add(
+    AIJobAction.staffAssistantReply,
+    { type: AIJobAction.staffAssistantReply, data },
+    {
+      delay: STAFF_ASSISTANT_REPLY_DELAY_MS,
+      deduplication: {
+        id: `staffAssistantReply-${data.threadId}`,
+        ttl: STAFF_ASSISTANT_REPLY_DELAY_MS,
+        extend: true,
+        replace: true,
+        keepLastIfActive: true,
+      },
+      attempts: 4,
+      backoff: { type: "exponential", delay: 30_000 },
+      removeOnComplete: true,
+      removeOnFail: 100,
+    },
+  )
+
+export const enqueueStaffAssistantWatch = (
+  data: StaffAssistantWatchData,
+  delay = 0,
+) =>
+  aiAgentQueue.add(
+    AIJobAction.staffAssistantWatch,
+    { type: AIJobAction.staffAssistantWatch, data },
+    {
+      jobId: `staffAssistantWatch-${data.threadId}-${encodeURIComponent(data.runId)}-${Date.now()}`,
       delay,
       attempts: 3,
       backoff: { type: "exponential", delay: 10_000 },

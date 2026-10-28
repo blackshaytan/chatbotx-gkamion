@@ -120,6 +120,12 @@ const chatMessagesPrivateRouter = {
         memberUserIds: result.memberUserIds,
         message: result.message,
       })
+      await staffAssistantService.enqueueReplyIfNeeded({
+        workspaceId: input.workspaceId,
+        threadId: input.id,
+        userId: context.user.id,
+        messageId: result.message.id,
+      })
       return await toPrivateMessage(input.workspaceId, result.message)
     }),
   update: authorizedAPI

@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
   publish: vi.fn(),
   isMember: vi.fn(),
   sendToMember: vi.fn(),
+  enqueue: vi.fn(),
 }))
 vi.mock("@chatbotx.io/database/client", () => ({
   db: { transaction: mocks.transaction },
@@ -50,6 +51,9 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
 }))
 vi.mock("@chatbotx.io/encryption", () => ({
   encryptUtils: { encryptObject: mocks.encrypt, decryptObject: mocks.decrypt },
+}))
+vi.mock("@chatbotx.io/worker-config", () => ({
+  enqueueStaffAssistantReply: mocks.enqueue,
 }))
 vi.mock("@chatbotx.io/redis", () => ({
   withCache: mocks.withCache,
@@ -222,6 +226,27 @@ test("typing is delivered only to the real member of this staff chat", async () 
     typing: true,
   })
   expect(mocks.sendToMember).not.toHaveBeenCalled()
+})
+
+test("only enqueues replies for a matching staff chat", async () => {
+  const input = {
+    workspaceId: "ws",
+    threadId: "thread",
+    userId: "user",
+    messageId: "message",
+  }
+  await staffAssistantService.enqueueReplyIfNeeded(input)
+  expect(mocks.enqueue).toHaveBeenCalledWith({
+    workspaceId: "ws",
+    threadId: "thread",
+    messageId: "message",
+  })
+  mocks.enqueue.mockClear()
+  mocks.findChat.mockResolvedValue({
+    thread: { type: "agent", directKey: "agent:user:token:other" },
+  })
+  await staffAssistantService.enqueueReplyIfNeeded(input)
+  expect(mocks.enqueue).not.toHaveBeenCalled()
 })
 
 describe("staff assistant settings", () => {

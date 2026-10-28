@@ -38,16 +38,21 @@ export type ExternalAgentConversationContext = {
   contactInbox: ContactInboxModel
 }
 
-export const withExternalAgentLock = async <T>(
-  conversationId: string,
+export const withRunLock = async <T>(
+  key: string,
   fn: () => Promise<T>,
 ): Promise<T> =>
   await distributedLock.runExclusive({
-    key: `externalAgent:${conversationId}`,
+    key,
     timeoutInSeconds: LOCK_TIMEOUT_SECONDS,
     retryTimeoutInSeconds: LOCK_RETRY_TIMEOUT_SECONDS,
     fn,
   })
+
+export const withExternalAgentLock = async <T>(
+  conversationId: string,
+  fn: () => Promise<T>,
+): Promise<T> => await withRunLock(`externalAgent:${conversationId}`, fn)
 
 /** BullMQ rejects custom job ids that contain `:`. */
 export const toJobIdPart = (value: string): string =>

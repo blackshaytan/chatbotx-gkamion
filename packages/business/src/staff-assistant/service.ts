@@ -10,6 +10,7 @@ import {
 } from "@chatbotx.io/database/partials"
 import {
   chatRepository,
+  type ExternalAgentChatStatePatch,
   externalAgentChatStateRepository,
   externalAgentRepository,
   internalThreadRepository,
@@ -19,6 +20,7 @@ import type { ExternalAgentModel } from "@chatbotx.io/database/types"
 import { encryptUtils } from "@chatbotx.io/encryption"
 import { RealtimeEventType } from "@chatbotx.io/partysocket-config"
 import { distributedStore, withCache } from "@chatbotx.io/redis"
+import { enqueueStaffAssistantReply } from "@chatbotx.io/worker-config"
 import { BaseService } from "../base.service"
 import type { ChatAgentChannel } from "../chat/direct-key"
 import { chatService } from "../chat/service"
@@ -96,6 +98,66 @@ const tokenHasChats = async (workspaceId: string, tokenId: string | null) => {
 }
 
 export class StaffAssistantService extends BaseService {
+  async enqueueReplyIfNeeded(input: {
+    workspaceId: string
+    threadId: string
+    userId: string
+    messageId: string
+  }): Promise<void> {
+    try {
+      const chat = await chatRepository.findAccessible(input)
+      if (
+        chat?.thread.type !== "agent" ||
+        chat.thread.directKey !== `agent:${input.userId}:staff` ||
+        !(await isStaffAssistantAvailable(input.workspaceId))
+      ) {
+        return
+      }
+      await enqueueStaffAssistantReply({
+        workspaceId: input.workspaceId,
+        threadId: input.threadId,
+        messageId: input.messageId,
+      })
+    } catch (err) {
+      logger.error(
+        { err, workspaceId: input.workspaceId, threadId: input.threadId },
+        "Staff assistant: unable to enqueue reply",
+      )
+    }
+  }
+
+  async findRunState(input: { workspaceId: string; threadId: string }) {
+    return await externalAgentChatStateRepository.find(input)
+  }
+
+  async saveRunState(input: {
+    workspaceId: string
+    threadId: string
+    values: ExternalAgentChatStatePatch
+  }): Promise<void> {
+    const previous = await externalAgentChatStateRepository.find(input)
+    await externalAgentChatStateRepository.upsert({
+      ...previous,
+      ...input.values,
+      workspaceId: input.workspaceId,
+      threadId: input.threadId,
+      includeHistory:
+        input.values.includeHistory ?? previous?.includeHistory ?? true,
+      lastEventSeq: input.values.lastEventSeq ?? previous?.lastEventSeq ?? -1,
+      failureCount: input.values.failureCount ?? previous?.failureCount ?? 0,
+      updatedAt: new Date(),
+    })
+  }
+
+  async patchRunState(input: {
+    workspaceId: string
+    threadId: string
+    values: ExternalAgentChatStatePatch
+    expectedRunId?: string
+  }): Promise<number> {
+    return await externalAgentChatStateRepository.patch(input)
+  }
+
   async publishTyping(input: {
     workspaceId: string
     threadId: string
@@ -418,6 +480,23 @@ export class StaffAssistantService extends BaseService {
       agent,
       client: createHermesClient({ baseUrl: agent.baseUrl, apiKey }),
     }
+  }
+
+  /** Used only to stop a run after the profile is disabled or unbound. */
+  async getClientForWorkspace(workspaceId: string) {
+    const agent = await externalAgentRepository.findByWorkspace(
+      workspaceId,
+      "staff",
+    )
+    if (!agent) {
+      return null
+    }
+    const { apiKey } = await encryptUtils.decryptObject(
+      agent.apiKey,
+      externalAgentApiKeySchema,
+      staffAad(workspaceId),
+    )
+    return createHermesClient({ baseUrl: agent.baseUrl, apiKey })
   }
 
   async test(workspaceId: string): Promise<ExternalAgentCheckResult> {

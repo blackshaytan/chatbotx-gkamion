@@ -38,6 +38,8 @@ import { processExternalAgentWatch } from "./handlers/external-agent-watch"
 import { processConversationSource } from "./handlers/process-conversation-source"
 import { processConversationSourceEmbedding } from "./handlers/process-conversation-source-embedding"
 import { processPendingEmbedding } from "./handlers/process-pending-embeddings"
+import { processStaffAssistantReply } from "./handlers/staff-assistant-reply"
+import { processStaffAssistantWatch } from "./handlers/staff-assistant-watch"
 import { handleSummarizeConversation } from "./handlers/summarize-conversation"
 
 async function processAutomatedResponseWithWebhookContext(
@@ -141,6 +143,20 @@ async function startAIAgentWorker() {
             case AIJobAction.externalAgentWatch:
               await deferOnLockContention(job, token, () =>
                 processExternalAgentWatch(jobData.data, {
+                  isFinalAttempt: isFinalAttempt(job),
+                }),
+              )
+              return
+            case AIJobAction.staffAssistantReply:
+              await deferOnLockContention(job, token, () =>
+                processStaffAssistantReply(jobData.data, {
+                  isFinalAttempt: isFinalAttempt(job),
+                }),
+              )
+              return
+            case AIJobAction.staffAssistantWatch:
+              await deferOnLockContention(job, token, () =>
+                processStaffAssistantWatch(jobData.data, {
                   isFinalAttempt: isFinalAttempt(job),
                 }),
               )

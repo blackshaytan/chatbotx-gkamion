@@ -10,8 +10,8 @@ const LOOKBACK_MS = 30 * 24 * 60 * 60 * 1000
 const INITIAL_MESSAGE_LIMIT = 30
 const PENDING_MESSAGE_LIMIT = 100
 
-/** Load only the one real member of this staff chat, with no support-session access. */
-export const loadStaffAssistantTurn = async (input: {
+/** Resolve the sole stored participant without synthesizing support access. */
+export const findStaffChatParticipant = async (input: {
   workspaceId: string
   threadId: string
 }) => {
@@ -24,11 +24,19 @@ export const loadStaffAssistantTurn = async (input: {
     threadIds: [input.threadId],
   })
   const member = members[0]
-  if (
-    members.length !== 1 ||
-    !member?.isWorkspaceMember ||
-    chat.thread.directKey !== `agent:${member.userId}:staff`
-  ) {
+  if (members.length !== 1 || !member || chat.thread.directKey !== `agent:${member.userId}:staff`) {
+    return null
+  }
+  return member
+}
+
+/** Load only the one real member of this staff chat, with no support-session access. */
+export const loadStaffAssistantTurn = async (input: {
+  workspaceId: string
+  threadId: string
+}) => {
+  const member = await findStaffChatParticipant(input)
+  if (!member?.isWorkspaceMember) {
     return null
   }
   const membership = await workspaceMemberService.findMembership({
