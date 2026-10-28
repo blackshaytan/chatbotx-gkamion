@@ -8,6 +8,8 @@ import {
 
 export type TaskNotificationPreferences = Record<TaskNotificationType, boolean>
 export type ChatNotificationPreferences = Record<ChatNotificationType, boolean>
+export type NotificationPreferences = TaskNotificationPreferences &
+  ChatNotificationPreferences
 
 export const isTaskNotificationEnabled = (
   notificationTypes: Partial<WorkspaceMemberNotificationTypes>,

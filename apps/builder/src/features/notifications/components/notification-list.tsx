@@ -59,6 +59,8 @@ type NotificationListProps = {
   workspaceId: string
 }
 
+type TaskNotificationItem = Extract<NotificationItem, { taskId: string }>
+
 export const NotificationList = ({
   items,
   loading,
@@ -85,7 +87,7 @@ export const NotificationList = ({
     return item.payload.actorLabel ?? t("system")
   }
 
-  const resolveTextParams = (item: NotificationItem) => {
+  const resolveTextParams = (item: TaskNotificationItem) => {
     const from = isTaskStatus(item.payload.from)
       ? tasksT(statusLabelKeyByStatus[item.payload.from])
       : (item.payload.from ?? "")

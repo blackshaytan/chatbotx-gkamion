@@ -1,4 +1,5 @@
 import {
+  type InternalMessageView,
   type ChatView,
   chatService,
   workspacePresenceService,
@@ -46,7 +47,7 @@ const forbiddenForSupport = (context: { isSupportSession?: boolean }) => {
 
 const toPrivateMessage = async (
   workspaceId: string,
-  message: Parameters<typeof withSingleChatAttachmentUrls>[1],
+  message: InternalMessageView,
 ) => await withSingleChatAttachmentUrls(workspaceId, message)
 
 const toPrivateChat = async (
@@ -297,7 +298,7 @@ export const chatsAuthenticatedAPI = {
     .output(z.object({ changed: z.boolean() }))
     .handler(async ({ context, input }) => {
       if (context.isSupportSession) {
-        return { changed: false }
+        return { changed: false, memberUserIds: [] }
       }
       const result = await chatService.markRead({
         workspaceId: input.workspaceId,

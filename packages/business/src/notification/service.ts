@@ -26,6 +26,7 @@ import {
   readChatNotificationPreferences,
   readTaskNotificationPreferences,
   type TaskNotificationPreferences,
+  type NotificationPreferences,
 } from "./preferences"
 import {
   pickHighestPriorityType,
@@ -267,7 +268,9 @@ class NotificationService extends BaseService {
     await notificationRepository.markReadByEntity(input)
   }
 
-  async getPreferences(input: { workspaceId: string; userId: string }) {
+  async getPreferences(
+    input: { workspaceId: string; userId: string },
+  ): Promise<NotificationPreferences> {
     const notificationTypes =
       (await workspaceMemberRepository.findNotificationTypes(input)) ?? {}
     return {
@@ -280,7 +283,7 @@ class NotificationService extends BaseService {
     workspaceId: string
     userId: string
     patch: Partial<Record<TaskNotificationType | ChatNotificationType, boolean>>
-  }): Promise<TaskNotificationPreferences> {
+  }): Promise<NotificationPreferences> {
     const existing =
       (await workspaceMemberRepository.findNotificationTypes(input)) ?? {}
     const merged: Partial<WorkspaceMemberNotificationTypes> = {

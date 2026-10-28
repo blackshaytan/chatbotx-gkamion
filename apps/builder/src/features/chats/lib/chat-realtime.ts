@@ -1,7 +1,10 @@
-import { notificationService, sendToWorkspaceMember } from "@chatbotx.io/business"
+import {
+  type InternalMessageView,
+  notificationService,
+  sendToWorkspaceMember,
+} from "@chatbotx.io/business"
 import { getChildLogger } from "@chatbotx.io/logger"
 import { RealtimeEventType } from "@chatbotx.io/partysocket-config"
-import type { InternalMessageModel } from "@chatbotx.io/database/types"
 
 const logger = getChildLogger("chats:realtime")
 
@@ -32,7 +35,12 @@ export const publishChatChanged = ({
 export const deliverChatMessage = ({
   message,
   ...input
-}: ChatChangedInput & { message: InternalMessageModel }): void => {
+}: ChatChangedInput & {
+  message: Pick<
+    InternalMessageView,
+    "authorLabel" | "authorUserId" | "createdAt" | "id" | "text"
+  >
+}): void => {
   publishChatChanged(input)
   notificationService
     .notifyChatMessage({

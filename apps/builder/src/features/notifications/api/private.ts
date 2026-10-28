@@ -1,5 +1,8 @@
 import "@/features/notifications/lib/notification-realtime"
 import {
+  type ChatNotificationPayload,
+  type NotificationPayload,
+  type TaskNotificationType,
   notificationService,
   resolveTenantSettings,
 } from "@chatbotx.io/business"
@@ -46,9 +49,9 @@ export const notificationsAuthenticatedAPI = {
           if (notification.entityType === "chat") {
             return {
               id: notification.id,
-              type: notification.type,
+              type: "chatMessage" as const,
               threadId: notification.entityId,
-              payload: notification.payload,
+              payload: notification.payload as ChatNotificationPayload,
               readAt: notification.readAt,
               createdAt: notification.createdAt,
               url: `${appUrl}/space/${input.workspaceId}/chats/${notification.entityId}`,
@@ -56,9 +59,9 @@ export const notificationsAuthenticatedAPI = {
           }
           return {
             id: notification.id,
-            type: notification.type,
+            type: notification.type as TaskNotificationType,
             taskId: notification.entityId,
-            payload: notification.payload,
+            payload: notification.payload as NotificationPayload,
             readAt: notification.readAt,
             createdAt: notification.createdAt,
             url: buildTaskUrl(appUrl, {
