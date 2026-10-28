@@ -6,6 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@chatbotx.io/ui/components/ui/tooltip"
+import { cn } from "@chatbotx.io/ui/lib/utils"
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query"
 import {
   BotIcon,
@@ -33,6 +34,9 @@ import { groupChatMessages } from "../lib/message-groups"
 import { mergeChatMessagePages } from "../lib/message-pages"
 import { canMarkChatRead } from "../lib/read-throttle"
 import { ChatComposer } from "./chat-composer"
+
+const ownChatBubbleClass = "rounded-ee-md bg-primary text-primary-foreground"
+const otherChatBubbleClass = "rounded-es-md bg-secondary"
 
 type ChatsPageProps = {
   isBlocked: boolean
@@ -311,7 +315,7 @@ export const ChatsPage = ({
                 </Button>
               ) : null}
               {messageGroups.map((group, groupIndex) => (
-                <div className="space-y-3" key={group[0].id}>
+                <div className="flex flex-col gap-1" key={group[0].id}>
                   {groupIndex === 0 ||
                   dateLabel(
                     messageGroups[groupIndex - 1].at(-1)?.createdAt ??
@@ -321,41 +325,91 @@ export const ChatsPage = ({
                       {dateLabel(group[0].createdAt)}
                     </div>
                   ) : null}
-                  {group.map((message, messageIndex) =>
-                    message.kind === "system" &&
-                    message.systemEvent?.type === "assistantFailed" ? (
-                      <p
-                        className="flex items-center justify-center gap-2 text-center text-muted-foreground text-sm"
+                  {group.map((message, messageIndex) => {
+                    if (
+                      message.kind === "system" &&
+                      message.systemEvent?.type === "assistantFailed"
+                    ) {
+                      return (
+                        <p
+                          className="flex items-center justify-center gap-2 text-center text-muted-foreground text-sm"
+                          key={message.id}
+                          role="status"
+                        >
+                          <TriangleAlertIcon
+                            aria-hidden="true"
+                            className="size-4"
+                          />
+                          {message.systemEvent.reason === "timeout"
+                            ? t("staffAssistant.failedTimeout")
+                            : t("staffAssistant.failedUnavailable")}
+                        </p>
+                      )
+                    }
+
+                    const isOwn = message.authorUserId === currentUserId
+                    const isEditing = editingMessageId === message.id
+                    const showStandaloneTime = !(
+                      message.deleted ||
+                      isEditing ||
+                      message.text
+                    )
+                    const sentAtLabel = format.dateTime(message.createdAt, {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })
+                    const sentAtTime = format.dateTime(message.createdAt, {
+                      timeStyle: "short",
+                    })
+
+                    return (
+                      <article
+                        className={cn(
+                          "flex flex-col gap-1",
+                          isEditing
+                            ? "w-full"
+                            : cn(
+                                "w-fit max-w-[min(100%,32rem)]",
+                                isOwn ? "ms-auto items-end" : "items-start",
+                              ),
+                        )}
                         key={message.id}
-                        role="status"
                       >
-                        <TriangleAlertIcon
-                          aria-hidden="true"
-                          className="size-4"
-                        />
-                        {message.systemEvent.reason === "timeout"
-                          ? t("staffAssistant.failedTimeout")
-                          : t("staffAssistant.failedUnavailable")}
-                      </p>
-                    ) : (
-                      <article className="space-y-1" key={message.id}>
-                        <div className="flex items-center justify-between gap-2 text-muted-foreground text-xs">
-                          <span>
-                            {messageIndex === 0 ? message.authorLabel : null}
+                        {messageIndex === 0 && !isOwn && message.authorLabel ? (
+                          <span className="px-1 text-muted-foreground text-xs">
+                            {message.authorLabel}
                           </span>
-                          <time>
-                            {format.dateTime(message.createdAt, {
-                              dateStyle: "medium",
-                              timeStyle: "short",
-                            })}
-                          </time>
-                        </div>
-                        {message.deleted ? (
-                          <p className="text-muted-foreground text-sm">
-                            {t("actions.delete")}
-                          </p>
                         ) : null}
-                        {!message.deleted && editingMessageId === message.id ? (
+                        {message.deleted ? (
+                          <div
+                            className={cn(
+                              "flex flex-col gap-1 rounded-2xl px-3 py-2 opacity-80",
+                              isOwn
+                                ? ownChatBubbleClass
+                                : cn(
+                                    otherChatBubbleClass,
+                                    "text-muted-foreground",
+                                  ),
+                            )}
+                          >
+                            <p className="text-sm italic">
+                              {t("actions.delete")}
+                            </p>
+                            <time
+                              className={cn(
+                                "self-end text-[11px] leading-none",
+                                isOwn
+                                  ? "text-primary-foreground/75"
+                                  : "text-muted-foreground",
+                              )}
+                              dateTime={message.createdAt.toISOString()}
+                              title={sentAtLabel}
+                            >
+                              {sentAtTime}
+                            </time>
+                          </div>
+                        ) : null}
+                        {!message.deleted && isEditing ? (
                           <div className="flex gap-2">
                             <textarea
                               className="min-h-20 flex-1 rounded-md border bg-background p-2 text-sm"
@@ -389,10 +443,29 @@ export const ChatsPage = ({
                             </Button>
                           </div>
                         ) : null}
-                        {!message.deleted && editingMessageId !== message.id ? (
-                          <p className="whitespace-pre-wrap text-sm">
-                            {message.text}
-                          </p>
+                        {!(message.deleted || isEditing) && message.text ? (
+                          <div
+                            className={cn(
+                              "flex flex-col gap-1 rounded-2xl px-3 py-2",
+                              isOwn ? ownChatBubbleClass : otherChatBubbleClass,
+                            )}
+                          >
+                            <p className="wrap-break-word whitespace-pre-wrap text-sm">
+                              {message.text}
+                            </p>
+                            <time
+                              className={cn(
+                                "self-end text-[11px] leading-none",
+                                isOwn
+                                  ? "text-primary-foreground/75"
+                                  : "text-muted-foreground",
+                              )}
+                              dateTime={message.createdAt.toISOString()}
+                              title={sentAtLabel}
+                            >
+                              {sentAtTime}
+                            </time>
+                          </div>
                         ) : null}
                         {message.attachments.map((attachment) => (
                           <div key={attachment.index}>
@@ -422,9 +495,18 @@ export const ChatsPage = ({
                             </a>
                           </div>
                         ))}
+                        {showStandaloneTime ? (
+                          <time
+                            className="text-muted-foreground text-xs"
+                            dateTime={message.createdAt.toISOString()}
+                            title={sentAtLabel}
+                          >
+                            {sentAtTime}
+                          </time>
+                        ) : null}
                         {canCreate && canCreateTaskFromChatMessage(message) ? (
                           <div className="flex gap-0.5">
-                            {message.authorUserId === currentUserId ? (
+                            {isOwn ? (
                               <>
                                 <ChatMessageIconButton
                                   label={t("actions.edit")}
@@ -459,8 +541,8 @@ export const ChatsPage = ({
                           </div>
                         ) : null}
                       </article>
-                    ),
-                  )}
+                    )
+                  })}
                 </div>
               ))}
               {messages?.length === 0 ? (
@@ -487,7 +569,7 @@ export const ChatsPage = ({
                 <div
                   aria-label={t("staffAssistant.typing")}
                   aria-live="polite"
-                  className="inline-flex gap-1 rounded-lg bg-muted p-3"
+                  className="inline-flex gap-1 rounded-2xl rounded-es-md bg-secondary p-3"
                   role="status"
                 >
                   {[0, 1, 2].map((dot) => (
