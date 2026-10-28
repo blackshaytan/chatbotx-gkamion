@@ -17,6 +17,7 @@ import {
 } from "@chatbotx.io/database/repositories"
 import type { ExternalAgentModel } from "@chatbotx.io/database/types"
 import { encryptUtils } from "@chatbotx.io/encryption"
+import { RealtimeEventType } from "@chatbotx.io/partysocket-config"
 import { distributedStore, withCache } from "@chatbotx.io/redis"
 import { BaseService } from "../base.service"
 import type { ChatAgentChannel } from "../chat/direct-key"
@@ -36,6 +37,8 @@ import {
 } from "../external-agent/service"
 import { toInternalMessageView } from "../internal-thread/view"
 import { logger } from "../logger"
+import { sendToWorkspaceMember } from "../platform/realtime-broadcast"
+import { workspaceMemberService } from "../workspace-member/service"
 import { isStaffAssistantAvailable } from "./availability"
 
 const staffTag = (workspaceId: string) => `externalAgent:${workspaceId}:staff`
@@ -93,6 +96,43 @@ const tokenHasChats = async (workspaceId: string, tokenId: string | null) => {
 }
 
 export class StaffAssistantService extends BaseService {
+  async publishTyping(input: {
+    workspaceId: string
+    threadId: string
+    userId: string
+    typing: boolean
+  }): Promise<void> {
+    const chat = await chatRepository.findAccessible({
+      workspaceId: input.workspaceId,
+      threadId: input.threadId,
+      userId: input.userId,
+    })
+    if (
+      chat?.thread.type !== "agent" ||
+      chat.thread.directKey !== `agent:${input.userId}:staff` ||
+      !(await workspaceMemberService.isMember({
+        workspaceId: input.workspaceId,
+        userId: input.userId,
+      }))
+    ) {
+      return
+    }
+    try {
+      await sendToWorkspaceMember(
+        { workspaceId: input.workspaceId, userId: input.userId },
+        {
+          eventType: RealtimeEventType.chatTyping,
+          data: { threadId: input.threadId, typing: input.typing, seconds: 20 },
+        },
+      )
+    } catch (err) {
+      logger.warn(
+        { err, workspaceId: input.workspaceId, threadId: input.threadId },
+        "Staff assistant: typing delivery failed",
+      )
+    }
+  }
+
   async postAssistantMessage(input: {
     workspaceId: string
     threadId: string

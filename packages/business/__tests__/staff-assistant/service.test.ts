@@ -23,6 +23,8 @@ const mocks = vi.hoisted(() => ({
   available: vi.fn(),
   deliver: vi.fn(),
   publish: vi.fn(),
+  isMember: vi.fn(),
+  sendToMember: vi.fn(),
 }))
 vi.mock("@chatbotx.io/database/client", () => ({
   db: { transaction: mocks.transaction },
@@ -73,6 +75,12 @@ vi.mock("../../src/chat-delivery", () => ({
   deliverStaffChatMessage: mocks.deliver,
   publishStaffChatChanged: mocks.publish,
 }))
+vi.mock("../../src/workspace-member/service", () => ({
+  workspaceMemberService: { isMember: mocks.isMember },
+}))
+vi.mock("../../src/platform/realtime-broadcast", () => ({
+  sendToWorkspaceMember: mocks.sendToMember,
+}))
 
 const { staffAssistantService } = await import(
   "../../src/staff-assistant/service"
@@ -112,6 +120,7 @@ beforeEach(() => {
     { userId: "user", isWorkspaceMember: true },
   ])
   mocks.findStateForUpdate.mockResolvedValue({ runId: "run" })
+  mocks.isMember.mockResolvedValue(true)
 })
 
 describe("assistant message persistence", () => {
@@ -188,6 +197,31 @@ describe("assistant message persistence", () => {
     expect(mocks.publish).toHaveBeenCalledOnce()
     expect(mocks.deliver).not.toHaveBeenCalled()
   })
+})
+
+test("typing is delivered only to the real member of this staff chat", async () => {
+  await staffAssistantService.publishTyping({
+    workspaceId: "ws",
+    threadId: "thread",
+    userId: "user",
+    typing: true,
+  })
+  expect(mocks.sendToMember).toHaveBeenCalledWith(
+    { workspaceId: "ws", userId: "user" },
+    {
+      eventType: "chatTyping",
+      data: { threadId: "thread", typing: true, seconds: 20 },
+    },
+  )
+  mocks.sendToMember.mockClear()
+  mocks.isMember.mockResolvedValue(false)
+  await staffAssistantService.publishTyping({
+    workspaceId: "ws",
+    threadId: "thread",
+    userId: "user",
+    typing: true,
+  })
+  expect(mocks.sendToMember).not.toHaveBeenCalled()
 })
 
 describe("staff assistant settings", () => {

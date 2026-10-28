@@ -222,6 +222,10 @@ describe("REALTIME_EVENT_TOPICS", () => {
 
   test("maps task events to the tasks topic and keeps chat typing ephemeral", () => {
     expect(REALTIME_EVENT_TOPICS.typing.durability).toBe("ephemeral")
+    expect(REALTIME_EVENT_TOPICS.chatTyping).toEqual({
+      durability: "ephemeral",
+      topics: [RealtimeTopic.staffChats],
+    })
     expect(REALTIME_EVENT_TOPICS.conversationAssigned).toMatchObject({
       durability: "durable",
       topics: expect.arrayContaining([RealtimeTopic.chat, RealtimeTopic.voip]),

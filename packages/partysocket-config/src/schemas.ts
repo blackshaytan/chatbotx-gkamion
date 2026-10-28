@@ -26,6 +26,7 @@ export const RealtimeEventType = {
   taskCommentsChanged: "taskCommentsChanged",
   notificationCreated: "notificationCreated",
   chatChanged: "chatChanged",
+  chatTyping: "chatTyping",
 } as const
 
 export const RealtimeTopic = {
@@ -153,6 +154,10 @@ export const REALTIME_EVENT_TOPICS: {
     topics: [RealtimeTopic.notifications],
   },
   [RealtimeEventType.chatChanged]: {
+    durability: "ephemeral",
+    topics: [RealtimeTopic.staffChats],
+  },
+  [RealtimeEventType.chatTyping]: {
     durability: "ephemeral",
     topics: [RealtimeTopic.staffChats],
   },
@@ -527,6 +532,11 @@ export type RealtimeEventChatChanged = {
   data: { threadId: string }
 }
 
+export type RealtimeEventChatTyping = {
+  eventType: typeof RealtimeEventType.chatTyping
+  data: { threadId: string; typing: boolean; seconds: number }
+}
+
 export type RealtimeEventData =
   | RealtimeEventCreateMessage
   | RealtimeEventMessageDeleted
@@ -551,3 +561,4 @@ export type RealtimeEventData =
   | RealtimeEventTaskCommentsChanged
   | RealtimeEventNotificationCreated
   | RealtimeEventChatChanged
+  | RealtimeEventChatTyping
