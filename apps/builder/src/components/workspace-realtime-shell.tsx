@@ -8,6 +8,7 @@ import { WhatsappCallInfoSheet } from "@/features/messages/components/whatsapp-c
 import { NotificationsRealtimeSync } from "@/features/notifications/components/notifications-realtime-sync"
 import { WorkspaceRealtimeProvider } from "@/features/realtime/workspace-realtime-provider"
 import { TasksRealtimeSync } from "@/features/tasks/components/tasks-realtime-sync"
+import { ChatsRealtimeSync } from "@/features/chats/components/chats-realtime-sync"
 
 type WorkspaceRealtimeShellProps = {
   realtimeEnabled: boolean
@@ -50,6 +51,7 @@ export function WorkspaceRealtimeShell({
   return (
     <WorkspaceRealtimeProvider>
       <TasksRealtimeSync />
+      <ChatsRealtimeSync />
       <NotificationsRealtimeSync />
       {callHistoryEnabled && <WhatsappCallInfoSheet />}
       {callingEnabled ? (

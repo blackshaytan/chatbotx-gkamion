@@ -1,12 +1,15 @@
 import { type DatabaseClient, db } from "@chatbotx.io/database/client"
 import type {
   NotificationPayload,
+  ChatNotificationType,
+  ChatNotificationPayload,
   TaskNotificationType,
   WorkspaceMemberNotificationTypes,
 } from "@chatbotx.io/database/partials"
 import type { TaskDueNotificationRow } from "@chatbotx.io/database/repositories"
 import {
   notificationRepository,
+  chatRepository,
   taskRepository,
   workspaceMemberRepository,
 } from "@chatbotx.io/database/repositories"
@@ -20,6 +23,7 @@ import { listAssigneeUserIds } from "../task/notifications"
 import { emitNotificationsCreated } from "./listeners"
 import {
   isTaskNotificationEnabled,
+  readChatNotificationPreferences,
   readTaskNotificationPreferences,
   type TaskNotificationPreferences,
 } from "./preferences"
@@ -158,6 +162,65 @@ class NotificationService extends BaseService {
     })
   }
 
+  async notifyChatMessage(props: {
+    workspaceId: string
+    threadId: string
+    actorUserId: string | null
+    actorLabel: string | null
+    excerpt: string | null
+    messageId: string
+    messageAt: Date
+    tx?: DatabaseClient
+  }): Promise<void> {
+    const { tx = db } = props
+    const members = await chatRepository.listMembers({
+      workspaceId: props.workspaceId,
+      threadIds: [props.threadId],
+      tx,
+    })
+    const recipientIds = members
+      .filter((member) => member.isWorkspaceMember)
+      .map((member) => member.userId)
+      .filter((userId) => userId !== props.actorUserId)
+    const preferences = await workspaceMemberRepository.listNotificationTypesByUserIds({
+      workspaceId: props.workspaceId,
+      userIds: recipientIds,
+      tx,
+    })
+    const preferencesByUser = new Map(
+      preferences.map((row) => [row.userId, row.notificationTypes]),
+    )
+    const payload: ChatNotificationPayload = {
+      actorUserId: props.actorUserId,
+      actorLabel: props.actorLabel,
+      excerpt: props.excerpt?.slice(0, 200) ?? null,
+      count: 1,
+      lastMessageId: props.messageId,
+      lastMessageAt: props.messageAt.toISOString(),
+    }
+    const inserted = await Promise.all(
+      recipientIds
+        .filter((userId) => preferencesByUser.get(userId)?.chatMessage !== false)
+        .map((userId) =>
+          notificationRepository.upsertChatUnread({
+            row: {
+              workspaceId: props.workspaceId,
+              userId,
+              type: "chatMessage",
+              entityType: "chat",
+              entityId: props.threadId,
+              payload,
+            },
+            tx,
+          }),
+        ),
+    )
+    emitNotificationsCreated({
+      workspaceId: props.workspaceId,
+      notifications: inserted.map((row) => ({ id: row.id, userId: row.userId })),
+    })
+  }
+
   async listForUser(input: {
     workspaceId: string
     userId: string
@@ -202,13 +265,16 @@ class NotificationService extends BaseService {
   async getPreferences(input: { workspaceId: string; userId: string }) {
     const notificationTypes =
       (await workspaceMemberRepository.findNotificationTypes(input)) ?? {}
-    return readTaskNotificationPreferences(notificationTypes)
+    return {
+      ...readTaskNotificationPreferences(notificationTypes),
+      ...readChatNotificationPreferences(notificationTypes),
+    }
   }
 
   async updatePreferences(input: {
     workspaceId: string
     userId: string
-    patch: Partial<Record<TaskNotificationType, boolean>>
+    patch: Partial<Record<TaskNotificationType | ChatNotificationType, boolean>>
   }): Promise<TaskNotificationPreferences> {
     const existing =
       (await workspaceMemberRepository.findNotificationTypes(input)) ?? {}
@@ -227,7 +293,10 @@ class NotificationService extends BaseService {
         "Notification preferences cannot be updated without workspace membership",
       )
     }
-    return readTaskNotificationPreferences(merged)
+    return {
+      ...readTaskNotificationPreferences(merged),
+      ...readChatNotificationPreferences(merged),
+    }
   }
 
   async processDueTaskNotifications(input: {

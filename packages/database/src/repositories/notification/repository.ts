@@ -53,6 +53,25 @@ class NotificationRepository {
     return await tx.insert(notificationModel).values(rows).returning()
   }
 
+  async upsertChatUnread(props: {
+    row: ChatNotificationInsert
+    tx?: DatabaseClient
+  }): Promise<NotificationModel> {
+    const { row, tx = db } = props
+    const result = await tx.execute<NotificationModel>(sql`
+      INSERT INTO "Notification" ("workspaceId", "userId", "type", "entityType", "entityId", "payload")
+      VALUES (${row.workspaceId}::bigint, ${row.userId}::bigint, ${row.type}, 'chat', ${row.entityId}::bigint, ${JSON.stringify(row.payload)}::jsonb)
+      ON CONFLICT ("workspaceId", "userId", "entityId") WHERE "entityType" = 'chat' AND "readAt" IS NULL
+      DO UPDATE SET "payload" = EXCLUDED."payload", "updatedAt" = now()
+      RETURNING *
+    `)
+    const rowResult = result.rows[0]
+    if (!rowResult) {
+      throw new Error("Chat notification upsert returned no row")
+    }
+    return rowResult
+  }
+
   async listForUser(props: {
     workspaceId: string
     userId: string

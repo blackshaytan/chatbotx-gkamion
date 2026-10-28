@@ -33,6 +33,7 @@ export const notificationPreferencesResource = z.object({
   taskDueChanged: z.boolean(),
   taskReminder: z.boolean(),
   taskOverdue: z.boolean(),
+  chatMessage: z.boolean(),
 })
 
 export type NotificationPreferences = z.infer<

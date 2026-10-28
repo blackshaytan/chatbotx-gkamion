@@ -1,10 +1,13 @@
 import {
+  chatNotificationTypes,
+  type ChatNotificationType,
   type TaskNotificationType,
   taskNotificationTypes,
   type WorkspaceMemberNotificationTypes,
 } from "@chatbotx.io/database/partials"
 
 export type TaskNotificationPreferences = Record<TaskNotificationType, boolean>
+export type ChatNotificationPreferences = Record<ChatNotificationType, boolean>
 
 export const isTaskNotificationEnabled = (
   notificationTypes: Partial<WorkspaceMemberNotificationTypes>,
@@ -20,6 +23,17 @@ export const readTaskNotificationPreferences = (
   const prefs = {} as TaskNotificationPreferences
   for (const type of taskNotificationTypes.options) {
     prefs[type] = isTaskNotificationEnabled(notificationTypes, type)
+  }
+  return prefs
+}
+
+export const readChatNotificationPreferences = (
+  notificationTypes: Partial<WorkspaceMemberNotificationTypes>,
+): ChatNotificationPreferences => {
+  const prefs = {} as ChatNotificationPreferences
+  for (const type of chatNotificationTypes.options) {
+    const value = notificationTypes[type]
+    prefs[type] = value === undefined ? true : value
   }
   return prefs
 }

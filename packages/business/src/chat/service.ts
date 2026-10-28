@@ -7,11 +7,14 @@ import {
 import { chatRepository } from "@chatbotx.io/database/repositories"
 import { BaseService } from "../base.service"
 import { notFoundException, validationException } from "../errors"
+import { logger } from "../logger"
+import { notificationService } from "../notification/service"
 import {
   resolveChatAttachments,
   uploadChatAttachment,
 } from "../internal-thread/attachments"
 import { internalThreadService } from "../internal-thread/service"
+import { publishToWorkspaceParty } from "../platform/realtime-broadcast"
 import { toInternalMessageView } from "../internal-thread/view"
 import type { ChatScope } from "./actor"
 import { actorParticipantUserId, type ChatActor, toTaskActor } from "./actor"
@@ -250,6 +253,26 @@ class ChatService extends BaseService {
       })
       return { created, members }
     })
+    publishToWorkspaceParty(input.workspaceId, {
+      eventType: "chatChanged",
+      data: { threadId: input.threadId },
+    })
+    notificationService
+      .notifyChatMessage({
+        workspaceId: input.workspaceId,
+        threadId: input.threadId,
+        actorUserId: message.created.authorUserId,
+        actorLabel: message.created.authorLabel,
+        excerpt: message.created.text,
+        messageId: message.created.id,
+        messageAt: message.created.createdAt,
+      })
+      .catch((err) =>
+        logger.warn(
+          { err, threadId: input.threadId, workspaceId: input.workspaceId },
+          "Failed to deliver chat notification",
+        ),
+      )
     return {
       message: message.created,
       memberUserIds: message.members.map((member) => member.userId),
@@ -285,14 +308,19 @@ class ChatService extends BaseService {
         )
       }
     }
-    return {
-      changed: await chatRepository.markReadMonotonic({
-        workspaceId: input.workspaceId,
-        threadId: input.threadId,
-        userId: input.userId,
-        upToMessageId: input.upToMessageId ?? null,
-      }),
+    const changed = await chatRepository.markReadMonotonic({
+      workspaceId: input.workspaceId,
+      threadId: input.threadId,
+      userId: input.userId,
+      upToMessageId: input.upToMessageId ?? null,
+    })
+    if (changed) {
+      publishToWorkspaceParty(input.workspaceId, {
+        eventType: "chatChanged",
+        data: { threadId: input.threadId },
+      })
     }
+    return { changed }
   }
 
   async listMessages(input: {
@@ -343,7 +371,7 @@ class ChatService extends BaseService {
       throw validationException("text", "Message is too long")
     }
     const userId = actorParticipantUserId(input.actor)
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       await this.requireChat({ ...input, userId, tx })
       const message = await internalThreadService.editComment({
         workspaceId: input.workspaceId,
@@ -361,6 +389,11 @@ class ChatService extends BaseService {
       })
       return { message, memberUserIds: members.map((member) => member.userId) }
     })
+    publishToWorkspaceParty(input.workspaceId, {
+      eventType: "chatChanged",
+      data: { threadId: input.threadId },
+    })
+    return result
   }
 
   async deleteMessage(input: {
@@ -370,7 +403,7 @@ class ChatService extends BaseService {
     actor: ChatActor
   }) {
     const userId = actorParticipantUserId(input.actor)
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       await this.requireChat({ ...input, userId, tx })
       const message = await internalThreadService.deleteComment({
         workspaceId: input.workspaceId,
@@ -387,6 +420,11 @@ class ChatService extends BaseService {
       })
       return { message, memberUserIds: members.map((member) => member.userId) }
     })
+    publishToWorkspaceParty(input.workspaceId, {
+      eventType: "chatChanged",
+      data: { threadId: input.threadId },
+    })
+    return result
   }
 
   async uploadAttachment(input: {

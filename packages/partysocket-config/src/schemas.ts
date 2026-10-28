@@ -25,6 +25,7 @@ export const RealtimeEventType = {
   taskChanged: "taskChanged",
   taskCommentsChanged: "taskCommentsChanged",
   notificationCreated: "notificationCreated",
+  chatChanged: "chatChanged",
 } as const
 
 export const RealtimeTopic = {
@@ -32,6 +33,7 @@ export const RealtimeTopic = {
   tasks: "tasks",
   voip: "voip",
   notifications: "notifications",
+  staffChats: "staffChats",
 } as const
 
 export type RealtimeTopic = (typeof RealtimeTopic)[keyof typeof RealtimeTopic]
@@ -149,6 +151,10 @@ export const REALTIME_EVENT_TOPICS: {
   [RealtimeEventType.notificationCreated]: {
     durability: "ephemeral",
     topics: [RealtimeTopic.notifications],
+  },
+  [RealtimeEventType.chatChanged]: {
+    durability: "ephemeral",
+    topics: [RealtimeTopic.staffChats],
   },
 }
 
@@ -516,6 +522,11 @@ export type RealtimeEventNotificationCreated = {
   data: NotificationCreatedPayload
 }
 
+export type RealtimeEventChatChanged = {
+  eventType: typeof RealtimeEventType.chatChanged
+  data: { threadId: string }
+}
+
 export type RealtimeEventData =
   | RealtimeEventCreateMessage
   | RealtimeEventMessageDeleted
@@ -539,3 +550,4 @@ export type RealtimeEventData =
   | RealtimeEventTaskChanged
   | RealtimeEventTaskCommentsChanged
   | RealtimeEventNotificationCreated
+  | RealtimeEventChatChanged
