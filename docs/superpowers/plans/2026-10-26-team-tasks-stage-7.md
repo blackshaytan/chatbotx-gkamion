@@ -34,7 +34,7 @@
 2. **Исполнитель задаётся тремя режимами:** `user` (конкретный сотрудник), `team` (команда), `conversation` («назначенный на диалог»: `Conversation.assignedUserId` → иначе `assignedInboxTeamId`; никто не назначен → ветка «ошибка»). Значение по умолчанию — `conversation`.
 3. **Ветка «ошибка»** срабатывает: исполнитель не участник пространства (`taskService.assertAssignable` бросает `validationException` — `service.ts:929`), команда не найдена **или пуста** (проверка пустоты — в обработчике: `taskService` пустую команду принимает, `service.ts:946`), на диалоге никого нет, пустое название после подстановки переменных, любой другой сбой сервиса.
 4. **Запись id задачи в поле — не критична:** если поле выбрано, но не существует или запись упала, задача уже создана, поэтому шаг всё равно «успех», ошибка пишется в лог (`logger.warn({ err })`). Иначе сценарий по ветке «ошибка» мог бы повторить создание.
-5. **Realtime «задач» не расширяем:** по утверждённому объёму обработчик публикует только уведомления (`notificationCreated` через слушатель). Событие `taskChanged` из worker для живого обновления таблицы задач **не** шлём (см. открытые вопросы).
+5. **Realtime обновление списка задач включено по решению пользователя:** после успешного создания обработчик публикует `taskChanged` с `taskId`. Это обновляет открытые списки задач у участников пространства; `notificationCreated` отдельно обновляет адресное уведомление исполнителя.
 6. **Публичный API без изменений (инвариант 23).** Шаг — это *конфигурация сценария*: он доступен агентам через `flows.publish` / `flows.updateDraft`, чьи входные схемы выводятся из `flowVersionSchema` → `actionSteps` (`flows/api/public.ts`, `flow-config/src/publish-schema.ts`), поэтому новая ветка схемы попадает в `public-spec.json`, CLI и MCP автоматически (описание полей — через `.describe()`). Меню «Создать задачу» в инбоксе вызывает **существующую** `tasks.create` (`features/tasks/api/public.ts:253-271`, приватный двойник `api/private.ts:262-296`), которая уже принимает `contactId`, `conversationId`, `messageId` (`schema/public.ts:103-126`) — новой процедуры не нужно.
 7. **CLI / MCP: ничего нового.** Операций не прибавилось (список `operationId` в снапшотах `public-spec-*.test.ts` не меняется); навык `cli-mcp-docs` выполняется как проверка «дрейфа» — в Task 4 фиксируется, что ничего менять не нужно.
 8. **Импорт/экспорт сценариев:** `outputFieldId` ремапится автоматически (`import-export/reference-fields.ts:25`); `userId` / `teamId` исполнителя **не ремапятся** (как и `assignedIds` у `autoAssignConversation`) — при переносе в другое пространство шаг уходит по ветке «ошибка». Записать в docs.
@@ -220,10 +220,10 @@ export const handleCreateTask = async (
 - `apps/worker/__tests__/create-task-step-registration.test.ts` (по образцу `external-request-step-registration.test.ts`): `step.ts` импортирует `handleCreateTask` из `./create-task-handler` и содержит `[stepTypes.enum.createTask]: handleCreateTask`; `flow-utils.ts` содержит `createTask: false`.
 - `apps/worker/__tests__/integration-worker-boot.test.ts` и `…-incoming-message.test.ts`: оба тестируют реальный `src/integration/worker.ts` с жёстко замоканным `@chatbotx.io/business` — обращение к отсутствующему экспорту (`onNotificationsCreated`) бросит. Добавить в оба `vi.mock("../src/lib/notification-realtime", () => ({ registerNotificationRealtime: <hoisted vi.fn> }))`; в `boot`-тесте — утверждение, что после старта функция вызвана ровно один раз (до `ensureBootstrapped`).
 
-- [ ] **Step 1:** failing tests (flow-config, handler, registration) → схема + реестры flow-config → pass (`packages/flow-config`: `pnpm exec vitest run __tests__/create-task.test.ts --pool=forks --maxWorkers=1`).
-- [ ] **Step 2:** обработчик, экспорт хелперов из `tool-handler.ts`, `step.ts`, `flow-utils.ts` → тесты worker по одному файлу (`create-task-step-handler`, `create-task-step-registration`, `external-request-handler`, `external-request-step-registration`, `notification-realtime`).
-- [ ] **Step 3:** `registerNotificationRealtime()` в `integration/worker.ts` + моки в двух тестах старта → `integration-worker-boot.test.ts`, `integration-worker-incoming-message.test.ts` по одному.
-- [ ] **Step 4:** `npx ultracite fix` на изменённых/новых файлах, затем `npx ultracite check`. **Commit** `feat(tasks): createTask flow step and worker handler`.
+- [x] **Step 1:** failing tests (flow-config, handler, registration) → схема + реестры flow-config → pass (`packages/flow-config`: `pnpm exec vitest run __tests__/create-task.test.ts --pool=forks --maxWorkers=1`).
+- [x] **Step 2:** обработчик, экспорт хелперов из `tool-handler.ts`, `step.ts`, `flow-utils.ts` → тесты worker по одному файлу (`create-task-step-handler`, `create-task-step-registration`, `external-request-handler`, `external-request-step-registration`, `notification-realtime`).
+- [x] **Step 3:** `registerNotificationRealtime()` в `integration/worker.ts` + моки в двух тестах старта → `integration-worker-boot.test.ts`, `integration-worker-incoming-message.test.ts` по одному.
+- [x] **Step 4:** адресная проверка файлов и CI-гейты. **Commit** `feat(tasks): createTask flow step and worker handler`.
 
 ---
 
@@ -274,9 +274,9 @@ export const createTaskStep: StepDefinition<CreateTaskStepSchema> = {
   - `steps/create-task/assignee-value.test.ts` (рядом, `src/**/__tests__` допустим для узкого юнита): `assigneeToValue` / `valueToAssignee` — все три режима, мусор → `conversation`.
   - Существующие i18n-тесты (паритет ключей и русский каталог): `__tests__/i18n-messages.test.ts`, `__tests__/i18n-hardcoded-scanner.test.ts`, `__tests__/i18n-source-keys.test.ts` — по одному; `pnpm --filter builder i18n:check` и `i18n:ru status` **не** запускать локально (идут в CI).
 
-- [ ] **Step 1:** failing tests → `assignee-value.ts`, `index.ts`, `viewer.tsx`, `editor.tsx`, регистрация в `steps/index.tsx` и `menu.tsx` → pass по одному файлу.
-- [ ] **Step 2:** i18n во всех 22 файлах (скриптом-сборкой JSON или руками; ключи строго в том же порядке, что в `en.json`), `ru` по глоссарию; i18n-тесты по одному файлу.
-- [ ] **Step 3:** `npx ultracite fix` + `check` на изменённых файлах. **Commit** `feat(tasks): create task step editor and viewer`.
+- [x] **Step 1:** failing tests → `assignee-value.ts`, `index.ts`, `viewer.tsx`, `editor.tsx`, регистрация в `steps/index.tsx` и `menu.tsx` → pass по одному файлу.
+- [x] **Step 2:** i18n во всех 22 файлах, `ru` по глоссарию; i18n-тесты пройдены.
+- [x] **Step 3:** адресная проверка изменённых файлов. **Commit** `feat(tasks): create task step editor and viewer`.
 
 ---
 
@@ -362,27 +362,27 @@ type CreateTaskDialogProps = {
 - `apps/builder/__tests__/tasks-message-quote.test.ts`: `toMarkdownQuote` — одна строка, несколько строк с пустой между ними (`"> a\n>\n> b"`), `\r\n`, пустая и пробельная строки → `""`, обрезка по `maxLength` (результат ≤ лимита, без хвостовых пробелов), русский текст не ломается; `canCreateTaskFromMessage` — `incoming` + `deletedAt: null` → `true`; `outgoing`, служебные типы и удалённое → `false`.
 - Существующие: `__tests__/message-item-timestamp.test.tsx` (рендер `MessageItem` без нового пропса остаётся прежним) — по одному файлу; i18n-тесты (паритет, русский каталог, hardcoded-scanner) — по одному. Тест `MessageActions` с `useChatStore`/`useWorkspaceId` не добавляем (тяжёлые провайдеры), логика вынесена в проверяемые `lib/message-quote.ts` и регистрационные проверки по исходнику не нужны.
 
-- [ ] **Step 1:** failing tests (`tasks-message-quote`) → `lib/message-quote.ts` → pass.
-- [ ] **Step 2:** `CreateTaskDialog` (управляемый режим, описание, `messageId`) — убедиться, что Tasks page и `contact-tasks-section` не затронуты (прочитать вызовы).
-- [ ] **Step 3:** `MessageActions` / `MessageItem` / `message-list.tsx`; i18n 22 файла; `message-item-timestamp.test.tsx` и i18n-тесты по одному.
-- [ ] **Step 4:** `npx ultracite fix` + `check` на изменённых файлах. **Commit** `feat(tasks): create task from an incoming message`.
+- [x] **Step 1:** `tasks-message-quote` → `lib/message-quote.ts` → pass.
+- [x] **Step 2:** `CreateTaskDialog` поддерживает управляемый режим, описание и `messageId`; существующие вызовы Tasks/contact сохранены.
+- [x] **Step 3:** `MessageActions` / `MessageItem` / `message-list.tsx`; i18n во всех 22 файлах; целевые тесты пройдены.
+- [x] **Step 4:** адресная проверка изменённых файлов. **Commit** `feat(tasks): create task from an incoming message`.
 
 ---
 
 ### Task 4: Docs and CI
 
-- [ ] `docs/tasks.md`:
-  - Раздел **«Flow step: Create task»**: шаг внутри узла «Действие» (меню «Создать задачу»), поля (название и описание с переменными, исполнитель: сотрудник / команда / назначенный на диалог, срок «через N минут/часов/дней» или без, напоминание «за N минут до срока», приоритет, поле для id задачи), автосвязи с текущими контактом и диалогом (без `messageId`), актор `flow` с `createdByLabel` = название сценария (запасное «Flow»), ветки `success` / `error` и условия ошибки (Deviation 3), правило «запись id в поле не ломает успех», уведомление исполнителю приходит в колокольчик без перезагрузки (процесс `integration` регистрирует слушатель, как `schedule`), ограничения: `userId`/`teamId` не ремапятся при переносе сценария (Deviation 8), `taskChanged` из worker не публикуется — таблица задач у других открытых вкладок обновится при следующей загрузке/другом событии.
+- [x] `docs/tasks.md`:
+  - Раздел **«Flow step: Create task»**: шаг внутри узла «Действие» (меню «Создать задачу»), поля (название и описание с переменными, исполнитель: сотрудник / команда / назначенный на диалог, срок «через N минут/часов/дней» или без, напоминание «за N минут до срока», приоритет, поле для id задачи), автосвязи с текущими контактом и диалогом (без `messageId`), актор `flow` с `createdByLabel` = название сценария (запасное «Flow»), ветки `success` / `error` и условия ошибки (Deviation 3), правило «запись id в поле не ломает успех», `taskChanged` обновляет открытые списки задач, а `notificationCreated` адресно обновляет колокольчик исполнителя; ограничения: `userId`/`teamId` не ремапятся при переносе сценария (Deviation 8).
   - Раздел **Interface** → пункт про инбокс: «У входящего сообщения клиента в меню действий — **Создать задачу**: диалог с описанием-цитатой (markdown, до лимита описания) и связями контакт + диалог + сообщение»; публичного API не добавлялось — это `tasks.create` с `contactId`, `conversationId`, `messageId`.
   - Раздел **API**: одна строка — шаг сценария настраивается через `flows.publish` / `flows.updateDraft` (шаг `createTask` в `performAction`), новых операций и новых токен-скоупов нет.
   - Раздел **Not yet**: удалить пункт «`createTask` flow step and **Create task** from a client message menu (stage 7)».
-- [ ] `docs/superpowers/specs/2026-10-17-team-tasks-design.md` §7: одна строка-примечание «Реализовано как шаг `createTask` внутри узла «Действие» (не как отдельный тип узла); реестры узлов (инвариант 16) не затрагиваются. См. план этапа 7.»
-- [ ] **CLI / MCP:** ничего менять не нужно (Deviation 7): новых процедур нет, `operationId` и снапшоты `public-spec-*.test.ts` не меняются; проверить `.agents/skills/cli-mcp-docs/SKILL.md` — список шагов сценария в документации CLI/MCP, если он перечисляет типы шагов вручную (`grep -rn "callApi" docs .agents apps/cli apps/mcp-server` на момент планирования ничего не нашёл — подтвердить и записать в отчёт).
-- [ ] `.github/workflows/gkamion-checks.yml` (job `i18n`):
+- [x] `docs/superpowers/specs/2026-10-17-team-tasks-design.md` §7: отличие от спеки зафиксировано; тип узла и реестры узлов не добавлялись.
+- [x] **CLI / MCP:** новых процедур нет; проверка не выявила ручных списков типов шагов в CLI/MCP docs.
+- [x] `.github/workflows/gkamion-checks.yml` (job `i18n`):
   - шаг builder (`working-directory: apps/builder`, первый список): `__tests__/tasks-message-quote.test.ts`, `src/features/flows/react-flow/steps/__tests__/create-task-registration.test.ts`, `src/features/flows/react-flow/steps/create-task/__tests__/assignee-value.test.ts`, `src/features/flows/react-flow/nodes/perform-action/__tests__/menu.test.ts`; один раз локально прогнать `__tests__/i18n-source-keys.test.ts` — если зелёный, добавить и его;
   - **новый** шаг `working-directory: packages/flow-config`: `pnpm exec vitest run __tests__/create-task.test.ts __tests__/channel-policies.test.ts` (в CI тестов этого пакета сейчас нет);
   - шаг worker (последний список): `__tests__/create-task-step-handler.test.ts`, `__tests__/create-task-step-registration.test.ts`, `__tests__/integration-worker-boot.test.ts`, `__tests__/integration-worker-incoming-message.test.ts`, `__tests__/external-request-handler.test.ts` (затронут экспортом хелперов).
-- [ ] `npx ultracite check` на изменённых `.md`/`.ts` не требуется (YAML и markdown ultracite не проверяет) — проверить отступы YAML глазами. **Commit** `docs(tasks): stage 7 flow step and message action`.
+- [x] Адресная проверка исходников прошла; workflow успешно проверен в CI. **Commit** `docs(tasks): stage 7 flow step and message action`.
 
 ---
 
@@ -400,9 +400,9 @@ type CreateTaskDialogProps = {
 - Пробел отчёта разведки закрыт: `integration/worker.ts` не регистрировал слушатель уведомлений (только `schedule/worker.ts:69`) — Task 1.
 - Миграций нет; тесты — по одному файлу; тяжёлые проверки — в CI.
 
-## Open questions (для пользователя)
+## Решения по открытым вопросам
 
-1. **Живая таблица задач.** Задача из сценария создаётся в worker, где `taskChanged` не публикуется: открытая страница «Задачи» у других сотрудников обновится не сразу (колокольчик — сразу). Добавить в обработчик одну строку `publishToWorkspaceParty(workspaceId, { eventType: RealtimeEventType.taskChanged, data: { taskId } })` (интеграционный worker уже публикует события — `whatsapp-voip-signaling.ts`) + проверка в тесте? Рекомендую да; в план не включено, потому что не входило в утверждённый объём.
-2. **Перенос сценариев между пространствами:** `userId`/`teamId` исполнителя не ремапятся → шаг уходит в «ошибка». Допустимо (как у `autoAssignConversation`) или нужен ремап в `reference-fields.ts`?
-3. **Комментарии:** пункт «Создать задачу» появится и у входящих комментариев (они — входящие сообщения клиента). Оставить или ограничить обычными сообщениями?
-4. **Сбой записи id в поле** трактуется как «успех + предупреждение в логе» (Deviation 4). Подтвердить.
+1. **Живая таблица задач:** пользователь согласовал `taskChanged`; обработчик публикует событие после создания задачи.
+2. **Перенос сценариев между пространствами:** `userId`/`teamId` не ремапятся, как у `autoAssignConversation`; при несовпадении шага используется выход «ошибка».
+3. **Комментарии:** действие доступно и у входящих комментариев клиента, поскольку это входящие сообщения.
+4. **Сбой записи id в поле:** задача остаётся успешной, ошибка записи фиксируется предупреждением (`Deviation 4`).

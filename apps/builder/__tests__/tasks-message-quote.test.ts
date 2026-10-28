@@ -46,9 +46,7 @@ describe("toTaskDescriptionFromChatMessage", () => {
         date: "Oct 28, 2026, 12:00 PM",
         text: "Follow up with the customer",
       }),
-    ).toBe(
-      "> Follow up with the customer\n\n— Ada, Oct 28, 2026, 12:00 PM",
-    )
+    ).toBe("> Follow up with the customer\n\n— Ada, Oct 28, 2026, 12:00 PM")
   })
 
   test("keeps attribution when an attachment-only message has no text", () => {
