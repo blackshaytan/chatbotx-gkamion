@@ -149,6 +149,11 @@ export type TenantHelpItemModel = typeof schema.tenantHelpItemModel.$inferSelect
 export type PlatformCredentialModel =
   typeof schema.platformCredentialModel.$inferSelect
 export type ContactNoteModel = typeof schema.contactNoteModel.$inferSelect
+export type ExternalCustomerIdentityModel =
+  typeof schema.externalCustomerIdentityModel.$inferSelect
+export type ExternalOrderModel = typeof schema.externalOrderModel.$inferSelect
+export type ExternalOrderEventModel =
+  typeof schema.externalOrderEventModel.$inferSelect
 export type InboxTeamModel = typeof schema.inboxTeamModel.$inferSelect
 export type InboxTeamMemberModel =
   typeof schema.inboxTeamMemberModel.$inferSelect

@@ -40,6 +40,7 @@ import { emailTopicsPublicRouter } from "@/features/email-topics/api/public"
 import { errorLogsPublicRouter } from "@/features/error-logs/api/public"
 import { externalAgentPublicRouter } from "@/features/external-agent/api/public"
 import { appointmentExternalCalendarsPublicRouter } from "@/features/external-calendars/api/public"
+import { externalCrmPublicRouter } from "@/features/external-crm/api/public"
 import { externalWebhooksPublicRouter } from "@/features/external-webhooks/api/public"
 import { facebookLeadAdsPublicRouter } from "@/features/facebook-lead-ad-automation/api/public"
 import { fbCommentsPublicRouter } from "@/features/fb-comments/api/public"
@@ -130,6 +131,7 @@ export const publicRouter = {
   emailTopics: emailTopicsPublicRouter,
   errorLogs: errorLogsPublicRouter,
   externalAgent: externalAgentPublicRouter,
+  externalCrm: externalCrmPublicRouter,
   externalWebhooks: externalWebhooksPublicRouter,
   facebookLeadAds: facebookLeadAdsPublicRouter,
   fbComments: fbCommentsPublicRouter,

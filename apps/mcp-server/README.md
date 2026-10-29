@@ -45,7 +45,7 @@ Use `search_tools` when the task needs something outside the default set (e.g. d
 
 ## Available tools
 
-Tool names are derived from the OpenAPI `operationId` converted to `snake_case` (e.g. `tags.list` → `tags_list`). The current default set has 48 tools:
+Tool names are derived from the OpenAPI `operationId` converted to `snake_case` (e.g. `tags.list` → `tags_list`). The current default set has 51 tools:
 
 ### Capabilities
 
@@ -119,6 +119,14 @@ Tool names are derived from the OpenAPI `operationId` converted to `snake_case` 
 | Tool | Description |
 |---|---|
 | `external_agent_handover` | Hand a conversation over to a human manager with a reason |
+
+### External CRM
+
+| Tool | Description |
+|---|---|
+| `external_crm_sync_customer` | Link an external customer id to a contact without creating an inbox or conversation |
+| `external_crm_get_customer` | Resolve an external customer id to a ChatbotX contact and current orders |
+| `external_crm_get_order_history` | Read the current order snapshot and recorded status/payment events |
 
 ### Flows
 

@@ -930,6 +930,17 @@ chatbotx external-agent update --enabled <true|false> --baseUrl <url> --apiKey <
 chatbotx external-agent test                          # Health check of the Hermes address; stored as the last check
 ```
 
+### `external-crm` (scope `ecommerce`)
+
+Sync customer/order data from a trusted server and read it from an agent. See `docs/external-crm-sync.md` for matching and retry behavior.
+
+```bash
+chatbotx external-crm customers-sync --customer '{"externalCustomerId":"<gkamion-user-id>","email":"<email>","phoneNumber":"<phone>"}'
+chatbotx external-crm orders-events --eventId <stable-event-id> --externalCustomerId <gkamion-user-id> --externalOrderId <order-id> --eventType orderCreated|paymentReceived|statusChanged --status <status> --occurredAt <ISO-8601> --orderData '<json>'
+chatbotx external-crm customers-orders --externalCustomerId <gkamion-user-id>
+chatbotx external-crm orders-history --externalOrderId <order-id>
+```
+
 ### `staff-assistant` (scope `settings`)
 
 ```bash
