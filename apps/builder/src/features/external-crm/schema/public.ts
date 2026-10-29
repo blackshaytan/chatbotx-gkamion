@@ -14,6 +14,32 @@ const externalOrderData = z.object({
 })
 
 const whitespaceRegex = /\s+/
+const customerIdKeys = [
+  "externalCustomerId",
+  "external_customer_id",
+  "customerId",
+  "customer_id",
+  "clientId",
+  "client_id",
+]
+const customerSignalKeys = [
+  ...customerIdKeys,
+  "firstName",
+  "first_name",
+  "lastName",
+  "last_name",
+  "email",
+  "emailAddress",
+  "email_address",
+  "phoneNumber",
+  "phone_number",
+  "phone",
+  "mobile",
+  "mobilePhone",
+  "mobile_phone",
+  "tel",
+  "telephone",
+]
 
 export const externalCustomerPublicInput = z.object({
   externalCustomerId: z.string().trim().min(1).max(255),
@@ -53,6 +79,7 @@ const normalizeCustomerSyncRequest = (input: unknown) => {
   ]
   const visited = new Set<Record<string, unknown>>()
   let customer: Record<string, unknown> | undefined
+  let meaningfulRecord: Record<string, unknown> | undefined
   let fallback: Record<string, unknown> | undefined
 
   while (queue.length > 0) {
@@ -62,10 +89,21 @@ const normalizeCustomerSyncRequest = (input: unknown) => {
     }
     visited.add(current.value)
 
-    const nestedCustomer = asRecord(current.value.customer)
+    const nestedCustomer =
+      asRecord(current.value.customer) ??
+      asRecord(current.value.client) ??
+      asRecord(current.value.customer_data) ??
+      asRecord(current.value.customerData)
     if (nestedCustomer) {
       customer = nestedCustomer
       break
+    }
+
+    if (
+      !meaningfulRecord &&
+      customerSignalKeys.some((key) => current.value[key] !== undefined)
+    ) {
+      meaningfulRecord = current.value
     }
 
     if (!fallback) {
@@ -75,7 +113,15 @@ const normalizeCustomerSyncRequest = (input: unknown) => {
       continue
     }
 
-    for (const key of ["body", "data", "payload", "object", "resource"]) {
+    for (const key of [
+      "body",
+      "data",
+      "payload",
+      "object",
+      "resource",
+      "client",
+      "user",
+    ]) {
       const nested = asRecord(current.value[key])
       if (nested) {
         queue.push({ value: nested, depth: current.depth + 1 })
@@ -83,14 +129,8 @@ const normalizeCustomerSyncRequest = (input: unknown) => {
     }
   }
 
-  const source = customer ?? fallback ?? root
-  const externalCustomerId = firstValue(source, [
-    "externalCustomerId",
-    "external_customer_id",
-    "customerId",
-    "customer_id",
-    "id",
-  ])
+  const source = customer ?? meaningfulRecord ?? fallback ?? root
+  const externalCustomerId = firstValue(source, [...customerIdKeys, "id"])
   const firstName = firstValue(source, ["firstName", "first_name", "name"])
   const lastName = firstValue(source, ["lastName", "last_name", "surname"])
   const fullName = firstValue(source, ["fullName", "full_name"])
@@ -110,7 +150,10 @@ const normalizeCustomerSyncRequest = (input: unknown) => {
         "phone_number",
         "phone",
         "mobile",
+        "mobilePhone",
+        "mobile_phone",
         "tel",
+        "telephone",
       ]),
     },
   }
@@ -118,7 +161,22 @@ const normalizeCustomerSyncRequest = (input: unknown) => {
 
 export const syncExternalCustomerPublicRequest = z.preprocess(
   normalizeCustomerSyncRequest,
-  z.object({ customer: externalCustomerPublicInput }),
+  z
+    .object({ customer: externalCustomerPublicInput })
+    .superRefine(({ customer }, context) => {
+      if (
+        customer.firstName === undefined &&
+        customer.lastName === undefined &&
+        customer.email === undefined &&
+        customer.phoneNumber === undefined
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["customer"],
+          message: "At least one customer field must be provided",
+        })
+      }
+    }),
 )
 
 export const recordExternalOrderEventPublicRequest = z.object({
