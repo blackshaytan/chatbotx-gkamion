@@ -1,3 +1,4 @@
+import { logger } from "@/lib/log"
 import { createOpenAPIHandler } from "@/lib/orpc/handlers"
 import { publicRouter } from "@/routers/public"
 import "@/polyfill"
@@ -13,7 +14,68 @@ const openAPIHandler = createOpenAPIHandler(publicRouter, {
   logLabel: "OpenAPI handler",
 })
 
+const externalCustomerSyncPath = "/api/v1/external-crm/customers/sync"
+
+function describeJsonShape(value: unknown, depth = 0): unknown {
+  if (value === null) {
+    return "null"
+  }
+  if (Array.isArray(value)) {
+    return {
+      type: "array",
+      items: value
+        .slice(0, 2)
+        .map((item) => describeJsonShape(item, depth + 1)),
+      ...(value.length > 2 && { remainingItems: value.length - 2 }),
+    }
+  }
+  if (typeof value !== "object") {
+    return typeof value
+  }
+  if (depth >= 5) {
+    return "object"
+  }
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .slice(0, 30)
+      .map(([key, nested]) => [key, describeJsonShape(nested, depth + 1)]),
+  )
+}
+
+async function logExternalCustomerSyncShape(request: Request) {
+  if (
+    request.method !== "POST" ||
+    new URL(request.url).pathname !== externalCustomerSyncPath
+  ) {
+    return
+  }
+
+  const contentLength = Number(request.headers.get("content-length") ?? 0)
+  if (contentLength > 64 * 1024) {
+    logger.info(
+      { path: externalCustomerSyncPath, bodyTooLarge: true },
+      "External CRM request shape",
+    )
+    return
+  }
+
+  try {
+    const payload: unknown = await request.clone().json()
+    logger.info(
+      { path: externalCustomerSyncPath, shape: describeJsonShape(payload) },
+      "External CRM request shape",
+    )
+  } catch {
+    logger.info(
+      { path: externalCustomerSyncPath, invalidJson: true },
+      "External CRM request shape",
+    )
+  }
+}
+
 async function handleRequest(request: Request) {
+  await logExternalCustomerSyncShape(request)
   const { response } = await openAPIHandler.handle(request, {
     prefix: "/api",
     context: { headers: request.headers, url: request.url },
