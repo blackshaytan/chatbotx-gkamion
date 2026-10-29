@@ -36,11 +36,16 @@ function describeJsonShape(value: unknown, depth = 0): unknown {
     return "object"
   }
 
-  return Object.fromEntries(
-    Object.entries(value)
-      .slice(0, 30)
+  const entries = Object.entries(value)
+  const shape = Object.fromEntries(
+    entries
+      .slice(0, 100)
       .map(([key, nested]) => [key, describeJsonShape(nested, depth + 1)]),
   )
+  if (entries.length > 100) {
+    shape.__additionalKeys = entries.length - 100
+  }
+  return shape
 }
 
 async function logExternalCustomerSyncShape(request: Request) {
