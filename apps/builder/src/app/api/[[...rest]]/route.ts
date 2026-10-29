@@ -39,11 +39,11 @@ function describeJsonShape(value: unknown, depth = 0): unknown {
   const entries = Object.entries(value)
   const shape = Object.fromEntries(
     entries
-      .slice(0, 100)
+      .slice(0, 256)
       .map(([key, nested]) => [key, describeJsonShape(nested, depth + 1)]),
   )
-  if (entries.length > 100) {
-    shape.__additionalKeys = entries.length - 100
+  if (entries.length > 256) {
+    shape.__additionalKeys = entries.length - 256
   }
   return shape
 }
