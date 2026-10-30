@@ -12,6 +12,8 @@ Content-Type: application/json
 {"customer":{"externalCustomerId":"12345","firstName":"Ada","lastName":"Lovelace","email":"ada@example.com","phoneNumber":"+79990000000"}}
 ```
 
+The same route accepts the GKamion customer record the website already posts: `{ "customer": { "id", "name", "family_name", "second_name", "email", "contact" } }`. `id` is the external customer id. `family_name` is the surname, `name` is the given name, and `second_name` is the patronymic appended to the given name. A phone is read from `contact.clean_cell_phone`, then `contact.clean_phone`, `contact.cell_phone`, and `contact.phone`. Hash placeholders such as `####` and the labels «Клиент» and «Покупатель» are dropped. When the surname is empty and `name` contains several words, the first word is the surname and the rest is the given name. Account secrets in that record (password, salt, tokens) are discarded and never stored.
+
 The operation first resolves the saved external id. On first contact, it links an existing contact only when the supplied email/phone values point to exactly one contact. If they point to different contacts or either value is ambiguous, the request fails with `validation`; it never merges contacts. If no contact matches, at least one of email or phone is required to create a standalone contact without an inbox or conversation. Later syncs update only fields included in the request.
 
 ## Record an order event

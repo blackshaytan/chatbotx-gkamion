@@ -14,6 +14,7 @@ const externalOrderData = z.object({
 })
 
 const whitespaceRegex = /\s+/
+const placeholderNameRegex = /^(клиент|покупатель)$/iu
 const customerIdKeys = [
   "externalCustomerId",
   "external_customer_id",
@@ -39,6 +40,8 @@ const customerSignalKeys = [
   "mobile_phone",
   "tel",
   "telephone",
+  "family_name",
+  "second_name",
 ]
 
 export const externalCustomerPublicInput = z.object({
@@ -65,6 +68,72 @@ const firstValue = (record: Record<string, unknown>, keys: string[]) => {
     }
   }
   return
+}
+
+const cleanPersonName = (value: string | undefined) => {
+  if (!value) {
+    return
+  }
+  const cleaned = value.replace(/#+/g, " ").replace(whitespaceRegex, " ").trim()
+  if (!cleaned || placeholderNameRegex.test(cleaned)) {
+    return
+  }
+  return cleaned
+}
+
+const personNames = (source: Record<string, unknown>) => {
+  const explicitFirst = cleanPersonName(
+    firstValue(source, ["firstName", "first_name"]),
+  )
+  const explicitLast = cleanPersonName(
+    firstValue(source, ["lastName", "last_name", "surname"]),
+  )
+  const fullName = cleanPersonName(
+    firstValue(source, ["fullName", "full_name"]),
+  )
+  if (explicitFirst || explicitLast || fullName) {
+    const [fullNameFirst, ...fullNameRest] =
+      fullName?.split(whitespaceRegex) ?? []
+    return {
+      firstName: explicitFirst ?? fullNameFirst,
+      lastName:
+        explicitLast ??
+        (fullNameRest.length > 0 ? fullNameRest.join(" ") : undefined),
+    }
+  }
+
+  const family = cleanPersonName(firstValue(source, ["family_name"]))
+  const given = cleanPersonName(firstValue(source, ["name"]))
+  const patronymic = cleanPersonName(firstValue(source, ["second_name"]))
+  let givenParts = given?.split(whitespaceRegex) ?? []
+  if (family && givenParts[0]?.toLowerCase() === family.toLowerCase()) {
+    givenParts = givenParts.slice(1)
+  }
+  if (!family && givenParts.length >= 2) {
+    return {
+      firstName: givenParts.slice(1).join(" "),
+      lastName: givenParts[0],
+    }
+  }
+
+  const [firstToken, ...restTokens] = givenParts
+  const rest = restTokens.join(" ")
+  const firstName =
+    [firstToken, rest || patronymic].filter(Boolean).join(" ") || undefined
+  return { firstName, lastName: family }
+}
+
+const nestedContactPhone = (source: Record<string, unknown>) => {
+  const contact = asRecord(source.contact)
+  if (!contact) {
+    return
+  }
+  return firstValue(contact, [
+    "clean_cell_phone",
+    "clean_phone",
+    "cell_phone",
+    "phone",
+  ])
 }
 
 const normalizeCustomerSyncRequest = (input: unknown) => {
@@ -130,31 +199,30 @@ const normalizeCustomerSyncRequest = (input: unknown) => {
   }
 
   const source = customer ?? meaningfulRecord ?? fallback ?? root
-  const externalCustomerId = firstValue(source, [...customerIdKeys, "id"])
-  const firstName = firstValue(source, ["firstName", "first_name", "name"])
-  const lastName = firstValue(source, ["lastName", "last_name", "surname"])
-  const fullName = firstValue(source, ["fullName", "full_name"])
-  const [fullNameFirst, ...fullNameRest] =
-    fullName?.split(whitespaceRegex) ?? []
+  const names = personNames(source)
+  const contact = asRecord(source.contact)
 
   return {
     customer: {
-      externalCustomerId,
-      firstName: firstName ?? fullNameFirst,
-      lastName:
-        lastName ??
-        (fullNameRest.length > 0 ? fullNameRest.join(" ") : undefined),
-      email: firstValue(source, ["email", "emailAddress", "email_address"]),
-      phoneNumber: firstValue(source, [
-        "phoneNumber",
-        "phone_number",
-        "phone",
-        "mobile",
-        "mobilePhone",
-        "mobile_phone",
-        "tel",
-        "telephone",
-      ]),
+      externalCustomerId: firstValue(source, [...customerIdKeys, "id"]),
+      firstName: names.firstName,
+      lastName: names.lastName,
+      email:
+        firstValue(source, ["email", "emailAddress", "email_address"]) ??
+        (contact
+          ? firstValue(contact, ["email", "emailAddress", "email_address"])
+          : undefined),
+      phoneNumber:
+        firstValue(source, [
+          "phoneNumber",
+          "phone_number",
+          "phone",
+          "mobile",
+          "mobilePhone",
+          "mobile_phone",
+          "tel",
+          "telephone",
+        ]) ?? nestedContactPhone(source),
     },
   }
 }

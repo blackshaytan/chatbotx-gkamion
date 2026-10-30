@@ -24,7 +24,7 @@ export const externalCrmPublicRouter = {
       path: "/v1/external-crm/customers/sync",
       summary: "Sync an external customer",
       description:
-        "Creates or updates a contact linked to the gkamion customer id, without creating an inbox or conversation. The id comes from the gkamion customer record (for Hermes, use `customer_id` returned by `save_contact`). Use `externalCrm.getCustomer` to resolve the linked contact and its order history. A new contact needs an email address or phone number. Existing contacts are linked only when email/phone matching is unambiguous.",
+        "Creates or updates a contact linked to the gkamion customer id, without creating an inbox or conversation. The id comes from the gkamion customer record (for Hermes, use `customer_id` returned by `save_contact`). A posted GKamion customer record is reduced to `id`, `name`, `family_name`, `second_name`, `email`, and `contact` phone/email; password and token fields are ignored. Use `externalCrm.getCustomer` to resolve the linked contact and its order history. A new contact needs an email address or phone number. Existing contacts are linked only when email/phone matching is unambiguous.",
       tags: ["External CRM"],
       spec: mcpSpec({ visibility: "default" }),
     })
