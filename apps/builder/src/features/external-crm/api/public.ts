@@ -22,7 +22,7 @@ export const externalCrmPublicRouter = {
     .route({
       method: "POST",
       path: "/v1/external-crm/customers/sync",
-      summary: "Sync an external customer",
+      summary: "Sync external customer",
       description:
         "Creates or updates a contact linked to the gkamion customer id, without creating an inbox or conversation. The id comes from the gkamion customer record (for Hermes, use `customer_id` returned by `save_contact`). A posted GKamion customer record is reduced to `id`, `name`, `family_name`, `second_name`, `email`, and `contact` phone/email; password and token fields are ignored. Use `externalCrm.getCustomer` to resolve the linked contact and its order history. A new contact needs an email address or phone number. Existing contacts are linked only when email/phone matching is unambiguous.",
       tags: ["External CRM"],
@@ -43,7 +43,7 @@ export const externalCrmPublicRouter = {
     .route({
       method: "POST",
       path: "/v1/external-crm/orders/events",
-      summary: "Record an external order event",
+      summary: "Record external order event",
       description:
         "Records an idempotent gkamion order event and updates the current order snapshot only when the event is at least as recent as the stored state. `externalCustomerId` is the customer's gkamion id; `externalOrderId` comes from the gkamion order. `eventId` must be stable across retries. Sync the customer first with `externalCrm.syncCustomer`, or include `customer` to create/link it when needed. Returns `duplicate: true` when this event was already stored.",
       tags: ["External CRM"],
@@ -69,7 +69,7 @@ export const externalCrmPublicRouter = {
     .route({
       method: "GET",
       path: "/v1/external-crm/customers/orders",
-      summary: "Get an external customer and orders",
+      summary: "Get external customer and orders",
       description:
         "Resolves a customer by gkamion's id supplied to `externalCrm.syncCustomer` and returns the linked contact id plus that customer's current order snapshots. For Hermes, use the `customer_id` returned by gkamion `save_contact`. Use `contacts_create_note` or `contacts_set_custom_field` with the returned contact id to record an agent finding. Order ids come from `externalCrm.recordOrderEvent`.",
       tags: ["External CRM"],
@@ -96,7 +96,18 @@ export const externalCrmPublicRouter = {
       tags: ["External CRM"],
       spec: mcpSpec({ visibility: "default" }),
     })
-    .input(z.object({ externalOrderId: z.string().trim().min(1).max(255) }))
+    .input(
+      z.object({
+        externalOrderId: z
+          .string()
+          .trim()
+          .min(1)
+          .max(255)
+          .describe(
+            "GKamion order id first sent to externalCrm.recordOrderEvent.",
+          ),
+      }),
+    )
     .output(getExternalOrderHistoryPublicResponse)
     .errors(possibleErrorsOnFindingResource)
     .handler(

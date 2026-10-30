@@ -230,7 +230,11 @@ const normalizeCustomerSyncRequest = (input: unknown) => {
 export const syncExternalCustomerPublicRequest = z.preprocess(
   normalizeCustomerSyncRequest,
   z
-    .object({ customer: externalCustomerPublicInput })
+    .object({
+      customer: externalCustomerPublicInput.describe(
+        "Customer to link. Pass externalCustomerId plus contact fields, or the GKamion customer record with id, name, family_name, second_name, email, and contact.",
+      ),
+    })
     .superRefine(({ customer }, context) => {
       if (
         customer.firstName === undefined &&
@@ -248,20 +252,65 @@ export const syncExternalCustomerPublicRequest = z.preprocess(
 )
 
 export const recordExternalOrderEventPublicRequest = z.object({
-  eventId: z.string().trim().min(1).max(255),
-  externalCustomerId: z.string().trim().min(1).max(255),
-  externalOrderId: z.string().trim().min(1).max(255),
-  eventType: z.enum(["orderCreated", "paymentReceived", "statusChanged"]),
-  status: z.string().trim().min(1).max(100),
-  occurredAt: z.iso.datetime().transform((value) => new Date(value)),
-  orderData: externalOrderData,
+  eventId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .describe(
+      "Stable id for this logical event. Reuse the same value on every retry.",
+    ),
+  externalCustomerId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .describe(
+      "GKamion customer id, the same id passed to externalCrm.syncCustomer.",
+    ),
+  externalOrderId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .describe(
+      "GKamion order id. Read it later with externalCrm.getOrderHistory.",
+    ),
+  eventType: z
+    .enum(["orderCreated", "paymentReceived", "statusChanged"])
+    .describe(
+      "Kind of order event: orderCreated, paymentReceived, or statusChanged.",
+    ),
+  status: z
+    .string()
+    .trim()
+    .min(1)
+    .max(100)
+    .describe("Current order status label from GKamion."),
+  occurredAt: z.iso
+    .datetime()
+    .describe(
+      "When the event happened, as an ISO-8601 timestamp. Older events do not overwrite a newer snapshot.",
+    )
+    .transform((value) => new Date(value)),
+  orderData: externalOrderData.describe(
+    "Whitelisted order snapshot. Fields outside itemSummary, amount, currency, paymentStatus, and deliveryMethod are ignored.",
+  ),
   customer: externalCustomerPublicInput
     .omit({ externalCustomerId: true })
-    .optional(),
+    .optional()
+    .describe(
+      "Contact fields used to create or link the customer when externalCrm.syncCustomer has not run yet.",
+    ),
 })
 
 export const getExternalCustomerPublicRequest = z.object({
-  externalCustomerId: z.string().trim().min(1).max(255),
+  externalCustomerId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .describe("GKamion customer id supplied to externalCrm.syncCustomer."),
 })
 
 export const externalOrderPublicResource = createSelectSchema(
@@ -271,7 +320,7 @@ export const externalOrderPublicResource = createSelectSchema(
     contactId: z.string(),
     workspaceId: z.string(),
   },
-)
+).omit({ workspaceId: true })
 
 export const externalOrderEventPublicResource = createSelectSchema(
   externalOrderEventModel,
@@ -279,7 +328,7 @@ export const externalOrderEventPublicResource = createSelectSchema(
     id: z.string(),
     workspaceId: z.string(),
   },
-)
+).omit({ workspaceId: true })
 
 export const getExternalCustomerPublicResponse = z.object({
   contactId: z.string(),

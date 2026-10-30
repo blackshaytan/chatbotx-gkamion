@@ -1428,6 +1428,26 @@ exports[`public API spec — operation naming guard > operation list (operationI
     "path": "/v1/external-agent",
   },
   {
+    "method": "GET",
+    "operationId": "externalCrm.getCustomer",
+    "path": "/v1/external-crm/customers/orders",
+  },
+  {
+    "method": "GET",
+    "operationId": "externalCrm.getOrderHistory",
+    "path": "/v1/external-crm/orders/history",
+  },
+  {
+    "method": "POST",
+    "operationId": "externalCrm.recordOrderEvent",
+    "path": "/v1/external-crm/orders/events",
+  },
+  {
+    "method": "POST",
+    "operationId": "externalCrm.syncCustomer",
+    "path": "/v1/external-crm/customers/sync",
+  },
+  {
     "method": "POST",
     "operationId": "externalWebhooks.create",
     "path": "/v1/external-webhooks",
