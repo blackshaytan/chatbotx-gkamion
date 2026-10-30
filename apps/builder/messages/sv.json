@@ -1172,6 +1172,17 @@
     "exportTakingLongDescription": "Exporten bearbetas fortfarande. Du kan stänga den här dialogrutan och kontrollera exporthistoriken igen om några minuter.",
     "linkCopied": "Länken har kopierats till urklipp",
     "title": "Kontakter",
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet",
+      "number": "Order",
+      "status": "Status",
+      "amount": "Amount",
+      "items": "Items",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "updated": "Updated"
+    },
     "gkamionCabinet": {
       "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",

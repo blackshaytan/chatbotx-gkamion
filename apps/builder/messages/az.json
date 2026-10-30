@@ -6037,6 +6037,17 @@
     "exportAllNotice": "Cari süzgəcə uyğun bütün kontaktlar ixrac ediləcək.",
     "exportTakingLong": "İxrac gözləniləndən uzun çəkir",
     "exportTakingLongDescription": "İxrac hələ davam edir. Bu pəncərəni bağlayıb bir neçə dəqiqədən sonra ixrac tarixçəsindən yenidən yoxlaya bilərsiniz.",
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet",
+      "number": "Order",
+      "status": "Status",
+      "amount": "Amount",
+      "items": "Items",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "updated": "Updated"
+    },
     "gkamionCabinet": {
       "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",

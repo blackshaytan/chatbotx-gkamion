@@ -5060,6 +5060,17 @@
     "countExact": "{count} liên hệ",
     "countCapped": "{count}+ liên hệ",
     "exportAllNotice": "Tất cả liên hệ khớp với bộ lọc hiện tại sẽ được xuất.",
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet",
+      "number": "Order",
+      "status": "Status",
+      "amount": "Amount",
+      "items": "Items",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "updated": "Updated"
+    },
     "gkamionCabinet": {
       "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",

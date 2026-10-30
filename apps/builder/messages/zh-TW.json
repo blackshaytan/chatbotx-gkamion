@@ -5388,6 +5388,17 @@
     "exportAllNotice": "與目前過濾器相符的所有聯絡人都會被匯出。",
     "exportTakingLong": "匯出花費的時間比預期長",
     "exportTakingLongDescription": "匯出仍在處理中。您可以關閉此對話框，並在幾分鐘後返回檢視匯出歷史記錄。",
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet",
+      "number": "Order",
+      "status": "Status",
+      "amount": "Amount",
+      "items": "Items",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "updated": "Updated"
+    },
     "gkamionCabinet": {
       "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",

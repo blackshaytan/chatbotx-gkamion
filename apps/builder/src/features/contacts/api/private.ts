@@ -1,3 +1,4 @@
+import { externalCrmService } from "@chatbotx.io/business"
 import { notFoundException } from "@chatbotx.io/business/errors"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import z from "zod"
@@ -7,6 +8,7 @@ import { authorizedAPI } from "@/orpc"
 import { resolveGkamionCabinetLinkForContact } from "../lib/gkamion-cabinet"
 import {
   buildContactPermissionScope,
+  requireContactAccessForMember,
   requireContactPermissionScope,
   requireContactPermissionScopeForMember,
 } from "../permissions"
@@ -18,6 +20,7 @@ import {
 } from "../queries/list-contact-inboxes.queries"
 import { countContacts, listContacts } from "../queries/list-contacts.queries"
 import { getExportFileRequest, getExportFileResponse } from "../schema/action"
+import { listContactOrdersResponse } from "../schema/contact-orders"
 import { gkamionCabinetLinkPublicResponse } from "../schema/public/cabinet-link"
 import {
   getContactRequest,
@@ -161,5 +164,35 @@ export const contactsAuthenticatedAPI = {
         contactId: input.contactId,
         accessScope,
       })
+    }),
+
+  listContactOrdersAuthenticatedAPI: authorizedAPI
+    .route({
+      method: "GET",
+      path: "/workspaces/{workspaceId}/contacts/{contactId}/orders",
+      summary: "List contact orders",
+      tags: ["Contacts"],
+    })
+    .input(
+      z.object({
+        workspaceId: zodBigintAsString(),
+        contactId: zodBigintAsString(),
+      }),
+    )
+    .output(listContactOrdersResponse)
+    .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
+    .handler(async ({ input, context }) => {
+      await requireContactAccessForMember({
+        permissions: context.workspaceMember.permissions,
+        userId: context.user.id,
+        workspaceId: input.workspaceId,
+        contactId: input.contactId,
+      })
+      return {
+        data: await externalCrmService.listOrdersForContact({
+          workspaceId: input.workspaceId,
+          contactId: input.contactId,
+        }),
+      }
     }),
 }

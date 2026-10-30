@@ -5355,6 +5355,17 @@
     "exportAllNotice": "سيتم تصدير جميع جهات الاتصال المطابقة لعامل التصفية الحالي.",
     "exportTakingLong": "يستغرق التصدير وقتًا أطول من المتوقع",
     "exportTakingLongDescription": "لا تزال عملية التصدير جارية. يمكنك إغلاق مربع الحوار هذا والتحقق مرة أخرى بعد بضع دقائق من سجل التصدير.",
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet",
+      "number": "Order",
+      "status": "Status",
+      "amount": "Amount",
+      "items": "Items",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "updated": "Updated"
+    },
     "gkamionCabinet": {
       "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",

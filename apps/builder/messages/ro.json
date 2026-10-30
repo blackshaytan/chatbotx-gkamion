@@ -5355,6 +5355,17 @@
     "exportAllNotice": "Toate contactele care corespund filtrului curent vor fi exportate.",
     "exportTakingLong": "Exportul durează mai mult decât era de așteptat",
     "exportTakingLongDescription": "Exportul este încă în curs de procesare. Poți închide acest dialog și poți reveni peste câteva minute din istoricul exporturilor.",
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet",
+      "number": "Order",
+      "status": "Status",
+      "amount": "Amount",
+      "items": "Items",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "updated": "Updated"
+    },
     "gkamionCabinet": {
       "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",

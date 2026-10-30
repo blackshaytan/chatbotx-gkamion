@@ -5355,6 +5355,17 @@
     "exportAllNotice": "Kaikki nykyistä suodatinta vastaavat yhteystiedot viedään.",
     "exportTakingLong": "Vienti kestää odotettua kauemmin",
     "exportTakingLongDescription": "Vientiä käsitellään edelleen. Voit sulkea tämän valintaikkunan ja tarkistaa tilanteen muutaman minuutin kuluttua vientihistoriasta.",
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet",
+      "number": "Order",
+      "status": "Status",
+      "amount": "Amount",
+      "items": "Items",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "updated": "Updated"
+    },
     "gkamionCabinet": {
       "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",

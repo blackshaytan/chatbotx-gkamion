@@ -6037,6 +6037,17 @@
     "exportAllNotice": "All contacts matching the current filter will be exported.",
     "exportTakingLong": "Export is taking longer than expected",
     "exportTakingLongDescription": "The export is still processing. You can close this dialog and check back in a few minutes from the export history.",
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet",
+      "number": "Order",
+      "status": "Status",
+      "amount": "Amount",
+      "items": "Items",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "updated": "Updated"
+    },
     "gkamionCabinet": {
       "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",

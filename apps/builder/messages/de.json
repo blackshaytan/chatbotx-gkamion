@@ -5355,6 +5355,17 @@
     "exportAllNotice": "Alle Kontakte, die dem aktuellen Filter entsprechen, werden exportiert.",
     "exportTakingLong": "Der Export dauert länger als erwartet",
     "exportTakingLongDescription": "Der Export wird noch verarbeitet. Sie können diesen Dialog schließen und in einigen Minuten im Exportverlauf erneut nachsehen.",
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet",
+      "number": "Order",
+      "status": "Status",
+      "amount": "Amount",
+      "items": "Items",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "updated": "Updated"
+    },
     "gkamionCabinet": {
       "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",

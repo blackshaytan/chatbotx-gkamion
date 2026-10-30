@@ -21,6 +21,7 @@ import { useThreadControl } from "../conversations/hooks/use-thread-control"
 import type { TagResource } from "../tags/schema/resource"
 import { ContactTasksSection } from "../tasks/components/contact-tasks-section"
 import { ContactAppointmentsList } from "./components/contact-appointments-list"
+import { ContactOrdersSection } from "./components/contact-orders-section"
 import { ContactThreadControlSection } from "./components/contact-thread-control-section"
 import UpdateContactTagField from "./components/update-contact-tag-field"
 import { ContactDetail } from "./contact-detail"
@@ -255,6 +256,13 @@ export const ContactInboxPanel = ({
           )
         }
       />
+
+      {contactData?.id ? (
+        <ContactOrdersSection
+          contactId={contactData.id}
+          workspaceId={workspaceId}
+        />
+      ) : null}
 
       {SHOW_CONTACT_SIDE_PANEL_MODULES && contactData?.id ? (
         <ContactNotesSection

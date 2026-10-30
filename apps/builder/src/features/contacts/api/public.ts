@@ -9,6 +9,7 @@ import { contactsCrudPublicRouter } from "./public/crud"
 import { contactsCustomFieldsPublicRouter } from "./public/custom-fields"
 import { contactsExportPublicRouter } from "./public/export"
 import { contactsMessagesPublicRouter } from "./public/messages"
+import { contactsOrdersPublicRouter } from "./public/orders"
 import { contactsRefreshProfilePublicRouter } from "./public/refresh-profile"
 import { contactsTagsPublicRouter } from "./public/tags"
 
@@ -18,6 +19,7 @@ export const contactsPublicRouter = {
   ...contactsCustomFieldsPublicRouter,
   ...contactsMessagesPublicRouter,
   ...contactsNotesPublicRouter,
+  ...contactsOrdersPublicRouter,
   ...contactsSequencesPublicRouter,
   ...contactsInboxesPublicRouter,
   ...importPublicRouter,

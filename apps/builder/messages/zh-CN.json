@@ -1360,6 +1360,17 @@
     "exportTakingLongDescription": "导出仍在处理中。您可以关闭此对话框，并在几分钟后返回查看导出历史记录。",
     "linkCopied": "链接已拷贝到剪贴板",
     "title": "联系人",
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet",
+      "number": "Order",
+      "status": "Status",
+      "amount": "Amount",
+      "items": "Items",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "updated": "Updated"
+    },
     "gkamionCabinet": {
       "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",

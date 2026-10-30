@@ -1064,6 +1064,11 @@ exports[`public API spec — operation naming guard > operation list (operationI
   },
   {
     "method": "GET",
+    "operationId": "contacts.listOrders",
+    "path": "/v1/contacts/{identifier}/orders",
+  },
+  {
+    "method": "GET",
     "operationId": "contacts.listSequences",
     "path": "/v1/contacts/{identifier}/sequences",
   },

@@ -23,6 +23,7 @@ import { contactService } from "../contact/service"
 import { notFoundException, validationException } from "../errors"
 import { quotaEnforcementService } from "../quota-enforcement/service"
 import { workspaceService } from "../workspace/service"
+import { toContactOrderSnapshot } from "./order-snapshot"
 
 const PROVIDER = "gkamion"
 const LOCK_TIMEOUT_SECONDS = 30
@@ -308,6 +309,18 @@ class ExternalCrmService extends BaseService {
         })
       },
     })
+  }
+
+  async listOrdersForContact(input: {
+    workspaceId: string
+    contactId: string
+  }) {
+    const orders = await listExternalOrdersForContact({
+      workspaceId: input.workspaceId,
+      provider: PROVIDER,
+      contactId: input.contactId,
+    })
+    return orders.map((order) => toContactOrderSnapshot(order))
   }
 
   async listCustomerOrders(input: {

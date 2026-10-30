@@ -5355,6 +5355,17 @@
     "exportAllNotice": "Geçerli filtreyle eşleşen tüm kişiler dışa aktarılacaktır.",
     "exportTakingLong": "Dışa aktarma beklenenden uzun sürüyor",
     "exportTakingLongDescription": "Dışa aktarma hâlâ işleniyor. Bu iletişim kutusunu kapatıp birkaç dakika sonra dışa aktarma geçmişinden tekrar kontrol edebilirsiniz.",
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet",
+      "number": "Order",
+      "status": "Status",
+      "amount": "Amount",
+      "items": "Items",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "updated": "Updated"
+    },
     "gkamionCabinet": {
       "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",

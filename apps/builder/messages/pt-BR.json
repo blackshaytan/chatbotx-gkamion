@@ -4988,6 +4988,17 @@
     "exportAllNotice": "Todos os contatos que correspondem ao filtro atual serão exportados.",
     "exportTakingLong": "A exportação está demorando mais do que o esperado",
     "exportTakingLongDescription": "A exportação ainda está sendo processada. Você pode fechar esta caixa de diálogo e verificar novamente em alguns minutos no histórico de exportações.",
+    "orders": {
+      "title": "Orders",
+      "empty": "No orders yet",
+      "number": "Order",
+      "status": "Status",
+      "amount": "Amount",
+      "items": "Items",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "updated": "Updated"
+    },
     "gkamionCabinet": {
       "open": "Личный кабинет",
       "notFound": "No gKamion customer found for this phone or email.",
