@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   mockFindActiveByOwner: vi.fn(
     async (): Promise<{ id: string } | undefined> => undefined,
   ),
+  mockListMemberships: vi.fn(async () => [] as { role: string }[]),
   mockRedirect: vi.fn((path: string) => {
     throw new Error(`redirect:${path}`)
   }),
@@ -15,6 +16,9 @@ vi.mock("@chatbotx.io/business", () => ({
   workspaceService: {
     create: mocks.mockWorkspaceCreate,
     findActiveByOwner: mocks.mockFindActiveByOwner,
+  },
+  workspaceMemberService: {
+    listByUserId: mocks.mockListMemberships,
   },
 }))
 vi.mock("next/navigation", () => ({ redirect: mocks.mockRedirect }))
@@ -70,6 +74,13 @@ describe("create-first-workspace", () => {
       data: { name: "New Workspace", ownerId: "user-1" },
       createdBy: "user-1",
     })
+  })
+
+  test("does not mint a workspace for an invited member who already belongs to one", async () => {
+    mocks.mockListMemberships.mockResolvedValueOnce([{ role: "agent" }])
+
+    await expect(createFirstWorkspace("user-1")).rejects.toThrow("redirect:/")
+    expect(mocks.mockWorkspaceCreate).not.toHaveBeenCalled()
   })
 
   test("reuses the user's existing workspace instead of minting a second one (regression I7: a GET-route retry/back-button/replay must not create an orphan workspace every time)", async () => {

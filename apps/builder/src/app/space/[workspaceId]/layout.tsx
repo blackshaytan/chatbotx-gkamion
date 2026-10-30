@@ -159,6 +159,9 @@ export default async function WorkspaceLayout({
       <AppSidebar
         allWorkspaces={allWorkspaces}
         callHistoryNavVisible={realtimeGates.callHistoryNavVisible}
+        canAddWorkspace={
+          !isSupportSession && targetWorkspaceMember.role === "owner"
+        }
         isPlatformAdmin={platformAdmin}
         isSuperAdmin={isSuperAdmin(user)}
         permissions={targetWorkspaceMember.permissions}

@@ -50,10 +50,12 @@ let root: Root | null = null
 
 async function renderWorkspacesList(
   workspaces: Parameters<typeof WorkspacesList>[0]["workspaces"],
+  ownerWorkspaceIds: string[] = [],
 ) {
   const ui = await WorkspacesList({
     user: { name: "Test User", email: "test@example.com", image: null },
     workspaces,
+    ownerWorkspaceIds,
   })
   container = document.createElement("div")
   document.body.appendChild(container)
@@ -84,6 +86,24 @@ describe("WorkspacesList — community edition, zero workspaces", () => {
     // createFirstWorkspace for a user with none yet.
     const createLink = el.querySelector('a[href="/channels/create"]')
     expect(createLink).not.toBeNull()
+  })
+
+  test("hides the card from an invited member who already belongs to a workspace", async () => {
+    mockIsCommunity.mockReturnValue(false)
+    const el = await renderWorkspacesList([
+      {
+        id: "1",
+        name: "GKamion",
+        logo: null,
+        status: "active",
+        endTime: null,
+        scheduledDeletionAt: null,
+      } as unknown as Parameters<
+        typeof WorkspacesList
+      >[0]["workspaces"][number],
+    ])
+
+    expect(el.querySelector('a[href="/channels/create"]')).toBeNull()
   })
 
   test("still hides the card once the workspace already exists", async () => {

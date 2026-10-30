@@ -1,5 +1,6 @@
 import {
   type WorkspaceQuotaConsumption,
+  workspaceMemberService,
   workspaceService,
 } from "@chatbotx.io/business"
 import { ChatbotXException } from "@chatbotx.io/business/errors"
@@ -89,6 +90,16 @@ export async function createFirstWorkspace(
   })
   if (existing) {
     return existing
+  }
+  // An invited member (role agent) has no workspace they own. Creating one
+  // here would give them a workspace of their own. Only a user with no
+  // membership yet may take this first-workspace path.
+  const memberships = await workspaceMemberService.listByUserId({
+    userId,
+    tx,
+  })
+  if (memberships.length > 0) {
+    redirect("/")
   }
   try {
     return await workspaceService.create({

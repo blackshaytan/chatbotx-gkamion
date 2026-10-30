@@ -68,6 +68,7 @@ export function AppSidebar({
   callHistoryNavVisible,
   isSuperAdmin,
   isPlatformAdmin,
+  canAddWorkspace = false,
   permissions,
   quota,
   scheduledForDeletion = false,
@@ -80,6 +81,8 @@ export function AppSidebar({
   callHistoryNavVisible: boolean
   isSuperAdmin?: boolean
   isPlatformAdmin?: boolean
+  /** Current member is the workspace owner, so they may create another workspace. */
+  canAddWorkspace?: boolean
   // Runtime may be a partial object (the jsonb column defaults to `{}`);
   // `hasWorkspacePermission` fails closed on any missing flag.
   permissions: WorkspaceMemberPermissions
@@ -249,7 +252,10 @@ export function AppSidebar({
           <BrandIcon alt="Brand" />
         </Link>
         <div className="border-b px-1">
-          <WorkspaceSwitcher workspaces={allWorkspaces} />
+          <WorkspaceSwitcher
+            canAddWorkspace={canAddWorkspace}
+            workspaces={allWorkspaces}
+          />
         </div>
       </SidebarHeader>
       <SidebarContent>

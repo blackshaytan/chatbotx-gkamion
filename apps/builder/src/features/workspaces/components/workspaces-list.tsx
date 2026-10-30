@@ -203,7 +203,12 @@ const WorkspacesList = async ({
   // are meant to stay single-workspace), but a user with ZERO workspaces has
   // no other path to `/channels/create` anywhere on this page — hiding it
   // here leaves them stuck on a static "no workspaces" message forever.
-  const showCreateCard = !isCommunity() || workspaces.length === 0
+  // An invited member (role agent) already belongs to someone else's
+  // workspace and must not mint their own from this card.
+  const canCreateWorkspace =
+    workspaces.length === 0 || ownerWorkspaceIds.length > 0
+  const showCreateCard =
+    canCreateWorkspace && (!isCommunity() || workspaces.length === 0)
   const ownerIds = new Set(ownerWorkspaceIds)
   const superAdminIds = new Set(superAdminWorkspaceIds)
   const ownerLabel = t("home.owner")

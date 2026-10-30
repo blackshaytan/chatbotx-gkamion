@@ -16,7 +16,10 @@ import { WHATSAPP_OAUTH_CALLBACK_PATH } from "@/features/integration-whatsapp/li
 import { generateZaloRedirectUri } from "@/features/integration-zalo/libs/zalo"
 import { ZzapConnect } from "@/features/integration-zzap/components/zzap-connect"
 import { requireWorkspacePermission } from "@/lib/auth/require-workspace-permission"
-import { getCurrentUserId } from "@/lib/auth/utils"
+import {
+  getCurrentUserAndAllLinkedWorkspaces,
+  getCurrentUserId,
+} from "@/lib/auth/utils"
 import { resolvePlatformOwnerId } from "@/lib/platform-credential-owner"
 import { buildProviderCallbackUrl } from "@/lib/provider-origin"
 import {
@@ -49,6 +52,16 @@ export default async function CreateChannelPage(props: CreateChannelPageProps) {
 
   if (workspaceId) {
     await requireWorkspacePermission(workspaceId, "superAdmin")
+  } else {
+    // No workspace id means "create a workspace", not "add a channel to one".
+    // Invited members already belong to someone else's workspace and must not
+    // mint their own. A user with no workspace yet still can.
+    const linked = await getCurrentUserAndAllLinkedWorkspaces()
+    const members = linked?.allWorkspaceMembers ?? []
+    const ownsWorkspace = members.some((member) => member.role === "owner")
+    if (members.length > 0 && !ownsWorkspace) {
+      redirect("/")
+    }
   }
 
   const selectedChannel = searchParams.channel
