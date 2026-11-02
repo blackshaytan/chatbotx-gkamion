@@ -13,6 +13,15 @@ type ContactOrdersSectionProps = {
 
 const CURRENCY_CODE = /^[A-Za-z]{3}$/
 
+const isHiddenContactOrderStatus = (status: string): boolean => {
+  const normalized = status.trim().toLocaleLowerCase("ru")
+  return (
+    normalized === "выдано" ||
+    normalized === "снят" ||
+    normalized.startsWith("отказ")
+  )
+}
+
 const formatUpdatedAt = (value: Date | string): string => {
   const date = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(date.getTime())) {
@@ -49,6 +58,9 @@ export const ContactOrdersSection = ({
       input: { workspaceId, contactId },
     }),
   )
+  const orders = data?.data.filter(
+    (order) => !isHiddenContactOrderStatus(order.status),
+  )
 
   return (
     <section className="border-t px-2 py-3">
@@ -74,13 +86,13 @@ export const ContactOrdersSection = ({
             {t("actions.retry")}
           </Button>
         </div>
-      ) : !data || data.data.length === 0 ? (
+      ) : !orders || orders.length === 0 ? (
         <p className="mt-2 text-muted-foreground text-sm">
           {t("contacts.orders.empty")}
         </p>
       ) : (
         <div className="mt-2 space-y-3">
-          {data.data.map((order) => (
+          {orders.map((order) => (
             <div className="min-w-0 space-y-0.5" key={order.externalOrderId}>
               <div className="flex items-baseline justify-between gap-2">
                 <span className="font-medium text-sm">
@@ -94,12 +106,12 @@ export const ContactOrdersSection = ({
                 {t("contacts.orders.updated")}:{" "}
                 {formatUpdatedAt(order.lastEventAt)}
               </p>
-              {order.amount !== undefined ? (
+              {order.amount === undefined ? null : (
                 <p className="text-xs">
                   {t("contacts.orders.amount")}:{" "}
                   {formatAmount(order.amount, order.currency)}
                 </p>
-              ) : null}
+              )}
               {order.itemSummary ? (
                 <p className="truncate text-xs">
                   {t("contacts.orders.items")}: {order.itemSummary}
