@@ -7,9 +7,20 @@ import { InputField } from "@chatbotx.io/ui/components/form/input-field"
 import { MultiSelectField } from "@chatbotx.io/ui/components/form/multi-select-field"
 import { SelectField } from "@chatbotx.io/ui/components/form/select-field"
 import { TextareaField } from "@chatbotx.io/ui/components/form/textarea-field"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@chatbotx.io/ui/components/ui/alert-dialog"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
 import {
   Dialog,
+  type DialogChangeEventDetails,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -92,6 +103,8 @@ const reminderLabelKeyByPreset = {
 
 const taskAssigneePattern = /^[ut]_.+/
 
+const dismissReasons = new Set(["outside-press", "escape-key", "close-press"])
+
 const toDate = (value: string | undefined) => {
   if (!value) {
     return
@@ -114,6 +127,7 @@ export const CreateTaskDialog = ({
   const t = useTranslations("tasks")
   const commonT = useTranslations()
   const [internalOpen, setInternalOpen] = useState(false)
+  const [confirmClose, setConfirmClose] = useState(false)
   const isControlled = openProp !== undefined
   const open = isControlled ? openProp : internalOpen
   const wasOpenRef = useRef(false)
@@ -192,8 +206,27 @@ export const CreateTaskDialog = ({
     }),
   )
 
-  const handleOpenChange = (nextOpen: boolean) => {
+  const handleOpenChange = (
+    nextOpen: boolean,
+    eventDetails: DialogChangeEventDetails,
+  ) => {
+    if (
+      !nextOpen &&
+      (createTaskMutation.isPending || dismissReasons.has(eventDetails.reason))
+    ) {
+      eventDetails.cancel()
+      if (!createTaskMutation.isPending) {
+        setConfirmClose(true)
+      }
+      return
+    }
+    setConfirmClose(false)
     setOpen(nextOpen)
+  }
+
+  const handleConfirmClose = () => {
+    setConfirmClose(false)
+    setOpen(false)
   }
 
   const handleReminderPreset = (preset: ReminderPreset) => {
@@ -251,119 +284,142 @@ export const CreateTaskDialog = ({
   const dueDate = toDate(dueAt)
 
   return (
-    <Dialog onOpenChange={handleOpenChange} open={open}>
-      {isControlled ? null : (
-        <DialogTrigger
-          render={
-            trigger ?? <Button type="button">{t("actions.create")}</Button>
-          }
-        />
-      )}
-      <DialogContent className="max-h-[85dvh] max-w-lg overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t("actions.create")}</DialogTitle>
-          <DialogDescription className="sr-only">
-            {t("actions.create")}
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={form.handleSubmit(handleSubmit)}
-          >
-            {defaultTargets?.contactLabel ? (
-              <p className="text-muted-foreground text-sm">
-                {t("contactLabel", { name: defaultTargets.contactLabel })}
-              </p>
-            ) : null}
-            <InputField label={t("fields.title")} name="title" required />
-            <TextareaField label={t("fields.description")} name="description" />
-            {descriptionHint ? (
-              <p className="text-muted-foreground text-sm">{descriptionHint}</p>
-            ) : null}
-            <ComboboxField
-              emptyText={t("empty")}
-              label={t("fields.assignee")}
-              name="assignee"
-              options={assigneeOptions}
-              placeholder={t("fields.assignee")}
-              required
-            />
-            <MultiSelectField
-              label={t("fields.watchers")}
-              name="watcherValues"
-              options={watcherOptions}
-              placeholder={t("fields.watchers")}
-            />
-            <DateTimePickerField
-              label={t("fields.dueAt")}
-              name="dueAt"
-              saveFormat="iso"
-            />
-            <Button
-              onClick={handleClearDueAt}
-              size="sm"
-              type="button"
-              variant="outline"
+    <>
+      <Dialog onOpenChange={handleOpenChange} open={open}>
+        {isControlled ? null : (
+          <DialogTrigger
+            render={
+              trigger ?? <Button type="button">{t("actions.create")}</Button>
+            }
+          />
+        )}
+        <DialogContent className="max-h-[85dvh] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("actions.create")}</DialogTitle>
+            <DialogDescription className="sr-only">
+              {t("actions.create")}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={form.handleSubmit(handleSubmit)}
             >
-              {commonT("actions.clear")}
-            </Button>
-            {dueDate ? (
-              <div className="flex flex-wrap gap-2">
-                {REMINDER_PRESETS.map((preset) => (
-                  <Button
-                    key={preset}
-                    onClick={() => handleReminderPreset(preset)}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    {t(reminderLabelKeyByPreset[preset])}
-                  </Button>
-                ))}
-              </div>
-            ) : null}
-            <DateTimePickerField
-              label={t("fields.remindAt")}
-              name="remindAt"
-              saveFormat="iso"
-            />
-            <Button
-              onClick={handleClearRemindAt}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              {commonT("actions.clear")}
-            </Button>
-            <SelectField
-              label={t("fields.priority")}
-              name="priority"
-              options={[
-                { label: t(priorityLabelKeyByPriority.low), value: "low" },
-                {
-                  label: t(priorityLabelKeyByPriority.normal),
-                  value: "normal",
-                },
-                { label: t(priorityLabelKeyByPriority.high), value: "high" },
-                {
-                  label: t(priorityLabelKeyByPriority.urgent),
-                  value: "urgent",
-                },
-              ]}
-              required
-            />
-            <DialogFooter>
-              <Button disabled={createTaskMutation.isPending} type="submit">
-                {createTaskMutation.isPending ? (
-                  <Loader2Icon className="animate-spin" />
-                ) : null}
-                {t("actions.create")}
+              {defaultTargets?.contactLabel ? (
+                <p className="text-muted-foreground text-sm">
+                  {t("contactLabel", { name: defaultTargets.contactLabel })}
+                </p>
+              ) : null}
+              <InputField label={t("fields.title")} name="title" required />
+              <TextareaField
+                label={t("fields.description")}
+                name="description"
+              />
+              {descriptionHint ? (
+                <p className="text-muted-foreground text-sm">
+                  {descriptionHint}
+                </p>
+              ) : null}
+              <ComboboxField
+                emptyText={t("empty")}
+                label={t("fields.assignee")}
+                name="assignee"
+                options={assigneeOptions}
+                placeholder={t("fields.assignee")}
+                required
+              />
+              <MultiSelectField
+                label={t("fields.watchers")}
+                name="watcherValues"
+                options={watcherOptions}
+                placeholder={t("fields.watchers")}
+              />
+              <DateTimePickerField
+                label={t("fields.dueAt")}
+                name="dueAt"
+                saveFormat="iso"
+              />
+              <Button
+                onClick={handleClearDueAt}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                {commonT("actions.clear")}
               </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+              {dueDate ? (
+                <div className="flex flex-wrap gap-2">
+                  {REMINDER_PRESETS.map((preset) => (
+                    <Button
+                      key={preset}
+                      onClick={() => handleReminderPreset(preset)}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      {t(reminderLabelKeyByPreset[preset])}
+                    </Button>
+                  ))}
+                </div>
+              ) : null}
+              <DateTimePickerField
+                label={t("fields.remindAt")}
+                name="remindAt"
+                saveFormat="iso"
+              />
+              <Button
+                onClick={handleClearRemindAt}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                {commonT("actions.clear")}
+              </Button>
+              <SelectField
+                label={t("fields.priority")}
+                name="priority"
+                options={[
+                  { label: t(priorityLabelKeyByPriority.low), value: "low" },
+                  {
+                    label: t(priorityLabelKeyByPriority.normal),
+                    value: "normal",
+                  },
+                  { label: t(priorityLabelKeyByPriority.high), value: "high" },
+                  {
+                    label: t(priorityLabelKeyByPriority.urgent),
+                    value: "urgent",
+                  },
+                ]}
+                required
+              />
+              <DialogFooter>
+                <Button disabled={createTaskMutation.isPending} type="submit">
+                  {createTaskMutation.isPending ? (
+                    <Loader2Icon className="animate-spin" />
+                  ) : null}
+                  {t("actions.create")}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      <AlertDialog onOpenChange={setConfirmClose} open={confirmClose}>
+        <AlertDialogContent className="z-[60]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("closeConfirm.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("closeConfirm.description")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("closeConfirm.stay")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmClose}>
+              {t("closeConfirm.close")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

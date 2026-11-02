@@ -9372,6 +9372,12 @@
     "validation": {
       "titleRequired": "Enter a task title",
       "assigneeRequired": "Select an assignee"
+    },
+    "closeConfirm": {
+      "title": "Close this window?",
+      "description": "The task will not be saved.",
+      "stay": "Keep editing",
+      "close": "Close"
     }
   }
 }
