@@ -181,6 +181,7 @@ export const staticFieldRules: Record<string, StaticFieldRule> = {
   followUp: booleanRule,
   archived: booleanRule,
   blocked: booleanRule,
+  aiCallOptOut: booleanRule,
   existingContact: booleanRule,
   isGuestUser: booleanRule,
   subjectToEuRules: booleanRule,

@@ -1981,6 +1981,7 @@ describe("applyContactFilter — boolean-from-timestamp columns", () => {
   test.each([
     ["subscribedToBroadcast", "broadcastSubscribedAt"],
     ["blocked", "blockedAt"],
+    ["aiCallOptOut", "aiCallOptOutAt"],
   ])("maps %s to %s null-checks", (field, column) => {
     expect(firstAnd(field, operatorTypes.enum.eq, "true")).toEqual({
       [column]: { isNotNull: true },
@@ -1994,6 +1995,21 @@ describe("applyContactFilter — boolean-from-timestamp columns", () => {
     expect(firstAnd(field, operatorTypes.enum.isNotEmpty)).toEqual({
       [column]: { isNotNull: true },
     })
+  })
+})
+
+describe("applyContactFilter — aiCallOptOut SQL", () => {
+  test.each([
+    ["aiCallOptOut", operatorTypes.enum.eq, "true", "is not null"],
+    ["aiCallOptOut", operatorTypes.enum.eq, "false", "is null"],
+  ])("поле %s %s %s", (field, operator, value, sql) => {
+    const where = applyContactFilter({
+      operator: "and",
+      conditions: [{ field, operator, value }],
+    })
+    const query = renderContactWhere(where)
+    expect(query.sql).toContain(sql)
+    expect(query.sql).toContain("aiCallOptOutAt")
   })
 })
 

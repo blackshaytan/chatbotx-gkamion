@@ -7,11 +7,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@chatbotx.io/ui/components/ui/dropdown-menu"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   ArchiveIcon,
   ArchiveXIcon,
   EllipsisVerticalIcon,
   MailIcon,
+  PhoneIcon,
+  PhoneOffIcon,
   StarIcon,
   StarOffIcon,
   TrashIcon,
@@ -21,8 +24,11 @@ import { useTranslations } from "next-intl"
 import { useAction } from "next-safe-action/hooks"
 import { toast } from "sonner"
 import { useWorkspaceId } from "@/hooks/routing"
+import { orpc } from "@/lib/orpc/query"
 import { useChatStore } from "../chat/store/chat-store-provider"
 import { blockContactAction } from "../contacts/actions/block-contact.action"
+import { clearAiCallOptOutAction } from "../contacts/actions/clear-ai-call-opt-out.action"
+import { setAiCallOptOutAction } from "../contacts/actions/set-ai-call-opt-out.action"
 import { unblockContactAction } from "../contacts/actions/unblock-contact.action"
 import DeleteContactDialog from "../contacts/components/remove-contact-dialog"
 import { archiveConversationAction } from "./actions/archive-conversation.action"
@@ -40,6 +46,7 @@ type ConversationActionProps = {
 export function ConversationAction({ conversation }: ConversationActionProps) {
   const t = useTranslations()
   const workspaceId = useWorkspaceId()
+  const queryClient = useQueryClient()
 
   const {
     deleteConversation,
@@ -165,6 +172,40 @@ export function ConversationAction({ conversation }: ConversationActionProps) {
     },
   )
 
+  const { execute: setAiCallOptOutFn, isExecuting: isSettingAiCallOptOut } =
+    useAction(
+      setAiCallOptOutAction.bind(null, workspaceId, conversation.contactId),
+      {
+        onSuccess: () => {
+          resetConversationState()
+          loadMoreConversations(workspaceId)
+          queryClient.invalidateQueries({ queryKey: orpc.contactsAPIs.key() })
+        },
+        onError: ({ error }) => {
+          if (error.serverError) {
+            toast.error(error.serverError)
+          }
+        },
+      },
+    )
+
+  const { execute: clearAiCallOptOutFn, isExecuting: isClearingAiCallOptOut } =
+    useAction(
+      clearAiCallOptOutAction.bind(null, workspaceId, conversation.contactId),
+      {
+        onSuccess: () => {
+          resetConversationState()
+          loadMoreConversations(workspaceId)
+          queryClient.invalidateQueries({ queryKey: orpc.contactsAPIs.key() })
+        },
+        onError: ({ error }) => {
+          if (error.serverError) {
+            toast.error(error.serverError)
+          }
+        },
+      },
+    )
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -228,6 +269,23 @@ export function ConversationAction({ conversation }: ConversationActionProps) {
           >
             <UserLockIcon />
             {t("actions.blockContact")}
+          </DropdownMenuItem>
+        )}
+        {conversation.contact?.aiCallOptOutAt ? (
+          <DropdownMenuItem
+            disabled={isClearingAiCallOptOut}
+            onClick={() => clearAiCallOptOutFn()}
+          >
+            <PhoneIcon />
+            {t("contactAiCalls.menuEnable")}
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem
+            disabled={isSettingAiCallOptOut}
+            onClick={() => setAiCallOptOutFn({})}
+          >
+            <PhoneOffIcon />
+            {t("contactAiCalls.menuDisable")}
           </DropdownMenuItem>
         )}
 

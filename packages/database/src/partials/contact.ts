@@ -199,6 +199,7 @@ export const contactFilterFields = z.enum([
   "followUp",
   "archived",
   "blocked",
+  "aiCallOptOut",
   "existingContact",
   "isGuestUser",
   "currentChannel",

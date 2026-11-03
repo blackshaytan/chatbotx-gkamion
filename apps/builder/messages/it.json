@@ -1576,7 +1576,8 @@
       "miniApps": "Mini Apps",
       "leaderboards": "Classifiche",
       "tasks": "Tasks",
-      "chats": "Chats"
+      "chats": "Chats",
+      "voiceAgent": "Voice agent"
     },
     "adReferral": {
       "label": "Ads",
@@ -2415,6 +2416,7 @@
       "lastUserInputType": "Tipo dell'ultimo input dell'utente",
       "archived": "Archiviato",
       "blocked": "Bloccato",
+      "aiCallOptOut": "No robot calls",
       "noAdminReply": "Nessuna risposta dell'amministratore",
       "contactCreatedAt": "Contatto creato il",
       "fromCtwaAd": "Da un'inserzione",
@@ -5372,6 +5374,19 @@
       "missingIdentifiers": "Add a phone number or email to open the customer cabinet.",
       "notConfigured": "gKamion cabinet integration is not configured.",
       "error": "Could not open the customer cabinet. Try again."
+    }
+  },
+  "contactAiCalls": {
+    "title": "Robot calls",
+    "toggleLabel": "Robot can call",
+    "optedOutAt": "Opted out on {date} via {source}",
+    "noPhoneWarning": "The contact has no phone number — calls are not blocked until a number appears",
+    "menuDisable": "Disable robot calls",
+    "menuEnable": "Enable robot calls",
+    "sources": {
+      "clientCall": "call",
+      "clientChat": "chat",
+      "manager": "manager"
     }
   },
   "contactScan": {

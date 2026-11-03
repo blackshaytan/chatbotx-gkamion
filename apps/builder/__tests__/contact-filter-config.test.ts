@@ -34,6 +34,7 @@ import {
   convertCustomFieldTypeToConditionType,
   singleContactFilterConditionSchema,
 } from "@/features/contact-filter/schema"
+import { enabledOperatorsForStaticField } from "@/features/contact-filter/schema/static-field-filter"
 
 const t = (key: string) => key
 const conditionOptions = getConditionOptions(t)
@@ -152,6 +153,17 @@ describe("contact filter operator config", () => {
 
     expect(options).toHaveLength(14)
     expect(options.every((item) => item.disabled === false)).toBe(true)
+  })
+
+  test("exposes aiCallOptOut in both static field operator sources", () => {
+    expect(enabledOperatorsForStaticField("aiCallOptOut")).toEqual([
+      operatorTypes.enum.eq,
+      operatorTypes.enum.isEmpty,
+    ])
+    expect(staticFieldRules.aiCallOptOut?.enabledOperators).toEqual([
+      operatorTypes.enum.eq,
+      operatorTypes.enum.isEmpty,
+    ])
   })
 })
 

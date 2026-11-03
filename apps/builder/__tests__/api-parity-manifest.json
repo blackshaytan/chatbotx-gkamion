@@ -82,6 +82,8 @@
     "contacts/unblock-contact.action:unblockContactAction": "covered:contacts",
     "contacts/update-contact-field.action:updateContactFieldAction": "covered:contacts",
     "contacts/update-contact-tag.action:updateContactTagAction": "covered:contacts",
+    "contacts/set-ai-call-opt-out.action:setAiCallOptOutAction": "covered:voice-agent",
+    "contacts/clear-ai-call-opt-out.action:clearAiCallOptOutAction": "private:manager-only removal of the robot-call opt-out; agents set the flag with voiceAgent.optOut, stage 0 has no public clear",
     "conversations/archive-conversation.action:archiveConversationAction": "covered:conversations",
     "conversations/assign-conversation.action:assignConversationAction": "covered:conversations",
     "conversations/disable-bot.action:disableBotAction": "covered:conversations",

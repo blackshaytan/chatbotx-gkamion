@@ -3064,6 +3064,16 @@ exports[`public API spec — operation naming guard > operation list (operationI
   },
   {
     "method": "POST",
+    "operationId": "voiceAgent.checkPolicy",
+    "path": "/v1/voice-agent/policy/check",
+  },
+  {
+    "method": "POST",
+    "operationId": "voiceAgent.optOut",
+    "path": "/v1/voice-agent/opt-out",
+  },
+  {
+    "method": "POST",
     "operationId": "webchats.create",
     "path": "/v1/webchats",
   },

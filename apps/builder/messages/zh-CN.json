@@ -1187,6 +1187,7 @@
       "appliedJobs": "申请的职位",
       "archived": "已封存",
       "blocked": "已阻止",
+      "aiCallOptOut": "No robot calls",
       "bought": "已购买",
       "boughtItems": "购买了项目",
       "broadcastClicked": "广播已点击",
@@ -1377,6 +1378,19 @@
       "missingIdentifiers": "Add a phone number or email to open the customer cabinet.",
       "notConfigured": "gKamion cabinet integration is not configured.",
       "error": "Could not open the customer cabinet. Try again."
+    }
+  },
+  "contactAiCalls": {
+    "title": "Robot calls",
+    "toggleLabel": "Robot can call",
+    "optedOutAt": "Opted out on {date} via {source}",
+    "noPhoneWarning": "The contact has no phone number — calls are not blocked until a number appears",
+    "menuDisable": "Disable robot calls",
+    "menuEnable": "Enable robot calls",
+    "sources": {
+      "clientCall": "call",
+      "clientChat": "chat",
+      "manager": "manager"
     }
   },
   "contactScan": {
@@ -3379,7 +3393,8 @@
       "miniApps": "迷你应用",
       "leaderboards": "排行榜",
       "tasks": "Tasks",
-      "chats": "Chats"
+      "chats": "Chats",
+      "voiceAgent": "Voice agent"
     },
     "adReferral": {
       "label": "Ads",

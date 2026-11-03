@@ -846,7 +846,8 @@
       "ctwaConversionTypes": {
         "lead": "Лид",
         "purchase": "Покупка"
-      }
+      },
+      "aiCallOptOut": "Без звонков робота"
     },
     "fieldGroups": {
       "opportunity": "Сделка",
@@ -2634,7 +2635,8 @@
       "miniApps": "Мини-приложения",
       "leaderboards": "Рейтинги",
       "tasks": "Задачи",
-      "chats": "Чаты"
+      "chats": "Чаты",
+      "voiceAgent": "Голосовой робот"
     },
     "adReferral": {
       "label": "Реклама",
@@ -9378,6 +9380,19 @@
       "description": "Задача не сохранится.",
       "stay": "Продолжить редактирование",
       "close": "Закрыть"
+    }
+  },
+  "contactAiCalls": {
+    "title": "Звонки робота",
+    "toggleLabel": "Робот может звонить",
+    "optedOutAt": "Запрет установлен {date}, источник: {source}",
+    "noPhoneWarning": "У контакта нет телефона — звонки не заблокированы, пока номер не появится",
+    "menuDisable": "Запретить звонки робота",
+    "menuEnable": "Разрешить звонки робота",
+    "sources": {
+      "clientCall": "«звонок»",
+      "clientChat": "«чат»",
+      "manager": "«менеджер»"
     }
   }
 }

@@ -10,7 +10,7 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core"
-import { genderTypes } from "../partials"
+import { aiCallOptOutSourceSchema, genderTypes } from "../partials"
 import {
   bigintAsString,
   sharedColumns,
@@ -21,6 +21,11 @@ import { workspaceModel } from "./workspace"
 export const gender = pgEnum(
   "gender",
   genderTypes.options as [string, ...string[]],
+)
+
+export const aiCallOptOutSource = pgEnum(
+  "aiCallOptOutSource",
+  aiCallOptOutSourceSchema.options as [string, ...string[]],
 )
 
 /**
@@ -67,6 +72,9 @@ export const contactModel = pgTable(
     subscribedAt: timestamp(timestampConfig),
     broadcastSubscribedAt: timestamp(timestampConfig),
     blockedAt: timestamp(timestampConfig),
+    aiCallOptOutAt: timestamp(timestampConfig),
+    aiCallOptOutSource: aiCallOptOutSource(),
+    aiCallOptOutReason: text(),
     totalTagged: integer().notNull().default(0),
     totalNewTagged: integer().notNull().default(0),
     workspaceId: bigintAsString()
@@ -84,6 +92,9 @@ export const contactModel = pgTable(
       table.workspaceId,
       table.createdAt,
     ),
+    index("Contact_workspace_ai_call_opt_out_idx")
+      .on(table.workspaceId, table.aiCallOptOutAt)
+      .where(sql`${table.aiCallOptOutAt} is not null`),
     // Covers the identifier→id equality lookup used by
     // `packages/business/src/contact/utils.ts#parseContactIdentifier` for
     // the public API's `identifier: "email:..."/"phone:..."` syntax —

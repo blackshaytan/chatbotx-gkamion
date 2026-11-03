@@ -47,9 +47,15 @@ jobs:
           __tests__/public-spec-options.test.ts
           __tests__/public-spec-mcp.test.ts
           __tests__/external-agent-api.test.ts
+          __tests__/voice-agent-api.test.ts
+          __tests__/contact-filter-config.test.ts
+          __tests__/contact-inbox-panel.test.tsx
+          src/features/contacts/components/__tests__/contact-ai-calls-section.test.tsx
           src/features/external-crm/schema/__tests__/public.test.ts
           __tests__/tasks-public-api.test.ts
           __tests__/tasks-private-api.test.ts
+          __tests__/chats-private-api.test.ts
+          __tests__/authorize-workspace-access.test.ts
           __tests__/tasks-comments-api.test.ts
           __tests__/task-attachment-route.test.ts
           __tests__/tasks-mention-serialize.test.ts
@@ -62,6 +68,10 @@ jobs:
           src/features/flows/react-flow/steps/__tests__/create-task-registration.test.ts
           src/features/flows/react-flow/steps/create-task/__tests__/assignee-value.test.ts
           src/features/flows/react-flow/nodes/perform-action/__tests__/menu.test.ts
+          src/features/chats/lib/__tests__/chat-controls.test.ts
+          src/features/chats/lib/__tests__/message-groups.test.ts
+          src/features/chats/lib/__tests__/message-pages.test.ts
+          src/features/chats/lib/__tests__/read-throttle.test.ts
 
       - working-directory: packages/flow-config
         run: >-
@@ -96,12 +106,14 @@ jobs:
           pnpm exec vitest run
           __tests__/conversation-unread.test.ts
           __tests__/contact-filter.test.ts
+          __tests__/voice-agent-partial.test.ts
           __tests__/sharded-message-repository.test.ts
           __tests__/task-partial.test.ts
           __tests__/task-list-where.test.ts
           __tests__/chat-partials.test.ts
           __tests__/staff-chat-schema.test.ts
           __tests__/chat-repository.test.ts
+          __tests__/chat-message-pagination.test.ts
 
       - working-directory: apps/worker
         run: pnpm exec vitest run __tests__/notification __tests__/incoming-push-policy.test.ts __tests__/received-message.test.ts
@@ -111,6 +123,7 @@ jobs:
           pnpm exec vitest run
           __tests__/external-agent
           __tests__/external-agent/manager-join.test.ts
+          __tests__/voice-agent
           __tests__/conversation-service.test.ts
           __tests__/message-create-outgoing.test.ts
           src/conversation/__tests__/conversation.service.test.ts
@@ -141,6 +154,7 @@ jobs:
           __tests__/create-task-step-registration.test.ts
           __tests__/integration-worker-boot.test.ts
           __tests__/integration-worker-incoming-message.test.ts
+          __tests__/voice-opt-out.test.ts
           __tests__/external-request-handler.test.ts
 
   check-types:

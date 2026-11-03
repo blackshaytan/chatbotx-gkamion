@@ -563,6 +563,9 @@ function buildConditionWhere(
     case "blocked":
       return buildBooleanFromTimestamp("blockedAt", operator, value)
 
+    case "aiCallOptOut":
+      return buildBooleanFromTimestamp("aiCallOptOutAt", operator, value)
+
     case "interactedInLast24h":
       return buildExistsBooleanWhere(
         contactInboxExists,

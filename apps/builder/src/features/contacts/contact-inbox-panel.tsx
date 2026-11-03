@@ -20,6 +20,7 @@ import UpdateContactSequenceField, {
 import { useThreadControl } from "../conversations/hooks/use-thread-control"
 import type { TagResource } from "../tags/schema/resource"
 import { ContactTasksSection } from "../tasks/components/contact-tasks-section"
+import { ContactAiCallsSection } from "./components/contact-ai-calls-section"
 import { ContactAppointmentsList } from "./components/contact-appointments-list"
 import { ContactOrdersSection } from "./components/contact-orders-section"
 import { ContactThreadControlSection } from "./components/contact-thread-control-section"
@@ -260,6 +261,13 @@ export const ContactInboxPanel = ({
       {contactData?.id ? (
         <ContactOrdersSection
           contactId={contactData.id}
+          workspaceId={workspaceId}
+        />
+      ) : null}
+
+      {contactData?.id ? (
+        <ContactAiCallsSection
+          contact={contactData}
           workspaceId={workspaceId}
         />
       ) : null}

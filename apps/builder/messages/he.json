@@ -3179,6 +3179,19 @@
       "error": "Could not open the customer cabinet. Try again."
     }
   },
+  "contactAiCalls": {
+    "title": "Robot calls",
+    "toggleLabel": "Robot can call",
+    "optedOutAt": "Opted out on {date} via {source}",
+    "noPhoneWarning": "The contact has no phone number — calls are not blocked until a number appears",
+    "menuDisable": "Disable robot calls",
+    "menuEnable": "Enable robot calls",
+    "sources": {
+      "clientCall": "call",
+      "clientChat": "chat",
+      "manager": "manager"
+    }
+  },
   "contactScan": {
     "menu": {
       "importFromFile": "Import from File",
@@ -6294,7 +6307,8 @@
       "miniApps": "Mini Apps",
       "leaderboards": "טבלאות מובילים",
       "tasks": "Tasks",
-      "chats": "Chats"
+      "chats": "Chats",
+      "voiceAgent": "Voice agent"
     },
     "adReferral": {
       "label": "Ads",
@@ -6810,6 +6824,7 @@
       "lastUserInputType": "סוג קלט המשתמש האחרון",
       "archived": "בארכיון",
       "blocked": "חסום",
+      "aiCallOptOut": "No robot calls",
       "noAdminReply": "אין תשובה ממנהל מערכת",
       "contactCreatedAt": "איש הקשר נוצר בתאריך",
       "fromCtwaAd": "ממודעה",

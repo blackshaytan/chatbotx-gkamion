@@ -84,6 +84,7 @@ import {
   releaseOwnedThread,
 } from "./handlers/thread-control"
 import { receiveTiktokHighIntentComment } from "./handlers/tiktok-high-intent-comment"
+import { applyVoiceOptOut } from "./handlers/voice-opt-out"
 import { runWaitResume } from "./handlers/wait-resume"
 import { handleWhatsappCallEvent } from "./handlers/whatsapp-call"
 import { handleWhatsappCallNativeRecordingFetch } from "./handlers/whatsapp-call-native-recording"
@@ -201,6 +202,14 @@ async function startIntegrationWorker() {
               if (!message) {
                 return
               }
+
+              await applyVoiceOptOut({
+                workspaceId: conversation.workspaceId,
+                contactId: conversation.contactId,
+                messageType: "incoming",
+                text: message.text ?? null,
+                senderIsContact: message.senderType === "contact",
+              })
 
               const isNotPostbackOrQuickReply = !(
                 postbackAction || quickReplyAction

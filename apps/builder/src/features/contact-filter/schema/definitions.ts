@@ -141,6 +141,11 @@ export const CONTACT_FILTER_FIELD_DEFINITIONS = [
     optionSource: "none",
   },
   {
+    field: contactFilterFields.enum.aiCallOptOut,
+    schemaKind: "boolean",
+    optionSource: "none",
+  },
+  {
     field: contactFilterFields.enum.existingContact,
     schemaKind: "boolean",
     optionSource: "none",

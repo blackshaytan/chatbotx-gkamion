@@ -9,6 +9,9 @@ import type { UseAutoRefreshContactProfileProps } from "@/features/contacts/hook
 import type { ThreadControlView } from "@/features/conversations/utils/thread-control"
 
 vi.mock("next-intl", () => ({
+  useFormatter: () => ({
+    dateTime: () => "mocked date",
+  }),
   useTranslations: () => (key: string) => key,
 }))
 

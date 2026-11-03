@@ -109,6 +109,7 @@ const STATIC_OPERATOR_RULES: Record<string, readonly OperatorType[]> = {
   followUp: BOOLEAN_OPERATORS,
   archived: BOOLEAN_OPERATORS,
   blocked: BOOLEAN_OPERATORS,
+  aiCallOptOut: BOOLEAN_OPERATORS,
   existingContact: BOOLEAN_OPERATORS,
   unreplied: BOOLEAN_OPERATORS,
   unread: BOOLEAN_OPERATORS,

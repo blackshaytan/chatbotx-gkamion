@@ -1,3 +1,5 @@
+import { POLICY_CHECK_PATH } from "@/features/voice-agent/lib/api-paths"
+
 export const IDEMPOTENCY_KEY_HEADER = "Idempotency-Key"
 export const IDEMPOTENT_REPLAYED_HEADER = "Idempotent-Replayed"
 export const MAX_IDEMPOTENCY_KEY_LENGTH = 255
@@ -15,4 +17,6 @@ export const IDEMPOTENCY_EXEMPT_READ_PATHS: ReadonlySet<string> = new Set([
   // A dry run of a mapping: nothing is written, and the verdict depends on
   // the workspace's current custom fields.
   "/v1/inbound-webhooks/preview-mapping",
+  // A replayed policy would go stale as soon as the contact or workspace state changes.
+  POLICY_CHECK_PATH,
 ])

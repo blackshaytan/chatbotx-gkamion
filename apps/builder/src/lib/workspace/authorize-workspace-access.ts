@@ -14,6 +14,7 @@ import {
   FILTER_VALUE_LABELS_TOKEN_PATH,
 } from "@/features/contact-filter/lib/api-paths"
 import { CONVERSATIONS_LIST_POST_PATH } from "@/features/conversations/lib/api-paths"
+import { POLICY_CHECK_PATH } from "@/features/voice-agent/lib/api-paths"
 
 export type WorkspaceAccessDenialReason = "trialExpired" | "macLimitReached"
 
@@ -81,12 +82,19 @@ const READ_ONLY_TOKEN_ALLOWED_METHODS = new Set<HTTPMethod>(["GET", "HEAD"])
  *   `read_only` tokens: unlike `broadcasts.getAudience` (bounded by broadcasts
  *   that already exist) they page every contact of the workspace and accept
  *   an arbitrary `contactFilter`.
+ * - `POLICY_CHECK_PATH` (`/v1/voice-agent/policy/check`): a pure read that
+ *   returns whether an automated voice call is allowed for a phone number.
+ *   The underlying `resolveVoiceCallPolicy` performs no writes on any success
+ *   path. Allow-listed for `read_only` tokens only — it has not been reviewed
+ *   against the trial/MAC-limit gate, so it stays out of `READ_ONLY_POST_PATHS`.
  */
 
 const READ_ONLY_TOKEN_ALLOWED_POST_PATHS = new Set<string>([
   ADS_CAMPAIGNS_INSIGHTS_PATH,
   // Tag-id -> name lookup only: a primary-key read, no writes.
   FILTER_VALUE_LABELS_TOKEN_PATH,
+  // Voice-agent policy read: no writes on any success path.
+  POLICY_CHECK_PATH,
 ])
 
 /**

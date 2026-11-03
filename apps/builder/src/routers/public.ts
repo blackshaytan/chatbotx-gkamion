@@ -94,6 +94,7 @@ import { tiktokCommentsPublicRouter } from "@/features/tiktok-comments/api/publi
 import { tokenPublicRouter } from "@/features/token/api/public"
 import { triggersPublicRouter } from "@/features/triggers/api/public"
 import { userPersistentMenusPublicRouter } from "@/features/user-persistent-menus/api/public"
+import { voiceAgentPublicRouter } from "@/features/voice-agent/api/public"
 import { webhooksPublicRouter } from "@/features/webhooks/api/public"
 import { whatsappCallsPublicRouter } from "@/features/whatsapp-calls/api/public"
 import { workspaceMembersPublicRouter } from "@/features/workspace-members/api/public"
@@ -185,6 +186,7 @@ export const publicRouter = {
   },
   triggers: triggersPublicRouter,
   userPersistentMenus: userPersistentMenusPublicRouter,
+  voiceAgent: voiceAgentPublicRouter,
   webchats: webchatsPublicRouter,
   webhooks: webhooksPublicRouter,
   whatsappCalls: whatsappCallsPublicRouter,
