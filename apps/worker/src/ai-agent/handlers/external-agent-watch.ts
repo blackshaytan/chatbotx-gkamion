@@ -32,6 +32,7 @@ import {
   loadConversationContext,
   selectNewMessages,
   sendClientText,
+  resolveAgentPhotoReply,
   stopRunQuietly,
   withExternalAgentLock,
 } from "./external-agent-shared"
@@ -143,11 +144,16 @@ const completeRun = async (
       workspaceId: batch.data.workspaceId,
     },
   })
-  const shouldSend = text !== "" && Boolean(conversation?.botEnabled)
+  // Photo-in-bubble: move a markdown image / img-server URL out of the text
+  // into the send job's `url` (the bubble renders it as an attachment).
+  const photo = resolveAgentPhotoReply(text)
+  const photoText = photo.url ? photo.text : text
+  const shouldSend = (photoText !== "" || Boolean(photo.url)) && Boolean(conversation?.botEnabled)
   if (shouldSend) {
     await sendClientText({
       context: batch.context,
-      text,
+      text: photoText,
+      ...(photo.url ? { url: photo.url } : {}),
       jobId: sendJobId(batch.data, "final"),
     })
   }

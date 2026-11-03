@@ -182,9 +182,30 @@ export const toInputMessages = async (
   )
 
 /** `jobId` makes a re-run of the same step reuse the queued send instead of sending twice. */
+/** Extracts one photo from the agent's final output as an attachment for the
+ * client bubble. The external-agent bridge can only carry plain text, while the
+ * client chat renders images from a message attachment — so a markdown photo in
+ * the reply (`![alt](url)`) or a bare `img-server-*` URL is moved into the send
+ * job's `url` (`sendChatMessage` re-hosts the file) and dropped from the text.
+ * If the download fails, `sendChatMessage` falls back to text with the URL.
+ * Photo-in-bubble request by the owner, 03.11. */
+export const resolveAgentPhotoReply = (output: string): { text: string; url?: string } => {
+  const md = output.match(/!\[[^\]\n]*]\((https?:\/\/[^)\s]+)\)/)
+  if (md) {
+    return { text: output.replace(md[0], "").trim(), url: md[1] }
+  }
+  const bare = output.match(/https?:\/\/img-server[\w.-]*\/[^\s)\]]+/)
+  if (bare) {
+    return { text: output.replace(bare[0], "").trim(), url: bare[0] }
+  }
+  return { text: output }
+}
+
 export const sendClientText = async (input: {
   context: ExternalAgentConversationContext
   text: string
+  /** Optional photo: `sendChatMessage` re-hosts it and renders an image bubble. */
+  url?: string
   jobId?: string
   /** Handover confirmations are platform messages, not agent replies. */
   signAsExternalAgent?: boolean
@@ -197,6 +218,7 @@ export const sendClientText = async (input: {
         conversation: input.context.conversation,
         contactInbox: input.context.contactInbox,
         text: input.text,
+        ...(input.url ? { url: input.url } : {}),
         ...(input.signAsExternalAgent === false
           ? {}
           : { signAs: "externalAgent" as const }),
