@@ -3,10 +3,14 @@ import { automatedResponseService } from "@chatbotx.io/automated-response"
 import {
   conversationService,
   flushAllPendingWorkspaceBroadcasts,
+  resolveWorkspaceFreezeReasonById,
+  settleBlockedOrderNotification,
+  smartDelayService,
   withBlockedOwnerGuard,
 } from "@chatbotx.io/business"
 import { channelTypes } from "@chatbotx.io/database/partials"
 import { emit } from "@chatbotx.io/event-bus"
+import { ORDER_NOTIFICATION_PAYLOAD_TYPE } from "@chatbotx.io/flow-config"
 import {
   AIJobAction,
   aiAgentQueue,
@@ -165,6 +169,52 @@ async function resolveVoipSignalingWorkspaceId(
   }
 }
 
+async function recordBlockedOrderNotification(
+  job: IntegrationJobData,
+  workspaceId: string,
+) {
+  const { freezeReason } = await resolveWorkspaceFreezeReasonById(workspaceId)
+  const reason = freezeReason ?? "ownerBlocked"
+  if (
+    job.type === IntegrationJobAction.sendFlow ||
+    job.type === IntegrationJobAction.resumeHeavyStep
+  ) {
+    const metadata = job.data.metadata
+    if (metadata?.type === ORDER_NOTIFICATION_PAYLOAD_TYPE) {
+      await settleBlockedOrderNotification({
+        workspaceId,
+        flowRunId: metadata.flowRunId,
+        reason,
+      })
+    }
+    return
+  }
+  if (job.type !== IntegrationJobAction.resumeWait) {
+    return
+  }
+  const row = await smartDelayService.findById({ id: job.data.smartDelayId })
+  if (!row || row.workspaceId !== workspaceId) {
+    return
+  }
+  const metadata = row.metadata
+  if (
+    typeof metadata !== "object" ||
+    metadata === null ||
+    !("type" in metadata) ||
+    metadata.type !== ORDER_NOTIFICATION_PAYLOAD_TYPE ||
+    !("flowRunId" in metadata) ||
+    typeof metadata.flowRunId !== "string"
+  ) {
+    return
+  }
+  await settleBlockedOrderNotification({
+    workspaceId,
+    flowRunId: metadata.flowRunId,
+    smartDelayId: row.id,
+    reason,
+  })
+}
+
 async function startIntegrationWorker() {
   registerNotificationRealtime()
   try {
@@ -177,6 +227,9 @@ async function startIntegrationWorker() {
   const processIntegrationJob = async (job: Job<IntegrationJobData>) => {
     const workspaceId = await resolveWorkspaceId(job.data.data)
     if (await isBlockedWorkspace(workspaceId)) {
+      if (workspaceId) {
+        await recordBlockedOrderNotification(job.data, workspaceId)
+      }
       return
     }
 

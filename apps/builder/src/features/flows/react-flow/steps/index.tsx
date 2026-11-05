@@ -66,6 +66,7 @@ import sendImageStep from "./send-image"
 import sendMessengerTemplateMessageStep from "./send-messenger-template-message"
 import { sendMetaCapiEventStep } from "./send-meta-capi-event"
 import sendMultipleImagesStep from "./send-multiple-images"
+import { sendOrderNotificationStep } from "./send-order-notification"
 import sendProductsStep from "./send-products"
 import sendTextStep from "./send-text"
 import { sendVideoStep } from "./send-video"
@@ -128,6 +129,7 @@ export const allSteps: Record<StepType, StepDefinition<any> | undefined> = {
   [stepTypes.enum.createTask]: createTaskStep,
   [stepTypes.enum.make]: makeStep,
   [stepTypes.enum.triggerN8n]: triggerN8nStep,
+  [stepTypes.enum.sendOrderNotification]: sendOrderNotificationStep,
   [stepTypes.enum.executeJavascript]: executeJavascriptStep,
   [stepTypes.enum.disableBot]: disableBotStep,
   [stepTypes.enum.enableBot]: enableBotStep,

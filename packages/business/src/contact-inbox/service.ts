@@ -14,6 +14,7 @@ import {
   sql,
 } from "@chatbotx.io/database/client"
 import {
+  contactSources,
   type ProfileSnapshotState,
   profileSnapshotChannels,
 } from "@chatbotx.io/database/partials"
@@ -55,6 +56,7 @@ import { GOOGLE_CLICK_REFERRAL_KEYS } from "@chatbotx.io/utils/google-click"
 import { BaseService } from "../base.service"
 import { PROFILE_NAME_BLANK_CHARACTERS } from "../contact/profile-refresh/rules"
 import { logger } from "../logger"
+import { messageCleanupService } from "../message-cleanup/service"
 import {
   type ContactInboxBackfillField,
   type ContactInboxIdentityField,
@@ -659,6 +661,68 @@ class ContactInboxService extends BaseService {
       where: { inboxId, sourceId },
       orderBy: { lastMessageAt: "desc" },
     })
+  }
+
+  /**
+   * Opens a channel dialog for a contact that already exists. Used when an
+   * order notification has an email and exactly one SMTP inbox, and this
+   * contact has no mail dialog yet. A source id that already belongs to
+   * someone else is left untouched.
+   */
+  async connectExistingContact(props: {
+    workspaceId: string
+    contactId: string
+    inboxId: string
+    channel: string
+    sourceId: string
+  }): Promise<ContactInboxModel | null> {
+    const existing = await this.findLatestBySource({
+      inboxId: props.inboxId,
+      sourceId: props.sourceId,
+      workspaceId: props.workspaceId,
+    })
+    if (existing) {
+      return existing.contactId === props.contactId ? existing : null
+    }
+
+    try {
+      const [created] = await db.transaction(async (tx) => {
+        await messageCleanupService.cancelByInboxSource({
+          inboxId: props.inboxId,
+          sourceIds: [props.sourceId],
+          tx,
+        })
+        return await tx
+          .insert(contactInboxModel)
+          .values({
+            originalContactId: props.contactId,
+            contactId: props.contactId,
+            inboxId: props.inboxId,
+            channel: props.channel,
+            source: contactSources.enum.api,
+            sourceId: props.sourceId,
+          })
+          .returning()
+      })
+      if (!created) {
+        return null
+      }
+      await this.invalidateCacheTags([
+        `contacts:${props.workspaceId}:${props.contactId}:contact-inboxes`,
+        ...this.getTrackingCacheTags(props.contactId),
+      ])
+      return created
+    } catch (error) {
+      if (!isUniqueViolationError(error)) {
+        throw error
+      }
+      const raced = await this.findLatestBySource({
+        inboxId: props.inboxId,
+        sourceId: props.sourceId,
+        workspaceId: props.workspaceId,
+      })
+      return raced?.contactId === props.contactId ? raced : null
+    }
   }
 
   /** One of the contact's own connections, by id (workspace-scoped), if it still has it. */

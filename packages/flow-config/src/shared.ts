@@ -49,6 +49,7 @@ import { questionnairesStepSchema } from "./steps/questionnaires"
 import { removeContactTagStepSchema } from "./steps/remove-contact-tag"
 import { sendGoogleAdsConversionSchema } from "./steps/send-google-ads-conversion"
 import { sendMetaCapiEventSchema } from "./steps/send-meta-capi-event"
+import { sendOrderNotificationStepSchema } from "./steps/send-order-notification"
 import { sendGridAddContactSchema } from "./steps/sendgrid-add-contact"
 import { setCustomFieldStepSchema } from "./steps/set-custom-field"
 import { setMessengerPersonaStepSchema } from "./steps/set-messenger-persona"
@@ -124,7 +125,11 @@ const toolSteps = [
   evaluateDecisionStepSchema,
 ]
 
-const triggerSteps = [makeStepSchema, triggerN8nStepSchema]
+const triggerSteps = [
+  makeStepSchema,
+  triggerN8nStepSchema,
+  sendOrderNotificationStepSchema,
+]
 
 const emailSteps = [
   markEmailVerifiedStepSchema,

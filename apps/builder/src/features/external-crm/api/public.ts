@@ -45,7 +45,7 @@ export const externalCrmPublicRouter = {
       path: "/v1/external-crm/orders/events",
       summary: "Record external order event",
       description:
-        "Records an idempotent gkamion order event and updates the current order snapshot only when the event is at least as recent as the stored state. `externalCustomerId` is the customer's gkamion id; `externalOrderId` comes from the gkamion order. `eventId` must be stable across retries. Sync the customer first with `externalCrm.syncCustomer`, or include `customer` to create/link it when needed. Returns `duplicate: true` when this event was already stored.",
+        "Records an idempotent gkamion order event and updates the current order snapshot only when the event is at least as recent as the stored state. `externalCustomerId` is the customer's gkamion id; `externalOrderId` comes from the gkamion order. `eventId` must be stable across retries. Sync the customer first with `externalCrm.syncCustomer`, or include `customer` or `orderData.phone` / `orderData.email` to create/link it when needed. When `statusId` is set, every published flow subscribed to that status sends the client notification. `itemStatusChanged` also requires `externalOrderItemId`. Returns `duplicate: true` when this event was already stored and its flows were already started.",
       tags: ["External CRM"],
     })
     .input(recordExternalOrderEventPublicRequest)

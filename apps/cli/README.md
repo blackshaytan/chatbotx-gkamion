@@ -936,7 +936,8 @@ Sync customer/order data from a trusted server and read it from an agent. See `d
 
 ```bash
 chatbotx external-crm customers-sync --customer '{"externalCustomerId":"<gkamion-user-id>","email":"<email>","phoneNumber":"<phone>"}'
-chatbotx external-crm orders-events --eventId <stable-event-id> --externalCustomerId <gkamion-user-id> --externalOrderId <order-id> --eventType orderCreated|paymentReceived|statusChanged --status <status> --occurredAt <ISO-8601> --orderData '<json>'
+chatbotx external-crm orders-events --eventId <stable-event-id> --externalCustomerId <gkamion-user-id> --externalOrderId <order-id> --eventType orderCreated|paymentReceived|statusChanged|itemStatusChanged --status <status> --statusId <number> --externalOrderItemId <item-id> --occurredAt <ISO-8601> --orderData '<json>'
+                                                    # itemStatusChanged requires --externalOrderItemId. statusId starts published order-notification flows. orderData may include deliveryMethod, hasDebt, amount, itemSummary, billUrl, orderNumber, phone, email. See docs/external-crm-sync.md
 chatbotx external-crm customers-orders --externalCustomerId <gkamion-user-id>
 chatbotx external-crm orders-history --externalOrderId <order-id>
 ```

@@ -1,3 +1,4 @@
+import { externalOrderEventTypes } from "@chatbotx.io/database/partials"
 import {
   createSelectSchema,
   externalOrderEventModel,
@@ -10,7 +11,16 @@ const externalOrderData = z.object({
   amount: z.number().finite().nonnegative().optional(),
   currency: z.string().length(3).optional(),
   paymentStatus: z.string().max(100).optional(),
-  deliveryMethod: z.string().max(100).optional(),
+  deliveryMethod: z
+    .string()
+    .max(100)
+    .optional()
+    .describe("pickup or delivery. Other values do not match a flow check."),
+  hasDebt: z.boolean().optional(),
+  billUrl: z.string().max(2000).optional(),
+  orderNumber: z.string().max(100).optional(),
+  phone: z.string().max(50).optional(),
+  email: z.string().max(320).optional(),
 })
 
 const whitespaceRegex = /\s+/
@@ -276,17 +286,31 @@ export const recordExternalOrderEventPublicRequest = z.object({
     .describe(
       "GKamion order id. Read it later with externalCrm.getOrderHistory.",
     ),
-  eventType: z
-    .enum(["orderCreated", "paymentReceived", "statusChanged"])
-    .describe(
-      "Kind of order event: orderCreated, paymentReceived, or statusChanged.",
-    ),
+  eventType: externalOrderEventTypes.describe(
+    "Kind of order event: orderCreated, paymentReceived, statusChanged, or itemStatusChanged.",
+  ),
   status: z
     .string()
     .trim()
     .min(1)
     .max(100)
     .describe("Current order status label from GKamion."),
+  statusId: z
+    .number()
+    .int()
+    .optional()
+    .describe(
+      "Numeric GKamion status. Published flows subscribed to this number start. orderCreated and statusChanged start order flows; itemStatusChanged starts item flows.",
+    ),
+  externalOrderItemId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .optional()
+    .describe(
+      "GKamion order item id. Required when eventType is itemStatusChanged.",
+    ),
   occurredAt: z.iso
     .datetime()
     .describe(
@@ -294,7 +318,7 @@ export const recordExternalOrderEventPublicRequest = z.object({
     )
     .transform((value) => new Date(value)),
   orderData: externalOrderData.describe(
-    "Whitelisted order snapshot. Fields outside itemSummary, amount, currency, paymentStatus, and deliveryMethod are ignored.",
+    "Order package. The contact card keeps itemSummary, amount, currency, paymentStatus and deliveryMethod. hasDebt, billUrl, orderNumber, phone and email stay on the event and are available to the notification flow.",
   ),
   customer: externalCustomerPublicInput
     .omit({ externalCustomerId: true })
