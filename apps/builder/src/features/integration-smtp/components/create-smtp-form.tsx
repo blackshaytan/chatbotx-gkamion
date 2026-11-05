@@ -94,7 +94,7 @@ export const CreateSmtpForm = ({
 
   return (
     <Form {...form}>
-      <form className="space-y-6" onSubmit={handleSubmitWithAction}>
+      <form className="min-w-0 space-y-6" onSubmit={handleSubmitWithAction}>
         <SelectField
           label={t("fields.provider.label")}
           name="provider"
@@ -107,10 +107,10 @@ export const CreateSmtpForm = ({
           }}
         />
 
-        <div className="flex gap-2">
+        <div className="flex min-w-0 gap-2">
           <InputField
             disabled={selectedProvider !== "other"}
-            formItemClassName="flex-1"
+            formItemClassName="min-w-0 flex-1"
             label={t("fields.host.label")}
             name="host"
             placeholder={t("fields.host.placeholder")}
@@ -119,7 +119,7 @@ export const CreateSmtpForm = ({
 
           <InputField
             disabled={selectedProvider !== "other"}
-            formItemClassName="w-24"
+            formItemClassName="w-24 shrink-0"
             label={t("fields.port.label")}
             name="port"
             placeholder={t("fields.port.placeholder")}

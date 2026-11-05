@@ -32,7 +32,7 @@ export const EditSmtpDialog = ({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogTrigger render={children} />
 
-      <DialogContent className="max-h-screen max-w-lg overflow-y-scroll">
+      <DialogContent className="max-h-screen overflow-y-auto overflow-x-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
             {t("messages.editFeature", { feature: "SMTP" })}

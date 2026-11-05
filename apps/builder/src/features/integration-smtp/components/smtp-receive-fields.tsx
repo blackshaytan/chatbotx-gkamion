@@ -28,21 +28,19 @@ export const SmtpReceiveFields = ({ provider }: SmtpReceiveFieldsProps) => {
         name="receiveEnabled"
       />
       {canReceive && provider === "other" && receiveEnabled ? (
-        <div className="flex gap-2">
+        <>
           <InputField
-            formItemClassName="flex-1"
             label={t("smtp.receive.imapHost")}
             name="imapHost"
             placeholder={t("smtp.receive.imapHostPlaceholder")}
           />
           <InputField
-            formItemClassName="w-24"
             label={t("smtp.receive.imapPort")}
             name="imapPort"
             placeholder={t("smtp.receive.imapPortPlaceholder")}
             type="number"
           />
-        </div>
+        </>
       ) : null}
     </>
   )
