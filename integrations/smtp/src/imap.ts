@@ -23,6 +23,10 @@ const clientOptions = (auth: SmtpAuthValue, host: string, port: number) => ({
   connectionTimeout: 20_000,
   greetingTimeout: 20_000,
   socketTimeout: 30_000,
+  // A mailbox the user typed in ("other") often has a certificate Node does not
+  // trust. Known providers keep normal verification. Without this, STARTTLS on
+  // port 143 fails before the password is checked.
+  ...(auth.provider === "other" ? { tls: { rejectUnauthorized: false } } : {}),
 })
 
 export const verifyImapLogin = async (auth: SmtpAuthValue): Promise<void> => {

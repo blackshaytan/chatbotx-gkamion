@@ -6,6 +6,7 @@ import {
 } from "@chatbotx.io/integration-smtp"
 import { createSmtpTransporter } from "@chatbotx.io/mail/transport"
 import { getTranslations } from "next-intl/server"
+import { logger } from "@/lib/log"
 import type { CreateSmtpRequest } from "../schema/mutation"
 
 export async function verifySmtpConnection(input: CreateSmtpRequest) {
@@ -53,7 +54,8 @@ export async function verifySmtpConnection(input: CreateSmtpRequest) {
       imapHost: input.imapHost,
       imapPort: input.imapPort,
     })
-  } catch {
+  } catch (error) {
+    logger.error({ err: error }, "IMAP mailbox login failed")
     throw new ChatbotXException(t("smtp.errors.imapFailed"))
   }
 }
