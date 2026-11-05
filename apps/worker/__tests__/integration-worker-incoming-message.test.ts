@@ -374,6 +374,7 @@ const CONTACT_PROFILE_NAME_CAPABILITIES: Record<
 
 vi.mock("@chatbotx.io/business", () => ({
   appointmentService: { cancelAppointmentByToken: vi.fn() },
+  detectOptOutRequest: () => ({ matched: false }),
   flushAllPendingWorkspaceBroadcasts: vi.fn(),
   resolveWorkspaceFreezeReasonById: vi.fn(async () => ({
     freezeReason: null,

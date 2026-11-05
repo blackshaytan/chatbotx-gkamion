@@ -114,6 +114,7 @@ vi.mock("@chatbotx.io/automated-response", () => ({
 vi.mock("@chatbotx.io/business", () => ({
   buildContext: vi.fn(),
   conversationService: { ensureActive: vi.fn() },
+  detectOptOutRequest: () => ({ matched: false }),
   flushAllPendingWorkspaceBroadcasts: vi.fn(),
   onNotificationsCreated: vi.fn(),
   resolveWorkspaceFreezeReasonById: vi.fn(async () => ({
