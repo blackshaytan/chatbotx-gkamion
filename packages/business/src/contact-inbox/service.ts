@@ -56,7 +56,7 @@ import { GOOGLE_CLICK_REFERRAL_KEYS } from "@chatbotx.io/utils/google-click"
 import { BaseService } from "../base.service"
 import { PROFILE_NAME_BLANK_CHARACTERS } from "../contact/profile-refresh/rules"
 import { logger } from "../logger"
-import { messageCleanupService } from "../message-cleanup/service"
+import { cancelMessageCleanupByInboxSource } from "../message-cleanup/cancel-by-inbox-source"
 import {
   type ContactInboxBackfillField,
   type ContactInboxIdentityField,
@@ -687,7 +687,7 @@ class ContactInboxService extends BaseService {
 
     try {
       const [created] = await db.transaction(async (tx) => {
-        await messageCleanupService.cancelByInboxSource({
+        await cancelMessageCleanupByInboxSource({
           inboxId: props.inboxId,
           sourceIds: [props.sourceId],
           tx,

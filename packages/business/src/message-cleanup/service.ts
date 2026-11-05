@@ -20,6 +20,7 @@ import { uploader } from "@chatbotx.io/filesystem"
 import { BaseService } from "../base.service"
 import { logger } from "../logger"
 import { messageService } from "../message/service"
+import { cancelMessageCleanupByInboxSource } from "./cancel-by-inbox-source"
 
 export type MessageCleanupEntry = {
   contactId: string
@@ -113,19 +114,7 @@ class MessageCleanupService extends BaseService {
     sourceIds: string[]
     tx?: DatabaseClient
   }): Promise<void> {
-    const { inboxId, sourceIds, tx = db } = props
-    if (sourceIds.length === 0) {
-      return
-    }
-
-    await tx
-      .delete(messageCleanupModel)
-      .where(
-        and(
-          eq(messageCleanupModel.inboxId, inboxId),
-          inArray(messageCleanupModel.sourceId, [...sourceIds].sort()),
-        ),
-      )
+    await cancelMessageCleanupByInboxSource(props)
   }
 
   /**
