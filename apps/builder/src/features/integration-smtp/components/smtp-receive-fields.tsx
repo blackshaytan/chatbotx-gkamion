@@ -30,11 +30,13 @@ export const SmtpReceiveFields = ({ provider }: SmtpReceiveFieldsProps) => {
       {canReceive && provider === "other" && receiveEnabled ? (
         <>
           <InputField
+            hideOptionalLabel
             label={t("smtp.receive.imapHost")}
             name="imapHost"
             placeholder={t("smtp.receive.imapHostPlaceholder")}
           />
           <InputField
+            hideOptionalLabel
             label={t("smtp.receive.imapPort")}
             name="imapPort"
             placeholder={t("smtp.receive.imapPortPlaceholder")}

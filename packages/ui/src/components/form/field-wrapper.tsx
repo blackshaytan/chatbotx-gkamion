@@ -28,6 +28,8 @@ type FormFieldWrapperProps<T extends FieldValues> = {
   descriptionHref?: string
   /** Suppress the inline error message (e.g. when a sibling control bound to the same field already shows it). */
   hideMessage?: boolean
+  /** Keep an optional field unlabeled as optional. */
+  hideOptionalLabel?: boolean
   formItemClassName?: string
   children: (
     field: {
@@ -47,6 +49,7 @@ export function FormFieldWrapper<T extends FieldValues>({
   descriptionType = "inline",
   descriptionHref,
   hideMessage = false,
+  hideOptionalLabel = false,
   formItemClassName,
   children,
 }: FormFieldWrapperProps<T>) {
@@ -62,7 +65,7 @@ export function FormFieldWrapper<T extends FieldValues>({
           {label ? (
             <FormLabel className="flex items-center gap-1">
               {label}
-              {!required && (
+              {!(required || hideOptionalLabel) && (
                 <span className="self-start font-normal text-xxs">
                   {optionalLabel}
                 </span>
