@@ -3570,7 +3570,7 @@
       },
       "messengerText": {
         "label": "Messenger text",
-        "description": "Sent to MAX, Telegram, ZZAP and DROM. Placeholders: {{orderNumber}}, {{itemSummary}}, {{amount}}, {{billUrl}}. Leave empty to skip those channels."
+        "description": "Sent to MAX, Telegram, ZZAP and DROM. Placeholders: '{{orderNumber}}', '{{itemSummary}}', '{{amount}}', '{{billUrl}}'. Leave empty to skip those channels."
       },
       "emailText": {
         "label": "Email text",

@@ -2706,7 +2706,7 @@
       },
       "messengerText": {
         "label": "Текст мессенджера",
-        "description": "Отправляется в MAX, Telegram, ZZAP и DROM. Подстановки: {{orderNumber}}, {{itemSummary}}, {{amount}}, {{billUrl}}. Пустое значение пропускает эти каналы."
+        "description": "Отправляется в MAX, Telegram, ZZAP и DROM. Подстановки: '{{orderNumber}}', '{{itemSummary}}', '{{amount}}', '{{billUrl}}'. Пустое значение пропускает эти каналы."
       },
       "emailText": {
         "label": "Текст письма",
