@@ -94,6 +94,7 @@ vi.mock("@chatbotx.io/worker-config", () => ({
     whatsappIdentityChange: "whatsappIdentityChange",
   },
   integrationQueue: { add: vi.fn() },
+  PURGE_WORKSPACES_INTERVAL_MINUTES: 30,
   queueNames: {
     enum: {
       integration: "integration",
@@ -113,8 +114,14 @@ vi.mock("@chatbotx.io/automated-response", () => ({
 vi.mock("@chatbotx.io/business", () => ({
   buildContext: vi.fn(),
   conversationService: { ensureActive: vi.fn() },
+  flushAllPendingWorkspaceBroadcasts: vi.fn(),
   onNotificationsCreated: vi.fn(),
+  resolveWorkspaceFreezeReasonById: vi.fn(async () => ({
+    freezeReason: null,
+  })),
   sendToWorkspaceMember: vi.fn(),
+  settleBlockedOrderNotification: vi.fn(async () => undefined),
+  smartDelayService: { findById: vi.fn(async () => null) },
   withBlockedOwnerGuard: vi.fn(
     async (_workspaceId: unknown, fn: () => Promise<unknown>) => await fn(),
   ),
