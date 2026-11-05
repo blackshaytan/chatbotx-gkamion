@@ -6034,11 +6034,21 @@
   },
   "smtp": {
     "errors": {
-      "connectionFailed": "Det går inte att ansluta till SMTP-servern. Kontrollera dina inloggningsuppgifter och försök igen."
+      "connectionFailed": "Det går inte att ansluta till SMTP-servern. Kontrollera dina inloggningsuppgifter och försök igen.",
+      "imapFailed": "Cannot read this mailbox. Check the password, and for Gmail or Outlook use an app password with IMAP enabled."
     },
     "setting": {
       "description": "Skicka e-post med din SMTP-server.",
       "label": "(E-post) SMTP"
+    },
+    "receive": {
+      "label": "Receive customer emails",
+      "description": "New mail in this mailbox shows up in the inbox, and replies go back to the same thread. Mail already in the mailbox is not imported. Gmail and Outlook need an app password.",
+      "unavailable": "This provider only sends mail. To receive customer emails, connect a mailbox: Gmail, Outlook, Yahoo, Zoho, or your own server.",
+      "imapHost": "IMAP host",
+      "imapHostPlaceholder": "imap.example.com",
+      "imapPort": "IMAP port",
+      "imapPortPlaceholder": "993"
     }
   },
   "states": {

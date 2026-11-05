@@ -2,6 +2,7 @@
 
 import { integrationSmtpService, workspaceService } from "@chatbotx.io/business"
 import { ChatbotXException } from "@chatbotx.io/business/errors"
+import { smtpReceiveEnabled } from "@chatbotx.io/integration-smtp/schema"
 import { workspaceIdrequestParams } from "@/features/common/schema"
 import { workspaceActionClient } from "@/lib/safe-action"
 import { prepareSmtpAuth } from "../lib/prepare-smtp-auth"
@@ -38,6 +39,12 @@ export const createSmtpAction = workspaceActionClient
         port,
         username,
         password,
+        receiveEnabled: smtpReceiveEnabled({
+          provider,
+          receiveEnabled: parsedInput.receiveEnabled,
+        }),
+        ...(parsedInput.imapHost ? { imapHost: parsedInput.imapHost } : {}),
+        ...(parsedInput.imapPort ? { imapPort: parsedInput.imapPort } : {}),
       },
     })
 

@@ -1,5 +1,9 @@
 import { ChatbotXException } from "@chatbotx.io/business/errors"
-import { smtpHostMap } from "@chatbotx.io/integration-smtp"
+import {
+  smtpHostMap,
+  smtpReceiveEnabled,
+  verifyImapLogin,
+} from "@chatbotx.io/integration-smtp"
 import { createSmtpTransporter } from "@chatbotx.io/mail/transport"
 import { getTranslations } from "next-intl/server"
 import type { CreateSmtpRequest } from "../schema/mutation"
@@ -25,5 +29,31 @@ export async function verifySmtpConnection(input: CreateSmtpRequest) {
     throw new ChatbotXException(t("smtp.errors.connectionFailed"))
   } finally {
     transporter.close()
+  }
+
+  if (
+    !smtpReceiveEnabled({
+      provider: input.provider,
+      receiveEnabled: input.receiveEnabled,
+    })
+  ) {
+    return
+  }
+
+  try {
+    await verifyImapLogin({
+      authType: "custom",
+      provider: input.provider,
+      host,
+      port,
+      username: input.username,
+      password: input.password,
+      fromAddress: input.fromAddress,
+      receiveEnabled: true,
+      imapHost: input.imapHost,
+      imapPort: input.imapPort,
+    })
+  } catch {
+    throw new ChatbotXException(t("smtp.errors.imapFailed"))
   }
 }

@@ -34,6 +34,10 @@ type SmtpAuthInput = {
   port: number
   username: string
   password: string
+  fromAddress?: string
+  receiveEnabled?: boolean
+  imapHost?: string
+  imapPort?: number
 }
 
 /**
@@ -49,6 +53,9 @@ export type UpdateSmtpInput = Partial<{
   username: string
   password: string
   fromAddress: string
+  receiveEnabled: boolean
+  imapHost: string
+  imapPort: number
 }>
 
 class IntegrationSmtpService extends BaseService {
@@ -136,7 +143,9 @@ class IntegrationSmtpService extends BaseService {
             provider: "smtp",
             kind: "channel",
             descriptor: { sourceId: smtpId, displayName: name },
-            auth,
+            // `fromAddress` is also a column. The poller only sees `auth`,
+            // so the address is copied there to skip the mailbox's own mail.
+            auth: { ...auth, fromAddress },
             extraConfig: { fromAddress },
             existing: undefined,
             store: CONNECTION_STORE_BINDINGS.smtp as NonNullable<
@@ -176,6 +185,11 @@ class IntegrationSmtpService extends BaseService {
     const integration = await this.findByIdForWorkspace({ id, workspaceId })
     const currentAuth = integration.auth as SmtpAuthInput
 
+    const name = data.username ?? integration.name
+    const fromAddress = data.fromAddress ?? integration.fromAddress
+    const receiveEnabled = data.receiveEnabled ?? currentAuth.receiveEnabled
+    const imapHost = data.imapHost ?? currentAuth.imapHost
+    const imapPort = data.imapPort ?? currentAuth.imapPort
     const auth: SmtpAuthInput = {
       authType: "custom",
       provider: data.provider ?? currentAuth.provider,
@@ -183,9 +197,11 @@ class IntegrationSmtpService extends BaseService {
       port: data.port || currentAuth.port,
       username: data.username ?? currentAuth.username,
       password: data.password ?? currentAuth.password,
+      fromAddress,
+      ...(receiveEnabled === undefined ? {} : { receiveEnabled }),
+      ...(imapHost ? { imapHost } : {}),
+      ...(imapPort ? { imapPort } : {}),
     }
-    const name = data.username ?? integration.name
-    const fromAddress = data.fromAddress ?? integration.fromAddress
 
     // Scoped by workspace as well as id: `findByIdForWorkspace` above already
     // proves ownership, but this method accepts a `workspaceId` and must

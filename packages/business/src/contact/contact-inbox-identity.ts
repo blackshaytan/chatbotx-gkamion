@@ -53,7 +53,7 @@ const SOURCE_ID_NORMALIZER: Record<
   // Threads contacts are keyed by the commenter's lower-cased username.
   threads: (raw) => raw.toLowerCase(),
   omnichannel: () => null,
-  smtp: asSent,
+  smtp: (raw) => raw.trim().toLowerCase() || null,
   // Webchat ids are minted when the contact is created; a sender can still
   // quote one back to find that contact.
   webchat: asSent,

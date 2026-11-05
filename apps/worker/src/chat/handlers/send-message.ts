@@ -62,6 +62,7 @@ import {
   willSendRetry,
 } from "../utils/retry"
 import { reconcileChannelSendError } from "./channel-send-error-reconcilers"
+import { loadSmtpEmailReply } from "./smtp-reply-thread"
 
 // Keep private comment replies aligned with sendMessageToChannel's isPrivateReply
 // routing below and packages/business/src/message/create-outgoing.ts's DM routing.
@@ -283,6 +284,20 @@ export async function sendMessageToChannel(
       signAs,
     })
 
+    const outboundMessage =
+      contactInbox.channel === channelTypes.enum.smtp && !isComment
+        ? {
+            ...signedHandlerMessage,
+            contentAttributes: {
+              ...signedHandlerMessage.contentAttributes,
+              emailReply: await loadSmtpEmailReply({
+                conversation,
+                contactInboxId: contactInbox.id,
+              }),
+            },
+          }
+        : signedHandlerMessage
+
     const handlerData = {
       ctx,
       data: {
@@ -290,7 +305,7 @@ export async function sendMessageToChannel(
           ...contactInbox,
           sourceConversationId: resolveChannelConversationId(conversation),
         },
-        message: signedHandlerMessage,
+        message: outboundMessage,
         quickReplies: isComment ? undefined : quickReplies,
         metadata,
         sendFrom,
@@ -939,24 +954,33 @@ export async function sendFlowStepToChannel({
   // Captured BEFORE dispatch — see `recordServiceSent`'s `dispatchedAt`.
   const dispatchedAt = new Date()
   let result: OutgoingSendResult
+  const flowData = {
+    contact: {
+      ...contactInbox,
+      sourceConversationId: resolveChannelConversationId(conversation),
+    },
+    flowId,
+    flowVersionId,
+    step: resolvedStep,
+    productMessage,
+    quickReplies,
+    metadata,
+    richResponse,
+    sendFrom,
+    commentAnchor,
+  }
+  if (contactInbox.channel === channelTypes.enum.smtp) {
+    Object.assign(flowData, {
+      emailReply: await loadSmtpEmailReply({
+        conversation,
+        contactInboxId: contactInbox.id,
+      }),
+    })
+  }
   try {
     result = await integration.runChannelHandler("message", "sendFlowStep", {
       ctx,
-      data: {
-        contact: {
-          ...contactInbox,
-          sourceConversationId: resolveChannelConversationId(conversation),
-        },
-        flowId,
-        flowVersionId,
-        step: resolvedStep,
-        productMessage,
-        quickReplies,
-        metadata,
-        richResponse,
-        sendFrom,
-        commentAnchor,
-      },
+      data: flowData,
     })
   } catch (error) {
     // The same reconciliation `sendMessageToChannel` runs, so both chokepoints

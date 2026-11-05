@@ -5231,7 +5231,17 @@
       "label": "(E-mail) SMTP"
     },
     "errors": {
-      "connectionFailed": "Não foi possível conectar ao servidor SMTP. Verifique suas credenciais e tente novamente."
+      "connectionFailed": "Não foi possível conectar ao servidor SMTP. Verifique suas credenciais e tente novamente.",
+      "imapFailed": "Cannot read this mailbox. Check the password, and for Gmail or Outlook use an app password with IMAP enabled."
+    },
+    "receive": {
+      "label": "Receive customer emails",
+      "description": "New mail in this mailbox shows up in the inbox, and replies go back to the same thread. Mail already in the mailbox is not imported. Gmail and Outlook need an app password.",
+      "unavailable": "This provider only sends mail. To receive customer emails, connect a mailbox: Gmail, Outlook, Yahoo, Zoho, or your own server.",
+      "imapHost": "IMAP host",
+      "imapHostPlaceholder": "imap.example.com",
+      "imapPort": "IMAP port",
+      "imapPortPlaceholder": "993"
     }
   },
   "botSimulator": {

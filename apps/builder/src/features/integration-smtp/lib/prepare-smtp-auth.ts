@@ -1,14 +1,8 @@
+import type { CreateSmtpRequest } from "../schema/mutation"
 import { resolveSmtpHostAndPort } from "./smtp-host"
 import { verifySmtpConnection } from "./verify-connection"
 
-type SmtpConnectionInput = {
-  provider: Parameters<typeof resolveSmtpHostAndPort>[0]
-  host: string
-  port: number
-  username: string
-  password: string
-  fromAddress: string
-}
+type SmtpConnectionInput = CreateSmtpRequest
 
 /**
  * Verifies the caller-supplied SMTP credentials actually connect, then

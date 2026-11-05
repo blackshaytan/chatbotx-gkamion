@@ -96,7 +96,16 @@ export const runPoll = async (input: {
     throw err
   }
 
-  const integrationIdentifier = adapter.provider.describe(auth).sourceId
+  // The stored connection identity is what the channel lookup is keyed on.
+  // SMTP's `describe()` still returns the constant "workspace" (it has no
+  // external account id), while `Connection.sourceId` is the integration row
+  // id. A `legacy:` prefix is not a real identifier, so those rows keep the
+  // provider's own describe() result.
+  const described = adapter.provider.describe(auth).sourceId
+  const integrationIdentifier =
+    connection.sourceId && !connection.sourceId.startsWith("legacy:")
+      ? connection.sourceId
+      : described
   for (const event of result.events) {
     await input.enqueue({
       integrationType: connection.provider,

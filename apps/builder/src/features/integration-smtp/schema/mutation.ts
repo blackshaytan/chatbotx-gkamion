@@ -1,6 +1,41 @@
 import { smtpProviders } from "@chatbotx.io/integration-smtp/schema"
 import { z } from "zod"
 
+const emptyToUndefined = (value: unknown) =>
+  value === "" || value === null || value === undefined ? undefined : value
+
+const optionalImapHost = z.preprocess(
+  emptyToUndefined,
+  z
+    .string()
+    .trim()
+    .max(255)
+    .optional()
+    .describe(
+      "IMAP host. Only for provider `other` when receiving is on. Defaults to the SMTP host.",
+    ),
+)
+
+const optionalImapPort = z.preprocess(
+  emptyToUndefined,
+  z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(65_535)
+    .optional()
+    .describe(
+      "IMAP port. Only for provider `other` when receiving is on. Defaults to 993.",
+    ),
+)
+
+const receiveEnabledField = z
+  .boolean()
+  .optional()
+  .describe(
+    "When true, new mail in this mailbox is delivered to the ChatbotX inbox. Defaults to true for Gmail, Outlook, Yahoo, Zoho, and a custom server. Ignored for send-only providers (SendGrid, Mailgun, Amazon SES, Postmark, Brevo). Mail already in the mailbox is not imported. Gmail and Outlook need an app password.",
+  )
+
 const fromAddressRegex = /<([^>]+)>$/
 
 // Accepts plain email or "Display Name <email>" / "Name" <email> formats.
@@ -40,6 +75,9 @@ export const createSmtpRequest = z
     fromAddress: fromAddressSchema.describe(
       "Sender email address, plain or 'Name <email>' format.",
     ),
+    receiveEnabled: receiveEnabledField,
+    imapHost: optionalImapHost,
+    imapPort: optionalImapPort,
   })
   .superRefine((data, ctx) => {
     if (data.provider === "other") {
@@ -84,6 +122,9 @@ export const updateSmtpRequest = z
     fromAddress: fromAddressSchema.describe(
       "Sender email address, plain or 'Name <email>' format.",
     ),
+    receiveEnabled: receiveEnabledField,
+    imapHost: optionalImapHost,
+    imapPort: optionalImapPort,
   })
   .superRefine((data, ctx) => {
     if (data.provider === "other") {

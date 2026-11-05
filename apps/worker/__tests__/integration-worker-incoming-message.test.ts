@@ -356,7 +356,7 @@ const CONTACT_PROFILE_NAME_CAPABILITIES: Record<
   tiktok: { inbound: null, onDemand: false },
   api: { inbound: "payload", onDemand: false },
   webchat: { inbound: null, onDemand: false },
-  smtp: { inbound: null, onDemand: false },
+  smtp: { inbound: "payload", onDemand: false },
   omnichannel: { inbound: null, onDemand: false },
 }
 

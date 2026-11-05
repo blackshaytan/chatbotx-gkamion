@@ -131,7 +131,7 @@ describe("integrationSmtpService.connect", () => {
       expect.objectContaining({
         workspaceId: "ws-1",
         provider: "smtp",
-        auth,
+        auth: { ...auth, fromAddress: "from@example.com" },
         extraConfig: { fromAddress: "from@example.com" },
         inboxId: "smtp-1",
         ownerId: "owner-1",
@@ -186,7 +186,7 @@ describe("integrationSmtpService.update", () => {
     inboxId: "inbox-1",
     name: "user",
     fromAddress: "from@example.com",
-    auth,
+    auth: { ...auth, fromAddress: "from@example.com" },
   }
 
   beforeEach(() => {
@@ -243,7 +243,7 @@ describe("integrationSmtpService.update", () => {
       mockUpdate.mock.results[0]?.value as { set: ReturnType<typeof vi.fn> }
     ).set
     expect(setArg).toHaveBeenCalledWith({
-      auth,
+      auth: { ...auth, fromAddress: "a@b.com" },
       name: existing.name,
       fromAddress: "a@b.com",
     })

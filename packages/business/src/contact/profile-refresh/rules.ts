@@ -38,7 +38,7 @@ export const contactProfileNameCapabilities = {
   zzap: { inbound: "payload", onDemand: false }, // poll event carries the buyer name/phone/email
   drom: { inbound: "payload", onDemand: false }, // deal page carries the buyer name/phone/email
   webchat: { inbound: null, onDemand: false },
-  smtp: { inbound: null, onDemand: false },
+  smtp: { inbound: "payload", onDemand: false }, // From: display name on the inbound mail
   omnichannel: { inbound: null, onDemand: false },
 } as const satisfies Record<ChannelType, ContactProfileNameCapability>
 

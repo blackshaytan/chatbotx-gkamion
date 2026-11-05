@@ -1712,19 +1712,16 @@ class ConversationService extends BaseService {
     return { agentLastReadAt }
   }
 
-  /**
-   * Channel message id (e.g. a WhatsApp wamid) of the newest incoming message
-   * this conversation received on `contactInboxId`. Read receipts and typing
-   * indicators that must reference a real message use it. Looks back 30 days,
-   * matching WhatsApp's mark-as-read guidance.
-   */
-  async findLastIncomingMessageSourceId(props: {
+  /** Newest incoming message on this conversation for `contactInboxId`. */
+  async findLastIncomingMessage(props: {
     conversation: Pick<
       ConversationModel,
       "id" | "workspaceId" | "lastActivityAt" | "createdAt"
     >
     contactInboxId: string
-  }): Promise<string | undefined> {
+  }): Promise<
+    Pick<MessageModel, "sourceId" | "text" | "contentAttributes"> | undefined
+  > {
     const { conversation, contactInboxId } = props
     const messageRepository = await createMessageRepository()
     const messages = await messageRepository.findLastByConversation(
@@ -1743,12 +1740,27 @@ class ConversationService extends BaseService {
       },
     )
 
-    return (
-      messages.find(
-        (message) =>
-          message.contactInboxId === contactInboxId && message.sourceId,
-      )?.sourceId ?? undefined
+    return messages.find(
+      (message) =>
+        message.contactInboxId === contactInboxId && message.sourceId,
     )
+  }
+
+  /**
+   * Channel message id (e.g. a WhatsApp wamid) of the newest incoming message
+   * this conversation received on `contactInboxId`. Read receipts and typing
+   * indicators that must reference a real message use it. Looks back 30 days,
+   * matching WhatsApp's mark-as-read guidance.
+   */
+  async findLastIncomingMessageSourceId(props: {
+    conversation: Pick<
+      ConversationModel,
+      "id" | "workspaceId" | "lastActivityAt" | "createdAt"
+    >
+    contactInboxId: string
+  }): Promise<string | undefined> {
+    const message = await this.findLastIncomingMessage(props)
+    return message?.sourceId ?? undefined
   }
 
   async updateReadStatus(props: {

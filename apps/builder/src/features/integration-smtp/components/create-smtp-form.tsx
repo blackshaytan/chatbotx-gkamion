@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  canReceiveSmtp,
   smtpHostMap,
   smtpProviders,
 } from "@chatbotx.io/integration-smtp/schema"
@@ -20,6 +21,7 @@ import { useInvalidateInboxes } from "@/features/inboxes/provider/inbox-hook"
 import { createSmtpAction } from "../actions/create-smtp.action"
 import { createSmtpRequest } from "../schema/mutation"
 import { smtpProviderLabels } from "../schema/resource"
+import { SmtpReceiveFields } from "./smtp-receive-fields"
 
 type CreateSmtpFormProps = {
   readonly workspaceId: string
@@ -71,6 +73,9 @@ export const CreateSmtpForm = ({
           username: "",
           password: "",
           fromAddress: "",
+          receiveEnabled: true,
+          imapHost: "",
+          imapPort: "",
         },
       },
     },
@@ -84,6 +89,7 @@ export const CreateSmtpForm = ({
       smtpHostMap[value as (typeof smtpProviders.options)[number]]
     form.setValue("host", host)
     form.setValue("port", port || 587)
+    form.setValue("receiveEnabled", canReceiveSmtp(value))
   }
 
   return (
@@ -146,6 +152,8 @@ export const CreateSmtpForm = ({
           required
           type="email"
         />
+
+        <SmtpReceiveFields provider={selectedProvider} />
 
         <div className="flex justify-end gap-2">
           <Button onClick={onCancel} size="sm" type="button" variant="ghost">

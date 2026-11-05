@@ -1,4 +1,5 @@
 import { integrationSmtpService } from "@chatbotx.io/business"
+import { smtpReceiveEnabled } from "@chatbotx.io/integration-smtp/schema"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import { z } from "zod"
 import {
@@ -92,7 +93,7 @@ export const smtpIntegrationsPublicRouter = {
       path: "/v1/smtp-integrations",
       summary: "Create SMTP integration",
       description:
-        "Connects an SMTP server for outbound email broadcasts. Use `smtpIntegrations.list` first to avoid duplicating an existing one.",
+        "Connects a mailbox. Outbound email uses SMTP. When receiving is enabled (the default for Gmail, Outlook, Yahoo, Zoho, and a custom server), new customer emails appear in the inbox and agent replies are sent back on the same thread. Mail already in the mailbox is not imported. Send-only providers (SendGrid, Mailgun, Amazon SES, Postmark, Brevo) cannot receive. Use `smtpIntegrations.list` first to avoid duplicating an existing one.",
       successStatus: 201,
       tags,
     })
@@ -114,6 +115,12 @@ export const smtpIntegrationsPublicRouter = {
           port,
           username: input.username,
           password: input.password,
+          receiveEnabled: smtpReceiveEnabled({
+            provider: input.provider,
+            receiveEnabled: input.receiveEnabled,
+          }),
+          ...(input.imapHost ? { imapHost: input.imapHost } : {}),
+          ...(input.imapPort ? { imapPort: input.imapPort } : {}),
         },
       })
 
@@ -131,7 +138,7 @@ export const smtpIntegrationsPublicRouter = {
       path: "/v1/smtp-integrations/{id}",
       summary: "Update SMTP integration",
       description:
-        "Changes an existing SMTP integration's settings, including its credentials. Call `smtpIntegrations.get` to inspect current values first.",
+        "Changes an existing SMTP integration's settings, including its credentials and whether new customer emails are received into the inbox. Call `smtpIntegrations.get` to inspect current values first.",
       tags,
     })
     .input(

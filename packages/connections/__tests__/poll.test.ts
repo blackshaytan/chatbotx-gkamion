@@ -67,6 +67,7 @@ const connection = {
   status: "connected",
   inboxId: "inbox-1",
   integrationId: null,
+  sourceId: "42",
   lastError: null,
 }
 const ref = { connectionId: "c1", workspaceId: "w1", now }
@@ -98,6 +99,29 @@ describe("runPoll", () => {
     })
     const result = await runPoll({ ...ref, enqueue: mocks.enqueue })
     expect(result).toEqual({ status: "skipped", reason: "not_pollable" })
+  })
+
+  test("enqueues under the stored connection sourceId when describe() differs", async () => {
+    mocks.findOrThrow.mockResolvedValue({ ...connection, sourceId: "smtp-1" })
+    mocks.resolveAdapter.mockReturnValue({
+      ...adapter,
+      provider: {
+        ...adapter.provider,
+        describe: () => ({ sourceId: "workspace", displayName: "SMTP" }),
+      },
+    })
+    mocks.run.mockResolvedValue({
+      events: [{ payload: { a: 1 } }],
+      cursor: { n: 1 },
+    })
+
+    await runPoll({ ...ref, enqueue: mocks.enqueue })
+
+    expect(mocks.enqueue).toHaveBeenCalledWith({
+      integrationType: "zzap",
+      integrationIdentifier: "smtp-1",
+      payload: { a: 1 },
+    })
   })
 
   test("enqueues every event, then saves the cursor", async () => {

@@ -6034,11 +6034,21 @@
   },
   "smtp": {
     "errors": {
-      "connectionFailed": "无法连接到SMTP 服务器。请检查您的凭证并重试。"
+      "connectionFailed": "无法连接到SMTP 服务器。请检查您的凭证并重试。",
+      "imapFailed": "Cannot read this mailbox. Check the password, and for Gmail or Outlook use an app password with IMAP enabled."
     },
     "setting": {
       "description": "使用您的SMTP 服务器发送电子邮件。",
       "label": "（电子邮件）SMTP"
+    },
+    "receive": {
+      "label": "Receive customer emails",
+      "description": "New mail in this mailbox shows up in the inbox, and replies go back to the same thread. Mail already in the mailbox is not imported. Gmail and Outlook need an app password.",
+      "unavailable": "This provider only sends mail. To receive customer emails, connect a mailbox: Gmail, Outlook, Yahoo, Zoho, or your own server.",
+      "imapHost": "IMAP host",
+      "imapHostPlaceholder": "imap.example.com",
+      "imapPort": "IMAP port",
+      "imapPortPlaceholder": "993"
     }
   },
   "states": {

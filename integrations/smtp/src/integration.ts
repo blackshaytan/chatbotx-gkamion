@@ -7,6 +7,8 @@ import {
   selfServeConnection,
 } from "@chatbotx.io/sdk"
 import { sendMail } from "./actions"
+import { messageHandlers } from "./handlers/message"
+import { pollSmtpInbox } from "./handlers/poll"
 import type { SmtpActions, SmtpAuthValue } from "./schema"
 
 const smtpFields: readonly ConnectionConfigField[] = [
@@ -53,21 +55,27 @@ const config: IntegrationDefinition<BaseConfig, SmtpAuthValue, SmtpActions> = {
   name: "smtp",
   channels: {
     channel: {
-      message: {},
+      message: messageHandlers,
     },
   },
   actions: {
     sendMail,
   },
-  connection: selfServeConnection<SmtpAuthValue>({
-    displayName: "SMTP",
-    multiAccount: false,
-    configFields: smtpFields,
-    describe: (auth) => ({
-      sourceId: "workspace",
-      displayName: `SMTP (${auth.provider})`,
+  connection: {
+    ...selfServeConnection<SmtpAuthValue>({
+      displayName: "SMTP",
+      multiAccount: false,
+      configFields: smtpFields,
+      describe: (auth) => ({
+        sourceId: "workspace",
+        displayName: `SMTP (${auth.provider})`,
+      }),
     }),
-  }),
+    poll: {
+      intervalSeconds: () => 60,
+      run: async ({ auth, cursor }) => await pollSmtpInbox({ auth, cursor }),
+    },
+  },
   handleRequest(_props: HandleRequestProps<BaseConfig>) {
     throw new Error("Method is not implemented.")
   },

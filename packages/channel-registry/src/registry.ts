@@ -231,6 +231,11 @@ export const integrationService = {
         columnName = "inboxId"
         break
       }
+      case "smtp": {
+        modelName = "IntegrationSmtp"
+        columnName = "id"
+        break
+      }
       default:
         throw new Error(`Unsupported integration: ${integrationType}`)
     }
