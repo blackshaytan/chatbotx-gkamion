@@ -15,3 +15,14 @@ export const integrationSmtpResource = createSelectSchema(
   fromAddress: true,
 })
 export type IntegrationSmtpResource = z.infer<typeof integrationSmtpResource>
+
+/** Settings the edit form can show. The password stays in `auth` and is never included. */
+export type SmtpEditableSettings = IntegrationSmtpResource & {
+  provider: string
+  host: string
+  port: number
+  username: string
+  receiveEnabled: boolean
+  imapHost: string
+  imapPort: number | null
+}

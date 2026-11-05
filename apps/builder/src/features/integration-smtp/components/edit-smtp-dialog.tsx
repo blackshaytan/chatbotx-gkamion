@@ -11,12 +11,12 @@ import {
 import { useTranslations } from "next-intl"
 import type { ReactElement } from "react"
 import { useState } from "react"
-import type { IntegrationSmtpResource } from "../schema/resource"
+import type { IntegrationSmtpEditable } from "../schema/resource"
 import { EditSmtpForm } from "./edit-smtp-form"
 
 type EditSmtpDialogProps = {
   readonly workspaceId: string
-  readonly integrationSmtp: IntegrationSmtpResource
+  readonly integrationSmtp: IntegrationSmtpEditable
   readonly children: ReactElement
 }
 

@@ -20,13 +20,13 @@ import { toast } from "sonner"
 import { useInvalidateInboxes } from "@/features/inboxes/provider/inbox-hook"
 import { updateSmtpAction } from "../actions/update-smtp.action"
 import { updateSmtpRequest } from "../schema/mutation"
-import type { IntegrationSmtpResource } from "../schema/resource"
+import type { IntegrationSmtpEditable } from "../schema/resource"
 import { smtpProviderLabels } from "../schema/resource"
 import { SmtpReceiveFields } from "./smtp-receive-fields"
 
 type EditSmtpFormProps = {
   readonly workspaceId: string
-  readonly integrationSmtp: IntegrationSmtpResource
+  readonly integrationSmtp: IntegrationSmtpEditable
   readonly onSuccess?: () => void
   readonly onCancel?: () => void
 }
@@ -71,15 +71,16 @@ export const EditSmtpForm = ({
       },
       formProps: {
         defaultValues: {
-          provider: "other",
-          host: "",
-          port: "",
-          username: "",
+          provider:
+            integrationSmtp.provider as (typeof smtpProviders.options)[number],
+          host: integrationSmtp.host,
+          port: integrationSmtp.port,
+          username: integrationSmtp.username,
           password: "",
-          fromAddress: "",
-          receiveEnabled: true,
-          imapHost: "",
-          imapPort: "",
+          fromAddress: integrationSmtp.fromAddress,
+          receiveEnabled: integrationSmtp.receiveEnabled,
+          imapHost: integrationSmtp.imapHost,
+          imapPort: integrationSmtp.imapPort ?? "",
         },
       },
     },

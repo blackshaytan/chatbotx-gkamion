@@ -2,11 +2,11 @@
 
 import { integrationSmtpService } from "@chatbotx.io/business"
 import { assertCurrentUserCanAccessChatbot } from "@/lib/auth/utils"
-import type { IntegrationSmtpResource } from "../schema/resource"
+import type { IntegrationSmtpEditable } from "../schema/resource"
 
 export const listIntegrationSmtps = async (input: {
   workspaceId: string
-}): Promise<{ data: IntegrationSmtpResource[] }> => {
+}): Promise<{ data: IntegrationSmtpEditable[] }> => {
   await assertCurrentUserCanAccessChatbot(input.workspaceId)
 
   const data = await integrationSmtpService.listByWorkspace(input.workspaceId)

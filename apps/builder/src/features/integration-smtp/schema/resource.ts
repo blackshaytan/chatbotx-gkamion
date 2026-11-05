@@ -36,6 +36,17 @@ export const integrationSmtpResource = createSelectSchema(
 })
 export type IntegrationSmtpResource = z.infer<typeof integrationSmtpResource>
 
+/** Saved connection shown in the edit form. The password is never included. */
+export type IntegrationSmtpEditable = IntegrationSmtpResource & {
+  provider: string
+  host: string
+  port: number
+  username: string
+  receiveEnabled: boolean
+  imapHost: string
+  imapPort: number | null
+}
+
 export const listIntegrationSmtpsResponse = z.object({
   data: z.array(integrationSmtpResource),
 })

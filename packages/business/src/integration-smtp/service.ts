@@ -18,7 +18,7 @@ import {
 import { connectionStateService } from "../connection/state-service"
 import { ChatbotXException } from "../errors"
 import { inboxService } from "../inbox/service"
-import type { IntegrationSmtpResource } from "./schema"
+import type { SmtpEditableSettings } from "./schema"
 
 /**
  * Mirrors `SmtpAuthValue` from `@chatbotx.io/integration-smtp` without
@@ -58,6 +58,24 @@ export type UpdateSmtpInput = Partial<{
   imapPort: number
 }>
 
+const toEditableSettings = (
+  row: IntegrationSmtpModel,
+): SmtpEditableSettings => {
+  const auth = row.auth as Partial<SmtpAuthInput>
+  return {
+    id: row.id,
+    name: row.name,
+    fromAddress: row.fromAddress,
+    provider: auth.provider || "other",
+    host: auth.host || "",
+    port: auth.port || 587,
+    username: auth.username || row.name,
+    receiveEnabled: auth.receiveEnabled ?? true,
+    imapHost: auth.imapHost || "",
+    imapPort: auth.imapPort ?? null,
+  }
+}
+
 class IntegrationSmtpService extends BaseService {
   find({
     where,
@@ -80,9 +98,7 @@ class IntegrationSmtpService extends BaseService {
     })
   }
 
-  async listByWorkspace(
-    workspaceId: string,
-  ): Promise<IntegrationSmtpResource[]> {
+  async listByWorkspace(workspaceId: string): Promise<SmtpEditableSettings[]> {
     const data = await db.query.integrationSmtpModel.findMany({
       where: { workspaceId },
       orderBy: {
@@ -90,11 +106,7 @@ class IntegrationSmtpService extends BaseService {
       },
     })
 
-    return data.map(({ id, name, fromAddress }) => ({
-      id,
-      name,
-      fromAddress,
-    }))
+    return data.map((row) => toEditableSettings(row))
   }
 
   async connect(input: {

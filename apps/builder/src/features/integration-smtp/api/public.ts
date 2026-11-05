@@ -57,7 +57,7 @@ export const smtpIntegrationsPublicRouter = {
       const data = await integrationSmtpService.listByWorkspace(
         context.workspace.id,
       )
-      return paginateInMemory(data, input)
+      return paginateInMemory(data.map(toPublicResource), input)
     }),
 
   get: workspaceTokenAuthAPI
