@@ -14,9 +14,11 @@ import { listSmtpInboxIds } from "./start-order-notifications"
 const PROVIDER = "gkamion"
 const RETENTION_SECONDS = 30 * 24 * 60 * 60
 const ALREADY_QUEUED_PATTERN = /already exists/i
+const JOB_ID_COLON = /:/g
 
+// BullMQ rejects a custom job id that contains ":".
 const clientNotificationJobId = (workspaceId: string, eventId: string) =>
-  `client-notify:${workspaceId}:${eventId}`
+  `client-notify_${workspaceId}_${eventId.replace(JOB_ID_COLON, "_")}`
 
 const alreadyQueued = (error: unknown): boolean =>
   error instanceof Error && ALREADY_QUEUED_PATTERN.test(error.message)
