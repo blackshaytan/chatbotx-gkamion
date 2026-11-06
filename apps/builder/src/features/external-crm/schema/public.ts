@@ -386,9 +386,7 @@ export const deliverClientNotificationPublicRequest = z.object({
     .trim()
     .min(1)
     .max(8000)
-    .describe(
-      "Canonical notification text. ChatbotX uses it as the email body.",
-    ),
+    .describe("Canonical notification text. It is also the email body."),
   messengerText: z
     .string()
     .trim()
