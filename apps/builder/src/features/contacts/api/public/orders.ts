@@ -1,8 +1,9 @@
-import { contactService, externalCrmService } from "@chatbotx.io/business"
+import { contactService } from "@chatbotx.io/business"
 import { z } from "zod"
 import { possibleErrorsOnFindingResource } from "@/lib/orpc/orpc-error-helper"
 import { publicContactIdentifier } from "@/lib/public-api/contact-identifier"
 import { workspaceTokenAuthAPIForScope } from "@/orpc"
+import { listContactOrdersWithGkamion } from "../../lib/pull-gkamion-contact"
 import { listContactOrdersResponse } from "../../schema/contact-orders"
 
 const workspaceTokenAuthAPI = workspaceTokenAuthAPIForScope("contacts")
@@ -14,7 +15,7 @@ export const contactsOrdersPublicRouter = {
       path: "/v1/contacts/{identifier}/orders",
       summary: "List contact orders",
       description:
-        "Returns GKamion orders linked to contact: status, amount, items, delivery, and payment. Resolve contact with `contacts.get` first.",
+        "Returns the contact's current gKamion orders: status, amount, items, delivery, and payment. The customer is `gkamion_customer_id` when `gkamion_verified` is phone or email; otherwise the contact phone or email is searched. Empty first name, last name, and email are filled from that customer and are not overwritten when already set. Issued, cancelled, and supplier-rejected orders are omitted. Resolve the contact with `contacts.get` first. Without gKamion admin credentials, returns the stored external-CRM snapshots.",
       tags: ["Contacts"],
     })
     .input(
@@ -30,11 +31,9 @@ export const contactsOrdersPublicRouter = {
         identifier: input.identifier,
         workspaceId,
       })
-      return {
-        data: await externalCrmService.listOrdersForContact({
-          workspaceId,
-          contactId,
-        }),
-      }
+      return await listContactOrdersWithGkamion({
+        workspaceId,
+        contactId,
+      })
     }),
 }

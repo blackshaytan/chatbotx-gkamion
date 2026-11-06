@@ -62,7 +62,7 @@ export const isGkamionCabinetConfigured = (): boolean =>
 const buildCabinetUrl = (cabinetBaseUrl: string, customerId: string): string =>
   `${cabinetBaseUrl}/customers/${customerId}`
 
-const pickBestCustomer = (
+export const pickBestCustomer = (
   customers: GkamionCustomerRow[],
   query: { email?: string | null; phoneDigits?: string },
 ): GkamionCustomerRow | undefined => {
@@ -99,6 +99,13 @@ const pickBestCustomer = (
   return customers[0]
 }
 
+const gkamionAuthHeaders = (
+  config: GkamionAdminConfig,
+): Record<string, string> => ({
+  Authorization: `Basic ${Buffer.from(`${config.username}:${config.password}`).toString("base64")}`,
+  Accept: "application/json",
+})
+
 const searchCustomers = async (
   config: GkamionAdminConfig,
   searchWord: string,
@@ -110,10 +117,7 @@ const searchCustomers = async (
 
   const response = await fetch(url, {
     method: "GET",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${config.username}:${config.password}`).toString("base64")}`,
-      Accept: "application/json",
-    },
+    headers: gkamionAuthHeaders(config),
     signal: AbortSignal.timeout(15_000),
   })
   if (!response.ok) {
@@ -124,6 +128,42 @@ const searchCustomers = async (
     data?: GkamionCustomerRow[]
   }
   return body.customers ?? body.data ?? []
+}
+
+export const searchGkamionCustomers = async (
+  searchWord: string,
+): Promise<GkamionCustomerRow[]> => {
+  const config = readGkamionAdminConfig()
+  if (!config) {
+    return []
+  }
+  return await searchCustomers(config, searchWord)
+}
+
+/** GET against the gKamion admin API. Throws when the call fails. */
+export const gkamionAdminGet = async (
+  path: string,
+  searchParams?: Record<string, string>,
+): Promise<unknown> => {
+  const config = readGkamionAdminConfig()
+  if (!config) {
+    throw new Error("gKamion admin API is not configured")
+  }
+  const url = new URL(
+    `${config.apiBaseUrl}${path.startsWith("/") ? path : `/${path}`}`,
+  )
+  for (const [key, value] of Object.entries(searchParams ?? {})) {
+    url.searchParams.set(key, value)
+  }
+  const response = await fetch(url, {
+    method: "GET",
+    headers: gkamionAuthHeaders(config),
+    signal: AbortSignal.timeout(15_000),
+  })
+  if (!response.ok) {
+    throw new Error(`gKamion ${path} failed: HTTP ${response.status}`)
+  }
+  return await response.json()
 }
 
 /**

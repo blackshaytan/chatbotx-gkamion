@@ -52,6 +52,8 @@ A published flow can still send from `statusId` on this event. That path is sepa
 
 ## Read data
 
+The contact card reads orders live from gKamion when admin credentials are configured. `GET /api/v1/contacts/{identifier}/orders` uses `gkamion_customer_id` when `gkamion_verified` is `phone` or `email`, otherwise it searches by the contact phone or email. Empty first name, last name, and email are filled from that customer and are not overwritten when already set. Issued, cancelled, and supplier-rejected orders are omitted. Without credentials, the same route returns the stored snapshots below.
+
 - `GET /api/v1/external-crm/customers/orders?externalCustomerId=...` returns the linked contact id and current orders.
 - `GET /api/v1/external-crm/orders/history?externalOrderId=...` returns the latest snapshot and the full event history.
 - Hermes can use `externalCrm.getCustomer` or `externalCrm.getOrderHistory` through MCP. Use the returned `contactId` with `contacts.createNote` or `contacts.setCustomField` to record a VIN or a finding. Treat a failed write as unrecorded.
