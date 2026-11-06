@@ -2,6 +2,20 @@
 
 The external CRM API links an external customer id to one ChatbotX contact and stores a durable order snapshot plus every delivered order event. The first source is `gkamion`. Website/server sync calls use a workspace API token with the `ecommerce` scope and are workspace-isolated. Hermes' MCP token needs `ecommerce` to resolve or link that identity, plus `contacts` to add CRM notes or update contact fields; the existing handover operation also needs `inbox`.
 
+## Deliver a rendered notification
+
+n8n already renders the client text in the email node and keeps sending that email. The same render is also posted here. ChatbotX does not start a flow for this call. It finds the contact linked by `externalCrm.syncCustomer` and tries MAX, Telegram, ZZAP, DROM, then email, stopping on the first accepted dialog. A repeated `eventId` does not send again for 30 days.
+
+```http
+POST /api/v1/external-crm/notifications
+Authorization: Bearer <workspace-token>
+Content-Type: application/json
+
+{"externalCustomerId":"12345","eventId":"order-778:21","text":"Заказ 778 готов к выдаче","messengerText":"Заказ 778 готов к выдаче","email":"ada@example.com","emailSubject":"Заказ 778","externalOrderId":"778","statusId":21}
+```
+
+`externalCustomerId` is the gkamion customer id from `externalCrm.syncCustomer`. `eventId` is the n8n idempotency key. When `messengerText` is omitted, `text` is used for messengers. An empty `messengerText` skips messengers. Email is used only when `text` is non-empty, `email` is present, and the workspace has a mail dialog or exactly one SMTP inbox. `queued: false` with `reason: noChannel` means nothing was sent. A customer that is not linked is `notFound` and is not created or merged. Until the n8n email node is turned off, the client can receive both that email and a ChatbotX email.
+
 ## Sync a customer
 
 ```http
@@ -34,7 +48,7 @@ The contact card keeps the short snapshot (`itemSummary`, `amount`, `currency`, 
 
 If the customer is not linked and the event has neither phone nor email, the request is rejected and nothing is stored. Phone and email that point at different people, or at several contacts, are rejected and not merged. Pass a `customer` object or put `phone` and `email` in `orderData`.
 
-The operator writes the text, the status numbers, the checks, and the wait in a ChatbotX flow. One notification is one published flow. The send step tries MAX, Telegram, ZZAP, DROM, then email, and stops on the first accepted dialog. A timeout stops the cascade. The dashboard mailer is not part of this path; turn off the matching n8n mail call once the published flow is sending.
+A published flow can still send from `statusId` on this event. That path is separate from the rendered notification above. The operator writes the text, the status numbers, the checks, and the wait in the flow. One notification is one published flow. The send step tries MAX, Telegram, ZZAP, DROM, then email, and stops on the first accepted dialog. A timeout stops the cascade.
 
 ## Read data
 

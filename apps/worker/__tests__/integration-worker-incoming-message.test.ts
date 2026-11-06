@@ -177,6 +177,12 @@ vi.mock("../src/integration/utils/message", () => ({
 // Every OTHER handler module worker.ts wires into its switch — none of them
 // are exercised by the `incomingMessage` case, stubbed only so the module
 // graph resolves.
+vi.mock(
+  "../src/integration/handlers/deliver-client-notification-handler",
+  () => ({
+    handleDeliverClientNotification: vi.fn(),
+  }),
+)
 vi.mock("../src/integration/handlers/ads-automatic-event", () => ({
   handleAdsAutomaticEvent: vi.fn(),
 }))
@@ -563,6 +569,7 @@ vi.mock("@chatbotx.io/worker-config", () => ({
     runRef: "runRef",
     threadControlEvent: "threadControlEvent",
     threadControlAction: "threadControlAction",
+    deliverClientNotification: "deliverClientNotification",
   },
   integrationQueue: {
     add: vi.fn().mockResolvedValue(undefined),

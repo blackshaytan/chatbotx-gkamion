@@ -92,6 +92,7 @@ vi.mock("@chatbotx.io/worker-config", () => ({
     syncRetargetAudience: "syncRetargetAudience",
     whatsappCallEvent: "whatsappCallEvent",
     whatsappIdentityChange: "whatsappIdentityChange",
+    deliverClientNotification: "deliverClientNotification",
   },
   integrationQueue: { add: vi.fn() },
   PURGE_WORKSPACES_INTERVAL_MINUTES: 30,
@@ -170,6 +171,12 @@ vi.mock("../src/services/integrations", () => ({
   integrationService: { identifyInboxAndIntegrationAuthFromIdentifier },
 }))
 
+vi.mock(
+  "../src/integration/handlers/deliver-client-notification-handler",
+  () => ({
+    handleDeliverClientNotification: vi.fn(),
+  }),
+)
 vi.mock("../src/integration/handlers/ads-automatic-event", () => ({
   handleAdsAutomaticEvent: vi.fn(),
 }))

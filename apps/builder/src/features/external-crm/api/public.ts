@@ -65,6 +65,41 @@ export const externalCrmPublicRouter = {
         }),
     ),
 
+  deliverClientNotification: workspaceTokenAuthAPI
+    .route({
+      method: "POST",
+      path: "/v1/external-crm/notifications",
+      summary: "Deliver a rendered client notification",
+      description:
+        "Sends one already rendered notification to the contact linked to the gkamion customer. `externalCustomerId` comes from `externalCrm.syncCustomer`. `eventId` is the n8n idempotency key and must stay the same on every retry. ChatbotX tries MAX, Telegram, ZZAP, DROM, then email, and stops on the first accepted dialog. This call does not start a flow. A customer that is not linked returns not found. `queued: false` with `reason: noChannel` means the contact has no usable dialog. `duplicate: true` means this event id was already queued.",
+      tags: ["External CRM"],
+    })
+    .input(deliverClientNotificationPublicRequest)
+    .output(
+      z.object({
+        contactId: zodBigintAsString(),
+        conversationId: zodBigintAsString().optional(),
+        queued: z.boolean(),
+        duplicate: z.boolean(),
+        reason: z.string().optional(),
+      }),
+    )
+    .errors(possibleErrorsOnMutatingResource)
+    .handler(
+      async ({ context, input }) =>
+        await queueClientNotification({
+          workspaceId: context.workspace.id,
+          externalCustomerId: input.externalCustomerId,
+          eventId: input.eventId,
+          text: input.text,
+          messengerText: input.messengerText,
+          email: input.email,
+          emailSubject: input.emailSubject,
+          externalOrderId: input.externalOrderId,
+          statusId: input.statusId,
+        }),
+    ),
+
   getCustomer: workspaceTokenAuthAPI
     .route({
       method: "GET",

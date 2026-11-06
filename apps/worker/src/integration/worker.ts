@@ -58,6 +58,7 @@ import { runDeferredCommentPrivateReply } from "./handlers/comment-automation/de
 import { updateContactAvatar } from "./handlers/contact/update-avatar"
 import { runContactScan } from "./handlers/contact-scan/engine"
 import { agentMarkAsRead, contactMarkAsRead } from "./handlers/conversation"
+import { handleDeliverClientNotification } from "./handlers/deliver-client-notification-handler"
 import {
   runFlowNode,
   runFlowPostback,
@@ -609,6 +610,10 @@ async function startIntegrationWorker() {
             }
             case IntegrationJobAction.captureTemplateFlowResponse: {
               await captureTemplateFlowResponse(job.data.data)
+              return
+            }
+            case IntegrationJobAction.deliverClientNotification: {
+              await handleDeliverClientNotification(job.data.data)
               return
             }
             case IntegrationJobAction.processLeadgen: {

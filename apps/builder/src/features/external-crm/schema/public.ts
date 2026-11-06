@@ -363,3 +363,68 @@ export const getExternalOrderHistoryPublicResponse = z.object({
   order: externalOrderPublicResource,
   events: z.array(externalOrderEventPublicResource),
 })
+
+export const deliverClientNotificationPublicRequest = z.object({
+  externalCustomerId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .describe(
+      "GKamion customer id already linked by externalCrm.syncCustomer.",
+    ),
+  eventId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .describe(
+      "Stable id for this rendered notification. Reuse the n8n idempotency key on every retry.",
+    ),
+  text: z
+    .string()
+    .trim()
+    .min(1)
+    .max(8000)
+    .describe(
+      "Canonical notification text. ChatbotX uses it as the email body.",
+    ),
+  messengerText: z
+    .string()
+    .trim()
+    .max(4000)
+    .optional()
+    .describe(
+      "Text for MAX, Telegram, ZZAP and DROM. When omitted, text is used. An empty string skips messengers.",
+    ),
+  email: z
+    .string()
+    .trim()
+    .max(255)
+    .optional()
+    .describe(
+      "Client email from the rendered notification. Opens the single SMTP inbox when the client has no mail dialog.",
+    ),
+  emailSubject: z
+    .string()
+    .trim()
+    .max(255)
+    .optional()
+    .describe("Subject used when the cascade reaches email."),
+  externalOrderId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .optional()
+    .describe(
+      "GKamion order id. The same id sent to externalCrm.recordOrderEvent.",
+    ),
+  statusId: z
+    .number()
+    .int()
+    .optional()
+    .describe(
+      "Numeric GKamion status from the rendered notification. It does not start a flow.",
+    ),
+})
