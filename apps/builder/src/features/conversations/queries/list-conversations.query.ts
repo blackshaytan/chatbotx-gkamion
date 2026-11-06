@@ -44,32 +44,38 @@ const mapConversationContactInboxes = (
     inbox: InboxModel
   })[],
 ): ConversationContactInboxResource[] =>
-  contactInboxes.map((contactInbox) => ({
-    id: contactInbox.id,
-    contactId: contactInbox.contactId,
-    inboxId: contactInbox.inboxId,
-    channel: contactInbox.channel,
-    source: contactInbox.source,
-    sourceId: contactInbox.sourceId,
-    sourceUserId: contactInbox.sourceUserId,
-    sourceUsername: contactInbox.sourceUsername,
-    language: contactInbox.language,
-    lastMessageAt: contactInbox.lastMessageAt,
-    lastIncomingMessageAt: contactInbox.lastIncomingMessageAt,
-    contactLastReadAt: contactInbox.contactLastReadAt,
-    inbox: contactInbox.inbox,
-    adReferral: resolveAdReferral(contactInbox.referral),
-    googleAdsClick: resolveGoogleAdsClick(contactInbox.referral),
-    // Conversation routing (thread control): the composer's standby lock and
-    // the owner pill read these off the listed conversation, so the allow-list
-    // mapper must carry them or the lock never engages on reload.
-    threadControlState: contactInbox.threadControlState,
-    threadOwnerRole: contactInbox.threadOwnerRole,
-    threadControlUpdatedAt: contactInbox.threadControlUpdatedAt,
-    threadOwnerExpiresAt: contactInbox.threadOwnerExpiresAt,
-    threadOwnerAppId: contactInbox.threadOwnerAppId,
-    threadControlLastEvent: contactInbox.threadControlLastEvent,
-  }))
+  contactInboxes
+    .map((contactInbox) => ({
+      id: contactInbox.id,
+      contactId: contactInbox.contactId,
+      inboxId: contactInbox.inboxId,
+      channel: contactInbox.channel,
+      source: contactInbox.source,
+      sourceId: contactInbox.sourceId,
+      sourceUserId: contactInbox.sourceUserId,
+      sourceUsername: contactInbox.sourceUsername,
+      language: contactInbox.language,
+      lastMessageAt: contactInbox.lastMessageAt,
+      lastIncomingMessageAt: contactInbox.lastIncomingMessageAt,
+      contactLastReadAt: contactInbox.contactLastReadAt,
+      inbox: contactInbox.inbox,
+      adReferral: resolveAdReferral(contactInbox.referral),
+      googleAdsClick: resolveGoogleAdsClick(contactInbox.referral),
+      // Conversation routing (thread control): the composer's standby lock and
+      // the owner pill read these off the listed conversation, so the allow-list
+      // mapper must carry them or the lock never engages on reload.
+      threadControlState: contactInbox.threadControlState,
+      threadOwnerRole: contactInbox.threadOwnerRole,
+      threadControlUpdatedAt: contactInbox.threadControlUpdatedAt,
+      threadOwnerExpiresAt: contactInbox.threadOwnerExpiresAt,
+      threadOwnerAppId: contactInbox.threadOwnerAppId,
+      threadControlLastEvent: contactInbox.threadControlLastEvent,
+    }))
+    .sort((left, right) => {
+      const leftTime = left.lastMessageAt?.getTime() ?? 0
+      const rightTime = right.lastMessageAt?.getTime() ?? 0
+      return rightTime - leftTime
+    })
 
 const resolveConversationContact = async <T extends { avatar: string | null }>(
   contact: T | null,

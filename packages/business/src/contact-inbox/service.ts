@@ -725,6 +725,87 @@ class ContactInboxService extends BaseService {
     }
   }
 
+  /**
+   * Opens a channel on a contact that already exists because the incoming
+   * phone or email is that client. A source id that already belongs to
+   * someone else is left untouched and reported as null.
+   */
+  async openIncomingChannel(props: {
+    workspaceId: string
+    contactId: string
+    inboxId: string
+    channel: string
+    source: string
+    sourceId: string
+    sourceUserId?: string | null
+    sourceParentUserId?: string | null
+    sourceUsername?: string | null
+    language?: string | null
+    followsBusiness?: boolean | null
+    businessFollowsContact?: boolean | null
+    accountVerified?: boolean | null
+    followerCount?: number | null
+  }): Promise<ContactInboxModel | null> {
+    const existing = await this.findLatestBySource({
+      inboxId: props.inboxId,
+      sourceId: props.sourceId,
+      workspaceId: props.workspaceId,
+    })
+    if (existing) {
+      return existing.contactId === props.contactId ? existing : null
+    }
+
+    try {
+      const [created] = await db.transaction(async (tx) => {
+        await cancelMessageCleanupByInboxSource({
+          inboxId: props.inboxId,
+          sourceIds: [props.sourceId],
+          tx,
+        })
+        return await tx
+          .insert(contactInboxModel)
+          .values({
+            originalContactId: props.contactId,
+            contactId: props.contactId,
+            inboxId: props.inboxId,
+            channel: props.channel,
+            source: props.source,
+            sourceId: props.sourceId,
+            sourceUserId: props.sourceUserId ?? null,
+            sourceParentUserId: props.sourceParentUserId ?? null,
+            sourceUsername: props.sourceUsername ?? null,
+            language: props.language ?? null,
+            followsBusiness: props.followsBusiness ?? null,
+            businessFollowsContact: props.businessFollowsContact ?? null,
+            accountVerified: props.accountVerified ?? null,
+            followerCount: props.followerCount ?? null,
+          })
+          .returning()
+      })
+      if (!created) {
+        return null
+      }
+      await this.invalidateCacheTags([
+        `contacts:${props.workspaceId}:${props.contactId}:contact-inboxes`,
+        ...this.getTrackingCacheTags(props.contactId),
+      ])
+      return created
+    } catch (error) {
+      if (!isUniqueViolationError(error, CONTACT_INBOX_SOURCE_ID_KEY)) {
+        throw error
+      }
+      const raced = await this.findLatestBySource({
+        inboxId: props.inboxId,
+        sourceId: props.sourceId,
+        workspaceId: props.workspaceId,
+      })
+      if (raced?.contactId === props.contactId) {
+        return raced
+      }
+      throw error
+    }
+  }
+
   /** One of the contact's own connections, by id (workspace-scoped), if it still has it. */
   async findByIdForContact(props: {
     id: string
