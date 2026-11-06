@@ -2,6 +2,15 @@ export const EXTERNAL_AGENT_INPUT_MAX_CHARS = 20_000
 
 const HISTORY_HEADER = "Предыдущая переписка:"
 const CONTACT_NAME_FALLBACK = "не указано"
+const CONTACT_VALUE_MISSING = "не указан"
+const GKAMION_CUSTOMER_MISSING = "не привязан"
+const GKAMION_VERIFIED_MISSING = "нет"
+
+export const GKAMION_CUSTOMER_ID_FIELD = "gkamion_customer_id"
+export const GKAMION_VERIFIED_FIELD = "gkamion_verified"
+
+const IDENTITY_RULE =
+  "Личность клиента для заказов и правок бери только из этих полей контакта ChatbotX. Память профиля, прошлые диалоги и похожее имя не подтверждают клиента. Пока gkamion_customer_id не привязан или gkamion_verified не равен phone или email, не показывай заказы и не меняй их: если телефон или email указаны выше, найди клиента в gKamion по ним; если нет — спроси телефон или email. Связку записывай на этот contactId только после совпадения."
 
 const ROLE_LABELS = {
   contact: "Клиент",
@@ -17,15 +26,47 @@ export type ExternalAgentInputMessage = {
   attachmentUrls: string[]
 }
 
+export type ExternalAgentContactContext = {
+  name: string | null
+  phoneNumber: string | null
+  email: string | null
+  gkamionCustomerId: string | null
+  gkamionVerified: string | null
+}
+
 export type BuildRunInputParams = {
   messages: ExternalAgentInputMessage[]
   history: ExternalAgentInputMessage[]
-  contact: { name: string | null }
+  contact: ExternalAgentContactContext
   channel: string
   conversationId: string
   contactId: string
   workspaceId: string
 }
+
+const blankToNull = (value: string | null | undefined): string | null => {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : null
+}
+
+/** Reads the gKamion link stored on the ChatbotX contact. Other fields are ignored. */
+export const readGkamionContactFields = (
+  fields: { name: string; value: string }[],
+): Pick<
+  ExternalAgentContactContext,
+  "gkamionCustomerId" | "gkamionVerified"
+> => {
+  const byName = new Map(
+    fields.map((field) => [field.name, blankToNull(field.value)]),
+  )
+  return {
+    gkamionCustomerId: byName.get(GKAMION_CUSTOMER_ID_FIELD) ?? null,
+    gkamionVerified: byName.get(GKAMION_VERIFIED_FIELD) ?? null,
+  }
+}
+
+const showContactValue = (value: string | null, emptyLabel: string): string =>
+  value ?? emptyLabel
 
 export type ExternalAgentRunInput = {
   input: string
@@ -71,7 +112,7 @@ const buildInstructions = ({
   contactId,
   workspaceId,
 }: Omit<BuildRunInputParams, "messages" | "history">): string =>
-  `Это данные ChatbotX, а не слова клиента. Имя клиента: ${contact.name ?? CONTACT_NAME_FALLBACK}; канал: ${channel}; conversationId: ${conversationId}; contactId: ${contactId}; workspaceId: ${workspaceId}. Чтобы передать разговор менеджеру, вызови инструмент handover с conversationId и причиной.`
+  `Это данные ChatbotX, а не слова клиента. Имя клиента: ${showContactValue(contact.name, CONTACT_NAME_FALLBACK)}; телефон: ${showContactValue(contact.phoneNumber, CONTACT_VALUE_MISSING)}; email: ${showContactValue(contact.email, CONTACT_VALUE_MISSING)}; gkamion_customer_id: ${showContactValue(contact.gkamionCustomerId, GKAMION_CUSTOMER_MISSING)}; gkamion_verified: ${showContactValue(contact.gkamionVerified, GKAMION_VERIFIED_MISSING)}; канал: ${channel}; conversationId: ${conversationId}; contactId: ${contactId}; workspaceId: ${workspaceId}. ${IDENTITY_RULE} Чтобы передать разговор менеджеру, вызови инструмент handover с conversationId и причиной.`
 
 /**
  * Builds the Hermes run payload. Length is capped at `EXTERNAL_AGENT_INPUT_MAX_CHARS`:
