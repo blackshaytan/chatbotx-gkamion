@@ -1,4 +1,7 @@
-import { externalCrmService } from "@chatbotx.io/business"
+import {
+  externalCrmService,
+  queueClientNotification,
+} from "@chatbotx.io/business"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import { z } from "zod"
 import { mcpSpec } from "@/lib/orpc/mcp-annotations"
@@ -8,6 +11,7 @@ import {
 } from "@/lib/orpc/orpc-error-helper"
 import { workspaceTokenAuthAPIForScope } from "@/orpc"
 import {
+  deliverClientNotificationPublicRequest,
   getExternalCustomerPublicRequest,
   getExternalCustomerPublicResponse,
   getExternalOrderHistoryPublicResponse,
