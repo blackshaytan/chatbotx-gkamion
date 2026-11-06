@@ -36,6 +36,7 @@ const {
   mockContactUpdate,
   mockAdoptPhoneNumberIfSafe,
   mockSetAvatarIfEmptyOrSentinel,
+  mockSetAvatarUnlessStored,
   mockUpdateTracking,
   mockInvalidateTracking,
   mockRecordInboundActivity,
@@ -130,6 +131,7 @@ const {
     mockContactUpdate: vi.fn().mockResolvedValue({}),
     mockAdoptPhoneNumberIfSafe,
     mockSetAvatarIfEmptyOrSentinel: vi.fn().mockResolvedValue(undefined),
+    mockSetAvatarUnlessStored: vi.fn().mockResolvedValue(undefined),
     mockConversationFindOrCreate: vi.fn(),
     mockAutomatedResponseEnqueueFlowAction: vi
       .fn()
@@ -345,6 +347,7 @@ vi.mock("@chatbotx.io/business", () => ({
     unblockIfBlocked: mockContactUnblockIfBlocked,
     update: mockContactUpdate,
     setAvatarIfEmptyOrSentinel: mockSetAvatarIfEmptyOrSentinel,
+    setAvatarUnlessStored: mockSetAvatarUnlessStored,
   },
   conversationService: {
     findOrCreate: mockConversationFindOrCreate,

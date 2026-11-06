@@ -678,4 +678,20 @@ describe("resolveContactAvatarUrl", () => {
     })
     expect(finalize).not.toHaveBeenCalled()
   })
+
+  test("serves a pack picture from the app instead of storage", async () => {
+    const finalize = vi.fn(async (key: string) => `final:${key}`)
+
+    const result = await resolveContactAvatarUrl(
+      {
+        workspaceId: "workspace-1",
+        contact: { avatar: "contact-avatars/07.svg" },
+        contactInboxes: [],
+      },
+      finalize,
+    )
+
+    expect(result).toBe("https://builder.example.com/contact-avatars/07.svg")
+    expect(finalize).not.toHaveBeenCalled()
+  })
 })

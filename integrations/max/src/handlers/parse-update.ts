@@ -33,12 +33,16 @@ export type MaxInbound =
       ref: string | null
     }
 
-const toContact = (user: MaxUser, locale?: string | null): IncomingContact => ({
-  sourceId: String(user.user_id),
-  firstName: user.first_name ?? user.name,
-  ...(user.last_name ? { lastName: user.last_name } : {}),
-  ...(locale ? { locale } : {}),
-})
+const toContact = (user: MaxUser, locale?: string | null): IncomingContact => {
+  const avatar = user.full_avatar_url ?? user.avatar_url
+  return {
+    sourceId: String(user.user_id),
+    firstName: user.first_name ?? user.name,
+    ...(user.last_name ? { lastName: user.last_name } : {}),
+    ...(locale ? { locale } : {}),
+    ...(avatar ? { avatar } : {}),
+  }
+}
 
 const MEDIA_KINDS = new Set(["image", "video", "audio", "file"])
 

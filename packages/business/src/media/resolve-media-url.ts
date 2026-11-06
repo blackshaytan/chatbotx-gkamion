@@ -1,4 +1,5 @@
 import { signMediaToken } from "@chatbotx.io/encryption"
+import { isContactAvatarPackKey } from "@chatbotx.io/utils/contact-avatar-pack"
 import { logger } from "../logger"
 import { resolveWorkspaceAppUrl } from "../platform/settings"
 import {
@@ -23,6 +24,7 @@ export const AVATAR_HYDRATION_CHANNELS = new Set([
   "instagram",
   "telegram",
 ])
+const LEADING_SLASHES_RE = /^\/+/
 export const FAILED_PREFIX = "failed:"
 export const WA_MEDIA_PREFIX = "wa-media:"
 
@@ -280,6 +282,15 @@ export const resolveContactAvatarUrl = async (
   finalize: FinalizeMediaUrl,
   ensureMirrored?: EnsureAvatarMirrored,
 ): Promise<string | null> => {
+  // Pack pictures are files on the app, not objects in storage.
+  if (isContactAvatarPackKey(input.contact.avatar)) {
+    const key = input.contact.avatar.replace(LEADING_SLASHES_RE, "")
+    return new URL(
+      `/${key}`,
+      await resolveWorkspaceAppUrl({ workspaceId: input.workspaceId }),
+    ).toString()
+  }
+
   const contactInboxes =
     input.contactInboxes ?? (input.contactInbox ? [input.contactInbox] : [])
   const contactInbox = selectAvatarContactInbox(contactInboxes)

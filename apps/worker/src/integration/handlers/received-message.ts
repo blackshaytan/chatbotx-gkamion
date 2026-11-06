@@ -103,6 +103,10 @@ import {
   type SourceScopedIdentityMatchedBy,
 } from "@chatbotx.io/sdk"
 import { createId } from "@chatbotx.io/utils"
+import {
+  isContactAvatarPackKey,
+  pickContactAvatarPackKey,
+} from "@chatbotx.io/utils/contact-avatar-pack"
 import { hasGoogleClick } from "@chatbotx.io/utils/google-click"
 import {
   ChatJobAction,
@@ -448,6 +452,18 @@ export const receiveMessage = async (
     throw new SdkException("Unable to resolve contact and conversation")
   }
   const { contactInbox, conversation, contact, isNewContact } = detected
+  try {
+    await rememberContactAvatar({
+      workspaceId: inbox.workspaceId,
+      contact,
+      incomingAvatar: incomingContact.avatar,
+    })
+  } catch (err) {
+    logger.warn(
+      { err, contactId: contact.id, workspaceId: inbox.workspaceId },
+      "Contact avatar assignment failed; keeping the dialog",
+    )
+  }
   const directedIncomingMessage = correctStoryReplyDirectionForNewContact(
     rawIncomingMessage,
     isNewContact,
@@ -1470,6 +1486,66 @@ const getMessageActivityTracking = (props: {
  * matching every other channel's contact avatar (never linked to hotlink
  * Meta's CDN directly, which can expire or rate-limit).
  */
+const PROVIDER_AVATAR_URL_RE = /^https?:\/\//i
+
+const providerAvatarUrl = (
+  value: string | null | undefined,
+): string | undefined =>
+  value && PROVIDER_AVATAR_URL_RE.test(value) ? value : undefined
+
+/**
+ * Keeps a real profile photo when the channel sent one (MAX `avatar_url`,
+ * Telegram `getUserProfilePhotos`, …) and otherwise assigns a stable pack
+ * picture. A photo already stored for this contact is never replaced.
+ */
+async function rememberContactAvatar(props: {
+  workspaceId: string
+  contact: { id: string; avatar: string | null }
+  incomingAvatar?: string | null
+}): Promise<void> {
+  const hasStoredPhoto =
+    hasRealAvatar(props.contact.avatar) &&
+    !isContactAvatarPackKey(props.contact.avatar) &&
+    !providerAvatarUrl(props.contact.avatar)
+  if (hasStoredPhoto) {
+    return
+  }
+
+  const sourceUrl =
+    providerAvatarUrl(props.incomingAvatar) ??
+    providerAvatarUrl(props.contact.avatar)
+  if (sourceUrl) {
+    try {
+      const stored = await downloadCommenterAvatar({
+        url: sourceUrl,
+        workspaceId: props.workspaceId,
+      })
+      if (stored) {
+        await contactService.setAvatarUnlessStored({
+          workspaceId: props.workspaceId,
+          contactId: props.contact.id,
+          avatar: stored,
+        })
+        return
+      }
+    } catch (err) {
+      logger.warn(
+        { err, contactId: props.contact.id, workspaceId: props.workspaceId },
+        "Failed to keep a channel profile photo; leaving the existing avatar",
+      )
+    }
+  }
+
+  if (hasRealAvatar(props.contact.avatar)) {
+    return
+  }
+  await contactService.setAvatarIfEmptyOrSentinel({
+    workspaceId: props.workspaceId,
+    contactId: props.contact.id,
+    avatar: pickContactAvatarPackKey(props.contact.id),
+  })
+}
+
 async function downloadCommenterAvatar(props: {
   url: string
   workspaceId: string
