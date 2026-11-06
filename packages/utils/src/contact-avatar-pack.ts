@@ -14,7 +14,7 @@ export const contactAvatarPackKey = (index: number): string => {
 
 export const isContactAvatarPackKey = (
   avatar: string | null | undefined,
-): avatar is string =>
+): boolean =>
   !!avatar &&
   (avatar.startsWith(CONTACT_AVATAR_PACK_PREFIX) ||
     avatar.startsWith(`/${CONTACT_AVATAR_PACK_PREFIX}`))
