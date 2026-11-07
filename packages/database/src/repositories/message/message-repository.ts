@@ -195,6 +195,7 @@ export type AttachmentLookupRow = Pick<
   | "sourceId"
   | "originPath"
   | "mimeType"
+  | "name"
   | "createdAt"
 >
 

@@ -5,6 +5,7 @@ import {
 import { resolveAdReferral } from "@chatbotx.io/business/ads-conversion/channel-fields"
 import { notFoundException } from "@chatbotx.io/business/errors"
 import { resolveGoogleAdsClick } from "@chatbotx.io/business/google-ads/click-fields"
+import { conversationUnreadRankSql } from "@chatbotx.io/database/queries"
 import {
   contactInboxOperationalColumns,
   createMessageRepository,
@@ -19,6 +20,7 @@ import { endOfHour } from "date-fns"
 import z from "zod"
 import type { ListConversationsRequest } from "@/features/conversations/schema/query"
 import { decodeCursor, encodeCursor } from "@/lib/pagination"
+import { isConversationUnread } from "../lib/is-conversation-unread"
 import type {
   ConversationContactInboxResource,
   FindConversationRequest,
@@ -44,32 +46,38 @@ const mapConversationContactInboxes = (
     inbox: InboxModel
   })[],
 ): ConversationContactInboxResource[] =>
-  contactInboxes.map((contactInbox) => ({
-    id: contactInbox.id,
-    contactId: contactInbox.contactId,
-    inboxId: contactInbox.inboxId,
-    channel: contactInbox.channel,
-    source: contactInbox.source,
-    sourceId: contactInbox.sourceId,
-    sourceUserId: contactInbox.sourceUserId,
-    sourceUsername: contactInbox.sourceUsername,
-    language: contactInbox.language,
-    lastMessageAt: contactInbox.lastMessageAt,
-    lastIncomingMessageAt: contactInbox.lastIncomingMessageAt,
-    contactLastReadAt: contactInbox.contactLastReadAt,
-    inbox: contactInbox.inbox,
-    adReferral: resolveAdReferral(contactInbox.referral),
-    googleAdsClick: resolveGoogleAdsClick(contactInbox.referral),
-    // Conversation routing (thread control): the composer's standby lock and
-    // the owner pill read these off the listed conversation, so the allow-list
-    // mapper must carry them or the lock never engages on reload.
-    threadControlState: contactInbox.threadControlState,
-    threadOwnerRole: contactInbox.threadOwnerRole,
-    threadControlUpdatedAt: contactInbox.threadControlUpdatedAt,
-    threadOwnerExpiresAt: contactInbox.threadOwnerExpiresAt,
-    threadOwnerAppId: contactInbox.threadOwnerAppId,
-    threadControlLastEvent: contactInbox.threadControlLastEvent,
-  }))
+  contactInboxes
+    .map((contactInbox) => ({
+      id: contactInbox.id,
+      contactId: contactInbox.contactId,
+      inboxId: contactInbox.inboxId,
+      channel: contactInbox.channel,
+      source: contactInbox.source,
+      sourceId: contactInbox.sourceId,
+      sourceUserId: contactInbox.sourceUserId,
+      sourceUsername: contactInbox.sourceUsername,
+      language: contactInbox.language,
+      lastMessageAt: contactInbox.lastMessageAt,
+      lastIncomingMessageAt: contactInbox.lastIncomingMessageAt,
+      contactLastReadAt: contactInbox.contactLastReadAt,
+      inbox: contactInbox.inbox,
+      adReferral: resolveAdReferral(contactInbox.referral),
+      googleAdsClick: resolveGoogleAdsClick(contactInbox.referral),
+      // Conversation routing (thread control): the composer's standby lock and
+      // the owner pill read these off the listed conversation, so the allow-list
+      // mapper must carry them or the lock never engages on reload.
+      threadControlState: contactInbox.threadControlState,
+      threadOwnerRole: contactInbox.threadOwnerRole,
+      threadControlUpdatedAt: contactInbox.threadControlUpdatedAt,
+      threadOwnerExpiresAt: contactInbox.threadOwnerExpiresAt,
+      threadOwnerAppId: contactInbox.threadOwnerAppId,
+      threadControlLastEvent: contactInbox.threadControlLastEvent,
+    }))
+    .sort((left, right) => {
+      const leftTime = left.lastMessageAt?.getTime() ?? 0
+      const rightTime = right.lastMessageAt?.getTime() ?? 0
+      return rightTime - leftTime
+    })
 
 const resolveConversationContact = async <T extends { avatar: string | null }>(
   contact: T | null,
@@ -94,9 +102,10 @@ const resolveConversationContact = async <T extends { avatar: string | null }>(
   }
 }
 
-// Cursors minted before the switch to `inboxActivityAt` fail to decode and
-// restart from the first page.
+// Cursors minted before unread-first ordering fail to decode and restart
+// from the first page.
 const conversationCursorSchema = z.object({
+  unread: z.boolean(),
   inboxActivityAt: z.coerce.date().nullable(),
   id: zodBigintAsString(),
 })
@@ -153,9 +162,11 @@ export const listConversations = async (
 
   const conversations = await conversationService.findManyQuery({
     where,
-    // Matches `Conversation_workspaceId_inboxActivityAt_id_idx` and the cursor
-    // in `buildConversationWhere`.
+    // Unread first, then newest activity. Matches
+    // `Conversation_workspaceId_inboxUnread_inboxActivityAt_id_idx` and the
+    // cursor in `buildConversationWhere`.
     orderBy: (table, { sql: orderSql, desc }) => [
+      orderSql`${conversationUnreadRankSql(table)} DESC`,
       orderSql`${table.inboxActivityAt} DESC NULLS LAST`,
       desc(table.id),
     ],
@@ -208,6 +219,7 @@ export const listConversations = async (
   const nextCursor =
     hasMore && lastItem
       ? encodeCursor({
+          unread: isConversationUnread(lastItem),
           inboxActivityAt: lastItem.inboxActivityAt,
           id: lastItem.id,
         } satisfies ConversationCursor)
@@ -215,6 +227,7 @@ export const listConversations = async (
 
   const prevCursor = cursor
     ? encodeCursor({
+        unread: page[0] ? isConversationUnread(page[0]) : false,
         inboxActivityAt: page[0]?.inboxActivityAt ?? new Date(),
         id: page[0]?.id ?? "0",
       } satisfies ConversationCursor)

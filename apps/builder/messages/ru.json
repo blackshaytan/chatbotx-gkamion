@@ -847,7 +847,10 @@
         "lead": "Лид",
         "purchase": "Покупка"
       },
-      "aiCallOptOut": "Без звонков робота"
+      "aiCallOptOut": "Без звонков робота",
+      "deliveryMethod": "Способ доставки",
+      "hasDebt": "Есть долг",
+      "amount": "Сумма заказа"
     },
     "fieldGroups": {
       "opportunity": "Сделка",
@@ -2687,6 +2690,32 @@
     },
     "igStory": {
       "label": "Автоответы на истории Instagram"
+    },
+    "orderNotification": {
+      "description": "n8n присылает событие заказа. Этот шаг задаёт статусы и текст. Шаг «Условие» в этом сценарии может проверять deliveryMethod (pickup или delivery), hasDebt (true или false) и amount.",
+      "subject": {
+        "label": "Что запускает сценарий",
+        "order": "Статус заказа",
+        "item": "Статус позиции"
+      },
+      "statusIds": {
+        "label": "Номера статусов",
+        "placeholder": "21, 22, 23",
+        "description": "Числовые статусы GKamion. Опубликованный сценарий запускается, когда событие заказа приходит с одним из этих номеров.",
+        "invalid": "Введите от одного до пятидесяти целых чисел через запятую."
+      },
+      "messengerText": {
+        "label": "Текст мессенджера",
+        "description": "Отправляется в MAX, Telegram, ZZAP и DROM. Подстановки: '{{orderNumber}}', '{{itemSummary}}', '{{amount}}', '{{billUrl}}'. Пустое значение пропускает эти каналы."
+      },
+      "emailText": {
+        "label": "Текст письма",
+        "description": "Те же подстановки, что у текста мессенджера. Пустое значение пропускает почту."
+      },
+      "emailSubject": {
+        "label": "Тема письма",
+        "description": "Те же подстановки. Пустое значение подставляет номер заказа."
+      }
     }
   },
   "metaConversions": {
@@ -3501,7 +3530,8 @@
       "sendGoogleAdsConversion": "Отправить конверсию Google Ads",
       "changeGamificationScore": "Изменить игровые баллы",
       "sendViewCatalog": "Открыть каталог",
-      "sendProducts": "Отправить товары"
+      "sendProducts": "Отправить товары",
+      "sendOrderNotification": "Уведомление по заказу"
     },
     "splitTraffic": {
       "balanceHint": "Сумма должна быть равна 100%.",

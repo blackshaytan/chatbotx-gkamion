@@ -11,6 +11,7 @@ import {
 } from "@/features/chat/store/chat-store"
 import type { ContactPermissionScope } from "@/features/contacts/permissions"
 import { getContact } from "@/features/contacts/queries/get-contact.query"
+import { sortInboxConversations } from "@/features/conversations/lib/compare-inbox-conversations"
 import {
   findConversation,
   listConversations,
@@ -130,14 +131,16 @@ const shapeInitialState = ({
   messagesResult: PromiseSettledResult<ChatStoreInitialState>
   contactResult: PromiseSettledResult<ChatStoreInitialState>
 }): ChatStoreInitialState => {
-  const conversations = activeConversation
-    ? [
-        activeConversation,
-        ...listedConversations.filter(
-          (conversation) => conversation.id !== activeConversation.id,
-        ),
-      ]
-    : listedConversations
+  const conversations = sortInboxConversations(
+    activeConversation
+      ? [
+          activeConversation,
+          ...listedConversations.filter(
+            (conversation) => conversation.id !== activeConversation.id,
+          ),
+        ]
+      : listedConversations,
+  )
 
   return {
     conversations,

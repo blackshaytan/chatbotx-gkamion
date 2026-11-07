@@ -28,6 +28,27 @@ export function useAttachmentUrl(
   }
 }
 
+const MEDIA_PROXY_PREFIX = "/media/attachment/"
+
+/**
+ * Preview stays on `url`. A stored file served by this app downloads on click;
+ * a public storage URL still opens, because a cross-origin download is ignored.
+ */
+export const attachmentClickTarget = (
+  url: string,
+): { href: string; download: boolean } => {
+  try {
+    const next = new URL(url)
+    if (next.pathname.startsWith(MEDIA_PROXY_PREFIX)) {
+      next.searchParams.set("download", "1")
+      return { href: next.toString(), download: true }
+    }
+  } catch {
+    // Keep a relative or malformed URL as a plain open link.
+  }
+  return { href: url, download: false }
+}
+
 // Mirrors the media proxy's retry flag (`app/media/attachment/[token]/route.ts`).
 const toRetryUrl = (fallbackUrl: string): string | undefined => {
   try {

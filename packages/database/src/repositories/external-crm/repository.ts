@@ -1,6 +1,6 @@
 import type { DatabaseClient } from "../../client"
-import { and, db, eq, or, sql } from "../../client"
-import { contactModel } from "../../schema"
+import { and, db, eq, inArray, ne, or, sql } from "../../client"
+import { contactModel, externalOrderEventModel } from "../../schema"
 
 export const findExternalCustomerIdentity = async (
   tx: DatabaseClient,
@@ -56,6 +56,46 @@ export const findExternalOrderEvent = async (
   tx: DatabaseClient,
   input: { workspaceId: string; provider: string; eventId: string },
 ) => await tx.query.externalOrderEventModel.findFirst({ where: input })
+
+export const findLatestExternalSubjectEventAt = async (
+  tx: DatabaseClient,
+  input: {
+    workspaceId: string
+    provider: string
+    externalOrderId: string
+    eventTypes: string[]
+    externalOrderItemId?: string
+    exceptEventId?: string
+  },
+): Promise<Date | null> => {
+  const [row] = await tx
+    .select({
+      occurredAt: sql<
+        Date | string | null
+      >`max(${externalOrderEventModel.occurredAt})`,
+    })
+    .from(externalOrderEventModel)
+    .where(
+      and(
+        eq(externalOrderEventModel.workspaceId, input.workspaceId),
+        eq(externalOrderEventModel.provider, input.provider),
+        eq(externalOrderEventModel.externalOrderId, input.externalOrderId),
+        inArray(externalOrderEventModel.eventType, input.eventTypes),
+        input.externalOrderItemId
+          ? sql`${externalOrderEventModel.data}->>'externalOrderItemId' = ${input.externalOrderItemId}`
+          : undefined,
+        input.exceptEventId
+          ? ne(externalOrderEventModel.eventId, input.exceptEventId)
+          : undefined,
+      ),
+    )
+  if (!row?.occurredAt) {
+    return null
+  }
+  const occurredAt =
+    row.occurredAt instanceof Date ? row.occurredAt : new Date(row.occurredAt)
+  return Number.isNaN(occurredAt.getTime()) ? null : occurredAt
+}
 
 export const getExternalOrderHistory = async (input: {
   workspaceId: string

@@ -72,6 +72,22 @@ type ConversationItemProps = {
   onSelect: () => void
 }
 
+/** The channel a reply is sent to: the inbox with the latest message. */
+const activeChannelInbox = (
+  contactInboxes: ListConversationItemResource["contactInboxes"],
+) => {
+  let active = contactInboxes?.[0]
+  let activeAt = new Date(active?.lastMessageAt ?? 0).getTime()
+  for (const contactInbox of contactInboxes ?? []) {
+    const at = new Date(contactInbox.lastMessageAt ?? 0).getTime()
+    if (at >= activeAt) {
+      active = contactInbox
+      activeAt = at
+    }
+  }
+  return active
+}
+
 const assignedIcon = (
   conversation: ListConversationItemResource,
   assignedAvatarUrl: string | undefined,
@@ -241,6 +257,7 @@ export default function ConversationItem({
   const assignedInboxTeamOptionName =
     assigneeOptionNameByValue.get(`t_${conversation.assignedInboxTeamId}`) ??
     null
+  const replyChannel = activeChannelInbox(conversation.contactInboxes)
   const { name: brand } = useTenantSettings()
   const previewText = resolveLastMessagePreview(
     conversation.messages?.[0],
@@ -325,13 +342,13 @@ export default function ConversationItem({
             )}
           </div>
           <div className="absolute end-0 bottom-0 transform">
-            {conversation.contactInboxes?.map((contactInbox) => (
-              <Tooltip key={contactInbox.id}>
+            {replyChannel ? (
+              <Tooltip>
                 <TooltipTrigger
                   render={
                     <span>
                       <InboxIcon
-                        channel={contactInbox.channel as ChannelType}
+                        channel={replyChannel.channel as ChannelType}
                         showLabel={false}
                         size="small"
                       />
@@ -339,10 +356,10 @@ export default function ConversationItem({
                   }
                 />
                 <TooltipContent align="center" side="right">
-                  {contactInbox.inbox.name}
+                  {replyChannel.inbox.name}
                 </TooltipContent>
               </Tooltip>
-            ))}
+            ) : null}
           </div>
           {conversation.followed && (
             <div className="absolute end-0 top-0 transform">

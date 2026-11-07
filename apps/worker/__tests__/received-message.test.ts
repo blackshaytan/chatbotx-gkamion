@@ -36,6 +36,7 @@ const {
   mockContactUpdate,
   mockAdoptPhoneNumberIfSafe,
   mockSetAvatarIfEmptyOrSentinel,
+  mockSetAvatarUnlessStored,
   mockUpdateTracking,
   mockInvalidateTracking,
   mockRecordInboundActivity,
@@ -130,6 +131,7 @@ const {
     mockContactUpdate: vi.fn().mockResolvedValue({}),
     mockAdoptPhoneNumberIfSafe,
     mockSetAvatarIfEmptyOrSentinel: vi.fn().mockResolvedValue(undefined),
+    mockSetAvatarUnlessStored: vi.fn().mockResolvedValue(undefined),
     mockConversationFindOrCreate: vi.fn(),
     mockAutomatedResponseEnqueueFlowAction: vi
       .fn()
@@ -235,6 +237,18 @@ vi.mock("@chatbotx.io/database/schema", () => ({
     sourceId: "sourceId",
     workspaceId: "workspaceId",
   },
+  magicLinkStatModel: {
+    workspaceId: "workspaceId",
+    linkId: "linkId",
+    contactInboxId: "contactInboxId",
+    occurredAt: "occurredAt",
+  },
+  refLinkStatModel: {
+    workspaceId: "workspaceId",
+    linkId: "linkId",
+    contactInboxId: "contactInboxId",
+    occurredAt: "occurredAt",
+  },
 }))
 
 // Mirror of the real capability table
@@ -274,6 +288,12 @@ const mockEmitShoppingCartSent = vi.hoisted(() => vi.fn())
 const mockEmitUserAskedAboutProduct = vi.hoisted(() => vi.fn())
 
 vi.mock("@chatbotx.io/business", () => ({
+  flushAllPendingWorkspaceBroadcasts: vi.fn(),
+  resolveWorkspaceFreezeReasonById: vi.fn(async () => ({
+    freezeReason: null,
+  })),
+  settleBlockedOrderNotification: vi.fn(async () => undefined),
+  smartDelayService: { findById: vi.fn(async () => null) },
   productMessageService: {
     resolveInboundProducts: mockResolveInboundProducts,
   },
@@ -327,6 +347,7 @@ vi.mock("@chatbotx.io/business", () => ({
     unblockIfBlocked: mockContactUnblockIfBlocked,
     update: mockContactUpdate,
     setAvatarIfEmptyOrSentinel: mockSetAvatarIfEmptyOrSentinel,
+    setAvatarUnlessStored: mockSetAvatarUnlessStored,
   },
   conversationService: {
     findOrCreate: mockConversationFindOrCreate,
@@ -520,6 +541,7 @@ vi.mock("@chatbotx.io/worker-config", () => ({
     add: mockIntegrationQueueAdd,
     getJob: vi.fn().mockResolvedValue(undefined),
   },
+  PURGE_WORKSPACES_INTERVAL_MINUTES: 30,
 }))
 
 vi.mock("../src/lib/logger", () => ({

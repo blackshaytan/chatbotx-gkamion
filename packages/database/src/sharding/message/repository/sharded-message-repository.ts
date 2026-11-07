@@ -2110,6 +2110,7 @@ export class ShardedMessageRepository implements IMessageRepository {
         sourceId: attachmentModel.sourceId,
         originPath: attachmentModel.originPath,
         mimeType: attachmentModel.mimeType,
+        name: attachmentModel.name,
         createdAt: attachmentModel.createdAt,
       })
       .from(attachmentModel)

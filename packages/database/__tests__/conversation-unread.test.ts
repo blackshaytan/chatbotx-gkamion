@@ -1,6 +1,24 @@
+import { sql } from "drizzle-orm"
 import { PgDialect } from "drizzle-orm/pg-core"
 import { describe, expect, test } from "vitest"
-import { conversationUnreadWhere } from "../src/queries/conversation-unread"
+import {
+  conversationUnreadRankSql,
+  conversationUnreadWhere,
+} from "../src/queries/conversation-unread"
+import { conversationModel } from "../src/schema/conversation"
+
+describe("conversationUnreadRankSql", () => {
+  test("ranks a conversation unread from activity or a handover newer than the last read", () => {
+    const query = new PgDialect().sqlToQuery(
+      sql`${conversationUnreadRankSql(conversationModel)} DESC`,
+    )
+
+    expect(query.sql).toBe(
+      '(("Conversation"."inboxActivityAt" IS NOT NULL AND ("Conversation"."agentLastReadAt" IS NULL OR "Conversation"."inboxActivityAt" > "Conversation"."agentLastReadAt")) OR ("Conversation"."handedOverAt" IS NOT NULL AND ("Conversation"."agentLastReadAt" IS NULL OR "Conversation"."handedOverAt" > "Conversation"."agentLastReadAt"))) DESC',
+    )
+    expect(query.params).toEqual([])
+  })
+})
 
 describe("conversationUnreadWhere", () => {
   test("matches the canonical unread semantics for never-read and newer-activity conversations", () => {

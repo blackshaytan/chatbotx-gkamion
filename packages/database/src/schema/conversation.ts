@@ -14,6 +14,7 @@ import {
   sharedColumns,
   timestampConfig,
 } from "../partials/shared"
+import { conversationUnreadRankSql } from "../queries/conversation-unread"
 import { userModel } from "./auth-user"
 import { contactModel } from "./contact"
 import { inboxTeamModel } from "./inbox-team"
@@ -86,6 +87,14 @@ export const conversationModel = pgTable(
     index("Conversation_workspaceId_inboxActivityAt_id_idx").using(
       "btree",
       table.workspaceId.asc().nullsLast(),
+      table.inboxActivityAt.desc().nullsLast(),
+      table.id.desc(),
+    ),
+    // Unread conversations first, then the same activity order as the inbox list.
+    index("Conversation_workspaceId_inboxUnread_inboxActivityAt_id_idx").using(
+      "btree",
+      table.workspaceId.asc().nullsLast(),
+      sql`${conversationUnreadRankSql(table)} DESC`,
       table.inboxActivityAt.desc().nullsLast(),
       table.id.desc(),
     ),

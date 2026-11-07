@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { Readable } from "node:stream"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
 const mocks = vi.hoisted(() => {
@@ -11,6 +12,7 @@ const mocks = vi.hoisted(() => {
     findAttachmentById: vi.fn(),
     findContact: vi.fn(),
     findContactInbox: vi.fn(),
+    getObjectStream: vi.fn(),
     getPresignedDownload: vi.fn(),
     getPublicFileUrl: vi.fn(),
     loadServableWorkspace: vi.fn(),
@@ -32,6 +34,14 @@ vi.mock("@chatbotx.io/business", () => ({
   contactInboxService: { findByUncached: mocks.findContactInbox },
   contactService: { findById: mocks.findContact },
   isFailedOriginPath: (originPath: string) => originPath.startsWith("failed:"),
+  isPrivateStorageUrl: (value: string) => {
+    try {
+      const host = new URL(value).hostname.toLowerCase()
+      return host === "localhost" || host === "127.0.0.1" || host === "::1"
+    } catch {
+      return false
+    }
+  },
   isNoAvatarSentinelFresh: (failedAtMs: number, now = Date.now()) =>
     now - failedAtMs < 10 * 60 * 1000,
   isPendingOriginPath: (originPath: string) =>
@@ -65,7 +75,10 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
 }))
 
 vi.mock("@chatbotx.io/filesystem", () => ({
-  uploader: { getPresignedDownload: mocks.getPresignedDownload },
+  uploader: {
+    getObjectStream: mocks.getObjectStream,
+    getPresignedDownload: mocks.getPresignedDownload,
+  },
 }))
 
 vi.mock("@chatbotx.io/worker-config", () => ({
@@ -204,6 +217,56 @@ describe("attachment media proxy", () => {
     )
     expect(mocks.resolveFreshMediaUrl).not.toHaveBeenCalled()
     expect(mocks.lowQueueAdd).not.toHaveBeenCalled()
+  })
+
+  test("streams a loopback storage object so the preview does not point at 127.0.0.1", async () => {
+    mocks.findAttachmentById.mockResolvedValue({
+      ...attachment("public/zzap/photo"),
+      name: "filter.jpg",
+    })
+    mocks.getPresignedDownload.mockResolvedValue(
+      "http://127.0.0.1:9010/chatbotx/public/zzap/photo",
+    )
+    mocks.getObjectStream.mockResolvedValue({
+      stream: Readable.from(Buffer.from("jpeg-bytes")),
+      contentLength: 10,
+    })
+
+    const response = await getAttachment(
+      new Request("http://localhost/media/attachment/signed-token") as never,
+      tokenContext(),
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get("content-type")).toBe("image/jpeg")
+    expect(response.headers.get("content-disposition")).toContain("inline")
+    expect(response.headers.get("content-disposition")).toContain("filter.jpg")
+    expect(await response.text()).toBe("jpeg-bytes")
+  })
+
+  test("download=1 saves the stored photo instead of showing it", async () => {
+    mocks.findAttachmentById.mockResolvedValue({
+      ...attachment("public/zzap/photo"),
+      name: "filter.jpg",
+    })
+    mocks.getPresignedDownload.mockResolvedValue(
+      "http://127.0.0.1:9010/chatbotx/public/zzap/photo",
+    )
+    mocks.getObjectStream.mockResolvedValue({
+      stream: Readable.from(Buffer.from("jpeg-bytes")),
+      contentLength: 10,
+    })
+
+    const response = await getAttachment(
+      new Request(
+        "http://localhost/media/attachment/signed-token?download=1",
+      ) as never,
+      tokenContext(),
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get("content-disposition")).toContain("attachment")
+    expect(response.headers.get("content-disposition")).toContain("filter.jpg")
   })
 
   test("retry on mirrored media redirects to fresh media and enqueues a restore job", async () => {
