@@ -1,0 +1,1090 @@
+/** Checkout: create order from gKamion basket. */
+
+const http = require('./http-gkamion');
+const { listBasketItems } = require('./basket-flow');
+const { resolveTelegramChatId } = require('./tool-input');
+const { resolveCustomerContext, registrationRequiredResponse } = require('./customer-registration');
+
+const DELIVERY_TYPES = {
+  pickup: 1,
+  moscow: 2,
+  tk: 3,
+  cdek: 4,
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 4,
+};
+
+const REGION_PVZ_HINTS = {
+  2: ['коньк', 'konk'],
+  3: ['южн', 'yuzh'],
+};
+
+let deliveryPointsCache = { at: 0, points: [] };
+const CACHE_TTL_MS = 3600000;
+
+function parseMaybeJson(value) {
+  if (typeof value !== 'string') return value;
+  const text = value.trim();
+  if (!text || !/^[{[]/.test(text)) return value;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return value;
+  }
+}
+
+function unwrapInput(input) {
+  let current = parseMaybeJson(input);
+  for (let i = 0; i < 3; i += 1) {
+    if (!current || typeof current !== 'object') break;
+    const next = current.query ?? current.input;
+    const parsed = parseMaybeJson(next);
+    if (parsed === next && (typeof parsed !== 'object' || parsed == null)) break;
+    current = parsed;
+  }
+  return current && typeof current === 'object' ? current : {};
+}
+
+function normalizeDeliveryType(value) {
+  const t = String(value || '').trim().toLowerCase();
+  if (['pickup', 'самовывоз', 'пвз', '1'].includes(t) || t.includes('самовывоз')) return 1;
+  if (['moscow', 'москв', 'курьер', '2'].includes(t) || t.includes('моск')) return 2;
+  // СДЭК before generic «тк» / substrings that could collide
+  if (['cdek', 'сдэк', 'сдек', '4'].includes(t) || t.includes('сдэк') || t.includes('сдек') || t.includes('cdek')) return 4;
+  if (['tk', 'тк', 'транспорт', '3'].includes(t)) return 3;
+  if (t.includes('пэк') || t.includes('pek') || t.includes('деловые') || t.includes('dellin') || t.includes('энерги')) return 3;
+  // ОЗОН / Яндекс.Доставка запрещены — не маппим в tk.
+  if (t.includes('озон') || t.includes('ozon') || t.includes('яндекс') || t.includes('yandex')) return null;
+  const num = Number(value);
+  if (DELIVERY_TYPES[num]) return num;
+  return null;
+}
+
+/**
+ * LLM sometimes passes delivery_type=tk for СДЭК (confuses with banned ОЗОН/Яндекс→tk).
+ * If comment / delivery intent clearly says СДЭК, coerce tk(3) → cdek(4).
+ */
+function coerceDeliveryTypeId(deliveryTypeId, context = {}) {
+  const id = Number(deliveryTypeId);
+  if (id !== 3) return id;
+  const orderDelivery = require('./order-delivery-address');
+  const blob = [
+    context.comment,
+    context.deliveryIntent?.carrier,
+    context.deliveryIntent?.source_text,
+  ].filter(Boolean).join(' ');
+  if (orderDelivery.extractCarrier(blob) === 'СДЭК') return 4;
+  return id;
+}
+
+function isRemoteDeliveryIntent(intent) {
+  if (!intent || typeof intent !== 'object') return false;
+  if (String(intent.carrier || '').trim()) return true;
+  if (intent.wants_region) return true;
+  const city = String(intent.city || '').trim();
+  if (!city) return false;
+  return !/^москв/i.test(city);
+}
+
+function shouldBlockDefaultPickup(deliveryTypeId, deliveryIntent, rawDeliveryType) {
+  if (Number(deliveryTypeId) !== 1) return false;
+  if (!isRemoteDeliveryIntent(deliveryIntent)) return false;
+  const raw = rawDeliveryType;
+  const explicit = raw != null && String(raw).trim() !== '';
+  return !(explicit && normalizeDeliveryType(raw) === 1);
+}
+
+async function loadDeliveryPoints() {
+  const now = Date.now();
+  if (deliveryPointsCache.points.length && (now - deliveryPointsCache.at) < CACHE_TTL_MS) {
+    return deliveryPointsCache.points;
+  }
+  const resp = await http.gkamionGet('/delivery_points.json', {
+    'search[active_true]': 1,
+    per_page: 50,
+    page: 1,
+  });
+  const points = resp.ok
+    ? (resp.body?.delivery_points || [])
+    : [];
+  deliveryPointsCache = { at: now, points };
+  return points;
+}
+
+async function resolveDeliveryPointId(regionId, deliveryPointId) {
+  if (deliveryPointId != null && String(deliveryPointId).trim() !== '') {
+    return Number(deliveryPointId);
+  }
+  if (regionId == null) return null;
+
+  const points = await loadDeliveryPoints();
+  const hints = REGION_PVZ_HINTS[Number(regionId)] || [];
+  const match = points.find((p) => {
+    const name = String(p.name || p.title || '').toLowerCase();
+    return hints.some((h) => name.includes(h));
+  });
+  return match?.id ?? null;
+}
+
+async function fetchLatestOrder(customerId) {
+  const resp = await http.gkamionGet('/orders.json', {
+    'search[customer_id_eq]': customerId,
+    sort_by_id: 'desc',
+    per_page: 1,
+    page: 1,
+  });
+  if (!resp.ok) return null;
+  const orders = resp.body?.orders || [];
+  return orders[0] || null;
+}
+
+function unwrapOrder(body) {
+  return body?.order || body;
+}
+
+async function createOrderFromBasket(rawInput) {
+  const ctx = resolveCustomerContext(rawInput);
+  const input = ctx;
+  const customerId = ctx.customer_id != null ? Number(ctx.customer_id) : null;
+  if (!customerId) {
+    return registrationRequiredResponse();
+  }
+
+  let basketIds = input.basket_ids;
+  if (typeof basketIds === 'string') {
+    // LLM иногда присылает строку в скобках: "[7935, 7936]". Скобки/кавычки —
+    // не часть id, иначе ключи формы baskets[[7935][check] отклоняет gKamion.
+    basketIds = basketIds
+      .split(/[\s,]+/)
+      .map((x) => x.trim().replace(/^[\[("']+|[\])"']+$/g, ''))
+      .filter(Boolean);
+  }
+  if (!Array.isArray(basketIds) || !basketIds.length) {
+    const cart = await listBasketItems(customerId);
+    if (!cart.ok || !cart.basket_ids?.length) {
+      return { success: false, error: 'empty_basket', message: 'Корзина пуста' };
+    }
+    basketIds = cart.basket_ids;
+  }
+
+  const chatId = String(input.telegram_chat_id || input.client_telegram_chat_id || '').trim();
+  const orderDelivery = require('./order-delivery-address');
+  const orderCtx = require('./order-context');
+  const deliveryIntent = chatId ? orderCtx.getDeliveryIntent(chatId) : null;
+  let rawDeliveryType = input.delivery_type_id ?? input.delivery_type;
+  if ((rawDeliveryType == null || String(rawDeliveryType).trim() === '') && chatId) {
+    try {
+      const drom = require('./drom-order-flow');
+      const fromDeal = drom.deliveryTypeFromAttachedDromDeal(drom.getDromOrderFacts(chatId));
+      if (fromDeal) rawDeliveryType = fromDeal;
+    } catch (_) { /* optional */ }
+  }
+  let deliveryTypeId = normalizeDeliveryType(rawDeliveryType) ?? 1;
+  deliveryTypeId = coerceDeliveryTypeId(deliveryTypeId, {
+    comment: input.comment,
+    deliveryIntent,
+  });
+  const bannedHint = [
+    rawDeliveryType,
+    input.comment,
+    deliveryIntent?.carrier,
+    deliveryIntent?.source_text,
+  ].filter(Boolean).join(' ');
+  if (orderDelivery.isSelfServiceCarrier(orderDelivery.extractCarrier(bannedHint))) {
+    const reply = orderDelivery.refuseSelfServiceCarrier(orderDelivery.extractCarrier(bannedHint));
+    return {
+      success: false,
+      error: 'carrier_not_supported',
+      client_hint: reply,
+    };
+  }
+  if (shouldBlockDefaultPickup(deliveryTypeId, deliveryIntent, rawDeliveryType)) {
+    return {
+      success: false,
+      error: 'delivery_type_required',
+      client_hint: 'Клиент назвал город или службу доставки. Спроси способ (СДЭК / ТК: Деловые линии, ПЭК или Энергия) и вызови create_order_from_basket с delivery_type. ОЗОН и Яндекс.Доставку не предлагай. Не оформляй самовывоз.',
+    };
+  }
+  const initialComment = input.comment
+    || (deliveryIntent && orderDelivery.isRemoteDeliveryType(deliveryTypeId)
+      ? orderDelivery.buildDeliveryInfoLine(deliveryIntent)
+      : null);
+
+  const form = {
+    'order[customer_id]': customerId,
+    'order[delivery_type_id]': deliveryTypeId,
+    put_to_work: 0,
+  };
+
+  if (initialComment) form['order[comment]'] = String(initialComment).slice(0, 500);
+
+  if (deliveryTypeId === 1) {
+    const pointId = await resolveDeliveryPointId(input.region_id, input.delivery_point_id);
+    if (pointId) form['order[delivery_point_id]'] = pointId;
+  } else if (input.delivery_point_id != null) {
+    form['order[delivery_point_id]'] = Number(input.delivery_point_id);
+  }
+
+  for (const id of basketIds) {
+    form[`baskets[${id}][check]`] = 1;
+  }
+
+  const resp = await http.gkamionPostForm('/orders.json', form);
+  if (!resp.ok) {
+    return {
+      success: false,
+      error: 'order_create_failed',
+      status: resp.status,
+      message: resp.body?.error || resp.error || 'Не удалось оформить заказ',
+    };
+  }
+
+  let order = null;
+  const body = resp.body || {};
+  if (body.order?.id) {
+    order = body.order;
+  } else if (body.data?.order?.id) {
+    order = body.data.order;
+  } else if (body.id) {
+    order = body;
+  } else {
+    await new Promise((r) => setTimeout(r, 1500));
+    order = await fetchLatestOrder(customerId);
+  }
+
+  const orderId = order?.id;
+  let total = order?.sum ?? order?.total;
+  if (orderId && total == null) {
+    const show = await http.gkamionGet(`/orders/${orderId}.json`);
+    if (show.ok) {
+      const full = unwrapOrder(show.body);
+      total = full?.sum ?? full?.total;
+    }
+  }
+
+  const result = {
+    success: true,
+    order_id: orderId,
+    order_number: order?.number || orderId,
+    total: total != null ? Math.round(Number(total)) : null,
+    basket_ids: basketIds,
+    delivery_type_id: deliveryTypeId,
+    client_hint: 'Сообщи номер заказа и что менеджер пришлёт ссылку на предоплату (до 5% по СБП). Не создавай счёт сам.',
+  };
+  if (chatId && orderId) {
+    orderDelivery.rememberOrderFromCheckout(chatId, result, customerId, deliveryTypeId);
+    if (orderDelivery.isRemoteDeliveryType(deliveryTypeId) && deliveryIntent && !initialComment) {
+      await orderDelivery.applyDeliveryIntentOnCheckout(chatId, orderId, customerId, deliveryTypeId);
+    }
+    try {
+      await require('./drom-order-flow').applyAttachedDromSellPrices(chatId, orderId);
+    } catch (_) { /* optional */ }
+    try {
+      require('./drom-order-flow').clearClientQuote(chatId);
+    } catch (_) { /* optional */ }
+  }
+  return result;
+}
+
+module.exports = {
+  createOrderFromBasket,
+  normalizeDeliveryType,
+  coerceDeliveryTypeId,
+  isRemoteDeliveryIntent,
+  shouldBlockDefaultPickup,
+  resolveDeliveryPointId,
+  DELIVERY_TYPES,
+};
+
+/** Save client delivery / PVZ address into gKamion order comment. */
+
+const http = require('./http-gkamion');
+const orderCtx = require('./order-context');
+const { extractOrderIdFromText } = require('./payment-flow');
+const orderCancel = require('./order-cancel-flow');
+
+const ADDRESS_MARKER = '[Адрес доставки / ПВЗ';
+const DELIVERY_INFO_MARKER = '[Доставка:';
+
+const CITY_ALIASES = [
+  { rx: /(?:санкт[\s-]?)?петербург|питер|спб|ленинград/i, canonical: 'Санкт-Петербург', short: ['питер', 'спб', 'петербург', 'ленинград', 'санкт'] },
+  { rx: /москв/i, canonical: 'Москва', short: ['москва', 'мск'] },
+  { rx: /казан/i, canonical: 'Казань', short: ['казань'] },
+  { rx: /екатеринбург|екб/i, canonical: 'Екатеринбург', short: ['екатеринбург', 'екб'] },
+  { rx: /новосибирск/i, canonical: 'Новосибирск', short: ['новосибирск'] },
+  { rx: /краснодар/i, canonical: 'Краснодар', short: ['краснодар'] },
+  { rx: /ростов/i, canonical: 'Ростов-на-Дону', short: ['ростов'] },
+  { rx: /самар/i, canonical: 'Самара', short: ['самара'] },
+  { rx: /воронеж/i, canonical: 'Воронеж', short: ['воронеж'] },
+  { rx: /нижн/i, canonical: 'Нижний Новгород', short: ['нижний', 'нижний новгород'] },
+  { rx: /хабаровск/i, canonical: 'Хабаровск', short: ['хабаровск'] },
+];
+
+function unwrapOrder(body) {
+  return body?.order || body;
+}
+
+function compact(text, max = 80) {
+  const value = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!value) return '';
+  return value.length > max ? `${value.slice(0, max - 1)}…` : value;
+}
+
+function extractDeliveryCity(text) {
+  const t = String(text || '');
+  for (const { rx, canonical } of CITY_ALIASES) {
+    if (rx.test(t)) return canonical;
+  }
+  const gDot = t.match(/(?:^|[\s,;])г\.?\s*([А-ЯЁ][а-яёА-ЯЁ\-]{2,30})/);
+  if (gDot) return compact(gDot[1], 40);
+  const ship = t.match(
+    /(?:отправк\w*|доставк\w*)\s+(?:в|до)\s+(?:г\.?\s*)?([А-ЯЁа-яё][А-Яа-яЁё\-]{2,30})/i,
+  );
+  if (ship) {
+    const city = compact(String(ship[1] || '').replace(/^г\.?\s*/i, ''), 40);
+    if (city && !/^(наличи|регион|область)/i.test(city)) return city;
+  }
+  const m = t.match(/доставк[аиуё]?\s+(?:в|до)\s+([А-Яа-яЁё][А-Яа-яЁё\s\-]{2,40})/i);
+  if (m) return compact(m[1].replace(/[.,!?].*$/, ''), 40);
+  const m2 = t.match(/(?:в|до)\s+([А-Яа-яЁё][А-Яа-яЁё\-]{2,30})\s+(?:сдэк|cdek|тк\b|озон|ozon|яндекс|yandex)/i);
+  if (m2) return compact(m2[1], 40);
+  return null;
+}
+
+const ALLOWED_TK_RX = /деловые\s*линии|dellin|пэк|\bpek\b|\bpec\b|энерги[яиюе]/i;
+
+function extractCarrier(text) {
+  const t = String(text || '').toLowerCase();
+  if (/(сдэк|сдек|cdek)/i.test(t)) return 'СДЭК';
+  if (/(озон|ozon)/i.test(t)) return 'ОЗОН';
+  if (/(яндекс|yandex)/i.test(t)) return 'Яндекс.Доставка';
+  if (ALLOWED_TK_RX.test(t) || /(?:^|\s)тк(?:\s|$)|транспортн/i.test(t)) return 'ТК';
+  return null;
+}
+
+function normalizeCarrier(value) {
+  return extractCarrier(value) || String(value || '').trim();
+}
+
+function isSelfServiceCarrier(value) {
+  const carrier = normalizeCarrier(value);
+  return carrier === 'ОЗОН' || carrier === 'Яндекс.Доставка';
+}
+
+function refuseSelfServiceCarrier(value) {
+  const carrier = normalizeCarrier(value);
+  if (carrier === 'ОЗОН') {
+    return 'ОЗОНом не отправляем. Можем отправить СДЭК, Деловыми линиями, ПЭК или Энергией. Какой вариант выбираете?';
+  }
+  if (carrier === 'Яндекс.Доставка') {
+    return 'Яндекс.Доставкой не отправляем. Можем отправить СДЭК, Деловыми линиями, ПЭК или Энергией. Какой вариант выбираете?';
+  }
+  return 'ОЗОНом и Яндекс.Доставкой не отправляем. Можем отправить СДЭК, Деловыми линиями, ПЭК или Энергией. Какой вариант выбираете?';
+}
+
+function isDeliveryTermsAccepted(text) {
+  const value = String(text || '').trim().toLowerCase();
+  if (!value || /(?:^|\s)(?:нет|не\s+соглас|не\s+устраива)/i.test(value)) return false;
+  return /(?:^|\s)(?:да|соглас(?:ен|на|ны)|подтверждаю|устраивает|подходит)(?:\s|[.!?,]|$)/i.test(value);
+}
+
+function isDeliveryTermsDeclined(text) {
+  return /(?:^|\s)(?:нет|не\s+соглас|не\s+устраива|отказываюсь)(?:\s|[.!?,]|$)/i
+    .test(String(text || '').trim());
+}
+
+function carrierTerms(value) {
+  const carrier = normalizeCarrier(value);
+  if (isSelfServiceCarrier(carrier)) {
+    return refuseSelfServiceCarrier(carrier);
+  }
+  if (carrier === 'СДЭК') {
+    return 'СДЭК: отправляем после полной оплаты заказа. Доставка до СДЭК в Москве стоит 250 ₽, оплачиваете нам. '
+      + 'Стоимость доставки СДЭК оплачиваете при получении. Точные срок и тариф проверьте на сайте СДЭК.';
+  }
+  return 'Транспортной компанией отправляем после полной оплаты заказа. '
+    + 'Возим только Деловыми линиями, ПЭК или Энергией. '
+    + 'Стоимость доставки оплачиваете перевозчику при получении; доставка до терминала ТК в Москве стоит 250 ₽. '
+    + 'Точные срок и тариф проверьте на сайте выбранной из этих трёх.';
+}
+
+/** Terms when this carrier is already set on the order. QR only for legacy Ozon/Yandex orders. */
+function configuredCarrierTerms(value) {
+  const carrier = normalizeCarrier(value);
+  if (isSelfServiceCarrier(carrier)) {
+    return `В заказе указана «${carrier}». После оформления доставки пришлите QR-код или штрих-код накладной.`;
+  }
+  return carrierTerms(value);
+}
+
+function carrierRequirementsPrompt(intent = {}) {
+  const carrier = normalizeCarrier(intent.carrier) || 'ТК';
+  const city = String(intent.city || '').trim();
+  const destination = city ? ` в ${city}` : '';
+  if (isSelfServiceCarrier(carrier)) {
+    return refuseSelfServiceCarrier(carrier);
+  }
+  const terms = carrierTerms(carrier);
+  if (carrier === 'СДЭК') {
+    return `${terms} Напишите адрес ПВЗ СДЭК${destination}: улица и дом.`;
+  }
+  return `${terms} Напишите, какую из трёх ТК выбираете (Деловые линии, ПЭК или Энергия) и адрес её терминала${destination}.`;
+}
+
+function orderUsesCarrier(order, value) {
+  const desired = normalizeCarrier(value);
+  const current = extractCarrier(deliveryTypeName(order));
+  if (!desired || !current) return false;
+  if (current !== 'ТК') return current === desired;
+  if (desired === 'ТК') return true;
+  return extractCarrier(String(order?.comment || '')) === desired;
+}
+
+async function confirmCarrierChange(input = {}, dependencies = {}) {
+  const orderId = input.orderId;
+  const customerId = input.customerId;
+  const intent = input.intent || {};
+  const carrier = normalizeCarrier(intent.carrier);
+  if (isSelfServiceCarrier(carrier)) {
+    const reply = refuseSelfServiceCarrier(carrier);
+    return {
+      success: false,
+      error: 'carrier_not_supported',
+      reply,
+      client_hint: reply,
+    };
+  }
+  if (!orderId || !customerId) {
+    return { success: false, error: 'confirmed carrier change requires order, customer and allowed carrier' };
+  }
+
+  return {
+    success: false,
+    error: 'carrier_not_supported',
+    reply: refuseSelfServiceCarrier(carrier),
+    client_hint: refuseSelfServiceCarrier(carrier),
+  };
+}
+
+function isPayOnReceiptQuestion(text) {
+  const t = String(text || '').toLowerCase();
+  if (!t) return false;
+  return /(оплат\w*.{0,40}при\s+получен|при\s+получен\w*.{0,40}оплат|наложенн|наложк|наложенн\w*\s+плат)/i.test(t);
+}
+
+function parseDeliveryIntentPatch(text, prev = {}) {
+  const raw = String(text || '').trim();
+  if (!raw) return null;
+  const city = extractDeliveryCity(raw);
+  const carrier = isPayOnReceiptQuestion(raw) ? null : extractCarrier(raw);
+  const wantsRegion = /доставк\w*\s+(?:в\s+)?(?:регион|область)/i.test(raw)
+    || /нужн\w*\s+доставк\w*\s+(?:в\s+)?(?:регион|область)/i.test(raw);
+  if (!city && !carrier && !wantsRegion) return null;
+  return {
+    city: city || prev.city || null,
+    carrier: carrier || prev.carrier || null,
+    wants_region: wantsRegion || prev.wants_region || false,
+    source_text: compact(raw, 200),
+  };
+}
+
+function captureDeliveryIntentFromText(chatId, text) {
+  const id = String(chatId || '').trim();
+  const raw = String(text || '').trim();
+  if (!id || !raw) return null;
+  const prev = orderCtx.getDeliveryIntent(id) || {};
+  const patch = parseDeliveryIntentPatch(raw, prev);
+  if (!patch) return null;
+  return orderCtx.setDeliveryIntent(id, patch);
+}
+
+function addressMentionsCity(text, city) {
+  const t = String(text || '').toLowerCase();
+  const c = String(city || '').toLowerCase();
+  if (!c) return false;
+  if (t.includes(c)) return true;
+  const alias = CITY_ALIASES.find((row) => row.canonical.toLowerCase() === c);
+  if (!alias) return false;
+  return alias.short.some((part) => t.includes(part));
+}
+
+function addressLooksComplete(text) {
+  const t = String(text || '').trim();
+  if (!t) return false;
+  if (/^г\.?\s+/i.test(t) || /город\s+/i.test(t)) return true;
+  if (/(ул\.|улиц|просп|пр-т|пер\.|наб\.|шоссе|бульвар|б-р)/i.test(t) && /\d/.test(t)) return true;
+  return addressMentionsCity(t, extractDeliveryCity(t));
+}
+
+function formatStructuredAddress({ city, streetLine }) {
+  const c = String(city || '').trim();
+  const line = String(streetLine || '').trim();
+  if (!line) return c ? `г. ${c}` : '';
+  if (/^г\.?\s+/i.test(line) || /город\s+/i.test(line)) return line;
+  const streetHouse = line.match(/^(.+?)\s+(\d+[а-яa-zА-ЯA-Z\-/]*)$/i);
+  if (streetHouse) {
+    const street = streetHouse[1].trim();
+    const house = streetHouse[2].trim();
+    const streetLabel = /^(ул\.|улиц|просп|пер\.|наб\.|шоссе|бульвар|б-р)/i.test(street)
+      ? street
+      : `ул. ${street}`;
+    return c ? `г. ${c}, ${streetLabel}, д. ${house}` : `${streetLabel}, д. ${house}`;
+  }
+  return c ? `г. ${c}, ${line}` : line;
+}
+
+function formatFullAddress(addressText, deliveryIntent) {
+  const raw = String(addressText || '').trim();
+  if (!raw) return '';
+  if (addressLooksComplete(raw)) return raw;
+  const city = deliveryIntent?.city || extractDeliveryCity(raw);
+  if (!city) return raw;
+  if (addressMentionsCity(raw, city)) return raw;
+  return formatStructuredAddress({ city, streetLine: raw });
+}
+
+function buildDeliveryInfoLine(deliveryIntent) {
+  if (!deliveryIntent) return null;
+  const parts = [];
+  if (deliveryIntent.city) parts.push(`Город доставки: ${deliveryIntent.city}`);
+  if (deliveryIntent.carrier) parts.push(`ТК: ${deliveryIntent.carrier}`);
+  if (!parts.length) return null;
+  return `${DELIVERY_INFO_MARKER} ${parts.join('; ')}]`;
+}
+
+function mergeDeliveryInfoComment(existing, deliveryIntent) {
+  const line = buildDeliveryInfoLine(deliveryIntent);
+  if (!line) return String(existing || '').trim();
+  const cleaned = String(existing || '')
+    .replace(/\[Доставка:[^\]]*\]/g, '')
+    .trim();
+  return cleaned ? `${cleaned}\n${line}` : line;
+}
+
+function mergeAddressComment(existing, addressLine) {
+  const line = `${ADDRESS_MARKER}: ${addressLine.trim()}]`;
+  const cleaned = String(existing || '')
+    .replace(/\[Адрес доставки \/ ПВЗ[^\]]*\]/g, '')
+    .trim();
+  return cleaned ? `${cleaned}\n${line}` : line;
+}
+
+function isRemoteDeliveryType(deliveryTypeId) {
+  const id = Number(deliveryTypeId);
+  return id === 3 || id === 4;
+}
+
+/**
+ * JS `\\b` is ASCII-only and does not match Cyrillic «ТК».
+ * Keep this in sync with isRemoteDelivery().
+ */
+function isRemoteDeliveryName(name) {
+  const n = String(name || '').toLowerCase();
+  if (!n) return false;
+  if (/(сдэк|сдек|cdek|транспорт|пэк|pec|байкал|озон|ozon|яндекс|yandex)/i.test(n)) {
+    return true;
+  }
+  return /(^|[^а-яёa-z0-9])тк([^а-яёa-z0-9]|$)/i.test(n);
+}
+
+/** Unwrap delivery_type when API returns { id, name } instead of a string. */
+function deliveryTypeName(order) {
+  const dt = order?.delivery_type;
+  if (dt && typeof dt === 'object') {
+    return String(dt.name || dt.title || '').trim();
+  }
+  return String(order?.delivery_type || order?.delivery_type_name || order?.delivery_name || '').trim();
+}
+
+function isRemoteDelivery(order) {
+  if (isRemoteDeliveryType(order?.delivery_type_id)) return true;
+  return isRemoteDeliveryName(deliveryTypeName(order));
+}
+
+/** True if order comment or structured address already has a delivery / PVZ address. */
+/** Free-text PVZ/address already in comment (legacy / manual entry). */
+function looksLikeLooseDeliveryAddress(comment) {
+  const t = String(comment || '')
+    .replace(/\[Доставка:[^\]]*\]/gi, ' ')
+    .replace(/\[Адрес доставки\s*\/\s*ПВЗ[^\]]*\]/gi, ' ')
+    .trim();
+  if (!t || t.length < 6 || t.length > 240) return false;
+  if (!/\d/.test(t)) return false;
+  // Status / payment chatter is not an address even if it has digits.
+  if (looksLikeOrderQuery(t) && !/(ул\.|улиц|просп|пер\.|д\.|дом\b)/i.test(t)) return false;
+  if (/(ул\.|улиц|просп|пр-т|пер\.|наб\.|шоссе|бульвар|б-р|\d+\/\d+)/i.test(t)) return true;
+  const words = t.split(/[\s,;]+/).filter(Boolean);
+  return words.length >= 2 && words.length <= 12 && /\d+[а-яa-z\/\-]*/i.test(t);
+}
+
+function hasSavedDeliveryAddress(order) {
+  const comment = String(order?.comment || '');
+  if (/\[Адрес доставки\s*\/\s*ПВЗ/i.test(comment)) return true;
+  const addr = order?.delivery_address;
+  if (addr && typeof addr === 'object') {
+    const filled = ['city', 'street', 'house', 'address', 'full']
+      .some((key) => String(addr[key] || '').trim());
+    if (filled) return true;
+  }
+  if (typeof addr === 'string' && addr.trim()) return true;
+  if (looksLikeLooseDeliveryAddress(comment)) return true;
+  return false;
+}
+
+function wantsDeliveryDestination(text) {
+  const value = String(text || '').toLowerCase();
+  return /(куда\s+(отправ|привез|достав|везти)|куда\s+отправит|адрес\s+(доставк|пвз|получен)|пункт\s+выдач|доставк\w*\s+(?:в\s+)?(?:регион|область|город)|нужн\w*\s+доставк|когда\s+отправ|когда\s+достав|как\s+(?:насч[её]т\s+)?доставк|по\s+доставк|про\s+доставк)/i.test(value);
+}
+
+function wantsProvideAddress(text) {
+  const value = String(text || '').toLowerCase();
+  return /(написать\s+адрес|указать\s+адрес|могу\s+.{0,20}адрес|пришлю\s+адрес|скину\s+адрес|дам\s+адрес)/i.test(value);
+}
+
+/** Order status / info questions — must not be treated as a PVZ street line. */
+function looksLikeOrderQuery(text) {
+  const t = String(text || '').toLowerCase();
+  if (/заказ(?:а|у|ом|е)?\s*№?\s*\d+/i.test(t)) return true;
+  if (/(информац|статус|состав|детализац|когда\s+(готов|будет|можно)|где\s+(мой\s+)?заказ|что\s+с\s+заказ)/i.test(t)) {
+    return true;
+  }
+  // Client correcting shipment status ("ещё не получил", "отправили по СДЭК").
+  if (/заказ/.test(t) && /(не\s+получил|не\s+забрал|отправили|отправлен|в\s+пути|по\s+сд[эе]к|по\s+cdek)/i.test(t)) {
+    return true;
+  }
+  if (/\?/.test(t) && /заказ/.test(t)) return true;
+  return false;
+}
+
+function looksLikeAddress(text) {
+  const t = String(text || '').trim();
+  if (!t || t.length < 3 || t.length > 300) return false;
+  if (orderCancel.isOrderActionNotAddress(t)) return false;
+  if (looksLikeOrderQuery(t)) return false;
+  if (/^(да|нет|ок|хорошо|спасибо|жду)$/i.test(t)) return false;
+  if (wantsDeliveryDestination(t) || wantsProvideAddress(t)) return false;
+  if (/(удал|отмен|аннулир|стер|убер(и|ите))[\s\S]{0,20}(заказ|сч[eё]т|счёт)/i.test(t)) return false;
+  // Shipping-method questions (OZON/Yandex/CDEK) are not PVZ street lines.
+  if (/(отправ(ляете|ите|ка)|достав(ляете|ите))[\s\S]{0,40}\?/i.test(t)
+    && /(озон|ozon|яндекс|yandex|сдэк|cdek|тк\b)/i.test(t)) {
+    return false;
+  }
+  if (/\?/.test(t) && /(озон|ozon|яндекс\.?\s*доставк|yandex)/i.test(t)) return false;
+  // Price / ETA questions about CDEK/TK are not PVZ street lines.
+  if (/(скольк|цен|стоим|тариф|примерно|поч[её]м|дорог)/i.test(t)
+    && /(сдэк|cdek|доставк|тк\b|озон|ozon|яндекс)/i.test(t)) {
+    return false;
+  }
+  if (/\?/.test(t) && /(скольк|цен|стоим|тариф|примерно)/i.test(t)) return false;
+  // Carrier name alone is NOT an address signal (was matching «…по СДЭК»).
+  if (/(улиц|ул\.|просп|пр-т|пер\.|дом|д\.|кв\.|город|г\.|област|район|пвз)/i.test(t)) return true;
+  // "Садовая 3" — short street+house. Long sentences ending in a number are not addresses
+  // (e.g. "Меня интересует информация по заказу 5167").
+  if (/^[А-Яа-яЁёA-Za-z0-9\s.\-]{3,80}\s+\d{1,5}[А-Яа-яA-Za-z\-]?$/i.test(t)) {
+    const words = t.split(/\s+/).filter(Boolean);
+    if (words.length > 6) return false;
+    if (/(заказ|информац|интерес|статус|оплат|счет|счёт|сдэк|cdek|отправ)/i.test(t)) return false;
+    return true;
+  }
+  if (/^\d{6}\s*,/.test(t)) return true;
+  return false;
+}
+
+async function fetchOrder(orderId) {
+  const resp = await http.gkamionGet(`/orders/${orderId}.json`);
+  if (!resp.ok) return { ok: false, error: resp.error || 'order not found' };
+  return { ok: true, order: unwrapOrder(resp.body) };
+}
+
+async function patchOrderComment(orderId, comment) {
+  return http.gkamionPatchForm(`/orders/${orderId}.json`, {
+    'order[comment]': String(comment || '').slice(0, 2000),
+  });
+}
+
+async function saveDeliveryInfoToOrder(orderId, customerId, deliveryIntent) {
+  const fetched = await fetchOrder(orderId);
+  if (!fetched.ok) return { success: false, error: fetched.error || 'order not found' };
+  const order = fetched.order;
+  if (customerId == null || customerId === '' || String(order.customer_id) !== String(customerId)) {
+    return { success: false, error: 'order_customer_mismatch' };
+  }
+  const comment = mergeDeliveryInfoComment(order.comment, deliveryIntent);
+  const resp = await patchOrderComment(orderId, comment);
+  if (!resp.ok) {
+    return { success: false, error: resp.error || 'update failed', status: resp.status };
+  }
+  return { success: true, order_id: Number(orderId) || orderId, comment };
+}
+
+async function saveDeliveryAddress(orderId, customerId, addressText, options = {}) {
+  if (orderCancel.isOrderActionNotAddress(addressText)) {
+    return {
+      success: false,
+      error: 'not_an_address',
+      client_hint: 'Это не адрес доставки. Запросы на удаление/отмену заказа решает менеджер.',
+    };
+  }
+  const fetched = await fetchOrder(orderId);
+  if (!fetched.ok) {
+    return { success: false, error: fetched.error || 'order not found' };
+  }
+  const order = fetched.order;
+  if (customerId == null || customerId === '' || String(order.customer_id) !== String(customerId)) {
+    return { success: false, error: 'order_customer_mismatch' };
+  }
+  const intent = options.deliveryIntent || null;
+  const fullAddress = formatFullAddress(addressText, intent);
+  if (!addressLooksComplete(fullAddress) && !intent?.city) {
+    return {
+      success: false,
+      error: 'address_incomplete',
+      need_city: true,
+      client_hint: 'Нужен полный адрес: город, улица, дом (например: г. Санкт-Петербург, ул. Садовая, д. 3).',
+    };
+  }
+  let comment = mergeDeliveryInfoComment(order.comment, intent);
+  comment = mergeAddressComment(comment, fullAddress);
+  const resp = await patchOrderComment(orderId, comment);
+  if (!resp.ok) {
+    return {
+      success: false,
+      error: resp.error || 'update failed',
+      status: resp.status,
+    };
+  }
+  return {
+    success: true,
+    order_id: Number(orderId) || orderId,
+    address: fullAddress,
+    comment,
+    client_hint: `Адрес «${fullAddress}» записан в комментарий к заказу №${orderId}.`,
+  };
+}
+
+function resolveOrderId(contact, event) {
+  const chatId = String(event?.chat_id || event?.user_id || '').trim();
+  // Prefer explicit order id in the message over a stale active_order from another topic.
+  const fromText = extractOrderIdFromText(event?.text);
+  if (fromText) {
+    return { order_id: fromText, customer_id: contact?.customer_id };
+  }
+  const active = chatId ? orderCtx.getActiveOrder(chatId) : null;
+  if (active?.order_id) {
+    return {
+      order_id: active.order_id,
+      customer_id: active.customer_id || contact?.customer_id,
+    };
+  }
+  const pending = chatId ? orderCtx.getPendingOrderIdentity(chatId) : null;
+  if (pending?.order_id) {
+    return {
+      order_id: pending.order_id,
+      customer_id: contact?.customer_id,
+    };
+  }
+  return null;
+}
+
+function addressPrompt(intent) {
+  if (intent?.carrier) return carrierRequirementsPrompt(intent);
+  if (intent?.city) {
+    return `Напишите адрес ПВЗ СДЭК в ${intent.city}: улица и дом (например: ул. Садовая, д. 3) — город добавлю автоматически. 📦`;
+  }
+  return 'Напишите полный адрес ПВЗ СДЭК: город, улица, дом (например: г. Санкт-Петербург, ул. Садовая, д. 3). 📦';
+}
+
+function rememberOrderFromDescribe(chatId, result, customerId) {
+  if (!chatId || !result?.success || !result.order_id) return;
+  orderCtx.setActiveOrder(chatId, {
+    order_id: result.order_id,
+    customer_id: customerId,
+  });
+}
+
+async function applyDeliveryIntentOnCheckout(chatId, orderId, customerId, deliveryTypeId) {
+  if (!chatId || !orderId || !isRemoteDeliveryType(deliveryTypeId)) return null;
+  const intent = orderCtx.getDeliveryIntent(chatId);
+  if (!intent?.city && !intent?.carrier) return null;
+  return saveDeliveryInfoToOrder(orderId, customerId, intent);
+}
+
+function rememberOrderFromCheckout(chatId, result, customerId, deliveryTypeId) {
+  if (!chatId || !result?.success || !result.order_id) return;
+  orderCtx.setActiveOrder(chatId, {
+    order_id: result.order_id,
+    customer_id: customerId,
+    delivery_type_id: deliveryTypeId ?? result.delivery_type_id,
+  });
+}
+
+async function tryRoute(contact, event) {
+  if (!event?.is_dm || !contact?.customer_id) return null;
+  const chatId = String(event.chat_id || event.user_id || '').trim();
+  const text = String(event.text || '').trim();
+  if (!text) return null;
+
+  captureDeliveryIntentFromText(chatId, text);
+
+  const awaiting = orderCtx.isAwaitingDeliveryAddress(chatId);
+  const orderRef = resolveOrderId(contact, event);
+  const intent = orderCtx.getDeliveryIntent(chatId);
+  const pendingCarrierChange = orderCtx.getPendingCarrierChange(chatId);
+  const mentionedCarrier = extractCarrier(text);
+
+  // Client switched carrier (e.g. OZON pending → «отправляйте сдек») — drop stale pending.
+  if (
+    pendingCarrierChange
+    && mentionedCarrier
+    && normalizeCarrier(mentionedCarrier) !== normalizeCarrier(pendingCarrierChange.carrier)
+  ) {
+    orderCtx.clearPendingCarrierChange(chatId);
+  }
+
+  const pendingAfterSwitch = orderCtx.getPendingCarrierChange(chatId);
+
+  if (pendingAfterSwitch) {
+    if (
+      pendingAfterSwitch.customer_id != null
+      && String(pendingAfterSwitch.customer_id) !== String(contact.customer_id)
+    ) {
+      orderCtx.clearPendingCarrierChange(chatId);
+      return null;
+    }
+    if (isDeliveryTermsDeclined(text)) {
+      orderCtx.clearPendingCarrierChange(chatId);
+      return {
+        handled: true,
+        route: 'carrier_change_declined',
+        order_id: pendingAfterSwitch.order_id,
+        reply: 'Поняла, способ доставки в заказе не меняю.',
+      };
+    }
+    if (isDeliveryTermsAccepted(text)) {
+      const result = await confirmCarrierChange({
+        orderId: pendingAfterSwitch.order_id,
+        customerId: pendingAfterSwitch.customer_id || contact.customer_id,
+        chatId,
+        intent: {
+          carrier: pendingAfterSwitch.carrier,
+          city: pendingAfterSwitch.city,
+        },
+      });
+      if (result.success) orderCtx.clearPendingCarrierChange(chatId);
+      return {
+        handled: true,
+        route: result.success ? 'carrier_change_confirmed' : 'carrier_change_failed',
+        order_id: pendingAfterSwitch.order_id,
+        success: result.success,
+        reply: result.reply,
+      };
+    }
+  }
+
+  if (orderCancel.wantsOrderDeletion(text)) {
+    orderCtx.setAwaitingDeliveryAddress(chatId, false);
+    const orderId = orderRef?.order_id || extractOrderIdFromText(text);
+    return {
+      handled: true,
+      route: 'order_delete_not_allowed',
+      order_id: orderId,
+      reply: orderCancel.buildReply(orderId),
+    };
+  }
+
+  // Explicit CDEK (or other non-self-service) choice with known order → ask/save address, not OZON terms.
+  if (
+    orderRef?.order_id
+    && mentionedCarrier
+    && !isSelfServiceCarrier(mentionedCarrier)
+    && /(отправ|достав|сдек|сдэк|cdek|нужен|нужна|через)/i.test(text)
+  ) {
+    orderCtx.setDeliveryIntent(chatId, {
+      ...(intent || {}),
+      carrier: normalizeCarrier(mentionedCarrier),
+      city: intent?.city || extractDeliveryCity(text) || null,
+      source_text: compact(text, 200),
+    });
+    orderCtx.setAwaitingDeliveryAddress(chatId, true);
+    const city = orderCtx.getDeliveryIntent(chatId)?.city;
+    return {
+      handled: true,
+      route: 'awaiting_delivery_address',
+      order_id: orderRef.order_id,
+      reply: addressPrompt({ carrier: normalizeCarrier(mentionedCarrier), city }),
+    };
+  }
+
+  if ((awaiting || looksLikeAddress(text)) && orderRef?.order_id && looksLikeAddress(text)) {
+    if (isSelfServiceCarrier(intent?.carrier)) {
+      orderCtx.setAwaitingDeliveryAddress(chatId, false);
+      orderCtx.clearPendingCarrierChange(chatId);
+      return {
+        handled: true,
+        route: 'self_service_carrier_forbidden',
+        order_id: orderRef.order_id,
+        reply: refuseSelfServiceCarrier(intent.carrier),
+      };
+    }
+    const saved = await saveDeliveryAddress(orderRef.order_id, contact.customer_id, text, { deliveryIntent: intent });
+    if (saved.success) {
+      orderCtx.setAwaitingDeliveryAddress(chatId, false);
+      orderCtx.setActiveOrder(chatId, {
+        order_id: orderRef.order_id,
+        customer_id: contact.customer_id,
+      });
+      return {
+        handled: true,
+        route: 'delivery_address_saved',
+        order_id: orderRef.order_id,
+        reply: `Записал в заказ №${orderRef.order_id}: ${saved.address}. Менеджер увидит при обработке. 📦`,
+      };
+    }
+    if (saved.error === 'address_incomplete') {
+      return {
+        handled: true,
+        route: 'delivery_address_need_full',
+        order_id: orderRef.order_id,
+        reply: addressPrompt(intent),
+      };
+    }
+    return {
+      handled: true,
+      route: 'delivery_address_failed',
+      order_id: orderRef.order_id,
+      error: saved.error,
+      reply: `Не получилось сохранить адрес в заказ №${orderRef.order_id}. Напишите полный адрес ещё раз или обратитесь к менеджеру.`,
+    };
+  }
+
+  if (!wantsDeliveryDestination(text) && !wantsProvideAddress(text)) return null;
+  if (!orderRef?.order_id) return null;
+
+  const fetched = await fetchOrder(orderRef.order_id);
+  if (!fetched.ok) return null;
+  const order = fetched.order;
+  const orderAccess = require('./order-access');
+  if (!orderAccess.orderOwnedByCustomer(order, contact.customer_id)) {
+    return {
+      handled: true,
+      route: 'delivery_order_not_yours',
+      order_id: orderRef.order_id,
+      reply: orderAccess.clientSafeOrderMiss(orderRef.order_id),
+    };
+  }
+
+  orderCtx.setActiveOrder(chatId, {
+    order_id: orderRef.order_id,
+    customer_id: contact.customer_id,
+    delivery_type_id: order.delivery_type_id,
+    delivery_type: order.delivery_type,
+  });
+
+  if (isSelfServiceCarrier(intent?.carrier)) {
+    orderCtx.setAwaitingDeliveryAddress(chatId, false);
+    orderCtx.clearPendingCarrierChange(chatId);
+    const configured = orderUsesCarrier(order, intent.carrier);
+    const current = deliveryTypeName(order);
+    const currentText = configured
+      ? `В заказе уже указана «${normalizeCarrier(intent.carrier)}». `
+      : current
+      ? `Сейчас в заказе указан способ «${current}». `
+      : '';
+    if (configured) {
+      return {
+        handled: true,
+        route: 'self_service_carrier_terms',
+        order_id: orderRef.order_id,
+        reply: `${currentText}${configuredCarrierTerms(intent.carrier)}`,
+      };
+    }
+    return {
+      handled: true,
+      route: 'self_service_carrier_forbidden',
+      order_id: orderRef.order_id,
+      reply: refuseSelfServiceCarrier(intent.carrier),
+    };
+  }
+
+  // Status 38: client may switch pickup → Moscow delivery; leave it to the LLM + set_order_delivery_type.
+  const deliveryTypeMod = require('./order-delivery-type');
+  if (!isRemoteDelivery(order) && deliveryTypeMod.orderHasSupplementBill(order)) {
+    return null;
+  }
+
+  if (!isRemoteDelivery(order)) {
+    return {
+      handled: true,
+      route: 'delivery_pickup_only',
+      order_id: orderRef.order_id,
+      reply: 'Этот заказ оформлен на самовывоз — забирать будете в пункте выдачи gKamion. 📦',
+    };
+  }
+
+  orderCtx.setAwaitingDeliveryAddress(chatId, true);
+  return {
+    handled: true,
+    route: 'awaiting_delivery_address',
+    order_id: orderRef.order_id,
+    reply: addressPrompt(intent),
+  };
+}
+
+async function saveFromTool(rawInput) {
+  const { resolveTelegramChatId } = require('./tool-input');
+  const input = resolveTelegramChatId(rawInput);
+  const orderId = input.order_id;
+  const address = input.address || input.delivery_address || input.comment || input.text;
+  const customerId = input.customer_id;
+  if (!orderId) return { success: false, error: 'order_id required' };
+  if (!address) return { success: false, error: 'address required' };
+  if (!customerId) return { success: false, error: 'customer_id required' };
+  const chatId = input.telegram_chat_id || input.client_telegram_chat_id;
+  const intent = chatId ? orderCtx.getDeliveryIntent(chatId) : null;
+  const result = await saveDeliveryAddress(orderId, customerId, String(address).trim(), { deliveryIntent: intent });
+  if (result.success && chatId) {
+    orderCtx.setAwaitingDeliveryAddress(chatId, false);
+    orderCtx.setActiveOrder(chatId, { order_id: orderId, customer_id: customerId });
+  }
+  return result;
+}
+
+module.exports = {
+  extractDeliveryCity,
+  extractCarrier,
+  carrierTerms,
+  configuredCarrierTerms,
+  isSelfServiceCarrier,
+  refuseSelfServiceCarrier,
+  isDeliveryTermsAccepted,
+  isDeliveryTermsDeclined,
+  carrierRequirementsPrompt,
+  orderUsesCarrier,
+  confirmCarrierChange,
+  isPayOnReceiptQuestion,
+  parseDeliveryIntentPatch,
+  captureDeliveryIntentFromText,
+  formatFullAddress,
+  addressLooksComplete,
+  buildDeliveryInfoLine,
+  isRemoteDeliveryType,
+  isRemoteDeliveryName,
+  deliveryTypeName,
+  isRemoteDelivery,
+  hasSavedDeliveryAddress,
+  wantsDeliveryDestination,
+  wantsProvideAddress,
+  looksLikeOrderQuery,
+  looksLikeAddress,
+  looksLikeLooseDeliveryAddress,
+  saveDeliveryInfoToOrder,
+  saveDeliveryAddress,
+  applyDeliveryIntentOnCheckout,
+  rememberOrderFromDescribe,
+  rememberOrderFromCheckout,
+  tryRoute,
+  saveFromTool,
+};
+

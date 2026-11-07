@@ -1,0 +1,15 @@
+test_extra_consent_withdrawn_during_supplier_read (test_review_regressions.Review.test_extra_consent_withdrawn_during_supplier_read) ... FAIL
+
+======================================================================
+FAIL: test_extra_consent_withdrawn_during_supplier_read (test_review_regressions.Review.test_extra_consent_withdrawn_during_supplier_read)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_review_regressions.py", line 130, in test_extra_consent_withdrawn_during_supplier_read
+    with self.assertRaisesRegex(ValueError,'selection|conversation|plan'):self.f.add(extra['offer_ref'],True)
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.038s
+
+FAILED (failures=1)

@@ -1,0 +1,163 @@
+test_cancel_before_checkout (test_checkout_v2.Checkout.test_cancel_before_checkout) ... ERROR
+test_concurrent_instances (test_checkout_v2.Checkout.test_concurrent_instances) ... Exception in thread Thread-1 (run):
+Traceback (most recent call last):
+  File "/opt/hermes/uv-python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "/opt/hermes/uv-python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/threading.py", line 995, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 41, in run
+    def run():results.append(DromTools(self.t,self.f.cache).checkout_create(self.c['context_ref'],True))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'checkout_create'
+Exception in thread Thread-2 (run):
+Exception in thread Thread-3 (run):
+Traceback (most recent call last):
+  File "/opt/hermes/uv-python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "/opt/hermes/uv-python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/threading.py", line 995, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 41, in run
+    def run():results.append(DromTools(self.t,self.f.cache).checkout_create(self.c['context_ref'],True))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'checkout_create'
+Exception in thread Traceback (most recent call last):
+Thread-4 (run):
+Traceback (most recent call last):
+  File "/opt/hermes/uv-python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "/opt/hermes/uv-python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/threading.py", line 995, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 41, in run
+    def run():results.append(DromTools(self.t,self.f.cache).checkout_create(self.c['context_ref'],True))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'checkout_create'
+  File "/opt/hermes/uv-python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "/opt/hermes/uv-python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/threading.py", line 995, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 41, in run
+    def run():results.append(DromTools(self.t,self.f.cache).checkout_create(self.c['context_ref'],True))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'checkout_create'
+FAIL
+test_confirm_required (test_checkout_v2.Checkout.test_confirm_required) ... ERROR
+test_create_once_and_verify (test_checkout_v2.Checkout.test_create_once_and_verify) ... ERROR
+test_explicitly_dropped_extra_preserves_deal (test_checkout_v2.Checkout.test_explicitly_dropped_extra_preserves_deal) ... ERROR
+test_extras_end_to_end (test_checkout_v2.Checkout.test_extras_end_to_end) ... ERROR
+test_missing_response_id_reconciles (test_checkout_v2.Checkout.test_missing_response_id_reconciles) ... ERROR
+test_open_choice_blocks (test_checkout_v2.Checkout.test_open_choice_blocks) ... ERROR
+test_readback_mismatch_is_durable (test_checkout_v2.Checkout.test_readback_mismatch_is_durable) ... ERROR
+test_unapproved_or_incomplete_plan_blocks (test_checkout_v2.Checkout.test_unapproved_or_incomplete_plan_blocks) ... ERROR
+test_unknown_never_reposts_even_after_restart (test_checkout_v2.Checkout.test_unknown_never_reposts_even_after_restart) ... ERROR
+
+======================================================================
+ERROR: test_cancel_before_checkout (test_checkout_v2.Checkout.test_cancel_before_checkout)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 65, in test_cancel_before_checkout
+    with self.assertRaisesRegex(ValueError,'cancel'):self.f.checkout_create(self.c['context_ref'],True)
+                                                     ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'checkout_create'
+
+======================================================================
+ERROR: test_confirm_required (test_checkout_v2.Checkout.test_confirm_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 61, in test_confirm_required
+    with self.assertRaisesRegex(ValueError,'confirm'):self.f.checkout_create(self.c['context_ref'])
+                                                      ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'checkout_create'
+
+======================================================================
+ERROR: test_create_once_and_verify (test_checkout_v2.Checkout.test_create_once_and_verify)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 36, in test_create_once_and_verify
+    self.base();r=self.f.checkout_create(self.c['context_ref'],True)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'checkout_create'
+
+======================================================================
+ERROR: test_explicitly_dropped_extra_preserves_deal (test_checkout_v2.Checkout.test_explicitly_dropped_extra_preserves_deal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 89, in test_explicitly_dropped_extra_preserves_deal
+    plan=self.f.plan_quote(self.c['context_ref'],[],['3'])
+         ^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'plan_quote'
+
+======================================================================
+ERROR: test_extras_end_to_end (test_checkout_v2.Checkout.test_extras_end_to_end)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 69, in test_extras_end_to_end
+    extra=self.f.extra_quote(self.c['context_ref'],'3','W712','MANN',3)
+          ^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'extra_quote'
+
+======================================================================
+ERROR: test_missing_response_id_reconciles (test_checkout_v2.Checkout.test_missing_response_id_reconciles)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 53, in test_missing_response_id_reconciles
+    self.base();self.t.mode='empty';self.assertEqual(self.f.checkout_create(self.c['context_ref'],True)['status'],'created_verified')
+                                                     ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'checkout_create'
+
+======================================================================
+ERROR: test_open_choice_blocks (test_checkout_v2.Checkout.test_open_choice_blocks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 79, in test_open_choice_blocks
+    with self.assertRaisesRegex(ValueError,'selection'):self.f.checkout_create(self.c['context_ref'],True)
+                                                        ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'checkout_create'
+
+======================================================================
+ERROR: test_readback_mismatch_is_durable (test_checkout_v2.Checkout.test_readback_mismatch_is_durable)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 57, in test_readback_mismatch_is_durable
+    self.assertEqual(self.f.checkout_create(self.c['context_ref'],True)['status'],'readback_mismatch')
+                     ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'checkout_create'
+
+======================================================================
+ERROR: test_unapproved_or_incomplete_plan_blocks (test_checkout_v2.Checkout.test_unapproved_or_incomplete_plan_blocks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 83, in test_unapproved_or_incomplete_plan_blocks
+    e=self.f.extra_quote(self.c['context_ref'],'3','W712','MANN',3)
+      ^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'extra_quote'
+
+======================================================================
+ERROR: test_unknown_never_reposts_even_after_restart (test_checkout_v2.Checkout.test_unknown_never_reposts_even_after_restart)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 48, in test_unknown_never_reposts_even_after_restart
+    self.assertEqual(self.f.checkout_create(self.c['context_ref'],True)['status'],'outcome_unknown')
+                     ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DromTools' object has no attribute 'checkout_create'
+
+======================================================================
+FAIL: test_concurrent_instances (test_checkout_v2.Checkout.test_concurrent_instances)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_checkout_v2.py", line 45, in test_concurrent_instances
+    self.assertEqual(len(results),4);self.assertEqual(len(self.t.posts),1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: 0 != 4
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.262s
+
+FAILED (failures=1, errors=10)
