@@ -1,3 +1,5 @@
+import { buildDromContextInstructions } from "./drom-context"
+
 export const EXTERNAL_AGENT_INPUT_MAX_CHARS = 20_000
 
 const HISTORY_HEADER = "Предыдущая переписка:"
@@ -22,8 +24,11 @@ export type ExternalAgentInputRole = keyof typeof ROLE_LABELS
 
 export type ExternalAgentInputMessage = {
   role: ExternalAgentInputRole
+  id?: string
+  createdAt?: string
   text: string | null
   attachmentUrls: string[]
+  contentAttributes?: unknown
 }
 
 export type ExternalAgentContactContext = {
@@ -140,5 +145,10 @@ export const buildRunInput = ({
       ? inputText.slice(inputText.length - EXTERNAL_AGENT_INPUT_MAX_CHARS)
       : inputText
 
-  return { input, instructions: buildInstructions(context) }
+  return {
+    input,
+    instructions:
+      buildInstructions(context) +
+      buildDromContextInstructions(context.channel, [...history, ...messages]),
+  }
 }
