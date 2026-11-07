@@ -1,0 +1,59 @@
+test_cancel_before_checkout (test_checkout_v2.Checkout.test_cancel_before_checkout) ... ok
+test_concurrent_instances (test_checkout_v2.Checkout.test_concurrent_instances) ... ok
+test_confirm_required (test_checkout_v2.Checkout.test_confirm_required) ... ok
+test_create_once_and_verify (test_checkout_v2.Checkout.test_create_once_and_verify) ... ok
+test_explicitly_dropped_extra_preserves_deal (test_checkout_v2.Checkout.test_explicitly_dropped_extra_preserves_deal) ... ok
+test_extras_end_to_end (test_checkout_v2.Checkout.test_extras_end_to_end) ... ok
+test_missing_response_id_reconciles (test_checkout_v2.Checkout.test_missing_response_id_reconciles) ... ok
+test_open_choice_blocks (test_checkout_v2.Checkout.test_open_choice_blocks) ... ok
+test_readback_mismatch_is_durable (test_checkout_v2.Checkout.test_readback_mismatch_is_durable) ... ok
+test_unapproved_or_incomplete_plan_blocks (test_checkout_v2.Checkout.test_unapproved_or_incomplete_plan_blocks) ... ok
+test_unknown_never_reposts_even_after_restart (test_checkout_v2.Checkout.test_unknown_never_reposts_even_after_restart) ... ok
+test_approved_plan_rejects_different_native_terms (test_review_regressions.Review.test_approved_plan_rejects_different_native_terms) ... FAIL
+test_cancel_during_supplier_read (test_review_regressions.Review.test_cancel_during_supplier_read) ... FAIL
+test_changed_order_hash_or_guid_blocks_verification (test_review_regressions.Review.test_changed_order_hash_or_guid_blocks_verification) ... FAIL
+test_withdrawn_consent (test_review_regressions.Review.test_withdrawn_consent) ... FAIL
+
+======================================================================
+FAIL: test_approved_plan_rejects_different_native_terms (test_review_regressions.Review.test_approved_plan_rejects_different_native_terms)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_review_regressions.py", line 31, in test_approved_plan_rejects_different_native_terms
+    with self.assertRaisesRegex(ValueError,'plan|composition'):self.f.add(alternate['offer_ref'])
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_cancel_during_supplier_read (test_review_regressions.Review.test_cancel_during_supplier_read)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_review_regressions.py", line 21, in test_cancel_during_supplier_read
+    with self.assertRaisesRegex(ValueError,'cancel'):self.f.add(q['offer_ref'])
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_changed_order_hash_or_guid_blocks_verification (test_review_regressions.Review.test_changed_order_hash_or_guid_blocks_verification)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_review_regressions.py", line 40, in test_changed_order_hash_or_guid_blocks_verification
+    self.assertEqual(result['status'],'readback_mismatch',field)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'created_verified' != 'readback_mismatch'
+- created_verified
++ readback_mismatch
+ : hash_key
+
+======================================================================
+FAIL: test_withdrawn_consent (test_review_regressions.Review.test_withdrawn_consent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_review_regressions.py", line 14, in test_withdrawn_consent
+    with self.assertRaises(ValueError):self.f.add(q['offer_ref'],True)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.338s
+
+FAILED (failures=4)

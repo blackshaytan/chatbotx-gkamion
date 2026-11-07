@@ -1,0 +1,15 @@
+{
+  "tests": 88,
+  "passed": true,
+  "isolated_http_only": true,
+  "clean_venv": true,
+  "ci_run": false,
+  "production_writes_enabled": false,
+  "source_sha256": {
+    "drom_checkout.py": "59da98af3bc68b40a9ea78dc197b562361232031b719169c3163948070d8d848",
+    "drom_tools.py": "811ef84fdfd544c5479eea7467ef7bc916a2ae5056768ce0c3d7a4c27de5d281",
+    "drom_transport.py": "ccc4ad812a9d2019028c46acf06abf9e852677a39f00bdc8caffd680c64bb606",
+    "server.py": "a583bb5c007b26b2f46e09c428ab51b65809c1c4a0c737c1a9cd0a63800b2004"
+  },
+  "core_review": "evidence/review-5.md"
+}

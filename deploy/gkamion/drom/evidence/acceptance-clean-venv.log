@@ -1,0 +1,100 @@
+test_actual_multipart_create_and_readback (test_checkout_http.Network.test_actual_multipart_create_and_readback) ... ok
+test_default_transport_cannot_write (test_checkout_http.Network.test_default_transport_cannot_write) ... ok
+test_http_extras_own_price_qty (test_checkout_http.Network.test_http_extras_own_price_qty) ... ok
+test_http_unknown_then_visibility (test_checkout_http.Network.test_http_unknown_then_visibility) ... ok
+test_two_os_processes_share_durable_guard (test_checkout_http.Network.test_two_os_processes_share_durable_guard) ... ok
+test_cancel_before_checkout (test_checkout_v2.Checkout.test_cancel_before_checkout) ... ok
+test_concurrent_instances (test_checkout_v2.Checkout.test_concurrent_instances) ... ok
+test_confirm_required (test_checkout_v2.Checkout.test_confirm_required) ... ok
+test_create_once_and_verify (test_checkout_v2.Checkout.test_create_once_and_verify) ... ok
+test_explicitly_dropped_extra_preserves_deal (test_checkout_v2.Checkout.test_explicitly_dropped_extra_preserves_deal) ... ok
+test_extras_end_to_end (test_checkout_v2.Checkout.test_extras_end_to_end) ... ok
+test_missing_response_id_reconciles (test_checkout_v2.Checkout.test_missing_response_id_reconciles) ... ok
+test_open_choice_blocks (test_checkout_v2.Checkout.test_open_choice_blocks) ... ok
+test_readback_mismatch_is_durable (test_checkout_v2.Checkout.test_readback_mismatch_is_durable) ... ok
+test_unapproved_or_incomplete_plan_blocks (test_checkout_v2.Checkout.test_unapproved_or_incomplete_plan_blocks) ... ok
+test_unknown_never_reposts_even_after_restart (test_checkout_v2.Checkout.test_unknown_never_reposts_even_after_restart) ... ok
+test_explicit_null_quantity_is_invalid (test_drom_finish.FinalRegression.test_explicit_null_quantity_is_invalid) ... ok
+test_live_server_write_tools_are_blocked (test_drom_finish.ReleaseBoundary.test_live_server_write_tools_are_blocked) ... ok
+test_binding_changed_blocks (test_drom_finish.Safety.test_binding_changed_blocks) ... ok
+test_checkout_never_issues_unprotected_form (test_drom_finish.Safety.test_checkout_never_issues_unprotected_form) ... ok
+test_delivery_change_does_not_duplicate (test_drom_finish.Safety.test_delivery_change_does_not_duplicate) ... ok
+test_durable_pending_blocks_other_engine (test_drom_finish.Safety.test_durable_pending_blocks_other_engine) ... ok
+test_empty_deal_not_ready (test_drom_finish.Safety.test_empty_deal_not_ready) ... ok
+test_exact_proposal_and_acceptance (test_drom_finish.Safety.test_exact_proposal_and_acceptance) ... ok
+test_extra_request_blocks (test_drom_finish.Safety.test_extra_request_blocks) ... ok
+test_generic_yes_does_not_authorize (test_drom_finish.Safety.test_generic_yes_does_not_authorize) ... ok
+test_mixed_negation_blocks (test_drom_finish.Safety.test_mixed_negation_blocks) ... ok
+test_money_exact (test_drom_finish.Safety.test_money_exact) ... ok
+test_partial_same_deal_update (test_drom_finish.Safety.test_partial_same_deal_update) ... ok
+test_post_unknown_is_not_retried (test_drom_finish.Safety.test_post_unknown_is_not_retried) ... ok
+test_proposal_must_be_shown (test_drom_finish.Safety.test_proposal_must_be_shown) ... ok
+test_quantity_literals (test_drom_finish.Safety.test_quantity_literals) ... ok
+test_question_fails_closed_without_cancellation (test_drom_finish.Safety.test_question_fails_closed_without_cancellation) ... ok
+test_repeated_listing_keeps_deal (test_drom_finish.Safety.test_repeated_listing_keeps_deal) ... ok
+test_revision_change_blocks_readd (test_drom_finish.Safety.test_revision_change_blocks_readd) ... ok
+test_supplier_changes_block (test_drom_finish.Safety.test_supplier_changes_block) ... ok
+test_supplier_readback_mismatch (test_drom_finish.Safety.test_supplier_readback_mismatch) ... ok
+test_cursor_cycle (test_drom_finish.TransportFaults.test_cursor_cycle) ... ok
+test_exact_marker_and_owner_filter (test_drom_finish.TransportFaults.test_exact_marker_and_owner_filter) ... ok
+test_foreign_message (test_drom_finish.TransportFaults.test_foreign_message) ... ok
+test_foreign_order_fails_closed (test_drom_finish.TransportFaults.test_foreign_order_fails_closed) ... ok
+test_incomplete_history (test_drom_finish.TransportFaults.test_incomplete_history) ... ok
+test_channels_does_not_restart_ordinary_selection_for_card (test_drom_rules.DromRules.test_channels_does_not_restart_ordinary_selection_for_card) ... ok
+test_drom_reference_has_trade_safety_and_identity (test_drom_rules.DromRules.test_drom_reference_has_trade_safety_and_identity) ... ok
+test_reference_is_in_both_indexes (test_drom_rules.DromRules.test_reference_is_in_both_indexes) ... ok
+test_soul_has_mandatory_channel_rule (test_drom_rules.DromRules.test_soul_has_mandatory_channel_rule) ... ok
+test_add_idempotent (test_drom_tools.Flow.test_add_idempotent) ... ok
+test_cancel_between_quote_and_add_blocks (test_drom_tools.Flow.test_cancel_between_quote_and_add_blocks) ... ok
+test_changed_deal_blocks_stale_offer (test_drom_tools.Flow.test_changed_deal_blocks_stale_offer) ... ok
+test_checkout_form_has_drom_and_delivery (test_drom_tools.Flow.test_checkout_form_has_drom_and_delivery) ... ok
+test_context_does_not_write_remote (test_drom_tools.Flow.test_context_does_not_write_remote) ... ok
+test_existing_order_blocks_duplicate (test_drom_tools.Flow.test_existing_order_blocks_duplicate) ... ok
+test_higher_needs_explicit_confirm (test_drom_tools.Flow.test_higher_needs_explicit_confirm) ... ok
+test_listing_needs_purchase_confirm (test_drom_tools.Flow.test_listing_needs_purchase_confirm) ... ok
+test_quote_is_cached_for_add (test_drom_tools.Flow.test_quote_is_cached_for_add) ... ok
+test_unknown_ref_fails (test_drom_tools.Flow.test_unknown_ref_fails) ... ok
+test_verified_binding_required_for_add (test_drom_tools.Flow.test_verified_binding_required_for_add) ... ok
+test_bot_text_is_not_contact (test_drom_tools.Pure.test_bot_text_is_not_contact) ... ok
+test_cancel_blocks (test_drom_tools.Pure.test_cancel_blocks) ... ok
+test_chooses_cheapest_eligible (test_drom_tools.Pure.test_chooses_cheapest_eligible) ... ok
+test_different_listing_drops_deal (test_drom_tools.Pure.test_different_listing_drops_deal) ... ok
+test_equal_keeps_drom_price (test_drom_tools.Pure.test_equal_keeps_drom_price) ... ok
+test_higher_requires_confirmation (test_drom_tools.Pure.test_higher_requires_confirmation) ... ok
+test_new_deal_does_not_inherit_old_cancel (test_drom_tools.Pure.test_new_deal_does_not_inherit_old_cancel) ... ok
+test_null_preserves_deal (test_drom_tools.Pure.test_null_preserves_deal) ... ok
+test_pause_blocks (test_drom_tools.Pure.test_pause_blocks) ... ok
+test_quantity_is_not_rounded (test_drom_tools.Pure.test_quantity_is_not_rounded) ... ok
+test_rejects_minimum_or_stock (test_drom_tools.Pure.test_rejects_minimum_or_stock) ... ok
+test_rejects_other_article (test_drom_tools.Pure.test_rejects_other_article) ... ok
+test_rejects_other_brand (test_drom_tools.Pure.test_rejects_other_brand) ... ok
+test_full_network_basket_and_checkout_without_real_writes (test_drom_transport.TransportTest.test_full_network_basket_and_checkout_without_real_writes) ... ok
+test_paginated_context_restores_deal_and_email (test_drom_transport.TransportTest.test_paginated_context_restores_deal_and_email) ... ok
+test_prices_never_request_cross (test_drom_transport.TransportTest.test_prices_never_request_cross) ... ok
+test_wrong_contact_rejected_before_messages (test_drom_transport.TransportTest.test_wrong_contact_rejected_before_messages) ... ok
+test_approved_plan_rejects_different_native_terms (test_review_regressions.Review.test_approved_plan_rejects_different_native_terms) ... ok
+test_cancel_during_supplier_read (test_review_regressions.Review.test_cancel_during_supplier_read) ... ok
+test_cancel_explicit_extra_does_not_cancel_native_deal (test_review_regressions.Review.test_cancel_explicit_extra_does_not_cancel_native_deal) ... ok
+test_cancel_only_extra_via_new_complete_plan (test_review_regressions.Review.test_cancel_only_extra_via_new_complete_plan) ... ok
+test_changed_order_hash_or_guid_blocks_verification (test_review_regressions.Review.test_changed_order_hash_or_guid_blocks_verification) ... ok
+test_conflicting_address_object_fields_fail_closed (test_review_regressions.Review.test_conflicting_address_object_fields_fail_closed) ... ok
+test_conflicting_structured_delivery_address_blocks (test_review_regressions.Review.test_conflicting_structured_delivery_address_blocks) ... ok
+test_email_cannot_cross_deals_or_choose_old_page (test_review_regressions.Review.test_email_cannot_cross_deals_or_choose_old_page) ... ok
+test_extra_and_higher_native_from_initial_open_request (test_review_regressions.Review.test_extra_and_higher_native_from_initial_open_request) ... ok
+test_extra_consent_withdrawn_during_supplier_read (test_review_regressions.Review.test_extra_consent_withdrawn_during_supplier_read) ... ok
+test_new_choice_after_approval_blocks (test_review_regressions.Review.test_new_choice_after_approval_blocks) ... ok
+test_withdrawal_after_basket_before_order (test_review_regressions.Review.test_withdrawal_after_basket_before_order) ... ok
+test_withdrawn_consent (test_review_regressions.Review.test_withdrawn_consent) ... ok
+test_exact_catalog_and_blocked_writes_without_transport (test_stdio_v2.MCPRelease.test_exact_catalog_and_blocked_writes_without_transport) ... execute program '/opt/hermes-data/cache/scratch/drom-finish2/.acceptance-venv/bin/python': <_UnixSubprocessTransport pid=1291431 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0> stdout=<_UnixReadPipeTransport fd=9 polling>>
+Processing request of type ListToolsRequest
+Processing request of type CallToolRequest
+Processing request of type CallToolRequest
+Processing request of type CallToolRequest
+<_UnixReadPipeTransport fd=9 polling> was closed by peer
+<_UnixSubprocessTransport pid=1291431 running stdin=<_UnixWritePipeTransport closed fd=8 closed> stdout=<_UnixReadPipeTransport closed fd=9 closed>> exited with return code 0
+ok
+
+----------------------------------------------------------------------
+Ran 88 tests in 5.625s
+
+OK
