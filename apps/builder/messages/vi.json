@@ -3962,6 +3962,10 @@
     "referredProduct": {
       "askedAbout": "Đã hỏi về sản phẩm này"
     },
+    "dromListing": {
+      "onDrom": "Trên Drom",
+      "productCard": "Thẻ sản phẩm"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",

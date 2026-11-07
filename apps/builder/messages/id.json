@@ -3920,6 +3920,10 @@
     "referredProduct": {
       "askedAbout": "Bertanya tentang produk ini"
     },
+    "dromListing": {
+      "onDrom": "Di Drom",
+      "productCard": "Kartu produk"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",

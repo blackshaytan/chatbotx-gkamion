@@ -3920,6 +3920,10 @@
     "referredProduct": {
       "askedAbout": "Vroeg naar dit product"
     },
+    "dromListing": {
+      "onDrom": "Op Drom",
+      "productCard": "Productkaart"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",

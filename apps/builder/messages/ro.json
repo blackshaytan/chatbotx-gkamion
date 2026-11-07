@@ -3920,6 +3920,10 @@
     "referredProduct": {
       "askedAbout": "A întrebat despre acest produs"
     },
+    "dromListing": {
+      "onDrom": "Pe Drom",
+      "productCard": "Fișa produsului"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",

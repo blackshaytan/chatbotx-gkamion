@@ -3920,6 +3920,10 @@
     "referredProduct": {
       "askedAbout": "Bu ürün hakkında soru sordu"
     },
+    "dromListing": {
+      "onDrom": "Drom'da",
+      "productCard": "Ürün kartı"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",
