@@ -3899,6 +3899,10 @@
     "referredProduct": {
       "askedAbout": "Perguntou sobre este produto"
     },
+    "dromListing": {
+      "onDrom": "No Drom",
+      "productCard": "Ficha do produto"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",

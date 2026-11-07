@@ -3899,6 +3899,10 @@
     "referredProduct": {
       "askedAbout": "この商品について質問しました"
     },
+    "dromListing": {
+      "onDrom": "Dromに掲載",
+      "productCard": "商品カード"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",

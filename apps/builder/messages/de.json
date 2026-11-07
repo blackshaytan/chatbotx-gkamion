@@ -3920,6 +3920,10 @@
     "referredProduct": {
       "askedAbout": "Hat nach diesem Produkt gefragt"
     },
+    "dromListing": {
+      "onDrom": "Auf Drom",
+      "productCard": "Produktkarte"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",

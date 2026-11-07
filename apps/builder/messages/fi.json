@@ -3920,6 +3920,10 @@
     "referredProduct": {
       "askedAbout": "Kysyi tästä tuotteesta"
     },
+    "dromListing": {
+      "onDrom": "Dromissa",
+      "productCard": "Tuotekortti"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",

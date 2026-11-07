@@ -4602,6 +4602,10 @@
     "referredProduct": {
       "askedAbout": "Bu məhsul haqqında soruşdu"
     },
+    "dromListing": {
+      "onDrom": "Drom-da",
+      "productCard": "Məhsul kartı"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",

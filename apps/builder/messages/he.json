@@ -1694,6 +1694,10 @@
     "referredProduct": {
       "askedAbout": "שאל על מוצר זה"
     },
+    "dromListing": {
+      "onDrom": "ב-Drom",
+      "productCard": "כרטיס מוצר"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",

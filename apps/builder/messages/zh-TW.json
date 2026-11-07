@@ -1848,6 +1848,10 @@
     "referredProduct": {
       "askedAbout": "詢問了此商品"
     },
+    "dromListing": {
+      "onDrom": "在 Drom 上",
+      "productCard": "商品卡片"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",

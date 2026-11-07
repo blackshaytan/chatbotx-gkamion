@@ -4602,6 +4602,10 @@
     "referredProduct": {
       "askedAbout": "Вопрос об этом товаре"
     },
+    "dromListing": {
+      "onDrom": "Есть на Дроме",
+      "productCard": "Карточка товара"
+    },
     "input": {
       "form": "Форма ввода сообщения",
       "clearReply": "Отменить ответ",

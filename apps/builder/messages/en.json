@@ -4602,6 +4602,10 @@
     "referredProduct": {
       "askedAbout": "Asked about this product"
     },
+    "dromListing": {
+      "onDrom": "On Drom",
+      "productCard": "Product card"
+    },
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",
