@@ -11,6 +11,8 @@ import {
 import type { ListConversationsRequest } from "@/features/conversations/schema/query"
 
 export type ConversationCursor = {
+  /** True while this row is still in the unread group. Old cursors omit it and are discarded. */
+  unread: boolean
   inboxActivityAt: Date | null
   id: string
 }
@@ -105,23 +107,32 @@ export function buildConversationWhere(
     where.contact = { blockedAt: { isNull: true } }
   }
 
-  // ── Cursor condition (inboxActivityAt DESC NULLS LAST, id DESC) ──────────
+  // ── Cursor (unread DESC, inboxActivityAt DESC NULLS LAST, id DESC) ──────
+  // Unread rows come first. A cursor still inside that group also reaches
+  // every read row, which sorts after the unread group even when its
+  // activity is newer. A cursor already in the read group never walks back.
   if (cursor) {
-    where.OR = cursor.inboxActivityAt
+    const olderActivity: QueryWhere = cursor.inboxActivityAt
+      ? {
+          OR: [
+            { inboxActivityAt: { lt: cursor.inboxActivityAt } },
+            { inboxActivityAt: { isNull: true } },
+            {
+              inboxActivityAt: cursor.inboxActivityAt,
+              id: { lt: cursor.id },
+            },
+          ],
+        }
+      : {
+          inboxActivityAt: { isNull: true },
+          id: { lt: cursor.id },
+        }
+    where.OR = cursor.unread
       ? [
-          { inboxActivityAt: { lt: cursor.inboxActivityAt } },
-          { inboxActivityAt: { isNull: true } },
-          {
-            inboxActivityAt: cursor.inboxActivityAt,
-            id: { lt: cursor.id },
-          },
+          { AND: [conversationUnreadWhere, olderActivity] },
+          { NOT: conversationUnreadWhere },
         ]
-      : [
-          {
-            inboxActivityAt: { isNull: true },
-            id: { lt: cursor.id },
-          },
-        ]
+      : [{ AND: [{ NOT: conversationUnreadWhere }, olderActivity] }]
   }
 
   // ── handoverCategory ─────────────────────────────────────────────────────

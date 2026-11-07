@@ -320,6 +320,7 @@ describe("buildConversationWhere unread filter", () => {
 
   test("keeps cursor OR separate from the unread predicate", () => {
     const cursor = {
+      unread: true,
       id: "100",
       inboxActivityAt: new Date("2026-09-23T10:00:00Z"),
     }
@@ -330,9 +331,22 @@ describe("buildConversationWhere unread filter", () => {
     )
 
     expect(where.OR).toEqual([
-      { inboxActivityAt: { lt: cursor.inboxActivityAt } },
-      { inboxActivityAt: { isNull: true } },
-      { inboxActivityAt: cursor.inboxActivityAt, id: { lt: cursor.id } },
+      {
+        AND: [
+          conversationUnreadWhere,
+          {
+            OR: [
+              { inboxActivityAt: { lt: cursor.inboxActivityAt } },
+              { inboxActivityAt: { isNull: true } },
+              {
+                inboxActivityAt: cursor.inboxActivityAt,
+                id: { lt: cursor.id },
+              },
+            ],
+          },
+        ],
+      },
+      { NOT: conversationUnreadWhere },
     ])
     expect(where.AND).toEqual([conversationUnreadWhere])
   })
