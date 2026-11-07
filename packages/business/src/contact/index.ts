@@ -4,6 +4,11 @@ export type {
   InsertImportedContactBatchInput,
   InsertImportedContactBatchResult,
 } from "./insert-imported-batch"
+export {
+  findContactForIdentity,
+  mergeContactInto,
+  unifySameClient,
+} from "./merge-same-client"
 export * from "./profile-refresh"
 export * from "./service"
 export * from "./update-from-message"

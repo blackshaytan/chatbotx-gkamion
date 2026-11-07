@@ -1,4 +1,7 @@
-import { notificationService } from "@chatbotx.io/business"
+import {
+  notificationService,
+  purgeOrderNotificationLogs,
+} from "@chatbotx.io/business"
 import { subDays } from "date-fns"
 import { logger } from "../../lib/logger"
 
@@ -24,6 +27,25 @@ export async function purgeOldNotifications(): Promise<void> {
     logger.info(
       { deleted, retentionDays: RETENTION_DAYS },
       "Purged old notifications",
+    )
+  }
+
+  const now = new Date()
+  let cleared = 0
+  for (;;) {
+    const batchCleared = await purgeOrderNotificationLogs({
+      now,
+      limit: BATCH_SIZE,
+    })
+    cleared += batchCleared
+    if (batchCleared < BATCH_SIZE) {
+      break
+    }
+  }
+  if (cleared > 0) {
+    logger.info(
+      { cleared, retentionDays: 30 },
+      "Cleared expired order-notification logs",
     )
   }
 }

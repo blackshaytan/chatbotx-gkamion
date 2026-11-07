@@ -140,6 +140,7 @@ export const APPOINTMENT_AVAILABILITY_RANGE_SKIPPED_PAYLOAD_TYPE =
   "appointmentAvailabilityRangeSkipped"
 export const GET_USER_DATA_WEBVIEW_SELECTION_PAYLOAD_TYPE =
   "getUserDataWebviewSelection"
+export const ORDER_NOTIFICATION_PAYLOAD_TYPE = "orderNotification"
 
 export const baseMetadataPayload = z.object({
   stepId: z.string().optional(),
@@ -226,6 +227,29 @@ export type CommentAutomationMetadataPayload = z.infer<
   typeof commentAutomationMetadataPayload
 >
 
+export const orderNotificationMetadataPayload = baseMetadataPayload.extend({
+  type: z.literal(ORDER_NOTIFICATION_PAYLOAD_TYPE),
+  flowRunId: z.string(),
+  eventId: z.string(),
+  subject: z.enum(["order", "item"]),
+  externalOrderId: z.string(),
+  externalOrderItemId: z.string().optional(),
+  statusId: z.number().int(),
+  package: z.object({
+    deliveryMethod: z.enum(["pickup", "delivery"]).optional(),
+    hasDebt: z.boolean().optional(),
+    amount: z.number().optional(),
+    itemSummary: z.string().optional(),
+    billUrl: z.string().optional(),
+    orderNumber: z.string().optional(),
+    phone: z.string().optional(),
+    email: z.string().optional(),
+  }),
+})
+export type OrderNotificationMetadata = z.infer<
+  typeof orderNotificationMetadataPayload
+>
+
 export const metadataSchema = z.discriminatedUnion("type", [
   broadcastMetadataPayload,
   sequenceScheduleMetadataPayload,
@@ -235,6 +259,7 @@ export const metadataSchema = z.discriminatedUnion("type", [
   appointmentAvailabilityRangeSelectionPayload,
   appointmentAvailabilityRangeSkippedPayload,
   getUserDataWebviewSelectionPayload,
+  orderNotificationMetadataPayload,
 ])
 
 export type MetadataPayload = z.infer<typeof metadataSchema>

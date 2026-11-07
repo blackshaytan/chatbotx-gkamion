@@ -268,7 +268,7 @@ describe("capability table", () => {
       tiktok: null,
       threads: null,
       webchat: null,
-      smtp: null,
+      smtp: "payload",
       omnichannel: null,
     }
 

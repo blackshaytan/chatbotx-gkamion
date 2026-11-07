@@ -1,6 +1,13 @@
-import { contactService } from "@chatbotx.io/business"
+import {
+  contactService,
+  isOrderNotificationField,
+  orderConditionGroupMatches,
+} from "@chatbotx.io/business"
 import { webhookChannelOrigin } from "@chatbotx.io/events/context"
-import type { ConditionStepSchema } from "@chatbotx.io/flow-config"
+import {
+  type ConditionStepSchema,
+  ORDER_NOTIFICATION_PAYLOAD_TYPE,
+} from "@chatbotx.io/flow-config"
 import { resolveContactVariablesDeep } from "@chatbotx.io/variables"
 import {
   IntegrationJobAction,
@@ -38,22 +45,57 @@ export async function handleCondition(
         },
       )
 
+      const orderPackage =
+        metadata?.type === ORDER_NOTIFICATION_PAYLOAD_TYPE
+          ? metadata.package
+          : {}
+
       for (const conditionCase of resolvedCases) {
         if (conditionCase.conditions.length === 0) {
           continue
         }
 
-        const isMatched = await contactService.matchesContactFilter({
+        const orderConditions = conditionCase.conditions.filter((condition) =>
+          isOrderNotificationField(condition.field),
+        )
+        const contactConditions = conditionCase.conditions.filter(
+          (condition) => !isOrderNotificationField(condition.field),
+        )
+        const orderMatched =
+          orderConditions.length === 0
+            ? conditionCase.operator === "and"
+            : orderConditionGroupMatches(
+                {
+                  operator: conditionCase.operator,
+                  conditions: orderConditions,
+                },
+                orderPackage,
+              )
+        if (conditionCase.operator === "and" && !orderMatched) {
+          continue
+        }
+        if (contactConditions.length === 0) {
+          if (orderMatched) {
+            return conditionCase.id
+          }
+          continue
+        }
+
+        const contactMatched = await contactService.matchesContactFilter({
           workspaceId: conversation.workspaceId,
           contactId: conversation.contactId,
           contactFilter: {
             operator: conditionCase.operator,
-            conditions: conditionCase.conditions,
+            conditions: contactConditions,
             // Timezone captured in the editor's browser at save time; the worker
             // has no browser context, so naive date values are interpreted here.
             timezone: conditionCase.timezone,
           },
         })
+        const isMatched =
+          conditionCase.operator === "or"
+            ? orderMatched || contactMatched
+            : orderMatched && contactMatched
         if (isMatched) {
           return conditionCase.id
         }

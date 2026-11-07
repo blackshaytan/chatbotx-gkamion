@@ -1,9 +1,10 @@
-import { db, lte } from "@chatbotx.io/database/client"
+import { and, db, eq, lte } from "@chatbotx.io/database/client"
 import {
   findContactMatches,
   findExternalCustomerIdentity,
   findExternalOrder,
   findExternalOrderEvent,
+  findLatestExternalSubjectEventAt,
   getExternalOrderHistory,
   listExternalOrdersForContact,
 } from "@chatbotx.io/database/repositories"
@@ -23,7 +24,16 @@ import { contactService } from "../contact/service"
 import { notFoundException, validationException } from "../errors"
 import { quotaEnforcementService } from "../quota-enforcement/service"
 import { workspaceService } from "../workspace/service"
+import {
+  decideOrderEvent,
+  notificationRunsCreated,
+  readOrderNotificationPackage,
+} from "./order-notification"
 import { toContactOrderSnapshot } from "./order-snapshot"
+import {
+  orderNotificationSubject,
+  startOrderNotificationFlows,
+} from "./start-order-notifications"
 
 const PROVIDER = "gkamion"
 const LOCK_TIMEOUT_SECONDS = 30
@@ -44,8 +54,14 @@ export type ExternalOrderEventInput = {
   eventId: string
   externalCustomerId: string
   externalOrderId: string
-  eventType: "orderCreated" | "paymentReceived" | "statusChanged"
+  externalOrderItemId?: string
+  eventType:
+    | "orderCreated"
+    | "paymentReceived"
+    | "statusChanged"
+    | "itemStatusChanged"
   status: string
+  statusId?: number
   occurredAt: Date
   orderData: {
     itemSummary?: string
@@ -53,9 +69,47 @@ export type ExternalOrderEventInput = {
     currency?: string
     paymentStatus?: string
     deliveryMethod?: string
+    hasDebt?: boolean
+    billUrl?: string
+    orderNumber?: string
+    phone?: string
+    email?: string
   }
   customer?: Omit<ExternalCustomerInput, "externalCustomerId">
 }
+
+const SHORT_SNAPSHOT_KEYS = [
+  "itemSummary",
+  "amount",
+  "currency",
+  "paymentStatus",
+  "deliveryMethod",
+] as const
+
+const shortOrderSnapshot = (
+  orderData: ExternalOrderEventInput["orderData"],
+): Record<string, unknown> => {
+  const snapshot: Record<string, unknown> = {}
+  for (const key of SHORT_SNAPSHOT_KEYS) {
+    if (orderData[key] !== undefined) {
+      snapshot[key] = orderData[key]
+    }
+  }
+  return snapshot
+}
+
+const eventPayload = (
+  event: ExternalOrderEventInput,
+  runsCreated: boolean,
+): Record<string, unknown> => ({
+  ...shortOrderSnapshot(event.orderData),
+  ...readOrderNotificationPackage(event.orderData),
+  ...(event.statusId === undefined ? {} : { statusId: event.statusId }),
+  ...(event.externalOrderItemId
+    ? { externalOrderItemId: event.externalOrderItemId }
+    : {}),
+  notificationRunsCreated: runsCreated,
+})
 
 type ContactFields = Pick<
   ContactModel,
@@ -207,35 +261,44 @@ class ExternalCrmService extends BaseService {
       key: eventLockKey(workspaceId, event.eventId),
       timeoutInSeconds: LOCK_TIMEOUT_SECONDS,
       fn: async () => {
-        const duplicate = await findExternalOrderEvent(db, {
+        if (
+          event.eventType === "itemStatusChanged" &&
+          !event.externalOrderItemId
+        ) {
+          throw validationException(
+            "externalOrderItemId",
+            "An item status event requires externalOrderItemId",
+          )
+        }
+
+        const orderPackage = readOrderNotificationPackage(event.orderData)
+        const phone = event.customer?.phoneNumber ?? orderPackage.phone
+        const email = event.customer?.email ?? orderPackage.email
+        const hasPhoneOrEmail = Boolean(phone || email)
+        const existing = await findExternalOrderEvent(db, {
           workspaceId,
           provider: PROVIDER,
           eventId: event.eventId,
         })
-        if (duplicate) {
-          const order = await findExternalOrder(db, {
-            workspaceId,
-            provider: PROVIDER,
-            externalOrderId: duplicate.externalOrderId,
-          })
-          return {
-            duplicate: true,
-            contactId: order?.contactId,
-            orderId: duplicate.externalOrderId,
-          }
-        }
-
         let identity = await findExternalCustomerIdentity(db, {
           workspaceId,
           provider: PROVIDER,
           externalCustomerId: event.externalCustomerId,
         })
-        if (!identity && event.customer) {
+        if (!(identity || hasPhoneOrEmail)) {
+          throw validationException(
+            "customer",
+            "Link the customer or include a phone number or email address",
+          )
+        }
+        if (!identity) {
           await this.syncCustomer({
             workspaceId,
             customer: {
               externalCustomerId: event.externalCustomerId,
               ...event.customer,
+              ...(email ? { email } : {}),
+              ...(phone ? { phoneNumber: phone } : {}),
             },
           })
           identity = await findExternalCustomerIdentity(db, {
@@ -250,63 +313,131 @@ class ExternalCrmService extends BaseService {
           )
         }
 
-        return await db.transaction(async (tx) => {
-          const seen = await findExternalOrderEvent(tx, {
-            workspaceId,
-            provider: PROVIDER,
-            eventId: event.eventId,
-          })
-          if (seen) {
-            return {
-              duplicate: true,
-              contactId: identity.contactId,
-              orderId: seen.externalOrderId,
-            }
-          }
-          await tx.insert(externalOrderEventModel).values({
-            workspaceId,
-            provider: PROVIDER,
-            eventId: event.eventId,
-            externalOrderId: event.externalOrderId,
-            eventType: event.eventType,
-            status: event.status,
-            data: event.orderData,
-            occurredAt: event.occurredAt,
-          })
-          await tx
-            .insert(externalOrderModel)
-            .values({
+        const subject = orderNotificationSubject(event.eventType)
+        const latestAcceptedAt = subject
+          ? await findLatestExternalSubjectEventAt(db, {
               workspaceId,
               provider: PROVIDER,
               externalOrderId: event.externalOrderId,
-              externalCustomerId: event.externalCustomerId,
-              contactId: identity.contactId,
-              status: event.status,
-              data: event.orderData,
-              lastEventAt: event.occurredAt,
+              eventTypes:
+                subject === "item"
+                  ? ["itemStatusChanged"]
+                  : ["orderCreated", "paymentReceived", "statusChanged"],
+              ...(subject === "item" && event.externalOrderItemId
+                ? { externalOrderItemId: event.externalOrderItemId }
+                : {}),
+              exceptEventId: event.eventId,
             })
-            .onConflictDoUpdate({
-              target: [
-                externalOrderModel.workspaceId,
-                externalOrderModel.provider,
-                externalOrderModel.externalOrderId,
-              ],
-              set: {
-                externalCustomerId: event.externalCustomerId,
-                contactId: identity.contactId,
-                status: event.status,
-                data: event.orderData,
-                lastEventAt: event.occurredAt,
-                updatedAt: new Date(),
-              },
-              setWhere: lte(externalOrderModel.lastEventAt, event.occurredAt),
-            })
+          : null
+        const decision = decideOrderEvent({
+          linked: true,
+          hasPhoneOrEmail,
+          existing: existing
+            ? { runsCreated: notificationRunsCreated(existing.data) }
+            : null,
+          latestAcceptedAt,
+          occurredAt: event.occurredAt,
+        })
+        if (decision.kind === "duplicate") {
           return {
-            duplicate: false,
+            duplicate: true,
             contactId: identity.contactId,
             orderId: event.externalOrderId,
           }
-        })
+        }
+
+        const startsFlows =
+          (decision.kind === "accept" || decision.kind === "resume") &&
+          subject !== null &&
+          event.statusId !== undefined
+        if (!existing) {
+          const snapshot = shortOrderSnapshot(event.orderData)
+          await db.transaction(async (tx) => {
+            await tx.insert(externalOrderEventModel).values({
+              workspaceId,
+              provider: PROVIDER,
+              eventId: event.eventId,
+              externalOrderId: event.externalOrderId,
+              eventType: event.eventType,
+              status: event.status,
+              data: eventPayload(event, !startsFlows),
+              occurredAt: event.occurredAt,
+            })
+            if (subject === "item") {
+              return
+            }
+            await tx
+              .insert(externalOrderModel)
+              .values({
+                workspaceId,
+                provider: PROVIDER,
+                externalOrderId: event.externalOrderId,
+                externalCustomerId: event.externalCustomerId,
+                contactId: identity.contactId,
+                status: event.status,
+                data: snapshot,
+                lastEventAt: event.occurredAt,
+              })
+              .onConflictDoUpdate({
+                target: [
+                  externalOrderModel.workspaceId,
+                  externalOrderModel.provider,
+                  externalOrderModel.externalOrderId,
+                ],
+                set: {
+                  externalCustomerId: event.externalCustomerId,
+                  contactId: identity.contactId,
+                  status: event.status,
+                  data: snapshot,
+                  lastEventAt: event.occurredAt,
+                  updatedAt: new Date(),
+                },
+                setWhere: lte(externalOrderModel.lastEventAt, event.occurredAt),
+              })
+          })
+        }
+
+        if (startsFlows && subject && event.statusId !== undefined) {
+          await startOrderNotificationFlows({
+            workspaceId,
+            eventId: event.eventId,
+            subject,
+            statusId: event.statusId,
+            externalOrderId: event.externalOrderId,
+            externalOrderItemId: event.externalOrderItemId,
+            contactId: identity.contactId,
+            orderPackage,
+          })
+          const stored = await findExternalOrderEvent(db, {
+            workspaceId,
+            provider: PROVIDER,
+            eventId: event.eventId,
+          })
+          if (stored) {
+            await db
+              .update(externalOrderEventModel)
+              .set({
+                data: {
+                  ...(stored.data as Record<string, unknown>),
+                  notificationRunsCreated: true,
+                },
+                updatedAt: new Date(),
+              })
+              .where(
+                and(
+                  eq(externalOrderEventModel.workspaceId, workspaceId),
+                  eq(externalOrderEventModel.provider, PROVIDER),
+                  eq(externalOrderEventModel.eventId, event.eventId),
+                ),
+              )
+          }
+        }
+
+        return {
+          duplicate: decision.kind === "resume",
+          contactId: identity.contactId,
+          orderId: event.externalOrderId,
+        }
       },
     })
   }

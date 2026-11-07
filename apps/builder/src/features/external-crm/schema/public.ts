@@ -1,3 +1,4 @@
+import { externalOrderEventTypes } from "@chatbotx.io/database/partials"
 import {
   createSelectSchema,
   externalOrderEventModel,
@@ -10,7 +11,16 @@ const externalOrderData = z.object({
   amount: z.number().finite().nonnegative().optional(),
   currency: z.string().length(3).optional(),
   paymentStatus: z.string().max(100).optional(),
-  deliveryMethod: z.string().max(100).optional(),
+  deliveryMethod: z
+    .string()
+    .max(100)
+    .optional()
+    .describe("pickup or delivery. Other values do not match a flow check."),
+  hasDebt: z.boolean().optional(),
+  billUrl: z.string().max(2000).optional(),
+  orderNumber: z.string().max(100).optional(),
+  phone: z.string().max(50).optional(),
+  email: z.string().max(320).optional(),
 })
 
 const whitespaceRegex = /\s+/
@@ -276,17 +286,31 @@ export const recordExternalOrderEventPublicRequest = z.object({
     .describe(
       "GKamion order id. Read it later with externalCrm.getOrderHistory.",
     ),
-  eventType: z
-    .enum(["orderCreated", "paymentReceived", "statusChanged"])
-    .describe(
-      "Kind of order event: orderCreated, paymentReceived, or statusChanged.",
-    ),
+  eventType: externalOrderEventTypes.describe(
+    "Kind of order event: orderCreated, paymentReceived, statusChanged, or itemStatusChanged.",
+  ),
   status: z
     .string()
     .trim()
     .min(1)
     .max(100)
     .describe("Current order status label from GKamion."),
+  statusId: z
+    .number()
+    .int()
+    .optional()
+    .describe(
+      "Numeric GKamion status. Published flows subscribed to this number start. orderCreated and statusChanged start order flows; itemStatusChanged starts item flows.",
+    ),
+  externalOrderItemId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .optional()
+    .describe(
+      "GKamion order item id. Required when eventType is itemStatusChanged.",
+    ),
   occurredAt: z.iso
     .datetime()
     .describe(
@@ -294,7 +318,7 @@ export const recordExternalOrderEventPublicRequest = z.object({
     )
     .transform((value) => new Date(value)),
   orderData: externalOrderData.describe(
-    "Whitelisted order snapshot. Fields outside itemSummary, amount, currency, paymentStatus, and deliveryMethod are ignored.",
+    "Order package. The contact card keeps itemSummary, amount, currency, paymentStatus and deliveryMethod. hasDebt, billUrl, orderNumber, phone and email stay on the event and are available to the notification flow.",
   ),
   customer: externalCustomerPublicInput
     .omit({ externalCustomerId: true })
@@ -338,4 +362,67 @@ export const getExternalCustomerPublicResponse = z.object({
 export const getExternalOrderHistoryPublicResponse = z.object({
   order: externalOrderPublicResource,
   events: z.array(externalOrderEventPublicResource),
+})
+
+export const deliverClientNotificationPublicRequest = z.object({
+  externalCustomerId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .describe(
+      "GKamion customer id already linked by externalCrm.syncCustomer.",
+    ),
+  eventId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .describe(
+      "Stable id for this rendered notification. Reuse the n8n idempotency key on every retry.",
+    ),
+  text: z
+    .string()
+    .trim()
+    .min(1)
+    .max(8000)
+    .describe("Canonical notification text. It is also the email body."),
+  messengerText: z
+    .string()
+    .trim()
+    .max(4000)
+    .optional()
+    .describe(
+      "Text for MAX, Telegram, ZZAP and DROM. When omitted, text is used. An empty string skips messengers.",
+    ),
+  email: z
+    .string()
+    .trim()
+    .max(255)
+    .optional()
+    .describe(
+      "Client email from the rendered notification. Opens the single SMTP inbox when the client has no mail dialog.",
+    ),
+  emailSubject: z
+    .string()
+    .trim()
+    .max(255)
+    .optional()
+    .describe("Subject used when the cascade reaches email."),
+  externalOrderId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .optional()
+    .describe(
+      "GKamion order id. The same id sent to externalCrm.recordOrderEvent.",
+    ),
+  statusId: z
+    .number()
+    .int()
+    .optional()
+    .describe(
+      "Numeric GKamion status from the rendered notification. It does not start a flow.",
+    ),
 })
