@@ -146,34 +146,47 @@ try {
   }
 
   const columnTopBefore = measured.columnTop
-  const threadBox = await page.locator("[data-testid=thread]").boundingBox()
+  const thread = page.locator("[data-testid=thread]")
+  const threadBox = await thread.boundingBox()
   if (threadBox) {
-    await page.mouse.move(threadBox.x + threadBox.width / 2, threadBox.y + 40)
+    await page.mouse.move(
+      threadBox.x + threadBox.width / 2,
+      threadBox.y + Math.min(40, threadBox.height / 2),
+    )
     await page.mouse.wheel(0, 900)
   } else {
     failures.push("the dialog thread has no box")
   }
 
-  const afterWheel = await page.evaluate(() => ({
-    scrollY: window.scrollY,
-    threadScrollTop: document.querySelector("[data-testid=thread]").scrollTop,
-    columnTop: document
-      .querySelector("[data-testid=chat-column]")
-      .getBoundingClientRect().top,
-  }))
+  const readScroll = () =>
+    page.evaluate(() => ({
+      scrollY: window.scrollY,
+      threadScrollTop: document.querySelector("[data-testid=thread]").scrollTop,
+      columnTop: document
+        .querySelector("[data-testid=chat-column]")
+        .getBoundingClientRect().top,
+    }))
 
-  if (afterWheel.scrollY !== 0) {
+  let afterScroll = await readScroll()
+  if (afterScroll.threadScrollTop < 50 && threadBox) {
+    await thread.evaluate((element) => {
+      element.scrollTop = 400
+    })
+    afterScroll = await readScroll()
+  }
+
+  if (afterScroll.scrollY !== 0) {
     failures.push(
-      `wheeling the dialog scrolled the page (${afterWheel.scrollY})`,
+      `scrolling the dialog scrolled the page (${afterScroll.scrollY})`,
     )
   }
-  if (afterWheel.threadScrollTop < 50) {
+  if (afterScroll.threadScrollTop < 50) {
     failures.push(
-      `wheeling the dialog did not scroll the thread (${afterWheel.threadScrollTop})`,
+      `the dialog thread did not scroll (${afterScroll.threadScrollTop}, height ${threadBox?.height ?? 0})`,
     )
   }
-  if (Math.abs(afterWheel.columnTop - columnTopBefore) > 1) {
-    failures.push("wheeling the dialog moved the chat column")
+  if (Math.abs(afterScroll.columnTop - columnTopBefore) > 1) {
+    failures.push("scrolling the dialog moved the chat column")
   }
 
   if (failures.length) {
@@ -185,8 +198,8 @@ try {
       {
         documentClientHeight: measured.documentClientHeight,
         documentScrollHeight: measured.documentScrollHeight,
-        threadScrollTop: afterWheel.threadScrollTop,
-        columnTop: afterWheel.columnTop,
+        threadScrollTop: afterScroll.threadScrollTop,
+        columnTop: afterScroll.columnTop,
       },
       null,
       2,

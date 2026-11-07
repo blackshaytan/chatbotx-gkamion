@@ -20,7 +20,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useFormatter, useTranslations } from "next-intl"
-import { useEffect, useRef, useState } from "react"
+import { type ReactNode, useEffect, useRef, useState } from "react"
 import { FullBleed } from "@/components/full-bleed"
 import { CreateTaskDialog } from "@/features/tasks/components/create-task-dialog"
 import {
