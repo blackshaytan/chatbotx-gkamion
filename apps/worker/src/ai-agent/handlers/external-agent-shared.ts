@@ -163,7 +163,11 @@ export const toInputMessages = async (
   await Promise.all(
     messages.map(async (message) => ({
       role: toInputRole(message.senderType),
+      id: message.id,
+      createdAt: message.createdAt.toISOString(),
       text: message.text,
+      contentAttributes: message.senderType === "contact" && message.messageType === "incoming"
+        ? message.contentAttributes : undefined,
       attachmentUrls: await Promise.all(
         message.attachments
           .filter((attachment) => !isFailedOriginPath(attachment.originPath))
