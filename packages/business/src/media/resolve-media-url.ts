@@ -283,8 +283,9 @@ export const resolveContactAvatarUrl = async (
   ensureMirrored?: EnsureAvatarMirrored,
 ): Promise<string | null> => {
   // Pack pictures are files on the app, not objects in storage.
-  if (isContactAvatarPackKey(input.contact.avatar)) {
-    const key = input.contact.avatar.replace(LEADING_SLASHES_RE, "")
+  const packAvatar = input.contact.avatar
+  if (packAvatar && isContactAvatarPackKey(packAvatar)) {
+    const key = packAvatar.replace(LEADING_SLASHES_RE, "")
     return new URL(
       `/${key}`,
       await resolveWorkspaceAppUrl({ workspaceId: input.workspaceId }),
