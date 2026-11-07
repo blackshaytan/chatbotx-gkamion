@@ -147,7 +147,11 @@ describe("listContactOrdersWithGkamion", () => {
     await expect(
       listContactOrdersWithGkamion({ workspaceId: "1", contactId: "2" }),
     ).resolves.toEqual({ data: [storedOrder] })
-    expect(mocks.findByIdOrFail).not.toHaveBeenCalled()
+    expect(mocks.findByIdOrFail).toHaveBeenCalledWith({
+      workspaceId: "1",
+      id: "2",
+      accessScope: undefined,
+    })
   })
 
   test("fills an empty surname and email from the verified customer", async () => {
@@ -260,7 +264,16 @@ describe("listContactOrdersWithGkamion", () => {
 
   test("falls back to stored snapshots when the admin API fails", async () => {
     mocks.isConfigured.mockReturnValue(true)
-    mocks.findByIdOrFail.mockRejectedValue(new Error("down"))
+    mocks.findByIdOrFail.mockResolvedValue({
+      id: "2",
+      email: null,
+      phoneNumber: null,
+    })
+    mocks.listWithDefinitions.mockResolvedValue([
+      { name: "gkamion_customer_id", value: "27" },
+      { name: "gkamion_verified", value: "phone" },
+    ])
+    mocks.adminGet.mockRejectedValue(new Error("down"))
 
     await expect(
       listContactOrdersWithGkamion({ workspaceId: "1", contactId: "2" }),

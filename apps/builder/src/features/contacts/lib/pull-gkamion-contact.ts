@@ -15,6 +15,12 @@ import {
   searchGkamionCustomers,
 } from "./gkamion-cabinet"
 import {
+  isVerifiedGkamionMethod,
+  matchesGkamionCustomerId,
+  usableGkamionPhone,
+  validGkamionCustomerId,
+} from "./gkamion-contact-identity"
+import {
   fallbackStatusLabels,
   mapGkamionOrders,
   mergeStatusLabels,
@@ -25,8 +31,6 @@ import {
 
 const log = getChildLogger("gkamion-contact")
 
-const NON_DIGIT_RE = /\D/g
-const VERIFIED_VALUES = new Set(["phone", "email"])
 const STATUS_LABEL_TTL_MS = 6 * 60 * 60 * 1000
 const ORDER_PAGE_SIZE = "100"
 
@@ -40,11 +44,10 @@ type GkamionCustomer = {
   name?: string | null
   family_name?: string | null
   email?: string | null
+  contact?: { phone?: string | null; cell_phone?: string | null } | null
 }
 
 let statusLabelsCache: { at: number; labels: Map<number, string> } | null = null
-
-const digitsOnly = (value: string): string => value.replace(NON_DIGIT_RE, "")
 
 const unwrapCustomer = (body: unknown): GkamionCustomer | null => {
   if (!body || typeof body !== "object") {
@@ -83,11 +86,14 @@ const loadStatusLabels = async (): Promise<Map<number, string>> => {
 const customerById = async (
   customerId: string,
 ): Promise<GkamionCustomer | null> => {
+  if (!validGkamionCustomerId(customerId)) {
+    return null
+  }
   try {
-    const body = await gkamionAdminGet(
-      `/customers/${encodeURIComponent(customerId)}`,
-    )
-    return unwrapCustomer(body)
+    const body = await gkamionAdminGet(`/customers/${customerId}`)
+    return matchesGkamionCustomerId(body, customerId)
+      ? unwrapCustomer(body)
+      : null
   } catch (err) {
     if (err instanceof Error && err.message.includes("HTTP 404")) {
       return null
@@ -101,7 +107,7 @@ const customerByContact = async (contact: {
   phoneNumber: string | null
 }): Promise<GkamionCustomer | null> => {
   const email = contact.email?.trim() || null
-  const phoneDigits = contact.phoneNumber ? digitsOnly(contact.phoneNumber) : ""
+  const phoneDigits = usableGkamionPhone(contact.phoneNumber)?.slice(1) ?? ""
   const searchTerms = [
     phoneDigits.length >= 10 ? phoneDigits : null,
     email,
@@ -125,15 +131,9 @@ const resolveCustomer = async (input: {
   gkamionCustomerId: string | null
   gkamionVerified: string | null
 }): Promise<GkamionCustomer | null> => {
-  const verified =
-    input.gkamionVerified != null &&
-    VERIFIED_VALUES.has(input.gkamionVerified) &&
-    input.gkamionCustomerId
-  if (verified && input.gkamionCustomerId) {
-    const linked = await customerById(input.gkamionCustomerId)
-    if (linked) {
-      return linked
-    }
+  if (isVerifiedGkamionMethod(input.gkamionVerified)) {
+    const customerId = validGkamionCustomerId(input.gkamionCustomerId)
+    return customerId ? await customerById(customerId) : null
   }
   return await customerByContact(input.contact)
 }
@@ -143,14 +143,21 @@ const emptyProfilePatch = (input: {
     firstName: string | null
     lastName: string | null
     email: string | null
+    phoneNumber: string | null
   }
   customer: GkamionCustomer
 }): {
   firstName?: string
   lastName?: string
   email?: string
+  phoneNumber?: string
 } => {
-  const patch: { firstName?: string; lastName?: string; email?: string } = {}
+  const patch: {
+    firstName?: string
+    lastName?: string
+    email?: string
+    phoneNumber?: string
+  } = {}
   const givenName = usablePersonName(input.customer.name)
   const familyName = usablePersonName(input.customer.family_name)
   const email = usableEmail(input.customer.email)
@@ -162,6 +169,14 @@ const emptyProfilePatch = (input: {
   }
   if (!input.contact.email?.trim() && email) {
     patch.email = email
+  }
+  if (!input.contact.phoneNumber?.trim()) {
+    const phone =
+      usableGkamionPhone(input.customer.contact?.phone) ??
+      usableGkamionPhone(input.customer.contact?.cell_phone)
+    if (phone) {
+      patch.phoneNumber = phone
+    }
   }
   return patch
 }
@@ -178,7 +193,7 @@ const displayName = (
 }
 
 /**
- * Live gKamion orders for a contact, filling empty name and email from the
+ * Live gKamion orders for a contact, filling empty name, email and phone from the
  * customer record. Returns null when gKamion is not configured, the contact
  * cannot be matched, or the admin API fails — the caller then keeps the
  * stored order snapshots.
@@ -195,16 +210,18 @@ export const listContactOrdersWithGkamion = async (input: {
     }),
   })
 
+  // Authorization must precede both the live API and stored-snapshot fallback.
+  // Do not catch access errors and turn them into an unscoped stored-order read.
+  const contact = await contactService.findByIdOrFail({
+    workspaceId: input.workspaceId,
+    id: input.contactId,
+    accessScope: input.accessScope,
+  })
   if (!isGkamionCabinetConfigured()) {
     return await stored()
   }
 
   try {
-    const contact = await contactService.findByIdOrFail({
-      workspaceId: input.workspaceId,
-      id: input.contactId,
-      accessScope: input.accessScope,
-    })
     const fields = await contactCustomFieldService.listWithDefinitions({
       contactId: input.contactId,
     })
@@ -248,7 +265,7 @@ export const listContactOrdersWithGkamion = async (input: {
         firstName,
         lastName,
         email,
-        phoneNumber: contact.phoneNumber ?? null,
+        phoneNumber: patch.phoneNumber ?? contact.phoneNumber ?? null,
         fullName: displayName(firstName, lastName),
         gkamionCustomerId: customerId,
         updated: Object.keys(patch).length > 0,
