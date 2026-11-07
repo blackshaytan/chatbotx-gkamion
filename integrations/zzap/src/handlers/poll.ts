@@ -67,8 +67,7 @@ const toEvents = (
     .sort((a, b) => a.message_date.localeCompare(b.message_date))
     .filter(
       (message) =>
-        Boolean(message.message?.trim()) &&
-        message.message_date >= lowerBound,
+        Boolean(message.message?.trim()) && message.message_date >= lowerBound,
     )
     .map((message) => {
       const isIncoming = message.user_key === thread.user_key

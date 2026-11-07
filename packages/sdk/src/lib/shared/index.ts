@@ -78,6 +78,8 @@ export type ReceivedMessageResult = {
    * with it instead of the ingestion time.
    */
   createdAt?: Date | null
+  /** Store an outgoing channel history entry without triggering automation. */
+  historyOnly?: boolean
   /**
    * Origin of an outgoing echo, when the channel can tell. Unset or null
    * means "not an echo" or "unknown", which the worker treats as first-party.

@@ -844,6 +844,54 @@ describe("receiveMessage — message repository branch", () => {
     mockMarkReadByOutbound.mockResolvedValue(true)
   })
 
+  test("stores ZZAP seller history without emitting automation or replies", async () => {
+    vi.mocked(
+      integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+    ).mockResolvedValue({
+      inbox: { ...fakeInbox, channel: "zzap" },
+      integrationRow: fakeIntegrationRow,
+    } as never)
+    const originalDate = new Date("2026-11-07T06:50:20.000Z")
+    mockFindLastByConversation.mockResolvedValue([])
+    mockRunChannelHandler.mockResolvedValue({
+      message: {
+        ...baseIncomingMessage,
+        sourceId: "zzap-out:history",
+        messageType: "outgoing",
+        attachments: [],
+      },
+      contact: { sourceId: "buyer-key", firstName: "Buyer" },
+      postbackAction: null,
+      quickReplyAction: null,
+      ref: null,
+      historyOnly: true,
+      createdAt: originalDate,
+    })
+    mockCreateOrUpdate.mockResolvedValue({
+      message: {
+        ...fakeCreatedMessage,
+        messageType: "outgoing",
+        senderType: "user",
+        createdAt: originalDate,
+      },
+      isNew: true,
+    })
+
+    await receiveMessage(baseProps)
+
+    expect(mockCreateOrUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        createdAt: originalDate,
+        messageType: "outgoing",
+      }),
+    )
+    expect(mockBroadcast).toHaveBeenCalled()
+    expect(mockEmit).not.toHaveBeenCalled()
+    expect(mockChatQueueAdd).not.toHaveBeenCalled()
+    expect(mockIntegrationQueueAdd).not.toHaveBeenCalled()
+    expect(mockAutomatedResponseEnqueueFlowAction).not.toHaveBeenCalled()
+  })
+
   test("calls repository.createOrUpdate() when message has no attachments", async () => {
     mockRunChannelHandler.mockResolvedValue({
       message: { ...baseIncomingMessage, attachments: [] },

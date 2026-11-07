@@ -106,7 +106,11 @@ export const receiveMessage = async ({
     ref: null,
     createdAt: parseMoscowDate(event.messageDate),
     ...(isOutgoing
-      ? { echoOrigin: echoOrigins.enum.firstParty, echoAppId: null }
+      ? {
+          echoOrigin: echoOrigins.enum.firstParty,
+          echoAppId: null,
+          historyOnly: true,
+        }
       : {}),
   }
 }

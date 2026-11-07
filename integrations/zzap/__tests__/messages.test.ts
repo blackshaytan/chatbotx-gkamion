@@ -145,6 +145,7 @@ describe("receiveMessage", () => {
       text: "Есть в наличии",
     })
     expect(result.echoOrigin).toBe("firstParty")
+    expect(result.historyOnly).toBe(true)
   })
 
   test("stamps the original Moscow time as createdAt", async () => {

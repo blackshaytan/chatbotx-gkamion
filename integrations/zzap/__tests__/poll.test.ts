@@ -46,12 +46,6 @@ const buyerMessage = (
   message_date: `${DAY}T${time}`,
 })
 
-const shopMessage = (time: string): ZzapMessage => ({
-  user_key: "shop",
-  message: "ответ магазина",
-  message_date: `${DAY}T${time}`,
-})
-
 const payloads = (result: Awaited<ReturnType<typeof pollZzap>>) =>
   result.events.map((event) => event.payload as ZzapInboundEvent)
 
@@ -162,10 +156,12 @@ describe("pollZzap", () => {
 
     const result = await pollZzap({ auth: zzapAuth, cursor: null, now })
 
-    expect(payloads(result).map((event) => ({
-      messageDate: event.messageDate,
-      messageType: event.messageType,
-    }))).toEqual([
+    expect(
+      payloads(result).map((event) => ({
+        messageDate: event.messageDate,
+        messageType: event.messageType,
+      })),
+    ).toEqual([
       { messageDate: `${DAY}T11:56:00`, messageType: "incoming" },
       { messageDate: `${DAY}T11:57:00`, messageType: "outgoing" },
       { messageDate: `${DAY}T11:58:00`, messageType: "outgoing" },

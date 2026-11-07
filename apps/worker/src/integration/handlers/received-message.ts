@@ -369,7 +369,10 @@ export const receiveMessage = async (
   // in every automation branch below).
   const threadControl = parsedMessage.threadControl
   const suppressAutomation = threadControl?.delivery === "standby"
-  const canAutomate = isWorkspaceActive && !suppressAutomation
+  const historyOnly =
+    parsedMessage.historyOnly === true &&
+    parsedIncomingMessage?.messageType === "outgoing"
+  const canAutomate = isWorkspaceActive && !suppressAutomation && !historyOnly
   const appointmentCancelToken = suppressAutomation
     ? null
     : parseAppointmentCancelPostback(rawPostbackAction)
@@ -565,6 +568,7 @@ export const receiveMessage = async (
         incomingMessage,
         storageUrl,
         createdAt: channelCreatedAt ?? undefined,
+        historyOnly,
         // A Business-AI (Meta AI) reply on standby keeps the conversation
         // unread so a human agent monitors the AI (Integration Guide §5.3).
         keepUnread: threadControl?.ownerRole === "ai_agent",
@@ -1114,6 +1118,7 @@ type SaveAndBroadcastMessageProps = {
   contactInboxTracking?: ContactInboxTracking
   contactLocation?: ContactLocation | null
   createdAt?: Date
+  historyOnly?: boolean
   storageUrl: string
   /**
    * A Business-AI (Meta AI) reply arriving on standby: record its activity but
@@ -1351,7 +1356,7 @@ const persistMessage = async (
     }
   }
 
-  if (isNew) {
+  if (isNew && !props.historyOnly) {
     emitMessageReceived({
       inbox,
       contactInbox,
