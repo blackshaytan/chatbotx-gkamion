@@ -53,7 +53,10 @@ import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 import type { AttachmentResource } from "@/features/attachments/schema/resource"
-import { useAttachmentSource } from "@/features/attachments/utils"
+import {
+  attachmentClickTarget,
+  useAttachmentSource,
+} from "@/features/attachments/utils"
 import { ExternalAgentActivityDivider } from "@/features/external-agent/components/external-agent-activity"
 import { getExternalAgentActivity } from "@/features/external-agent/lib/activity"
 import { canCreateTaskFromMessage } from "@/features/tasks/lib/message-quote"
@@ -509,6 +512,32 @@ const RenderAttachments = (props: {
   )
 }
 
+const ImageAttachmentLink = (props: {
+  attachmentLabel: string
+  attachmentUrl: string
+  children: React.ReactNode
+}) => {
+  const { attachmentLabel, attachmentUrl, children } = props
+  const click = attachmentClickTarget(attachmentUrl)
+  if (click.download) {
+    return (
+      <Link download={attachmentLabel} href={click.href} prefetch={false}>
+        {children}
+      </Link>
+    )
+  }
+  return (
+    <Link
+      href={click.href}
+      prefetch={false}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      {children}
+    </Link>
+  )
+}
+
 const RenderImageGridItem = (props: { attachment: AttachmentResource }) => {
   const { attachment } = props
   const { url: attachmentUrl, onError } = useAttachmentSource(attachment)
@@ -527,7 +556,10 @@ const RenderImageGridItem = (props: { attachment: AttachmentResource }) => {
   }
 
   return (
-    <Link href={attachmentUrl} prefetch={false} target="_blank">
+    <ImageAttachmentLink
+      attachmentLabel={attachmentLabel}
+      attachmentUrl={attachmentUrl}
+    >
       <div className="relative aspect-square overflow-hidden rounded-lg">
         <Image
           alt={attachmentLabel}
@@ -539,7 +571,7 @@ const RenderImageGridItem = (props: { attachment: AttachmentResource }) => {
           width={120}
         />
       </div>
-    </Link>
+    </ImageAttachmentLink>
   )
 }
 
@@ -557,7 +589,10 @@ const RenderImageAttachment = (props: {
     // content, so the frame needs an explicit width — max-width plus an aspect
     // ratio alone collapses to 0×0 and the message looks missing.
     return (
-      <Link href={attachmentUrl} prefetch={false} target="_blank">
+      <ImageAttachmentLink
+        attachmentLabel={attachmentLabel}
+        attachmentUrl={attachmentUrl}
+      >
         <div
           className="relative w-80 max-w-full overflow-hidden rounded-xl"
           style={{ aspectRatio: "4/3" }}
@@ -571,11 +606,14 @@ const RenderImageAttachment = (props: {
             unoptimized
           />
         </div>
-      </Link>
+      </ImageAttachmentLink>
     )
   }
   return (
-    <Link href={attachmentUrl} prefetch={false} target="_blank">
+    <ImageAttachmentLink
+      attachmentLabel={attachmentLabel}
+      attachmentUrl={attachmentUrl}
+    >
       <Image
         alt={attachmentLabel}
         className="max-w-full rounded-xl sm:max-w-80"
@@ -585,7 +623,7 @@ const RenderImageAttachment = (props: {
         unoptimized
         width={attachment.width}
       />
-    </Link>
+    </ImageAttachmentLink>
   )
 }
 

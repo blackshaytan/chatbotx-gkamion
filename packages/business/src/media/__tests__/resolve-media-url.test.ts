@@ -100,6 +100,32 @@ describe("resolveMediaUrl", () => {
     expect(mocks.signMediaToken).not.toHaveBeenCalled()
   })
 
+  test("serves a loopback storage URL through the app so a browser can open it", async () => {
+    const finalize = vi.fn(
+      async (key: string) => `http://127.0.0.1:9010/chatbotx/${key}`,
+    )
+
+    const result = await resolveMediaUrl(
+      {
+        kind: "attachment",
+        workspaceId: "workspace-1",
+        attachmentId: "attachment-1",
+        originPath: "public/zzap/photo.jpg",
+        channel: "zzap",
+      },
+      finalize,
+    )
+
+    expect(result).toBe(
+      "https://builder.example.com/media/attachment/signed-media-token",
+    )
+    expect(mocks.signMediaToken).toHaveBeenCalledWith({
+      workspaceId: "workspace-1",
+      kind: "attachment",
+      refId: "attachment-1",
+    })
+  })
+
   test("returns a signed proxy URL for a pending hydration-channel attachment", async () => {
     const finalize = vi.fn(async (key: string) => key)
 

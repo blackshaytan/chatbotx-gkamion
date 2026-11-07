@@ -81,6 +81,21 @@ export const isPendingOriginPath = (originPath: string): boolean =>
 export const isFailedOriginPath = (originPath: string): boolean =>
   originPath.startsWith(FAILED_PREFIX)
 
+/** Storage signed against a loopback host is reachable only from this machine. */
+export const isPrivateStorageUrl = (value: string): boolean => {
+  try {
+    const host = new URL(value).hostname.toLowerCase().replace(/^\[|\]$/g, "")
+    return (
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "::1" ||
+      host === "0.0.0.0"
+    )
+  } catch {
+    return false
+  }
+}
+
 // A fallback URL is only used after its attachment's presigned storage URL
 // (1 hour) fails, so it must outlive it — otherwise an inbox left open past the
 // hour has an expired fallback exactly when it needs one.
@@ -148,7 +163,18 @@ const resolveAttachmentUrl = async (
       messageCreatedAt: ref.messageCreatedAt?.getTime(),
     })
   }
-  return await finalize(ref.originPath)
+  const storedUrl = await finalize(ref.originPath)
+  // A presigned URL on 127.0.0.1 opens on the server and nowhere else. The
+  // inbox reads the same object through the app, which can reach storage.
+  if (isPrivateStorageUrl(storedUrl)) {
+    return await buildProxyUrl({
+      kind: "attachment",
+      refId: ref.attachmentId,
+      workspaceId: ref.workspaceId,
+      messageCreatedAt: ref.messageCreatedAt?.getTime(),
+    })
+  }
+  return storedUrl
 }
 
 /**
