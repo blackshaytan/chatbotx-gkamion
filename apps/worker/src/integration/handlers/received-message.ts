@@ -361,6 +361,7 @@ export const receiveMessage = async (
     quickReplyAction: rawQuickReplyAction,
     ref,
     referralSource,
+    createdAt: channelCreatedAt,
   } = parsedMessage
   // A standby delivery is a listen-only copy of a thread another responder
   // owns: it is stored, but must not start any automation (one early guard
@@ -563,6 +564,7 @@ export const receiveMessage = async (
         conversation,
         incomingMessage,
         storageUrl,
+        createdAt: channelCreatedAt ?? undefined,
         // A Business-AI (Meta AI) reply on standby keeps the conversation
         // unread so a human agent monitors the AI (Integration Guide §5.3).
         keepUnread: threadControl?.ownerRole === "ai_agent",

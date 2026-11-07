@@ -3,7 +3,7 @@ import { getBuyer, getOrderBuyer } from "../apis/buyers"
 import { listMessages } from "../apis/messages"
 import { listThreads } from "../apis/threads"
 import { ZzapRateLimitException } from "../exception"
-import { makeZzapMessageId } from "../lib/ids"
+import { makeZzapMessageId, makeZzapOutgoingId } from "../lib/ids"
 import { logger } from "../lib/logger"
 import { formatMoscowDate } from "../lib/moscow-time"
 import { extractOrderCodes } from "../lib/orders"
@@ -63,27 +63,37 @@ const toEvents = (
   messages: ZzapMessage[],
   lowerBound: string,
 ): ZzapInboundEvent[] =>
-  messages
+  [...messages]
+    .sort((a, b) => a.message_date.localeCompare(b.message_date))
     .filter(
       (message) =>
-        message.user_key === thread.user_key &&
         Boolean(message.message?.trim()) &&
         message.message_date >= lowerBound,
     )
-    .map((message) => ({
-      kind: "message",
-      sourceId: makeZzapMessageId({
+    .map((message) => {
+      const isIncoming = message.user_key === thread.user_key
+      return {
+        kind: "message",
+        sourceId: isIncoming
+          ? makeZzapMessageId({
+              userKey: thread.user_key,
+              messageDate: message.message_date,
+              senderKey: message.user_key,
+              message: message.message,
+            })
+          : makeZzapOutgoingId({
+              userKey: thread.user_key,
+              messageDate: message.message_date,
+              message: message.message,
+            }),
         userKey: thread.user_key,
+        userName: thread.user_name ?? message.user_name ?? "",
         messageDate: message.message_date,
-        senderKey: message.user_key,
-        message: message.message,
-      }),
-      userKey: thread.user_key,
-      userName: thread.user_name ?? message.user_name ?? "",
-      messageDate: message.message_date,
-      text: message.message,
-      buyer: null,
-    }))
+        text: message.message,
+        messageType: isIncoming ? "incoming" : "outgoing",
+        buyer: null,
+      }
+    })
 
 const enrichBuyer = async (
   auth: ZzapAuthValue,

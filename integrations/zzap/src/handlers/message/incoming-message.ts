@@ -1,6 +1,7 @@
 import {
   type Context,
   contentTypes,
+  echoOrigins,
   getMediaStoragePrefix,
   guessFileTypeFromMimeType,
   type IncomingAttachment,
@@ -15,6 +16,7 @@ import {
   parseZzapMedia,
   type ZzapMedia,
 } from "../../lib/media"
+import { parseMoscowDate } from "../../lib/moscow-time"
 import type { ZzapAuthValue } from "../../schema"
 import { parseZzapEvent, type ZzapInboundEvent } from "../event"
 
@@ -87,10 +89,13 @@ export const receiveMessage = async ({
       .filter(Boolean)
       .join("\n")
   }
+  const isOutgoing = event.messageType === "outgoing"
   return {
     message: {
       sourceId: event.sourceId,
-      messageType: messageTypes.enum.incoming,
+      messageType: isOutgoing
+        ? messageTypes.enum.outgoing
+        : messageTypes.enum.incoming,
       contentType: contentTypes.enum.text,
       text: body,
       attachments,
@@ -99,5 +104,9 @@ export const receiveMessage = async ({
     postbackAction: null,
     quickReplyAction: null,
     ref: null,
+    createdAt: parseMoscowDate(event.messageDate),
+    ...(isOutgoing
+      ? { echoOrigin: echoOrigins.enum.firstParty, echoAppId: null }
+      : {}),
   }
 }

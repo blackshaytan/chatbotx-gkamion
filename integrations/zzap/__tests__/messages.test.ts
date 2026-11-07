@@ -132,6 +132,26 @@ describe("receiveMessage", () => {
     })
   })
 
+  test("maps a seller message as an outgoing first-party echo", async () => {
+    const result = await receive(
+      event("Есть в наличии", {
+        sourceId: "zzap-out:abc",
+        messageType: "outgoing",
+      }),
+    )
+    expect(result.message).toMatchObject({
+      sourceId: "zzap-out:abc",
+      messageType: "outgoing",
+      text: "Есть в наличии",
+    })
+    expect(result.echoOrigin).toBe("firstParty")
+  })
+
+  test("stamps the original Moscow time as createdAt", async () => {
+    const result = await receive(event("Вопрос"))
+    expect(result.createdAt).toEqual(new Date("2026-10-19T08:58:00.000Z"))
+  })
+
   test("stores an image hosted by ZZAP", async () => {
     server.use(
       http.get("https://zzap.ru/a.jpg", () =>

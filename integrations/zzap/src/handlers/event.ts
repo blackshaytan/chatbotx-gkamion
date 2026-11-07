@@ -15,6 +15,8 @@ export const zzapInboundEventSchema = z.object({
   messageDate: z.string().min(1),
   /** Raw ZZAP text — `[img]`/`[file]` tags are still inside. */
   text: z.string(),
+  /** Direction inferred from `message.user_key` vs the thread's buyer key. */
+  messageType: z.enum(["incoming", "outgoing"]).default("incoming"),
   buyer: zzapBuyerSchema.nullable(),
 })
 
