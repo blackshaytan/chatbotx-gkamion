@@ -892,6 +892,47 @@ describe("receiveMessage — message repository branch", () => {
     expect(mockAutomatedResponseEnqueueFlowAction).not.toHaveBeenCalled()
   })
 
+  test("does not store a ZZAP echo of a message ChatbotX already sent", async () => {
+    vi.mocked(
+      integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+    ).mockResolvedValue({
+      inbox: { ...fakeInbox, channel: "zzap" },
+      integrationRow: fakeIntegrationRow,
+    } as never)
+    mockFindLastByConversation.mockResolvedValueOnce([
+      {
+        ...fakeCreatedMessage,
+        id: "sent-by-bot",
+        senderType: "bot",
+        senderId: null,
+        messageType: "outgoing",
+        text: "Цена 7 855 ₽.\n\nНапишите, какой вариант выбрать.",
+        attachments: [],
+      },
+    ])
+    mockRunChannelHandler.mockResolvedValue({
+      message: {
+        ...baseIncomingMessage,
+        sourceId: "zzap-out:echo",
+        messageType: "outgoing",
+        text: "Цена 7 855 ?.\nНапишите, какой вариант выбрать.",
+        attachments: [],
+      },
+      contact: { sourceId: "buyer-key", firstName: "Buyer" },
+      postbackAction: null,
+      quickReplyAction: null,
+      ref: null,
+      historyOnly: true,
+      createdAt: new Date("2026-11-07T12:32:51.000Z"),
+    })
+
+    await receiveMessage(baseProps)
+
+    expect(mockCreateOrUpdate).not.toHaveBeenCalled()
+    expect(mockBroadcast).not.toHaveBeenCalled()
+    expect(mockEmit).not.toHaveBeenCalled()
+  })
+
   test("calls repository.createOrUpdate() when message has no attachments", async () => {
     mockRunChannelHandler.mockResolvedValue({
       message: { ...baseIncomingMessage, attachments: [] },
