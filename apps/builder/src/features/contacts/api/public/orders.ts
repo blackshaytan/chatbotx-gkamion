@@ -15,7 +15,7 @@ export const contactsOrdersPublicRouter = {
       path: "/v1/contacts/{identifier}/orders",
       summary: "List contact orders",
       description:
-        "Returns the contact's current gKamion orders: status, amount, items, delivery, and payment. The customer is `gkamion_customer_id` when `gkamion_verified` is phone or email; otherwise the contact phone or email is searched. Empty first name, last name, and email are filled from that customer and are not overwritten when already set. Issued, cancelled, and supplier-rejected orders are omitted. Resolve the contact with `contacts.get` first. Without gKamion admin credentials, returns the stored external-CRM snapshots.",
+        "Returns the contact's current gKamion orders: status, amount, items, delivery, and payment. The customer is `gkamion_customer_id` when `gkamion_verified` is phone, email, or order_history; otherwise the contact phone or email is searched. Empty first name, last name, phone, and email are filled from that customer and are not overwritten when already set. Issued, cancelled, and supplier-rejected orders are omitted. Resolve the contact with `contacts.get` first. Without gKamion admin credentials, returns the stored external-CRM snapshots.",
       tags: ["Contacts"],
     })
     .input(
