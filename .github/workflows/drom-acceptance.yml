@@ -1,7 +1,7 @@
 name: DROM protected checkout acceptance
 on:
   push:
-    branches: [fix/drom-protected-checkout-20261108]
+    branches: [fix/drom-protected-checkout-from-89ec90a]
   workflow_dispatch:
     inputs:
       expected_sha:

@@ -5,6 +5,7 @@ All writers must share the same persistent cache directory and flock domain.
 """
 import copy
 import hashlib
+import html
 import json
 import re
 import time
@@ -12,6 +13,45 @@ import uuid
 from decimal import Decimal
 
 CHOICE = re.compile(r'добав|ещ[её]|друг(?:ую|ой|ая)|выб(?:ор|рать)|посовет|вместо|убер|исключ|замен|помен|отмен(?:ите|яйте)\s+(?:только\s+)?дополнительн', re.I)
+ARTICLE_TOKEN = re.compile(r'[A-Za-z0-9][A-Za-z0-9-]{4,}')
+OFFER_ID = re.compile(r'(?:предложение|состав)\s+[0-9a-fA-F]{8,}', re.I)
+
+
+def item_article_key(item):
+    if not isinstance(item, dict):
+        return ''
+    raw = item.get('article')
+    if not raw:
+        words = html.unescape(str(item.get('title') or '')).split()
+        if words and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9.\-/]{1,39}', words[-1]) and any(ch.isdigit() for ch in words[-1]):
+            raw = words[-1]
+    return re.sub(r'\s+', '', str(raw or '')).upper()
+
+
+def opens_choice(text, deal):
+    """Cue words or an article that is not already on this deal.
+
+    Matches live n8n looksLikeExtraPartRequest: an unknown article token is an
+    open extra even without «ещё/добавь». Offer ids we append are not articles.
+    """
+    raw = str(text or '')
+    if CHOICE.search(raw):
+        return True
+    from drom_tools import EMAIL
+    rest = OFFER_ID.sub(' ', EMAIL.sub(' ', raw))
+    known = {item_article_key(item) for item in ((deal or {}).get('items') or [])}
+    known.discard('')
+    if not known:
+        return False
+    for token in ARTICLE_TOKEN.findall(rest):
+        key = re.sub(r'\s+', '', token).upper()
+        if len(key) < 5 or len(key) == 17:
+            continue
+        if not re.search(r'[A-Z]', key) or not re.search(r'\d', key):
+            continue
+        if key not in known:
+            return True
+    return False
 
 
 def ordered(messages):
@@ -57,7 +97,7 @@ class CheckoutMixin:
                 continue
             facts = resolve_context(prefix)
             if facts['kind'] == 'deal' and facts['dialog_id'] == c['dialog_id'] and str(facts['deal']['dealId']) == str(c['deal']['dealId']):
-                if CHOICE.search(str(m.get('text') or '')):
+                if opens_choice(str(m.get('text') or ''), facts.get('deal')):
                     result.append(str(m['id']))
             else:
                 result = []

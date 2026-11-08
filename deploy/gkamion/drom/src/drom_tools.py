@@ -83,7 +83,7 @@ def resolve_context(messages):
             c['email']=found.group(0)
             if EMAIL.fullmatch(text.strip()):c['identity_email']=text.strip()
             elif found.group(0).casefold()!=c['identity_email'].casefold():c['identity_email']=''
-        if CHOICE.search(text):c['selection_pending']=True
+        if opens_choice(text, c.get('deal')):c['selection_pending']=True
         if PAUSE.search(text):c['paused']=True
         elif re.fullmatch(r'(?:оформляем|оформляйте|бер[её]м)[\s!.,)]*',text.strip(),re.I):c['paused']=False
         # Evaluate each clause; a negated delivery clause must not mask cancellation.
@@ -130,7 +130,7 @@ def select_offer(rows,item) -> dict:
     return {'mode':'drom_price' if cost<=cap else 'await_price_confirm','supplier_cost':format(cost,'f'),'sell_price':format(sell,'f'),'quantity':qty,'price_row':row,
             'client_hint':('Клиенту только цена ДРОМ. Не предлагай ниже, не показывай меню вариантов или остаток поставщика. После проверки контактов продолжай корзину и оформление.' if cost<=cap else 'Цена выше ДРОМ: сообщи новую цену и срок, дождись отдельного согласия. До согласия корзину не добавлять.')}
 
-from drom_checkout import CheckoutMixin, CHOICE
+from drom_checkout import CheckoutMixin, opens_choice
 
 class DromTools(CheckoutMixin):
     def __init__(self,transport,cache):

@@ -78,6 +78,21 @@ class Checkout(unittest.TestCase):
         self.base();self.t.messages.append(msg(3,'Добавьте ещё фильтр, какой выбрать?',deal=None))
         with self.assertRaisesRegex(ValueError,'selection'):self.f.checkout_create(self.c['context_ref'],True)
         self.assertEqual(self.t.posts,[])
+    def test_foreign_article_without_cue_blocks_checkout(self):
+        # Live n8n looksLikeExtraPartRequest treats an unknown article token as
+        # an open extra even without «ещё/добавь». The original deal stays.
+        self.base();self.t.messages.append(msg(3,'Нужен OC90M1 к заказу',deal=None))
+        with self.assertRaisesRegex(ValueError,'selection'):self.f.checkout_create(self.c['context_ref'],True)
+        self.assertEqual(self.t.posts,[])
+        from drom_tools import resolve_context
+        fresh=resolve_context(self.t.messages)
+        self.assertEqual(fresh['deal']['dealId'],'31186531')
+        self.assertEqual([(x['article'],x['qty']) for x in fresh['items']],[('1411295132',2)])
+        self.assertTrue(fresh['selection_pending'])
+    def test_native_article_mention_does_not_open_choice(self):
+        self.base();self.t.messages.append(msg(3,'Артикул 1411295132 оставляем',deal=None))
+        self.assertEqual(self.f.checkout_create(self.c['context_ref'],True)['status'],'created_verified')
+        self.assertEqual(len(self.t.posts),1)
     def test_unapproved_or_incomplete_plan_blocks(self):
         self.base();self.t.messages.append(msg(3,'Добавьте ещё фильтр',deal=None))
         e=self.f.extra_quote(self.c['context_ref'],'3','W712','MANN',3)
