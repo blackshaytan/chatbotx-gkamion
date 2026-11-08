@@ -32,7 +32,7 @@ git fetch /GKamion/chatbotX 75ced3aade285cc9236db9070880d2f6ef263b4c:refs/remote
 git fetch /opt/hermes-data/cache/scratch/drom-protected-checkout-20261108.bundle \
   refs/heads/fix/drom-protected-checkout-20261108:refs/remotes/drom-source/final
 : "${PRODUCTION_SOURCE_SHA:?set the verified source SHA of the running production image}"
-git switch -c fix/drom-protected-checkout-20261108 "$PRODUCTION_SOURCE_SHA"
+git switch -c fix/drom-protected-checkout-from-89ec90a "$PRODUCTION_SOURCE_SHA"
 # Apply only the reviewed target commits to the verified production base.
 # If production already contains the bridge by ancestry, do not duplicate it.
 if ! git merge-base --is-ancestor e32eb15e5d12df17169907d804994841590623ab HEAD; then
@@ -43,8 +43,8 @@ ci_sha=$(git rev-parse HEAD)
 gh auth status
 gh variable set DROM_BUILD_WORKER_SHA --repo blackshaytan/chatbotx-gkamion --body "$ci_sha"
 gh variable set DROM_PRODUCTION_SOURCE_SHA --repo blackshaytan/chatbotx-gkamion --body "$PRODUCTION_SOURCE_SHA"
-git push gkamion HEAD:refs/heads/fix/drom-protected-checkout-20261108
-gh run list --repo blackshaytan/chatbotx-gkamion --branch fix/drom-protected-checkout-20261108 \
+git push gkamion HEAD:refs/heads/fix/drom-protected-checkout-from-89ec90a
+gh run list --repo blackshaytan/chatbotx-gkamion --branch fix/drom-protected-checkout-from-89ec90a \
   --workflow drom-acceptance.yml --commit "$ci_sha"
 ```
 

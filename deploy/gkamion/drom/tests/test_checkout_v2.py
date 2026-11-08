@@ -93,6 +93,34 @@ class Checkout(unittest.TestCase):
         self.base();self.t.messages.append(msg(3,'Артикул 1411295132 оставляем',deal=None))
         self.assertEqual(self.f.checkout_create(self.c['context_ref'],True)['status'],'created_verified')
         self.assertEqual(len(self.t.posts),1)
+    def test_digit_only_foreign_article_blocks_checkout(self):
+        self.base();self.t.messages.append(msg(3,'А 0986452036 у вас есть?',deal=None))
+        with self.assertRaisesRegex(ValueError,'selection'):self.f.checkout_create(self.c['context_ref'],True)
+        self.assertEqual(self.t.posts,[])
+        from drom_tools import resolve_context
+        fresh=resolve_context(self.t.messages)
+        self.assertEqual(fresh['deal']['dealId'],'31186531')
+        self.assertEqual(fresh['items'][0]['article'],'1411295132')
+    def test_own_article_shapes_do_not_reopen_choice(self):
+        from drom_checkout import opens_choice
+        slashed={'dealId':'31186531','phone':'+79990000001','items':[{'article':'HU719/7x','title':'Фильтр HU719/7x','price':100}]}
+        self.assertFalse(opens_choice('HU719/7x оставляем, всё верно', slashed))
+        native={'dealId':'31186531','phone':'+79990000001','items':[{'title':'Радиатор Reach 1411295132','price':5238}]}
+        self.assertFalse(opens_choice('Reach-1411295132 оставляем', native))
+        self.assertFalse(opens_choice('Исключительно уточняю срок доставки', native))
+        self.assertFalse(opens_choice('Мой телефон +79990000001', native))
+        self.assertFalse(opens_choice('сделка 31186531', native))
+        self.assertTrue(opens_choice('А 0986452036 у вас есть?', native))
+    def test_existing_order_stays_blocked_when_search_goes_empty(self):
+        self.base()
+        self.t.full['900']={'id':'900','customer_id':'27','comment':'DROM deal:31186531 legacy','order_items':[]}
+        first=self.f.checkout_create(self.c['context_ref'],True)
+        self.assertEqual(first['status'],'already_exists')
+        self.assertEqual(self.t.posts,[])
+        self.t.full.clear()
+        second=self.f.checkout_create(self.c['context_ref'],True)
+        self.assertEqual(second['status'],'already_exists')
+        self.assertEqual(self.t.posts,[])
     def test_unapproved_or_incomplete_plan_blocks(self):
         self.base();self.t.messages.append(msg(3,'Добавьте ещё фильтр',deal=None))
         e=self.f.extra_quote(self.c['context_ref'],'3','W712','MANN',3)

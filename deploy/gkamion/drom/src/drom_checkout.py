@@ -12,8 +12,8 @@ import time
 import uuid
 from decimal import Decimal
 
-CHOICE = re.compile(r'добав|ещ[её]|друг(?:ую|ой|ая)|выб(?:ор|рать)|посовет|вместо|убер|исключ|замен|помен|отмен(?:ите|яйте)\s+(?:только\s+)?дополнительн', re.I)
-ARTICLE_TOKEN = re.compile(r'[A-Za-z0-9][A-Za-z0-9-]{4,}')
+CHOICE = re.compile(r'добав|ещ[её]|друг(?:ую|ой|ая)|выб(?:ор|рать)|посовет|вместо|убер|исключ(?!ительно)|замен|помен|отмен(?:ите|яйте)\s+(?:только\s+)?дополнительн', re.I)
+ARTICLE_TOKEN = re.compile(r'[A-Za-z0-9][A-Za-z0-9./-]{4,}')
 OFFER_ID = re.compile(r'(?:предложение|состав)\s+[0-9a-fA-F]{8,}', re.I)
 
 
@@ -25,31 +25,54 @@ def item_article_key(item):
         words = html.unescape(str(item.get('title') or '')).split()
         if words and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9.\-/]{1,39}', words[-1]) and any(ch.isdigit() for ch in words[-1]):
             raw = words[-1]
-    return re.sub(r'\s+', '', str(raw or '')).upper()
+    return re.sub(r'\s+', '', str(raw or '')).upper().strip('.,;:')
 
 
 def opens_choice(text, deal):
     """Cue words or an article that is not already on this deal.
 
-    Matches live n8n looksLikeExtraPartRequest: an unknown article token is an
-    open extra even without «ещё/добавь». Offer ids we append are not articles.
+    Digit-only OEM numbers count: live n8n skips them, and that dropped real
+    extras. The deal's own article, phone, deal id and price do not reopen a
+    choice. Offer ids we append are not articles.
     """
     raw = str(text or '')
     if CHOICE.search(raw):
         return True
     from drom_tools import EMAIL
     rest = OFFER_ID.sub(' ', EMAIL.sub(' ', raw))
-    known = {item_article_key(item) for item in ((deal or {}).get('items') or [])}
+    items = (deal or {}).get('items') or []
+    known = {item_article_key(item) for item in items}
     known.discard('')
     if not known:
         return False
+    ignored = set()
+    deal_id = re.sub(r'\D', '', str((deal or {}).get('dealId') or ''))
+    if len(deal_id) >= 5:
+        ignored.add(deal_id)
+    phone = re.sub(r'\D', '', str((deal or {}).get('phone') or ''))
+    if phone:
+        ignored.add(phone)
+        if len(phone) >= 10:
+            ignored.add(phone[-10:])
+    for item in items:
+        price = re.sub(r'\D', '', str(item.get('price') or ''))
+        if len(price) >= 5:
+            ignored.add(price)
+
+    def foreign(segment):
+        if len(segment) < 5 or len(segment) == 17 or segment in known or not re.search(r'\d', segment):
+            return False
+        digits = re.sub(r'\D', '', segment)
+        if digits and (digits in ignored or (len(digits) >= 10 and digits[-10:] in ignored)):
+            return False
+        return True
+
     for token in ARTICLE_TOKEN.findall(rest):
-        key = re.sub(r'\s+', '', token).upper()
-        if len(key) < 5 or len(key) == 17:
+        key = re.sub(r'\s+', '', token).upper().strip('.,;:')
+        if not key or key in known:
             continue
-        if not re.search(r'[A-Z]', key) or not re.search(r'\d', key):
-            continue
-        if key not in known:
+        segments = [part for part in re.split(r'[-/]', key) if part] or [key]
+        if any(foreign(part) for part in segments):
             return True
     return False
 
@@ -412,6 +435,10 @@ class CheckoutMixin:
                 raise ValueError('order total mismatch')
 
     def reconcile_attempt(self, c, state):
+        if state.get('status') == 'already_exists':
+            return {'status': 'already_exists', 'orders': state.get('orders') or [],
+                    'attempt_id': state.get('attempt_id'),
+                    'client_hint': 'Новый заказ не создавать; требуется сверка существующего заказа.'}
         path = self.attempt_path(c)
         cid = state['expected']['customer_id']
         try:
@@ -480,7 +507,13 @@ class CheckoutMixin:
             existing = self.t.existing(cid, deal_marker)
             if existing:
                 # Pre-existing legacy records cannot be adopted by guessing their
-                # lines or source. Block creation and provide owned IDs for review.
+                # lines or source. Journal the block before returning: a later
+                # empty search must not become a second POST.
+                state = {'version': 1, 'status': 'already_exists', 'attempt_id': uuid.uuid4().hex,
+                         'deal_marker': deal_marker, 'orders': existing,
+                         'expected': {'customer_id': cid, 'binding': fresh['binding']},
+                         'created_at': time.time()}
+                self.persist(path, state)
                 return {'status': 'already_exists', 'orders': existing, 'client_hint': 'Новый заказ не создавать; требуется сверка существующего заказа.'}
             expected = self.checkout_snapshot(c, fresh)
             attempt_id = uuid.uuid4().hex
