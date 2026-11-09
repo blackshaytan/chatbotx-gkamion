@@ -31,7 +31,11 @@ export const resolveInboxListBotCategory = <
 >(
   input: T,
   canFilterBotCategory: boolean,
-): T =>
-  canFilterBotCategory
-    ? input
-    : { ...input, botCategory: inboxHumanBotCategory }
+): T => {
+  if (canFilterBotCategory) {
+    return input
+  }
+  // The added category is the only change. Callers pass a full list request,
+  // and that request type has to survive the return.
+  return { ...input, botCategory: inboxHumanBotCategory } as T
+}
