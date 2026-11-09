@@ -26,16 +26,15 @@ export const inboxBotCategoryOptionValues = (
  * conversation). Regular members are pinned to Human even when the client
  * sends All or Bot.
  */
-export const resolveInboxListBotCategory = <
-  T extends { botCategory?: ConversationBotCategory },
->(
+export const resolveInboxListBotCategory = <T extends object>(
   input: T,
   canFilterBotCategory: boolean,
 ): T => {
   if (canFilterBotCategory) {
     return input
   }
-  // The added category is the only change. Callers pass a full list request,
-  // and that request type has to survive the return.
+  // Callers pass a full list request. The constraint stays `object` so
+  // TypeScript keeps fields such as workspaceId instead of reducing the
+  // request to the optional category.
   return { ...input, botCategory: inboxHumanBotCategory } as T
 }
