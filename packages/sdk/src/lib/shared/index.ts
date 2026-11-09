@@ -90,6 +90,13 @@ export type ReceivedMessageResult = {
    * resolves it against the workspace catalog.
    */
   commerce?: IncomingCommerceEvent | null
+  /**
+   * The channel asks to store the message without running any automation: the
+   * delivery is already answered outside ChatbotX (e.g. a DROM dialog replied
+   * from the shop's cabinet). Contact, conversation and message are written as
+   * usual; flows, the AI agent and analytics stay out of it.
+   */
+  suppressAutomation?: boolean
 }
 
 /**
