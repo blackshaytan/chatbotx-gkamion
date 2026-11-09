@@ -66,14 +66,17 @@ function PaneEmptyState({
 }
 
 export function ConversationListPane({
+  canFilterBotCategory = true,
   canViewEmailAndPhone,
   workspaceId,
 }: {
+  canFilterBotCategory?: boolean
   canViewEmailAndPhone: boolean
   workspaceId: string
 }) {
   return (
     <ConversationList
+      canFilterBotCategory={canFilterBotCategory}
       canViewEmailAndPhone={canViewEmailAndPhone}
       workspaceId={workspaceId}
     />
