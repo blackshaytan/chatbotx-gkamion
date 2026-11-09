@@ -1,6 +1,8 @@
 "use client"
 
 import type { ReactNode } from "react"
+import { ChatsRealtimeSync } from "@/features/chats/components/chats-realtime-sync"
+import { InboxUnreadRealtimeSync } from "@/features/conversations/components/inbox-unread-realtime-sync"
 import { WhatsappCallPanel } from "@/features/integration-whatsapp/calling/voip/whatsapp-call-panel"
 import { WhatsappCallRealtime } from "@/features/integration-whatsapp/calling/voip/whatsapp-call-realtime"
 import { WhatsappVoipCallProvider } from "@/features/integration-whatsapp/calling/voip/whatsapp-voip-call-context"
@@ -8,7 +10,6 @@ import { WhatsappCallInfoSheet } from "@/features/messages/components/whatsapp-c
 import { NotificationsRealtimeSync } from "@/features/notifications/components/notifications-realtime-sync"
 import { WorkspaceRealtimeProvider } from "@/features/realtime/workspace-realtime-provider"
 import { TasksRealtimeSync } from "@/features/tasks/components/tasks-realtime-sync"
-import { ChatsRealtimeSync } from "@/features/chats/components/chats-realtime-sync"
 
 type WorkspaceRealtimeShellProps = {
   realtimeEnabled: boolean
@@ -52,6 +53,7 @@ export function WorkspaceRealtimeShell({
     <WorkspaceRealtimeProvider>
       <TasksRealtimeSync />
       <ChatsRealtimeSync />
+      <InboxUnreadRealtimeSync />
       <NotificationsRealtimeSync />
       {callHistoryEnabled && <WhatsappCallInfoSheet />}
       {callingEnabled ? (

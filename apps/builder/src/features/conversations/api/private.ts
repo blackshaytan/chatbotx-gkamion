@@ -330,6 +330,22 @@ export const conversationsAuthenticatedAPI = {
       return { success: true as const }
     }),
 
+  unreadTotal: authorizedAPI
+    .route({
+      method: "GET",
+      path: "/workspaces/{workspaceId}/conversations/unread-total",
+      summary: "Count unread inbox conversations",
+      tags: ["Conversations"],
+    })
+    .input(z.object({ workspaceId: zodBigintAsString() }))
+    .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
+    .output(z.object({ total: z.number().int().nonnegative() }))
+    .handler(async ({ input }) =>
+      conversationService.countInboxUnread({
+        workspaceId: input.workspaceId,
+      }),
+    ),
+
   unfollowConversationAuthenticatedAPI: authorizedAPI
     .route({
       method: "POST",

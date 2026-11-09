@@ -21,6 +21,7 @@ import {
   assignUserIfUnassigned,
   claimManagerJoinedAt,
   contactInboxOperationalColumns,
+  countInboxUnread as countInboxUnreadConversations,
   createMessageRepository,
   externalAgentRepository,
   externalAgentStateRepository,
@@ -2390,6 +2391,18 @@ class ConversationService extends BaseService {
           ),
         ),
       )
+  }
+
+  /** Unread conversations in the default inbox (not archived, contact not blocked). */
+  async countInboxUnread(props: {
+    workspaceId: string
+    tx?: DatabaseClient
+  }): Promise<{ total: number }> {
+    const total = await countInboxUnreadConversations(
+      { workspaceId: props.workspaceId },
+      props.tx,
+    )
+    return { total }
   }
 
   /**
