@@ -14,6 +14,9 @@ const DEAL_HTML = readFileSync(
   new URL("./fixtures/deal-cdek.html", import.meta.url),
   "utf8",
 )
+const CARD_HTML = `
+<div class="row" data-field="manufacturer"><div class="label">Производитель</div><div class="value">BMW</div></div>
+<div class="row" data-field="autoPartsOemNumber"><div class="label">Номер запчасти</div><div class="value">51477326465</div></div>`
 
 type View = ReturnType<typeof dialogView>
 
@@ -44,6 +47,14 @@ const mockDrom = (
           })
         : new HttpResponse(null, { status: dealStatus })
     }),
+    // Position card read for «Номер запчасти» / «Производитель».
+    http.get(
+      `${DROM_BASE}/dealview/:deal/good/:good`,
+      () =>
+        new HttpResponse(CARD_HTML, {
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        }),
+    ),
   )
   return { viewed, deals }
 }

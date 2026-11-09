@@ -28,6 +28,8 @@ const dealSchema = z.object({
       qty: z.number(),
       url: z.string(),
       annotation: z.string(),
+      article: z.string(),
+      brand: z.string(),
     }),
   ),
 }) satisfies z.ZodType<DromDeal>
