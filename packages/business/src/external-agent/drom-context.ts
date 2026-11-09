@@ -12,6 +12,23 @@ const dromRecord = (value: unknown): Record<string, unknown> | null =>
     ? (value as Record<string, unknown>)
     : null
 
+/** Bracket access: `record?.key` on `Record<string, unknown> | null` is `never` in TypeScript 5.9. */
+const dromField = (
+  record: Record<string, unknown> | null,
+  key: string,
+): unknown => record?.[key]
+
+const mergeKnownRecord = (
+  current: Record<string, unknown> | null,
+  next: Record<string, unknown>,
+  same: boolean,
+): Record<string, unknown> => {
+  if (current && same) {
+    return { ...current, ...next }
+  }
+  return next
+}
+
 const dromPick = (value: unknown, keys: readonly string[]) => {
   const source = dromRecord(value)
   if (!source) {
@@ -83,7 +100,8 @@ export const buildDromContextInstructions = (
       "pickupAddress",
       "deliveryMethod",
     ])
-    if (nextDeal?.dealId) {
+    const nextDealId = dromField(nextDeal, "dealId")
+    if (nextDeal && nextDealId) {
       const rawItems = dromRecord(context.deal)?.items
       if (Array.isArray(rawItems)) {
         nextDeal.items = rawItems
@@ -104,8 +122,11 @@ export const buildDromContextInstructions = (
           nextDeal.itemsTruncated = true
         }
       }
-      deal =
-        deal?.dealId === nextDeal.dealId ? { ...deal, ...nextDeal } : nextDeal
+      deal = mergeKnownRecord(
+        deal,
+        nextDeal,
+        dromField(deal, "dealId") === nextDealId,
+      )
       listing = null
       continue
     }
@@ -118,23 +139,29 @@ export const buildDromContextInstructions = (
       "condition",
       "annotation",
     ])
-    if (nextListing?.url) {
+    const nextListingUrl = dromField(nextListing, "url")
+    if (nextListing && nextListingUrl) {
+      const dealItems = dromField(deal, "items")
       if (
         deal &&
-        Array.isArray(deal.items) &&
-        deal.items.some((item) => dromRecord(item)?.url === nextListing.url)
+        Array.isArray(dealItems) &&
+        dealItems.some(
+          (item) => dromField(dromRecord(item), "url") === nextListingUrl,
+        )
       ) {
         continue
       }
-      if (listing?.url !== nextListing.url) {
+      const currentListingUrl = dromField(listing, "url")
+      if (currentListingUrl !== nextListingUrl) {
         deal = null
       }
-      listing =
-        listing?.url === nextListing.url
-          ? { ...listing, ...nextListing }
-          : nextListing
+      listing = mergeKnownRecord(
+        listing,
+        nextListing,
+        currentListingUrl === nextListingUrl,
+      )
     } else if (!deal && nextListing) {
-      listing = { ...listing, ...nextListing }
+      listing = { ...(listing ?? {}), ...nextListing }
     }
   }
   const snapshot = { dialogId, deal, listing }
