@@ -12,7 +12,7 @@ export type ContactOrderSnapshot = {
 
 const optionalText = (value: unknown): string | undefined => {
   if (typeof value !== "string") {
-    return undefined
+    return
   }
   const trimmed = value.trim()
   return trimmed.length > 0 ? trimmed : undefined

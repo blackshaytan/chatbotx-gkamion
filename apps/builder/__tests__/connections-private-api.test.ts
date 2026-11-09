@@ -813,13 +813,12 @@ describe("private connections API permission gate", () => {
     ],
   ] as const
 
-  test.each(mutatingEndpoints)(
-    "%s %s rejects a member without superAdmin before any connection work",
-    async (method, path, input) => {
-      await expect(
-        getHandler(method, path)({ context: restrictedContext, input }),
-      ).rejects.toMatchObject({ code: "FORBIDDEN" })
-      expect(mocks.connectFromCredentials).not.toHaveBeenCalled()
-    },
-  )
+  test.each(
+    mutatingEndpoints,
+  )("%s %s rejects a member without superAdmin before any connection work", async (method, path, input) => {
+    await expect(
+      getHandler(method, path)({ context: restrictedContext, input }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" })
+    expect(mocks.connectFromCredentials).not.toHaveBeenCalled()
+  })
 })

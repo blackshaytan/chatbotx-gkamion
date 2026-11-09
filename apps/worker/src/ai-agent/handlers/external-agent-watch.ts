@@ -30,9 +30,9 @@ import {
   handOverToHuman,
   listRecentMessages,
   loadConversationContext,
+  resolveAgentPhotoReply,
   selectNewMessages,
   sendClientText,
-  resolveAgentPhotoReply,
   stopRunQuietly,
   withExternalAgentLock,
 } from "./external-agent-shared"
@@ -148,7 +148,9 @@ const completeRun = async (
   // into the send job's `url` (the bubble renders it as an attachment).
   const photo = resolveAgentPhotoReply(text)
   const photoText = photo.url ? photo.text : text
-  const shouldSend = (photoText !== "" || Boolean(photo.url)) && Boolean(conversation?.botEnabled)
+  const shouldSend =
+    (photoText !== "" || Boolean(photo.url)) &&
+    Boolean(conversation?.botEnabled)
   if (shouldSend) {
     await sendClientText({
       context: batch.context,

@@ -26,6 +26,8 @@ const HISTORY_MESSAGE_LIMIT = 10
 const ATTACHMENT_LINK_TTL_MS = 24 * 60 * 60 * 1000
 const RESUME_TRIGGER_GRACE_MS = 60_000
 const JOB_ID_SEPARATOR = /:/g
+const AGENT_PHOTO_MARKDOWN = /!\[[^\]\n]*]\((https?:\/\/[^)\s]+)\)/
+const AGENT_PHOTO_BARE_URL = /https?:\/\/img-server[\w.-]*\/[^\s)\]]+/
 
 export type ExternalAgentJobRef = {
   workspaceId: string
@@ -166,8 +168,10 @@ export const toInputMessages = async (
       id: message.id,
       createdAt: message.createdAt.toISOString(),
       text: message.text,
-      contentAttributes: message.senderType === "contact" && message.messageType === "incoming"
-        ? message.contentAttributes : undefined,
+      contentAttributes:
+        message.senderType === "contact" && message.messageType === "incoming"
+          ? message.contentAttributes
+          : undefined,
       attachmentUrls: await Promise.all(
         message.attachments
           .filter((attachment) => !isFailedOriginPath(attachment.originPath))
@@ -193,12 +197,14 @@ export const toInputMessages = async (
  * job's `url` (`sendChatMessage` re-hosts the file) and dropped from the text.
  * If the download fails, `sendChatMessage` falls back to text with the URL.
  * Photo-in-bubble request by the owner, 03.11. */
-export const resolveAgentPhotoReply = (output: string): { text: string; url?: string } => {
-  const md = output.match(/!\[[^\]\n]*]\((https?:\/\/[^)\s]+)\)/)
+export const resolveAgentPhotoReply = (
+  output: string,
+): { text: string; url?: string } => {
+  const md = output.match(AGENT_PHOTO_MARKDOWN)
   if (md) {
     return { text: output.replace(md[0], "").trim(), url: md[1] }
   }
-  const bare = output.match(/https?:\/\/img-server[\w.-]*\/[^\s)\]]+/)
+  const bare = output.match(AGENT_PHOTO_BARE_URL)
   if (bare) {
     return { text: output.replace(bare[0], "").trim(), url: bare[0] }
   }

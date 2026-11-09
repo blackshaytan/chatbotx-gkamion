@@ -1,6 +1,6 @@
 import {
-  chatNotificationTypes,
   type ChatNotificationType,
+  chatNotificationTypes,
   type TaskNotificationType,
   taskNotificationTypes,
   type WorkspaceMemberNotificationTypes,
