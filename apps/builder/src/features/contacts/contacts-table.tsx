@@ -25,6 +25,7 @@ import {
   useContactFilterQueryState,
 } from "@/features/contact-filter"
 import { EMAIL_PHONE_RESTRICTED_FILTER_FIELDS } from "@/features/contact-filter/lib/restricted-fields"
+import { resolveActiveContactInbox } from "../conversations/utils/contact-inbox"
 import { getUserName } from "../users/schema/resource"
 import { ContactNameCell } from "./components/contact-name-cell"
 import { CONTACTS_DEFAULT_PER_PAGE } from "./constants"
@@ -197,7 +198,7 @@ export function ContactsTable({
           <ContactNameCell
             avatarClassName="size-9"
             channel={
-              row.original.contactInboxes?.[0]?.channel as
+              resolveActiveContactInbox(row.original.contactInboxes)?.channel as
                 | ChannelType
                 | undefined
             }

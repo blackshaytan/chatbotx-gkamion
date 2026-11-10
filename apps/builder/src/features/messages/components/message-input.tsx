@@ -34,6 +34,7 @@ import {
   BOT_DISABLE_DURATION_MS,
   isConversationActive,
 } from "@/features/conversations/utils/bot-state"
+import { resolveActiveContactInbox } from "@/features/conversations/utils/contact-inbox"
 import { InboxIcon } from "@/features/inboxes/components/inbox-icon"
 import { MediaLibraryTrigger } from "@/features/media-library/components/media-library-trigger"
 import type { ListFilesResponse } from "@/features/media-library/schema"
@@ -119,7 +120,8 @@ export const MessageInput = () => {
     [conversations, activeConversationId],
   )
 
-  const channel = conversation?.contactInboxes[0]?.channel
+  const contactInbox = resolveActiveContactInbox(conversation?.contactInboxes)
+  const channel = contactInbox?.channel
   const threadControl = useThreadControl(conversation, channel)
 
   // The agent dismissed the standby lock (stored routing state may be stale):
@@ -324,8 +326,7 @@ export const MessageInput = () => {
   )
 
   const isInstagramPostComment =
-    conversation?.contactInboxes[0]?.channel === "instagram" &&
-    conversation?.sourceId != null
+    channel === "instagram" && conversation?.sourceId != null
 
   // Meta DM = messenger or instagram that is NOT a post comment.
   // sourceId != null on the conversation means it's a post comment for both channels.
@@ -337,7 +338,9 @@ export const MessageInput = () => {
   // as a memo dependency is more stable than the whole contactInboxes array.
   // Returns null if the field is absent or not a valid date (NaN guard).
   const lastIncomingTs = useMemo(() => {
-    const raw = conversation?.contactInboxes[0]?.lastIncomingMessageAt
+    const raw = resolveActiveContactInbox(
+      conversation?.contactInboxes,
+    )?.lastIncomingMessageAt
     if (!raw) {
       return null
     }
@@ -566,10 +569,7 @@ export const MessageInput = () => {
           <div className="scrollbar-hide flex w-full items-center gap-2 overflow-x-auto ps-2.5">
             <div className="min-w-0 flex-1">
               <InboxIcon
-                channel={
-                  (conversation?.contactInboxes[0]?.channel ??
-                    "webchat") as ChannelType
-                }
+                channel={(contactInbox?.channel ?? "webchat") as ChannelType}
               />
             </div>
 
@@ -577,7 +577,7 @@ export const MessageInput = () => {
               {!hasFiles && (
                 <InputMenu
                   bypassThreadControlLock={bypassThreadControlLock}
-                  contactInbox={conversation?.contactInboxes[0]}
+                  contactInbox={contactInbox}
                   setContent={setContent}
                 />
               )}

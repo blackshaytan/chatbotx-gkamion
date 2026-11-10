@@ -48,6 +48,7 @@ import { useWorkspaceId } from "@/hooks/routing"
 import { useChatStore } from "../chat/store/chat-store-provider"
 import { getBrowserTimezone } from "../contact-filter/lib/timezone"
 import type { ContactInboxResource } from "../contact-inboxes/schema/resource"
+import { resolveActiveContactInbox } from "../conversations/utils/contact-inbox"
 import { ContactCustomFieldManage } from "../custom-fields/contact-custom-field-manage"
 import { formatCustomFieldDisplayValue } from "../custom-fields/lib/format-custom-field-display-value"
 import { customFieldIconsMap } from "../custom-fields/provider/custom-field-hook"
@@ -477,7 +478,9 @@ export const ContactDetail = ({
       )
 
       if (conversation?.contact) {
-        const activeContactInbox = conversation.contactInboxes[0]
+        const activeContactInbox = resolveActiveContactInbox(
+          conversation.contactInboxes,
+        )
         // The ad the contact clicked from (any ad-attributed inbox), shown as
         // a link under the channel identity rows. Guarded to http(s) so a
         // non-navigable / `javascript:` referral value never becomes an anchor
