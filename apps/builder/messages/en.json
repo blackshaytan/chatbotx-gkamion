@@ -4599,6 +4599,13 @@
       "note": "Note",
       "unresolvedProduct": "Not found in your catalog"
     },
+    "dromContext": {
+      "listingPrefix": "Customer writes from the listing",
+      "dealPrefix": "Customer placed an order",
+      "openListing": "Open listing",
+      "openDeal": "Open order",
+      "itemsCount": "Items: {count}"
+    },
     "referredProduct": {
       "askedAbout": "Asked about this product"
     },

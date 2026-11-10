@@ -4599,6 +4599,13 @@
       "note": "Qeyd",
       "unresolvedProduct": "Kataloqunuzda tapılmadı"
     },
+    "dromContext": {
+      "listingPrefix": "Müştəri elandan yazır",
+      "dealPrefix": "Müştəri sifariş verdi",
+      "openListing": "Elanı aç",
+      "openDeal": "Sifarişi aç",
+      "itemsCount": "Mövqe sayı: {count}"
+    },
     "referredProduct": {
       "askedAbout": "Bu məhsul haqqında soruşdu"
     },

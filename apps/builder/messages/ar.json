@@ -3917,6 +3917,13 @@
       "note": "ملاحظة",
       "unresolvedProduct": "غير موجود في الكتالوج"
     },
+    "dromContext": {
+      "listingPrefix": "يكتب العميل من الإعلان",
+      "dealPrefix": "قام العميل بالطلب",
+      "openListing": "فتح الإعلان",
+      "openDeal": "فتح الطلب",
+      "itemsCount": "العناصر: {count}"
+    },
     "referredProduct": {
       "askedAbout": "سأل عن هذا المنتج"
     },

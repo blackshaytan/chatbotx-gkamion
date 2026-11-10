@@ -3896,6 +3896,13 @@
       "note": "Observação",
       "unresolvedProduct": "Não encontrado no seu catálogo"
     },
+    "dromContext": {
+      "listingPrefix": "O cliente escreve a partir do anúncio",
+      "dealPrefix": "O cliente fez um pedido",
+      "openListing": "Abrir anúncio",
+      "openDeal": "Abrir pedido",
+      "itemsCount": "Itens: {count}"
+    },
     "referredProduct": {
       "askedAbout": "Perguntou sobre este produto"
     },

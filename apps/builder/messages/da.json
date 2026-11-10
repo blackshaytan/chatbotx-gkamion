@@ -3917,6 +3917,13 @@
       "note": "Note",
       "unresolvedProduct": "Ikke fundet i dit katalog"
     },
+    "dromContext": {
+      "listingPrefix": "Kunden skriver fra annoncen",
+      "dealPrefix": "Kunden har afgivet en ordre",
+      "openListing": "Åbn annonce",
+      "openDeal": "Åbn ordre",
+      "itemsCount": "Varer: {count}"
+    },
     "referredProduct": {
       "askedAbout": "Spurgte om dette produkt"
     },

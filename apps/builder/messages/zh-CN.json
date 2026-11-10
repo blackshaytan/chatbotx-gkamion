@@ -5011,6 +5011,13 @@
       "note": "备注",
       "unresolvedProduct": "未在您的目录中找到"
     },
+    "dromContext": {
+      "listingPrefix": "客户从商品发布处写信",
+      "dealPrefix": "客户已下单",
+      "openListing": "打开发布",
+      "openDeal": "打开订单",
+      "itemsCount": "商品数：{count}"
+    },
     "referredProduct": {
       "askedAbout": "询问了此商品"
     },

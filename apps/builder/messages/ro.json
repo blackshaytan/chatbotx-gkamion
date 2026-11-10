@@ -3917,6 +3917,13 @@
       "note": "Notă",
       "unresolvedProduct": "Nu a fost găsit în catalogul tău"
     },
+    "dromContext": {
+      "listingPrefix": "Clientul scrie din anunț",
+      "dealPrefix": "Clientul a plasat o comandă",
+      "openListing": "Deschide anunțul",
+      "openDeal": "Deschide comanda",
+      "itemsCount": "Articole: {count}"
+    },
     "referredProduct": {
       "askedAbout": "A întrebat despre acest produs"
     },

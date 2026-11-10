@@ -5011,6 +5011,13 @@
       "note": "Anteckning",
       "unresolvedProduct": "Hittades inte i din katalog"
     },
+    "dromContext": {
+      "listingPrefix": "Kunden skriver från annonsen",
+      "dealPrefix": "Kunden har lagt en order",
+      "openListing": "Öppna annons",
+      "openDeal": "Öppna order",
+      "itemsCount": "Artiklar: {count}"
+    },
     "referredProduct": {
       "askedAbout": "Frågade om den här produkten"
     },

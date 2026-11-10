@@ -60,6 +60,7 @@ import {
 import { ExternalAgentActivityDivider } from "@/features/external-agent/components/external-agent-activity"
 import { getExternalAgentActivity } from "@/features/external-agent/lib/activity"
 import { canCreateTaskFromMessage } from "@/features/tasks/lib/message-quote"
+import type { DromContextCardData } from "../lib/drom-context-card"
 import { formatMessageTime } from "../lib/format-message-time"
 import {
   getThreadControlActivity,
@@ -67,6 +68,7 @@ import {
   isThreadControlEcho,
 } from "../lib/thread-control-content"
 import type { MessageResourceWithRelations } from "../schema/resource"
+import { DromContextCard } from "./drom-context-card"
 import { InboundOrderBubble } from "./inbound-order-bubble"
 import { MessageActions, MessageActionsEditor } from "./message-actions"
 import { MessageBubble } from "./message-bubble"
@@ -80,6 +82,12 @@ import { WhatsappFlowResponseButton } from "./whatsapp-flow-response-dialog"
 
 type MessageItemProps = {
   message: MessageResourceWithRelations
+  /**
+   * The DROM ad or order this message anchors in the thread (see
+   * `dromCardsByMessageId`). Passed by the inbox thread only: the guest
+   * widget never holds a DROM channel.
+   */
+  dromCard?: DromContextCardData | null
   guestDisplay?: boolean
   canCreateTask?: boolean
   /**
@@ -118,6 +126,7 @@ type MessageItemProps = {
 export const MessageItem = (props: MessageItemProps) => {
   const {
     message,
+    dromCard,
     guestDisplay = false,
     canCreateTask = false,
     avatarUrl,
@@ -240,6 +249,7 @@ export const MessageItem = (props: MessageItemProps) => {
             {tRouting("echo.partner")}
           </span>
         )}
+        {dromCard && <DromContextCard card={dromCard} />}
         {isComment ? (
           <div
             className={cn(

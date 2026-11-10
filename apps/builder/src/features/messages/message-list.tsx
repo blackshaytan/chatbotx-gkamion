@@ -6,7 +6,7 @@ import { cn } from "@chatbotx.io/ui/lib/utils"
 import { ArrowDownIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useAction } from "next-safe-action/hooks"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   type GridComponents,
   Virtuoso,
@@ -21,6 +21,7 @@ import { changeMessageAttributesAction } from "./actions/change-message-attribut
 import { deleteMessageAction } from "./actions/delete-message.action"
 import { editMessageAction } from "./actions/edit-message.action"
 import { MessageItem } from "./components/message-item"
+import { dromCardsByMessageId } from "./lib/drom-context-card"
 import { canPrivateReplyToComment } from "./lib/private-reply"
 import type { MessageResourceWithRelations } from "./schema/resource"
 
@@ -50,6 +51,10 @@ export function MessageList() {
   const activeChannel = conversations.find(
     (conversation) => conversation.id === activeConversationId,
   )?.contactInboxes?.[0]?.channel
+
+  // One plate per DROM ad/order, anchored to the message that introduced
+  // it — the channel repeats its context on every incoming message.
+  const dromCards = useMemo(() => dromCardsByMessageId(messages), [messages])
 
   const { execute: deleteMessage } = useAction(
     deleteMessageAction.bind(null, workspaceId, activeConversationId ?? ""),
@@ -310,6 +315,7 @@ export function MessageList() {
                 message: comment,
               })
             }
+            dromCard={dromCards.get(message.id) ?? null}
             key={message.id}
             message={message}
             onChangeHide={() => handleChangeHideState(message)}

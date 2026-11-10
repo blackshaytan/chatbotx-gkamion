@@ -4599,6 +4599,13 @@
       "note": "Примечание",
       "unresolvedProduct": "Не найден в вашем каталоге"
     },
+    "dromContext": {
+      "listingPrefix": "Клиент пишет из карточки",
+      "dealPrefix": "Покупатель оформил заказ",
+      "openListing": "Открыть карточку",
+      "openDeal": "Открыть заказ",
+      "itemsCount": "Позиций: {count}"
+    },
     "referredProduct": {
       "askedAbout": "Вопрос об этом товаре"
     },

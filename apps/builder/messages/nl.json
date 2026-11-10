@@ -3917,6 +3917,13 @@
       "note": "Notitie",
       "unresolvedProduct": "Niet gevonden in je catalogus"
     },
+    "dromContext": {
+      "listingPrefix": "Klant schrijft vanuit de advertentie",
+      "dealPrefix": "Klant heeft een bestelling geplaatst",
+      "openListing": "Advertentie openen",
+      "openDeal": "Bestelling openen",
+      "itemsCount": "Artikelen: {count}"
+    },
     "referredProduct": {
       "askedAbout": "Vroeg naar dit product"
     },
