@@ -1,8 +1,8 @@
 # T03 — Isolated dialog memory storage schema
 
 This document describes the schema changes committed under T03. It is a
-storage-only foundation; the triggers, registration service, and LLM
-integration are T04.
+storage-only foundation. Triggers and registration/publication logic belong
+to T04; LLM integration belongs to the later T09–T11 stages.
 
 ## New tables
 
@@ -37,10 +37,8 @@ integration are T04.
 
 ## What is deliberately NOT in this commit
 
-- No generated migration snapshot/journal/SQL (the maintainer will run the
-  offline generator).
 - No `db:migrate`, `db:push`, or introspection.
-- No triggers, registration/publish logic, or LLM input formatting (T04).
+- No triggers, registration/publish logic, or LLM input formatting.
 - No stored freshness/state enum; freshness is computed from revisions and
   epoch.
 - No FK to `Message` or `Attachment`.
@@ -48,6 +46,26 @@ integration are T04.
 
 ## Verification status
 
-`SCHEMA_IMPLEMENTED_PENDING_OFFLINE_GENERATION` — schema code is in place,
-but migration generation and testing are intentionally left for the
-maintainer-run offline step.
+`SCHEMA_AND_MIGRATION_GENERATED_NOT_APPLIED`.
+
+The real offline generator (`drizzle-kit` / `drizzle-orm` 1.0.0-beta.22,
+Node 24.22.3) ran `sh scripts/make-migration.sh external_agent_dialog_memory`
+successfully with an allowlisted environment, no dotenv, and an unused dummy
+database URL. It produced these files:
+
+- `packages/database/drizzle/20261111211410_external_agent_dialog_memory/migration.sql`
+- `packages/database/drizzle/20261111211410_external_agent_dialog_memory/snapshot.json`
+
+The snapshot is unedited generator output. Its `prevIds` matches the preceding
+`20261107111947_inbox_unread_first` snapshot. A structural comparison found only
+the three new tables and their columns/constraints plus the additive
+Conversation index; no existing schema entities were removed or changed.
+
+The SQL has one clearly marked manual data seed after the generated DDL:
+`DialogMemoryTopology(id='global', topologyEpoch=0) ON CONFLICT DO NOTHING`.
+It does not reset an existing epoch. Primary-key columns are implicitly
+NOT NULL in PostgreSQL even where the generator omits a separate NOT NULL.
+
+No migration was applied. Type checking, database-execution tests, and the
+deferred T02 hosted CI are not claimed as passed. The Creator explicitly
+authorized proceeding with T03 without waiting for that CI.
