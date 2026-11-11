@@ -62,6 +62,23 @@ describe("parseMaxUpdate", () => {
     })
   })
 
+  test("a profile photo on the sender is kept", () => {
+    const parsed = parseMaxUpdate({
+      ...text,
+      message: {
+        ...text.message,
+        sender: {
+          ...text.message.sender,
+          full_avatar_url: "https://i.max.ru/a/full.jpg",
+          avatar_url: "https://i.max.ru/a/small.jpg",
+        },
+      },
+    })
+    expect(parsed && "contact" in parsed ? parsed.contact.avatar : null).toBe(
+      "https://i.max.ru/a/full.jpg",
+    )
+  })
+
   test("unknown update types and malformed payloads are skipped", () => {
     expect(
       parseMaxUpdate({ update_type: "chat_title_changed", timestamp: 1 }),

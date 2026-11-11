@@ -429,6 +429,7 @@ describe("ShardedMessageRepository direct message/attachment lookup helpers", ()
       sourceId: attachmentModel.sourceId,
       originPath: attachmentModel.originPath,
       mimeType: attachmentModel.mimeType,
+      name: attachmentModel.name,
       createdAt: attachmentModel.createdAt,
     })
     expect(shardManager.getShardForWrite).toHaveBeenCalledWith("ws-1")

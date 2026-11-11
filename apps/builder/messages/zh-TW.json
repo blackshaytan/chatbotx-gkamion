@@ -1628,6 +1628,32 @@
     },
     "igStory": {
       "label": "Instagram 限時動態自動化"
+    },
+    "orderNotification": {
+      "description": "n8n sends the order event. This step chooses the statuses and the text. A Condition step in this flow can check deliveryMethod (pickup or delivery), hasDebt (true or false) and amount.",
+      "subject": {
+        "label": "What starts this flow",
+        "order": "Order status",
+        "item": "Item status"
+      },
+      "statusIds": {
+        "label": "Status numbers",
+        "placeholder": "21, 22, 23",
+        "description": "Numeric status ids from GKamion. The published flow starts when an order event carries one of these numbers.",
+        "invalid": "Enter one to fifty whole numbers, separated by commas."
+      },
+      "messengerText": {
+        "label": "Messenger text",
+        "description": "Sent to MAX, Telegram, ZZAP and DROM. Placeholders: '{{orderNumber}}', '{{itemSummary}}', '{{amount}}', '{{billUrl}}'. Leave empty to skip those channels."
+      },
+      "emailText": {
+        "label": "Email text",
+        "description": "Same placeholders as messenger text. Leave empty to skip email."
+      },
+      "emailSubject": {
+        "label": "Email subject",
+        "description": "Same placeholders. Empty uses the order number."
+      }
     }
   },
   "messages": {
@@ -1821,6 +1847,10 @@
     },
     "referredProduct": {
       "askedAbout": "詢問了此商品"
+    },
+    "dromListing": {
+      "onDrom": "在 Drom 上",
+      "productCard": "商品卡片"
     },
     "input": {
       "form": "Message input form",
@@ -2668,7 +2698,10 @@
       "ctwaConversionTypes": {
         "lead": "名單",
         "purchase": "購買"
-      }
+      },
+      "deliveryMethod": "Delivery method",
+      "hasDebt": "Has debt",
+      "amount": "Order amount"
     },
     "fieldGroups": {
       "opportunity": "機會",
@@ -3051,7 +3084,8 @@
       "sendGoogleAdsConversion": "傳送 Google Ads 轉換",
       "changeGamificationScore": "變更積分",
       "sendViewCatalog": "查看商品目錄",
-      "sendProducts": "傳送商品"
+      "sendProducts": "傳送商品",
+      "sendOrderNotification": "Order notification"
     },
     "splitTraffic": {
       "balanceHint": "總和必須等於 100%。",

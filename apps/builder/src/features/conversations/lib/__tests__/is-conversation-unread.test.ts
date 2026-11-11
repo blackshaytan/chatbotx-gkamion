@@ -73,6 +73,18 @@ describe("isConversationUnread", () => {
     ).toBe(true)
   })
 
+  test("returns true when the badge count is positive even if the read stamp is current", () => {
+    const at = new Date("2026-01-02T00:00:00Z")
+    expect(
+      isConversationUnread({
+        inboxActivityAt: at,
+        agentLastReadAt: at,
+        handedOverAt: null,
+        unreadCount: 2,
+      }),
+    ).toBe(true)
+  })
+
   test("returns false when the agent read after the handover", () => {
     expect(
       isConversationUnread({

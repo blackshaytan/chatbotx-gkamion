@@ -49,6 +49,9 @@ const ConditionRow = ({
       if (isBotField) {
         return t("fields.botField.label")
       }
+      // i18n-check t('condition.fields.deliveryMethod')
+      // i18n-check t('condition.fields.hasDebt')
+      // i18n-check t('condition.fields.amount')
       return t(`condition.fields.${condition.field}`)
     })()
   const operatorLabel =

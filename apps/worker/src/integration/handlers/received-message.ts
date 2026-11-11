@@ -10,6 +10,7 @@ import {
   contactInboxService,
   contactService,
   conversationService,
+  findContactForIdentity,
   getContactInboxIdentityConflictConstraint,
   hasOnDemandProfileApi,
   hasRealAvatar,
@@ -23,6 +24,7 @@ import {
   THREAD_CONTROL_DELIVERY_KEY,
   THREAD_CONTROL_STANDBY_DELIVERY,
   threadControlService,
+  unifySameClient,
   updateContactFromMessage,
   workspaceService,
 } from "@chatbotx.io/business"
@@ -101,6 +103,10 @@ import {
   type SourceScopedIdentityMatchedBy,
 } from "@chatbotx.io/sdk"
 import { createId } from "@chatbotx.io/utils"
+import {
+  isContactAvatarPackKey,
+  pickContactAvatarPackKey,
+} from "@chatbotx.io/utils/contact-avatar-pack"
 import { hasGoogleClick } from "@chatbotx.io/utils/google-click"
 import {
   ChatJobAction,
@@ -446,6 +452,18 @@ export const receiveMessage = async (
     throw new SdkException("Unable to resolve contact and conversation")
   }
   const { contactInbox, conversation, contact, isNewContact } = detected
+  try {
+    await rememberContactAvatar({
+      workspaceId: inbox.workspaceId,
+      contact,
+      incomingAvatar: incomingContact.avatar,
+    })
+  } catch (err) {
+    logger.warn(
+      { err, contactId: contact.id, workspaceId: inbox.workspaceId },
+      "Contact avatar assignment failed; keeping the dialog",
+    )
+  }
   const directedIncomingMessage = correctStoryReplyDirectionForNewContact(
     rawIncomingMessage,
     isNewContact,
@@ -1468,6 +1486,66 @@ const getMessageActivityTracking = (props: {
  * matching every other channel's contact avatar (never linked to hotlink
  * Meta's CDN directly, which can expire or rate-limit).
  */
+const PROVIDER_AVATAR_URL_RE = /^https?:\/\//i
+
+const providerAvatarUrl = (
+  value: string | null | undefined,
+): string | undefined =>
+  value && PROVIDER_AVATAR_URL_RE.test(value) ? value : undefined
+
+/**
+ * Keeps a real profile photo when the channel sent one (MAX `avatar_url`,
+ * Telegram `getUserProfilePhotos`, …) and otherwise assigns a stable pack
+ * picture. A photo already stored for this contact is never replaced.
+ */
+async function rememberContactAvatar(props: {
+  workspaceId: string
+  contact: { id: string; avatar: string | null }
+  incomingAvatar?: string | null
+}): Promise<void> {
+  const hasStoredPhoto =
+    hasRealAvatar(props.contact.avatar) &&
+    !isContactAvatarPackKey(props.contact.avatar) &&
+    !providerAvatarUrl(props.contact.avatar)
+  if (hasStoredPhoto) {
+    return
+  }
+
+  const sourceUrl =
+    providerAvatarUrl(props.incomingAvatar) ??
+    providerAvatarUrl(props.contact.avatar)
+  if (sourceUrl) {
+    try {
+      const stored = await downloadCommenterAvatar({
+        url: sourceUrl,
+        workspaceId: props.workspaceId,
+      })
+      if (stored) {
+        await contactService.setAvatarUnlessStored({
+          workspaceId: props.workspaceId,
+          contactId: props.contact.id,
+          avatar: stored,
+        })
+        return
+      }
+    } catch (err) {
+      logger.warn(
+        { err, contactId: props.contact.id, workspaceId: props.workspaceId },
+        "Failed to keep a channel profile photo; leaving the existing avatar",
+      )
+    }
+  }
+
+  if (hasRealAvatar(props.contact.avatar)) {
+    return
+  }
+  await contactService.setAvatarIfEmptyOrSentinel({
+    workspaceId: props.workspaceId,
+    contactId: props.contact.id,
+    avatar: pickContactAvatarPackKey(props.contact.id),
+  })
+}
+
 async function downloadCommenterAvatar(props: {
   url: string
   workspaceId: string
@@ -2266,12 +2344,17 @@ export const detectContactAndConversation = async (props: {
   // `findOrCreate` resolves the existing conversation or opens a fresh one when
   // the source id is new (e.g. a comment on a different post).
   if (existingContactMatch) {
-    return await buildExistingContactMatch({
+    return await retargetMergedContact({
       inbox,
       incomingContact,
       conversationSourceId,
-      existing: existingContactMatch.row,
-      matchedBy: existingContactMatch.matchedBy,
+      matched: await buildExistingContactMatch({
+        inbox,
+        incomingContact,
+        conversationSourceId,
+        existing: existingContactMatch.row,
+        matchedBy: existingContactMatch.matchedBy,
+      }),
     })
   }
 
@@ -2310,13 +2393,78 @@ export const detectContactAndConversation = async (props: {
     if (!winner) {
       throw error
     }
-    return await buildExistingContactMatch({
+    return await retargetMergedContact({
       inbox,
       incomingContact,
       conversationSourceId,
-      existing: winner.row,
-      matchedBy: winner.matchedBy,
+      matched: await buildExistingContactMatch({
+        inbox,
+        incomingContact,
+        conversationSourceId,
+        existing: winner.row,
+        matchedBy: winner.matchedBy,
+      }),
     })
+  }
+}
+
+const retargetMergedContact = async (props: {
+  inbox: InboxModel
+  incomingContact: IncomingContact
+  conversationSourceId: string | null
+  matched: {
+    contactInbox: ContactInboxModel
+    contact: ContactModel
+    conversation: ConversationModel
+    isNewContact: false
+  }
+}) => {
+  let unified: { survivorContactId: string } | null
+  try {
+    unified = await unifySameClient({
+      workspaceId: props.inbox.workspaceId,
+      contactId: props.matched.contact.id,
+    })
+  } catch (error) {
+    logger.warn(
+      {
+        err: error,
+        workspaceId: props.inbox.workspaceId,
+        contactId: props.matched.contact.id,
+      },
+      "Same-client merge failed; keeping this dialog",
+    )
+    return props.matched
+  }
+  if (!unified || unified.survivorContactId === props.matched.contact.id) {
+    return props.matched
+  }
+  const contact = await contactService.findByIdOrFail({
+    workspaceId: props.inbox.workspaceId,
+    id: unified.survivorContactId,
+  })
+  const conversation = await conversationService.findOrCreate({
+    workspaceId: props.inbox.workspaceId,
+    contactId: unified.survivorContactId,
+    sourceId: props.conversationSourceId,
+    channelConversationId: props.incomingContact.channelConversationId,
+  })
+  logger.info(
+    {
+      workspaceId: props.inbox.workspaceId,
+      duplicateContactId: props.matched.contact.id,
+      survivorContactId: unified.survivorContactId,
+    },
+    "Inbound message joined an existing client",
+  )
+  return {
+    contactInbox: {
+      ...props.matched.contactInbox,
+      contactId: unified.survivorContactId,
+    },
+    contact,
+    conversation,
+    isNewContact: false as const,
   }
 }
 
@@ -2336,7 +2484,7 @@ const createNewContactAndContactInbox = async (props: {
   contactInbox: ContactInboxModel
   contact: ContactModel
   conversation: ConversationModel
-  isNewContact: true
+  isNewContact: boolean
 }> => {
   const {
     inbox,
@@ -2436,6 +2584,92 @@ const createNewContactAndContactInbox = async (props: {
     ...contactData,
     locale: finalizedProfile.locale,
     timezone: finalizedProfile.timezone,
+  }
+
+  let existingContactId: string | null = null
+  try {
+    existingContactId = await findContactForIdentity({
+      workspaceId: inbox.workspaceId,
+      phoneNumber:
+        typeof contactData.phoneNumber === "string"
+          ? contactData.phoneNumber
+          : null,
+      email: typeof contactData.email === "string" ? contactData.email : null,
+    })
+  } catch (error) {
+    logger.warn(
+      {
+        err: error,
+        workspaceId: inbox.workspaceId,
+        sourceId: incomingContact.sourceId,
+      },
+      "Same-client lookup failed; creating a new contact",
+    )
+  }
+  if (existingContactId) {
+    const contactInbox = await contactInboxService.openIncomingChannel({
+      workspaceId: inbox.workspaceId,
+      contactId: existingContactId,
+      inboxId: inbox.id,
+      channel: inbox.channel,
+      source,
+      sourceId: incomingContact.sourceId,
+      sourceUserId: incomingContact.sourceUserId ?? null,
+      sourceParentUserId: incomingContact.sourceParentUserId ?? null,
+      sourceUsername:
+        incomingContact.sourceUsername ?? profileSourceUsername ?? null,
+      language: finalizedProfile.language,
+      followsBusiness: profileSnapshot?.followsBusiness ?? null,
+      businessFollowsContact: profileSnapshot?.businessFollowsContact ?? null,
+      accountVerified: profileSnapshot?.accountVerified ?? null,
+      followerCount: profileSnapshot?.followerCount ?? null,
+    })
+    if (!contactInbox) {
+      const winner = await resolveExistingContactInbox({
+        inbox,
+        incomingContact,
+      })
+      if (!winner) {
+        throw new Error("Contact inbox not found")
+      }
+      return await retargetMergedContact({
+        inbox,
+        incomingContact,
+        conversationSourceId,
+        matched: await buildExistingContactMatch({
+          inbox,
+          incomingContact,
+          conversationSourceId,
+          existing: winner.row,
+          matchedBy: winner.matchedBy,
+        }),
+      })
+    }
+    const contact = await contactService.findByIdOrFail({
+      workspaceId: inbox.workspaceId,
+      id: existingContactId,
+    })
+    const conversation = await conversationService.findOrCreate({
+      workspaceId: inbox.workspaceId,
+      contactId: existingContactId,
+      sourceId: conversationSourceId,
+      channelConversationId: incomingContact.channelConversationId,
+    })
+    logger.info(
+      {
+        workspaceId: inbox.workspaceId,
+        contactId: existingContactId,
+        channel: inbox.channel,
+        sourceId: incomingContact.sourceId,
+      },
+      "Inbound channel joined an existing client",
+    )
+    return {
+      contactInbox,
+      contact,
+      conversation,
+      isNewContact: false,
+    }
   }
 
   const ws = await workspaceService.find({ where: { id: inbox.workspaceId } })

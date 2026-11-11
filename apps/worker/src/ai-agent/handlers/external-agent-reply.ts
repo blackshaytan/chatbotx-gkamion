@@ -1,6 +1,7 @@
 import {
   type BuildRunInputParams,
   buildRunInput,
+  contactCustomFieldService,
   contactService,
   conversationService,
   type ExternalAgentRunInput,
@@ -9,6 +10,7 @@ import {
   HermesAuthError,
   HermesRequestError,
   HermesUnavailableError,
+  readGkamionContactFields,
   withBlockedOwnerGuard,
 } from "@chatbotx.io/business"
 import type { MessageWithAttachments } from "@chatbotx.io/database/repositories"
@@ -68,10 +70,22 @@ const buildTurnInput = async (
     workspaceId,
     id: conversation.contactId,
   })
+  const customFields = contact
+    ? await contactCustomFieldService.listWithDefinitions({
+        contactId: contact.id,
+      })
+    : []
+  const gkamion = readGkamionContactFields(customFields)
   const params: BuildRunInputParams = {
     messages: await toInputMessages(workspaceId, turn.newMessages),
     history: await toInputMessages(workspaceId, history),
-    contact: { name: contact?.fullName ?? null },
+    contact: {
+      name: contact?.fullName?.trim() || null,
+      phoneNumber: contact?.phoneNumber?.trim() || null,
+      email: contact?.email?.trim() || null,
+      gkamionCustomerId: gkamion.gkamionCustomerId,
+      gkamionVerified: gkamion.gkamionVerified,
+    },
     channel: contactInbox.channel,
     conversationId,
     contactId: conversation.contactId,

@@ -9,6 +9,11 @@ import { createStore } from "zustand/vanilla"
 import type { ContactFilterRequest } from "@/features/contact-filter/schema"
 import type { GetContactResponse } from "@/features/contacts/schema/query"
 import type { ContactResource } from "@/features/contacts/schema/resource"
+import {
+  inboxAttentionOrderKey,
+  insertInboxConversation,
+  sortInboxConversations,
+} from "@/features/conversations/lib/compare-inbox-conversations"
 import { UNREAD_BADGE_CAP } from "@/features/conversations/lib/unread-badge"
 import {
   type PostDetails,
@@ -414,18 +419,15 @@ const appendUniqueConversations = (
 }
 
 /**
- * Moves `conversation` to index 0 (replacing any stale copy). The active
- * conversation gets no special treatment: it only reaches the top when it
- * has activity of its own or is opened from the URL, so a message on another
- * conversation lands above it exactly as it does on the server.
+ * Places `conversation` in the inbox order (replacing any stale copy).
+ * Unread rows stay above read ones: a read row opened from the URL or a
+ * ringing call is pinned to the top of the read group, never above unread.
  */
 const moveConversationToTop = (
   list: ListConversationsResponse["data"],
   conversation: ListConversationItemResource,
-): ListConversationsResponse["data"] => [
-  conversation,
-  ...list.filter((item) => item.id !== conversation.id),
-]
+): ListConversationsResponse["data"] =>
+  insertInboxConversation(list, conversation)
 
 // Realtime events are unordered; activity only ever moves forward so a
 // delayed older event cannot make a conversation look read.
@@ -708,7 +710,10 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
                 return state
               }
               return {
-                conversations: [...newConversations, ...state.conversations],
+                conversations: sortInboxConversations([
+                  ...newConversations,
+                  ...state.conversations,
+                ]),
               }
             })
           } catch (error) {
@@ -836,9 +841,8 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
             )
 
           set((state) => ({
-            conversations: appendUniqueConversations(
-              state.conversations,
-              newConversations,
+            conversations: sortInboxConversations(
+              appendUniqueConversations(state.conversations, newConversations),
             ),
             nextCursorConversation: nextCursor,
             isLoadingConversation: false,
@@ -902,7 +906,20 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
         if (!get().manuallyUnreadConversationIds.has(conversationId)) {
           return
         }
-        get().updateConversation(conversationId, { agentLastReadAt })
+        set((state) => {
+          let changed = false
+          const conversations = state.conversations.map((conversation) => {
+            if (conversation.id !== conversationId) {
+              return conversation
+            }
+            changed = true
+            return { ...conversation, agentLastReadAt }
+          })
+          if (!changed) {
+            return state
+          }
+          return { conversations: sortInboxConversations(conversations) }
+        })
       },
 
       deleteConversation: (conversationId: string) => {
@@ -950,7 +967,9 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
             changed = true
             return { ...conversation, agentLastReadAt, unreadCount: 0 }
           })
-          return changed ? { conversations } : state
+          return changed
+            ? { conversations: sortInboxConversations(conversations) }
+            : state
         })
       },
 
@@ -1260,9 +1279,10 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
             ),
           }
           return {
-            conversations: moveConversationToTop(
-              state.conversations,
-              conversation,
+            conversations: sortInboxConversations(
+              state.conversations.map((item) =>
+                item.id === conversation.id ? conversation : item,
+              ),
             ),
           }
         })
@@ -1376,15 +1396,24 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
               (conversation) => [conversation.id, conversation] as const,
             ),
           )
-          // Conversation id → batch index of its last message that moves it up
-          // the list. Bot sends refresh the preview but leave the order alone.
-          const liftIndexByConversationId = new Map<string, number>()
+          const orderKeyById = new Map(
+            state.conversations.map(
+              (conversation) =>
+                [
+                  conversation.id,
+                  inboxAttentionOrderKey(conversation),
+                ] as const,
+            ),
+          )
+          // Bot sends refresh the preview but leave the order alone. A client
+          // message or manager reply changes the unread/activity key and the
+          // list is re-sorted so unread conversations stay above read ones.
           const touchedConversationIds = new Set<string>()
           let messages: MessageResourceWithRelations[] | null = null
           let messageIndexById = new Map<string, number>()
           let messageIndexByClientId = new Map<string, number>()
 
-          for (const [messageIndex, message] of incomingMessages.entries()) {
+          for (const message of incomingMessages) {
             const currentConversation = conversationsById.get(
               message.conversationId,
             )
@@ -1406,12 +1435,6 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
                 ),
               })
               touchedConversationIds.add(message.conversationId)
-              if (isInboxActivityMessage(message)) {
-                liftIndexByConversationId.set(
-                  message.conversationId,
-                  messageIndex,
-                )
-              }
             } else {
               unmatchedWorkspaceId ??= message.workspaceId
             }
@@ -1470,26 +1493,22 @@ export const createChatStore = (initialState: ChatStoreInitialState = {}) => {
             return state
           }
 
-          const liftedConversationIds = [...liftIndexByConversationId.entries()]
-            .sort(([, leftIndex], [, rightIndex]) => rightIndex - leftIndex)
-            .map(([conversationId]) => conversationId)
-          const liftedConversationIdSet = new Set(liftedConversationIds)
-          const conversations = [
-            ...liftedConversationIds.flatMap((conversationId) => {
-              const conversation = conversationsById.get(conversationId)
-              return conversation ? [conversation] : []
-            }),
-            ...state.conversations
-              .filter(
-                (conversation) => !liftedConversationIdSet.has(conversation.id),
-              )
-              .map(
-                (conversation) =>
-                  conversationsById.get(conversation.id) ?? conversation,
-              ),
-          ]
+          let orderChanged = false
+          const conversations = state.conversations.map((conversation) => {
+            const next = conversationsById.get(conversation.id) ?? conversation
+            if (
+              touchedConversationIds.has(conversation.id) &&
+              inboxAttentionOrderKey(next) !== orderKeyById.get(conversation.id)
+            ) {
+              orderChanged = true
+            }
+            return next
+          })
+          const orderedConversations = orderChanged
+            ? sortInboxConversations(conversations)
+            : conversations
           return {
-            conversations,
+            conversations: orderedConversations,
             ...(messages ? { messages } : {}),
           }
         })

@@ -39,6 +39,7 @@ const mocks = vi.hoisted(() => {
     ensureActive: vi.fn(),
     findContactInbox: vi.fn(),
     findContact: vi.fn(),
+    listContactFields: vi.fn(),
     getRuntime: vi.fn(),
     getRuntimeForWorkspace: vi.fn(),
     findConversationState: vi.fn(),
@@ -60,7 +61,19 @@ const mocks = vi.hoisted(() => {
 vi.mock("@chatbotx.io/business", () => ({
   buildAttachmentProxyUrl: mocks.buildAttachmentProxyUrl,
   buildRunInput: mocks.buildRunInput,
+  readGkamionContactFields: (fields: { name: string; value: string }[]) => {
+    const byName = new Map(
+      fields.map((field) => [field.name, field.value.trim() || null]),
+    )
+    return {
+      gkamionCustomerId: byName.get("gkamion_customer_id") ?? null,
+      gkamionVerified: byName.get("gkamion_verified") ?? null,
+    }
+  },
   contactInboxService: { findByUncached: mocks.findContactInbox },
+  contactCustomFieldService: {
+    listWithDefinitions: mocks.listContactFields,
+  },
   contactService: { findById: mocks.findContact },
   conversationService: {
     findByUncached: mocks.findConversation,
@@ -202,7 +215,13 @@ describe("processExternalAgentReply", () => {
     mocks.findConversation.mockResolvedValue(conversation)
     mocks.ensureActive.mockResolvedValue(true)
     mocks.findContactInbox.mockResolvedValue(contactInbox)
-    mocks.findContact.mockResolvedValue({ fullName: "Иван" })
+    mocks.findContact.mockResolvedValue({
+      id: "contact-1",
+      fullName: "Иван",
+      phoneNumber: null,
+      email: null,
+    })
+    mocks.listContactFields.mockResolvedValue([])
     mocks.getRuntime.mockResolvedValue(runtime)
     mocks.findConversationState.mockResolvedValue(state())
     mocks.listMessages.mockResolvedValue(conversationMessages())
@@ -354,11 +373,20 @@ describe("processExternalAgentReply", () => {
       attachmentUrls: [],
     })
     expect(params).toMatchObject({
-      contact: { name: "Иван" },
+      contact: {
+        name: "Иван",
+        phoneNumber: null,
+        email: null,
+        gkamionCustomerId: null,
+        gkamionVerified: null,
+      },
       channel: "max",
       conversationId: "conv-1",
       contactId: "contact-1",
       workspaceId: "ws-1",
+    })
+    expect(mocks.listContactFields).toHaveBeenCalledWith({
+      contactId: "contact-1",
     })
 
     expect(mocks.startRun).toHaveBeenCalledWith({
@@ -391,6 +419,30 @@ describe("processExternalAgentReply", () => {
       { input: "text m-new-1\ntext m-new-2", instructions: "chatbotx context" },
       86_400,
     )
+  })
+
+  test("passes the contact phone, email and gkamion link into the run", async () => {
+    mocks.findContact.mockResolvedValue({
+      id: "contact-1",
+      fullName: "  Рафаэль  ",
+      phoneNumber: " +79261546770 ",
+      email: " ada@example.com ",
+    })
+    mocks.listContactFields.mockResolvedValue([
+      { name: "gkamion_customer_id", value: " 27 " },
+      { name: "gkamion_verified", value: "phone" },
+      { name: "note", value: "skip" },
+    ])
+
+    await run()
+
+    expect(mocks.buildRunInput.mock.calls[0]?.[0].contact).toEqual({
+      name: "Рафаэль",
+      phoneNumber: "+79261546770",
+      email: "ada@example.com",
+      gkamionCustomerId: "27",
+      gkamionVerified: "phone",
+    })
   })
 
   test("sends no history once includeHistory is off", async () => {

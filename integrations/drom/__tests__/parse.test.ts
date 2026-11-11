@@ -154,6 +154,18 @@ describe("parseView", () => {
     expect(view.orderUrl).toBeNull()
   })
 
+  test("keeps a price that sits beside the product link", () => {
+    const header = `
+<h3 class="bzr-dialog-header__sub-title">
+  3 018 р. • <a href="https://baza.drom.ru/ni/g18430354449.html">Диск тормозной Tatsumi TCC1147</a>
+</h3>`
+    expect(parseView({ dialog: "", header }).listing).toEqual({
+      title: "3 018 р. • Диск тормозной Tatsumi TCC1147",
+      url: "https://baza.drom.ru/ni/g18430354449.html",
+      price: 3018,
+    })
+  })
+
   test("reads the order link and the item from the sub-title", () => {
     const view = parseView({ dialog: "", header: ORDER_HEADER })
     expect(view.orderUrl).toBe("https://baza.drom.ru/deal/10000001")

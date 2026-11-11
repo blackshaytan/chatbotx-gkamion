@@ -1,3 +1,5 @@
+import { Readable } from "node:stream"
+import { isPrivateStorageUrl } from "@chatbotx.io/business"
 import { resolveFreshMediaUrl } from "@chatbotx.io/channel-registry/media-hydration"
 import { createMessageRepository } from "@chatbotx.io/database/repositories"
 import { uploader } from "@chatbotx.io/filesystem"
@@ -18,9 +20,67 @@ type RouteContext = { params: Promise<{ token: string }> }
 // Set by the client once a freshly re-signed storage URL has also failed to
 // load, i.e. the mirrored object is gone from storage.
 const RETRY_PARAM = "retry"
+const DOWNLOAD_PARAM = "download"
 
-const redirectMirrored = async (originPath: string): Promise<NextResponse> =>
-  NextResponse.redirect(await uploader.getPresignedDownload(originPath), 302)
+const downloadFilename = (lookup: {
+  name?: string | null
+  originPath: string
+}): string => {
+  const fromName = lookup.name?.trim()
+  const fromPath = lookup.originPath.split("/").pop()?.trim()
+  const raw = fromName || fromPath || "file"
+  return raw.replace(/[\r\n\\"]/g, "").slice(0, 180) || "file"
+}
+
+const contentDisposition = (download: boolean, filename: string): string => {
+  const kind = download ? "attachment" : "inline"
+  const ascii = [...filename]
+    .map((char) => {
+      const code = char.charCodeAt(0)
+      return code >= 32 && code <= 126 ? char : "_"
+    })
+    .join("")
+  return `${kind}; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(filename)}`
+}
+
+/** Stream a private-storage object. A redirect would point the browser at 127.0.0.1. */
+const streamPrivateAttachment = async (
+  lookup: { originPath: string; mimeType: string; name?: string | null },
+  download: boolean,
+): Promise<NextResponse> => {
+  const { stream, contentLength } = await uploader.getObjectStream(
+    lookup.originPath,
+  )
+  const headers = new Headers({
+    "Cache-Control": "private, max-age=3600",
+    "Content-Disposition": contentDisposition(
+      download,
+      downloadFilename(lookup),
+    ),
+    "Content-Type": lookup.mimeType || "application/octet-stream",
+    "X-Content-Type-Options": "nosniff",
+  })
+  if (contentLength !== undefined) {
+    headers.set("Content-Length", String(contentLength))
+  }
+  return new NextResponse(Readable.toWeb(stream) as ReadableStream, {
+    headers,
+    status: 200,
+  })
+}
+
+const redirectMirrored = async (
+  originPath: string,
+  lookup: { mimeType: string; name?: string | null },
+  request: NextRequest,
+): Promise<NextResponse> => {
+  const presigned = await uploader.getPresignedDownload(originPath)
+  if (!isPrivateStorageUrl(presigned)) {
+    return NextResponse.redirect(presigned, 302)
+  }
+  const download = new URL(request.url).searchParams.get(DOWNLOAD_PARAM) === "1"
+  return await streamPrivateAttachment({ ...lookup, originPath }, download)
+}
 
 // Serve an evicted mirrored attachment straight from the channel and restore
 // its object in the background. Storage is never probed and the row is never
@@ -108,7 +168,7 @@ export const GET = async (request: NextRequest, context: RouteContext) => {
       }
     }
     try {
-      return await redirectMirrored(lookup.originPath)
+      return await redirectMirrored(lookup.originPath, lookup, request)
     } catch (err) {
       // A storage signing/config failure must not surface as a broken 500 on
       // the inbox hot path; degrade to the unavailable placeholder.
@@ -147,7 +207,7 @@ export const GET = async (request: NextRequest, context: RouteContext) => {
       return unavailable()
     }
     if (refreshed && !isPendingOriginPath(refreshed.originPath)) {
-      return await redirectMirrored(refreshed.originPath)
+      return await redirectMirrored(refreshed.originPath, refreshed, request)
     }
 
     enqueueMirror()

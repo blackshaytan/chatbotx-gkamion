@@ -1433,6 +1433,11 @@ exports[`public API spec — operation naming guard > operation list (operationI
     "path": "/v1/external-agent",
   },
   {
+    "method": "POST",
+    "operationId": "externalCrm.deliverClientNotification",
+    "path": "/v1/external-crm/notifications",
+  },
+  {
     "method": "GET",
     "operationId": "externalCrm.getCustomer",
     "path": "/v1/external-crm/customers/orders",

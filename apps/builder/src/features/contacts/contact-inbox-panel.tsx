@@ -99,6 +99,7 @@ export const ContactInboxPanel = ({
     })
   const { data: contactData = null } = useQuery(contactQueryOptions)
   const queryClient = useQueryClient()
+  const updateContact = useChatStore((state) => state.updateContact)
 
   const setContactData = useCallback(
     (
@@ -119,6 +120,39 @@ export const ContactInboxPanel = ({
         queryKey: contactQueryOptions.queryKey,
       }),
     [contactQueryOptions.queryKey, queryClient],
+  )
+  const handleGkamionProfile = useCallback(
+    (profile: {
+      firstName: string | null
+      lastName: string | null
+      email: string | null
+      phoneNumber: string | null
+      fullName: string | null
+    }) => {
+      setContactData((previousContact) =>
+        previousContact
+          ? {
+              ...previousContact,
+              firstName: profile.firstName,
+              lastName: profile.lastName,
+              email: profile.email,
+              phoneNumber: profile.phoneNumber ?? previousContact.phoneNumber,
+              fullName: profile.fullName,
+            }
+          : previousContact,
+      )
+      if (contactId) {
+        updateContact(contactId, {
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          email: profile.email,
+          phoneNumber: profile.phoneNumber,
+          fullName: profile.fullName,
+        })
+      }
+      onProfileUpdated()
+    },
+    [contactId, onProfileUpdated, setContactData, updateContact],
   )
 
   useAutoRefreshContactProfile({
@@ -261,6 +295,7 @@ export const ContactInboxPanel = ({
       {contactData?.id ? (
         <ContactOrdersSection
           contactId={contactData.id}
+          onProfileApplied={handleGkamionProfile}
           workspaceId={workspaceId}
         />
       ) : null}
