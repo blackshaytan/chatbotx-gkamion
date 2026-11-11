@@ -63,6 +63,44 @@ hypertables:
   `timescaledb_information.chunks`, then proves Message/Attachment UPDATE/DELETE
   and stale publish rejection still work on compressed data.
 
+## Memory-gate contract vs. upstream write semantics
+
+The gate separates three independent layers so that a known upstream
+TimescaleDB EPQ limitation is not misreported as a memory-contract failure:
+
+1. **Plain-PostgreSQL same-row reference** (`PostgresSameRowWriteSemanticsTests`):
+   on the `postgres:17` service job the original same-row UPDATE race is
+   preserved byte-for-byte as a reference check that the upstream database
+   serializes two concurrent UPDATEs of the same row.
+2. **Shared memory-gate contract** (`MessageInvalidationTests`,
+   `AttachmentInvalidationTests`, `CasPublishTests`, `TopologyTests`, and the
+   TimescaleDB re-runs of the same classes): memory guarantees a sourceRevision
+   bump for every **committed** Message/Attachment mutation. The new
+   `test_concurrent_distinct_messages_same_source_no_lost_revision` exercises
+   two different Message rows in the same conversation and therefore proves that
+   the gate does not lose source increments when rows differ; this test passes
+   on both plain PostgreSQL and TimescaleDB.
+3. **TimescaleDB same-row characterization**
+   (`TimescaleUpstream10902CharacterizationTests`, imported into
+   `test_timescale.py`): four deterministic blocking cases on the pinned
+   production TimescaleDB image record the real committed mutations for
+   concurrent same-row operations. If the second writer reports
+   `rowcount = 0`, the test logs a warning with the exact tag
+   "upstream platform limitation, DB semantics not asserted correct" and writes
+   evidence JSON containing the live server/extension versions, issue
+   `timescale/timescaledb#10902`, fix SHA
+   `d6b6dc649622ffeab20d88ccfba6190c1c631922`, and the observed deltas. The
+   test still asserts facts about committed rows (first writer rowcount = 1,
+   source revision delta equals the sum of committed rowcounts, final row/xmin
+   matches the winning RETURNING tuple), but it does **not** downgrade any
+   memory CAS, rollback, compression, or isolation assertions.
+
+This task does **not** upgrade production TimescaleDB. T15 pilot must evaluate
+whether the official fix applies to the installed production version, the write
+paths used, and whether the image can be updated. The EPQ limitation is a
+hypertable-specific storage issue and does not by itself imply that the memory
+CAS or sourceRevision counter is unsafe on ordinary tables.
+
 ## Fixture (scripts/dialog-memory-gate/fixture.sql)
 
 Dedicated schema `dialog_memory_gate` with a representative subset:
@@ -161,7 +199,8 @@ below.
    but carry their own workspace/conversation must not bump the foreign owner.
 3. Rolled back transaction does not move the committed sourceRevision.
 4. updatedAt-only update is content-neutral (no invalidation).
-5. Two concurrent UPDATEs serialize sourceRevision with no lost update.
+5. Two concurrent UPDATEs on **distinct** Message rows in the same
+   conversation serialize sourceRevision with no lost update (PG and TS).
 6. Stale summary fails CAS after a Message edit; fresh summary passes.
 7. Deterministic publish/edit interleavings: edit-before-publish rejects the
    stale snapshot; publish-before-edit is allowed and a subsequent stale
@@ -181,6 +220,11 @@ below.
 16. Missing global topology singleton rejects publish safely.
 17. All test harness connections carry a `statement_timeout` so concurrent
     threads fail fast instead of hanging.
+18. Plain-PostgreSQL same-row UPDATE serialization reference is preserved as a
+    separate upstream-semantics check.
+19. TimescaleDB same-row concurrent-write characterization documents the real
+    committed mutations under upstream issue #10902, without weakening any
+    memory-gate assertions.
 
 ## Known boundaries / honest RED items
 

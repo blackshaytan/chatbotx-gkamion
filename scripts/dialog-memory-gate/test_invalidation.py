@@ -337,47 +337,48 @@ class MessageInvalidationTests(GateBase):
             tx.close()
         self.assertEqual(self.revision_of("conv-1"), rev0)
 
-    def test_concurrent_updates_serialize_without_lost_update(self) -> None:
-        self.insert_message("ws-1", "conv-1", "m-9")
+    def test_concurrent_distinct_messages_same_source_no_lost_revision(self) -> None:
+        created = "2026-03-01 10:00:00+00"
+        self.insert_message("ws-1", "conv-1", "m-dist-a", created=created, text="hello")
+        self.insert_message("ws-1", "conv-1", "m-dist-b", created=created, text="hello")
         rev0 = self.revision_of("conv-1")
         barrier = threading.Barrier(2)
-        observations: list[dict[str, object]] = []
+        observations: dict[str, dict[str, object]] = {}
         errors: list[BaseException] = []
 
-        def bump(value: str) -> None:
+        def bump(mid: str, value: str) -> None:
+            conn = None
             try:
                 conn = _raw_connect()
-                try:
-                    with conn.cursor() as cur:
-                        barrier.wait(timeout=10)
-                        cur.execute("SET search_path = dialog_memory_gate, public")
-                        cur.execute(
-                            'UPDATE "Message" SET "text" = %s WHERE "id" = %s'
-                            ' RETURNING id, text, tableoid::regclass::text, xmin::text',
-                            (value, "m-9"),
-                        )
-                        rowcount = cur.rowcount
-                        row = cur.fetchone()
-                        observations.append(
-                            {
-                                "value": value,
-                                "rowcount": rowcount,
-                                "returned": {
-                                    "id": row[0] if row else None,
-                                    "text": row[1] if row else None,
-                                    "tableoid": row[2] if row else None,
-                                    "xmin": row[3] if row else None,
-                                },
-                            }
-                        )
-                finally:
-                    conn.close()
+                with conn.cursor() as cur:
+                    cur.execute("SET search_path = dialog_memory_gate, public")
+                    barrier.wait(timeout=10)
+                    cur.execute(
+                        'UPDATE "Message" SET "text" = %s WHERE "id" = %s'
+                        ' RETURNING id, text, tableoid::regclass::text, xmin::text',
+                        (value, mid),
+                    )
+                    rowcount = cur.rowcount
+                    row = cur.fetchone()
+                    observations[mid] = {
+                        "value": value,
+                        "rowcount": rowcount,
+                        "returned": {
+                            "id": row[0] if row else None,
+                            "text": row[1] if row else None,
+                            "tableoid": row[2] if row else None,
+                            "xmin": row[3] if row else None,
+                        },
+                    }
             except BaseException as exc:  # pragma: no cover - diagnostic
                 errors.append(exc)
                 raise
+            finally:
+                if conn is not None:
+                    conn.close()
 
-        t1 = threading.Thread(target=bump, args=("a",))
-        t2 = threading.Thread(target=bump, args=("b",))
+        t1 = threading.Thread(target=bump, args=("m-dist-a", "a"))
+        t2 = threading.Thread(target=bump, args=("m-dist-b", "b"))
         t1.start()
         t2.start()
         t1.join(15)
@@ -385,11 +386,12 @@ class MessageInvalidationTests(GateBase):
         with self.conn.cursor() as cur:
             cur.execute("SET search_path = dialog_memory_gate, public")
             cur.execute(
-                'SELECT text, tableoid::regclass::text, xmin::text'
-                ' FROM "Message" WHERE "id" = %s',
-                ("m-9",),
+                'SELECT "id", "text", tableoid::regclass::text, xmin::text'
+                ' FROM "Message" WHERE "id" IN (%s, %s) ORDER BY "id"',
+                ("m-dist-a", "m-dist-b"),
             )
-            final = cur.fetchone()
+            final_a = cur.fetchone()
+            final_b = cur.fetchone()
             cur.execute(
                 'SELECT "sourceRevision" FROM "DialogMemorySource"'
                 ' WHERE "conversationId" = %s',
@@ -401,17 +403,29 @@ class MessageInvalidationTests(GateBase):
             "after_revision": final_rev[0] if final_rev else None,
             "observations": observations,
             "errors": [repr(e) for e in errors],
-            "final_row": {
-                "text": final[0] if final else None,
-                "tableoid": final[1] if final else None,
-                "xmin": final[2] if final else None,
+            "final_rows": {
+                "a": {
+                    "id": final_a[0] if final_a else None,
+                    "text": final_a[1] if final_a else None,
+                    "tableoid": final_a[2] if final_a else None,
+                    "xmin": final_a[3] if final_a else None,
+                },
+                "b": {
+                    "id": final_b[0] if final_b else None,
+                    "text": final_b[1] if final_b else None,
+                    "tableoid": final_b[2] if final_b else None,
+                    "xmin": final_b[3] if final_b else None,
+                },
             },
         }
         print(json.dumps(diagnostics, sort_keys=True, default=str), flush=True)
         self.assertFalse(errors, msg=repr(diagnostics))
         self.assertFalse(t1.is_alive(), msg=repr(diagnostics))
         self.assertFalse(t2.is_alive(), msg=repr(diagnostics))
-        # Both updates must be reflected: no lost +1.
+        self.assertEqual(observations.get("m-dist-a", {}).get("rowcount"), 1)
+        self.assertEqual(observations.get("m-dist-b", {}).get("rowcount"), 1)
+        self.assertEqual(final_a[1], "a")
+        self.assertEqual(final_b[1], "b")
         self.assertEqual(
             self.revision_of("conv-1"), rev0 + 2, msg=repr(diagnostics)
         )
@@ -1098,6 +1112,95 @@ class TopologyTests(GateBase):
             "ws-1", "conv-t1", "tm-2", created="2027-03-01 10:00:00+00"
         )
         self.assertNotEqual(self.revision_of("conv-t1"), before)
+
+
+class PostgresSameRowWriteSemanticsTests(GateBase):
+    """Reference check for plain PostgreSQL same-row UPDATE serialization.
+
+    This class is deliberately NOT mixed into the TimescaleDB suite: it checks
+    the upstream PostgreSQL semantics on the plain-Postgres job. The shared
+    memory gate only guarantees a revision for each committed mutation, not
+    for attempted UPDATEs that the platform silently turns into no-ops.
+    """
+
+    def test_concurrent_updates_serialize_without_lost_update(self) -> None:
+        self.insert_message("ws-1", "conv-1", "m-9")
+        rev0 = self.revision_of("conv-1")
+        barrier = threading.Barrier(2)
+        observations: list[dict[str, object]] = []
+        errors: list[BaseException] = []
+
+        def bump(value: str) -> None:
+            try:
+                conn = _raw_connect()
+                try:
+                    with conn.cursor() as cur:
+                        barrier.wait(timeout=10)
+                        cur.execute("SET search_path = dialog_memory_gate, public")
+                        cur.execute(
+                            'UPDATE "Message" SET "text" = %s WHERE "id" = %s'
+                            ' RETURNING id, text, tableoid::regclass::text, xmin::text',
+                            (value, "m-9"),
+                        )
+                        rowcount = cur.rowcount
+                        row = cur.fetchone()
+                        observations.append(
+                            {
+                                "value": value,
+                                "rowcount": rowcount,
+                                "returned": {
+                                    "id": row[0] if row else None,
+                                    "text": row[1] if row else None,
+                                    "tableoid": row[2] if row else None,
+                                    "xmin": row[3] if row else None,
+                                },
+                            }
+                        )
+                finally:
+                    conn.close()
+            except BaseException as exc:  # pragma: no cover - diagnostic
+                errors.append(exc)
+                raise
+
+        t1 = threading.Thread(target=bump, args=("a",))
+        t2 = threading.Thread(target=bump, args=("b",))
+        t1.start()
+        t2.start()
+        t1.join(15)
+        t2.join(15)
+        with self.conn.cursor() as cur:
+            cur.execute("SET search_path = dialog_memory_gate, public")
+            cur.execute(
+                'SELECT text, tableoid::regclass::text, xmin::text'
+                ' FROM "Message" WHERE "id" = %s',
+                ("m-9",),
+            )
+            final = cur.fetchone()
+            cur.execute(
+                'SELECT "sourceRevision" FROM "DialogMemorySource"'
+                ' WHERE "conversationId" = %s',
+                ("conv-1",),
+            )
+            final_rev = cur.fetchone()
+        diagnostics = {
+            "before_revision": rev0,
+            "after_revision": final_rev[0] if final_rev else None,
+            "observations": observations,
+            "errors": [repr(e) for e in errors],
+            "final_row": {
+                "text": final[0] if final else None,
+                "tableoid": final[1] if final else None,
+                "xmin": final[2] if final else None,
+            },
+        }
+        print(json.dumps(diagnostics, sort_keys=True, default=str), flush=True)
+        self.assertFalse(errors, msg=repr(diagnostics))
+        self.assertFalse(t1.is_alive(), msg=repr(diagnostics))
+        self.assertFalse(t2.is_alive(), msg=repr(diagnostics))
+        # Both updates must be reflected: no lost +1.
+        self.assertEqual(
+            self.revision_of("conv-1"), rev0 + 2, msg=repr(diagnostics)
+        )
 
 
 _guard_env()  # refuse early, before any connection attempt

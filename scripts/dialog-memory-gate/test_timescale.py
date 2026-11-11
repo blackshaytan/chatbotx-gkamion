@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import pathlib
 import re
+import sys
 import textwrap
 import unittest
 
@@ -334,4 +335,16 @@ class TimescaleCompressedTests(TimescaleGateBase):
 
 
 if __name__ == "__main__":
+    # When this file is executed as a script, ``test_timescale_characterization``
+    # imports it as ``test_timescale``. Register the current module under that
+    # name so the script entry-point does not execute itself twice.
+    sys.modules.setdefault("test_timescale", sys.modules[__name__])
+    # Import the upstream-issue characterization suite explicitly into this
+    # script-based runner. Kept inside ``__main__`` to avoid a circular import
+    # when ``test_timescale_characterization`` loads ``test_timescale`` as a
+    # module to inherit ``TimescaleGateBase``.
+    from test_timescale_characterization import (
+        TimescaleUpstream10902CharacterizationTests,
+    )
+
     unittest.main(verbosity=2)
