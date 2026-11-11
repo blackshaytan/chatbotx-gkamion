@@ -5,6 +5,12 @@
 -- scripts/dialog-memory-gate/invalidation.sql (does not exist in RED stage).
 -- What this fixture DOES provide is the prospective publish CAS contract
 -- (publish_summary_candidate) as an explicit SQL helper, plus registry tables.
+--
+-- IMPORTANT: id columns here are intentionally TEXT for the RED prototype.
+-- Production MessageShard.id is a bigint (bigintAsString()), and the real
+-- Message/Attachment storage is a TimescaleDB hypertable with compression,
+-- not these declarative range partitions. This fixture proves the
+-- invalidation contract, not the final migration.
 
 SET client_min_messages = notice;
 
@@ -75,21 +81,28 @@ CREATE TABLE "Attachment" (
   PRIMARY KEY ("id", "createdAt")
 );
 
--- Shard registry: ANY row (active or not) disables memory.
+-- MessageShard registry is GLOBAL: it has no workspaceId/status columns.
+-- The real registry lives in packages/database/src/sharding/message/schema/shard.ts.
+-- ANY row here (active or not) disables dialog memory for every workspace.
 CREATE TABLE "MessageShard" (
   "id" text PRIMARY KEY,
-  "workspaceId" text NOT NULL,
-  "shardIndex" integer NOT NULL,
-  "status" text NOT NULL DEFAULT 'active', -- active | draining | retired
+  "name" text NOT NULL,
+  "host" text NOT NULL,
+  "database" text NOT NULL,
+  "user" text NOT NULL,
+  "isActive" boolean NOT NULL DEFAULT false,
+  "isMain" boolean NOT NULL DEFAULT false,
+  "shardKey" integer,
   "createdAt" timestamptz NOT NULL DEFAULT now()
 );
 
+-- ShardTimeRange references the global MessageShard by shardId; startTime/endTime.
+-- Real definition: packages/database/src/sharding/message/schema/time-range.ts.
 CREATE TABLE "ShardTimeRange" (
   "id" text PRIMARY KEY,
-  "workspaceId" text NOT NULL,
-  "messageShardId" text NOT NULL,
-  "fromCreatedAt" timestamptz,
-  "toCreatedAt" timestamptz
+  "shardId" text NOT NULL REFERENCES "MessageShard"("id") ON DELETE CASCADE,
+  "startTime" timestamptz NOT NULL,
+  "endTime" timestamptz
 );
 
 -- Monotonic per-conversation source revision (main DB). Bumped in the SAME
@@ -100,15 +113,16 @@ CREATE TABLE "DialogMemorySource" (
   "sourceRevision" numeric NOT NULL DEFAULT 0
 );
 
--- Monotonic per-workspace topology epoch (main DB). Bumped on ANY
--- MessageShard/ShardTimeRange change; never decrements, deleting registry
--- rows does not restore an older epoch.
+-- Global singleton topology epoch. MessageShard / ShardTimeRange mutations
+-- invalidate memory for ALL workspaces. Deleting registry rows never rolls
+-- the epoch back; in GREEN, TRUNCATE of the registry must also invalidate.
 CREATE TABLE "DialogMemoryTopology" (
-  "workspaceId" text PRIMARY KEY,
+  "id" text PRIMARY KEY DEFAULT 'global',
   "topologyEpoch" integer NOT NULL DEFAULT 0
 );
 
--- Main memory row: one per conversation (v1).
+-- Main memory row: one per conversation (v1). topologyEpoch stores the global
+-- epoch snapshot that was current when the summary was accepted.
 CREATE TABLE "DialogMemory" (
   "conversationId" text PRIMARY KEY,
   "workspaceId" text NOT NULL,
@@ -121,9 +135,11 @@ CREATE TABLE "DialogMemory" (
 
 -- Prospective publish CAS contract (fixture-owned, intentionally here so RED
 -- can validate candidate handling without the future write path):
--- publishes only if sourceRevision AND memoryVersion AND topologyEpoch all
--- still match the snapshot taken before generation. Coverage and delivery are
--- independent of this guard.
+-- locks global topology row, then source row, then memory row in the same
+-- stable order the GREEN registry trigger will use, performs a single
+-- conditional UPDATE checking sourceRevision + memoryVersion + topologyEpoch +
+-- NOT EXISTS "MessageShard", and returns true only if exactly one memory row
+-- was updated. Coverage and delivery are independent of this guard.
 CREATE OR REPLACE FUNCTION publish_summary_candidate(
   p_conversation_id text,
   p_summary text,
@@ -135,42 +151,57 @@ LANGUAGE plpgsql
 AS $fn$
 DECLARE
   v_workspace_id text;
-  v_revision_ok boolean;
-  v_topo_ok boolean;
-  v_version_ok boolean;
+  v_actual_revision numeric;
+  v_actual_topology_epoch integer;
 BEGIN
-  SELECT s."workspaceId",
-         (s."sourceRevision" = p_expected_source_revision)
-    INTO v_workspace_id, v_revision_ok
-    FROM "DialogMemorySource" s
-   WHERE s."conversationId" = p_conversation_id;
-  IF NOT FOUND THEN
-    RETURN false; -- unknown conversation: memory is never auto-created
-  END IF;
-
-  SELECT (t."topologyEpoch" = p_expected_topology_epoch)
-    INTO v_topo_ok
+  -- 1) Lock the global topology row first (same lock order the GREEN registry
+  --    trigger will use) and read the actual epoch under the lock.
+  SELECT t."topologyEpoch"
+    INTO v_actual_topology_epoch
     FROM "DialogMemoryTopology" t
-   WHERE t."workspaceId" = v_workspace_id;
-  v_topo_ok := COALESCE(v_topo_ok, false);
+   WHERE t."id" = 'global'
+     FOR UPDATE;
 
-  SELECT (m."memoryVersion" = p_expected_memory_version)
-    INTO v_version_ok
-    FROM "DialogMemory" m
-   WHERE m."conversationId" = p_conversation_id;
-  v_version_ok := COALESCE(v_version_ok, false);
-
-  IF NOT (v_revision_ok AND v_topo_ok AND v_version_ok) THEN
+  IF NOT FOUND
+     OR v_actual_topology_epoch IS DISTINCT FROM p_expected_topology_epoch THEN
     RETURN false;
   END IF;
 
-  UPDATE "DialogMemory"
+  -- 2) Lock the conversation source row and verify the expected revision.
+  SELECT s."workspaceId", s."sourceRevision"
+    INTO v_workspace_id, v_actual_revision
+    FROM "DialogMemorySource" s
+   WHERE s."conversationId" = p_conversation_id
+     FOR UPDATE;
+
+  IF NOT FOUND OR v_actual_revision IS DISTINCT FROM p_expected_source_revision THEN
+    RETURN false;
+  END IF;
+
+  -- 3) Lock the memory row (no-op if missing, but keeps a stable order).
+  PERFORM 1
+    FROM "DialogMemory" m
+   WHERE m."conversationId" = p_conversation_id
+     AND m."workspaceId" = v_workspace_id
+     FOR UPDATE;
+
+  -- 4) Conditional, workspace-scoped CAS update. The NOT EXISTS guard
+  --    reflects the agreed rule: any MessageShard row disables memory.
+  --    m."topologyEpoch" is intentionally not checked against the expected
+  --    value: once the global topology lock confirms the epoch, an older
+  --    memory row is allowed to catch up to the current epoch if the source
+  --    revision and memory version still match and the registry is empty.
+  UPDATE "DialogMemory" m
      SET "summary" = p_summary,
          "memoryVersion" = "memoryVersion" + 1,
-         "topologyEpoch" = p_expected_topology_epoch,
+         "topologyEpoch" = v_actual_topology_epoch,
          "updatedAt" = now()
-   WHERE "conversationId" = p_conversation_id;
-  RETURN true;
+   WHERE m."conversationId" = p_conversation_id
+     AND m."workspaceId" = v_workspace_id
+     AND m."memoryVersion" = p_expected_memory_version
+     AND NOT EXISTS (SELECT 1 FROM "MessageShard");
+
+  RETURN FOUND;
 END;
 $fn$;
 

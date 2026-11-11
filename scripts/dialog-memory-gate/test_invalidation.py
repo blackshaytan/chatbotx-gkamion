@@ -5,7 +5,7 @@ Runs ONLY in GitHub Actions against a dedicated PostgreSQL (service container)
 database named ``dialog_memory_gate``. Hard requirements:
 
   * DIALOG_MEMORY_TEST_DATABASE_URL set explicitly (never DATABASE_URL)
-  * connected database name equals ``dialog_memory_gate``
+  * dbname parsed from that URL equals ``dialog_memory_gate``
   * DIALOG_MEMORY_TEST_ALLOW_WRITES=1
 
 The future prototype triggers/functions will live in
@@ -24,6 +24,7 @@ import pathlib
 import sys
 import threading
 import unittest
+from typing import Any
 
 REQUIRED_DB = "dialog_memory_gate"
 BASE = pathlib.Path(__file__).resolve().parent
@@ -43,6 +44,12 @@ URL = os.environ.get("DIALOG_MEMORY_TEST_DATABASE_URL")
 ALLOW = os.environ.get("DIALOG_MEMORY_TEST_ALLOW_WRITES")
 
 
+def _dbname_from_url(url: str) -> str:
+    info = psycopg.conninfo.make_conninfo(url)
+    parts = psycopg.conninfo.conninfo_to_dict(info)
+    return parts.get("dbname") or ""
+
+
 def _guard_env() -> None:
     if not URL:
         raise SystemExit(
@@ -54,22 +61,30 @@ def _guard_env() -> None:
             "DIALOG_MEMORY_TEST_DATABASE_URL must be an explicit dedicated CI "
             "URL, not a copy of DATABASE_URL."
         )
+    if _dbname_from_url(URL) != REQUIRED_DB:
+        raise SystemExit(
+            f"DIALOG_MEMORY_TEST_DATABASE_URL dbname must be {REQUIRED_DB!r}. "
+            "Refusing to run before any connection."
+        )
     if ALLOW != "1":
         raise SystemExit(
             "DIALOG_MEMORY_TEST_ALLOW_WRITES=1 is required. Refusing without it."
         )
 
 
-def _connect(dbname: str | None = None) -> "psycopg.Connection":
+def _raw_connect() -> "psycopg.Connection":
     assert URL is not None
-    if dbname is None:
-        return psycopg.connect(URL, autocommit=True)
-    info = psycopg.conninfo.make_conninfo(URL)
-    parts = {
-        k: v for k, v in psycopg.conninfo.conninfo_to_dict(info).items() if v
-    }
-    parts["dbname"] = dbname
-    return psycopg.connect(**parts, autocommit=True)
+    conn = psycopg.connect(URL, autocommit=True)
+    # Prevent any single buggy statement from hanging CI if a thread misbehaves.
+    conn.execute("SET statement_timeout = '10s'")
+    return conn
+
+
+def _tx_connect() -> "psycopg.Connection":
+    """Transactional harness connection with the same safety timeout."""
+    conn = _raw_connect()
+    conn.autocommit = False
+    return conn
 
 
 class GateBase(unittest.TestCase):
@@ -77,19 +92,9 @@ class GateBase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        # Create the dedicated database idempotently via the maintenance DB
-        # derived from the same URL (postgres:17 service ships empty).
-        maintenance = _connect("postgres")
-        try:
-            with maintenance.cursor() as cur:
-                cur.execute(
-                    f"SELECT 1 FROM pg_database WHERE datname = '{REQUIRED_DB}'"
-                )
-                if cur.fetchone() is None:
-                    cur.execute(f'CREATE DATABASE "{REQUIRED_DB}"')
-        finally:
-            maintenance.close()
-        cls.conn = _connect()
+        # The CI workflow creates the dedicated database via POSTGRES_DB.
+        # We reconnect, assert the identity, and rebuild the dedicated schema.
+        cls.conn = _raw_connect()
         with cls.conn.cursor() as cur:
             cur.execute("SELECT current_database()")
             db = cur.fetchone()[0]
@@ -125,6 +130,11 @@ class GateBase(unittest.TestCase):
                 '"Workspace"',
             ):
                 cur.execute(f"TRUNCATE {table} CASCADE")
+            # Global topology singleton is recreated fresh for every test.
+            cur.execute(
+                'INSERT INTO "DialogMemoryTopology" DEFAULT VALUES '
+                'ON CONFLICT ("id") DO NOTHING'
+            )
 
     # ---- tiny data helpers -------------------------------------------------
     def make_workspace(self, wid: str) -> None:
@@ -132,11 +142,6 @@ class GateBase(unittest.TestCase):
             cur.execute(
                 'INSERT INTO "Workspace" ("id") VALUES (%s)'
                 ' ON CONFLICT ("id") DO NOTHING',
-                (wid,),
-            )
-            cur.execute(
-                'INSERT INTO "DialogMemoryTopology" ("workspaceId")'
-                " VALUES (%s) ON CONFLICT DO NOTHING",
                 (wid,),
             )
 
@@ -191,7 +196,7 @@ class GateBase(unittest.TestCase):
                 (aid, cid, wid, mid, mcreated, f"s3://gate/{aid}"),
             )
 
-    def revision_of(self, cid: str):
+    def revision_of(self, cid: str) -> Any:
         with self.conn.cursor() as cur:
             cur.execute(
                 'SELECT "sourceRevision" FROM "DialogMemorySource"'
@@ -201,12 +206,12 @@ class GateBase(unittest.TestCase):
             row = cur.fetchone()
         return row[0] if row else None
 
-    def epoch_of(self, wid: str) -> int:
+    def epoch_of(self) -> int:
         with self.conn.cursor() as cur:
             cur.execute(
                 'SELECT "topologyEpoch" FROM "DialogMemoryTopology"'
-                ' WHERE "workspaceId" = %s',
-                (wid,),
+                ' WHERE "id" = %s',
+                ("global",),
             )
             row = cur.fetchone()
         return int(row[0]) if row else 0
@@ -316,7 +321,7 @@ class MessageInvalidationTests(GateBase):
     def test_rollback_does_not_move_committed_revision(self) -> None:
         self.insert_message("ws-1", "conv-1", "m-8")
         rev0 = self.revision_of("conv-1")
-        tx = _connect()
+        tx = _raw_connect()
         try:
             with tx.cursor() as cur:
                 cur.execute("BEGIN")
@@ -339,7 +344,7 @@ class MessageInvalidationTests(GateBase):
 
         def bump(value: str) -> None:
             try:
-                conn = _connect()
+                conn = _raw_connect()
                 with conn.cursor() as cur:
                     barrier.wait(timeout=10)
                     cur.execute("SET search_path = dialog_memory_gate, public")
@@ -359,6 +364,8 @@ class MessageInvalidationTests(GateBase):
         t1.join(15)
         t2.join(15)
         self.assertFalse(errors, f"concurrent updates failed: {errors}")
+        self.assertFalse(t1.is_alive())
+        self.assertFalse(t2.is_alive())
         # Both updates must be reflected: no lost +1.
         self.assertEqual(self.revision_of("conv-1"), rev0 + 2)
 
@@ -376,6 +383,65 @@ class MessageInvalidationTests(GateBase):
         # Meaningful edit only in ws-1.
         self.insert_message("ws-1", "conv-1", "m-11")
         self.assertEqual(self.revision_of("conv-2"), rev_ws2)
+
+    def test_reassign_message_to_other_conversation_bumps_both_owners(self) -> None:
+        self.make_conversation("ws-1", "conv-1a")
+        self.insert_message("ws-1", "conv-1", "m-reassign")
+        rev_old = self.revision_of("conv-1")
+        rev_new = self.revision_of("conv-1a")
+        with self.conn.cursor() as cur:
+            cur.execute(
+                'UPDATE "Message" SET "conversationId" = %s WHERE "id" = %s',
+                ("conv-1a", "m-reassign"),
+            )
+        self.assertIsNotNone(rev_old)
+        self.assertIsNotNone(rev_new)
+        self.assertGreater(self.revision_of("conv-1"), rev_old)
+        self.assertGreater(self.revision_of("conv-1a"), rev_new)
+
+    def test_reassign_message_to_other_workspace_bumps_both_owners(self) -> None:
+        self.make_workspace("ws-2")
+        self.make_conversation("ws-2", "conv-2a")
+        self.insert_message("ws-1", "conv-1", "m-ws-move")
+        rev_old = self.revision_of("conv-1")
+        rev_new = self.revision_of("conv-2a")
+        self.assertIsNotNone(rev_old)
+        self.assertIsNotNone(rev_new)
+        with self.conn.cursor() as cur:
+            cur.execute(
+                'UPDATE "Message" SET "conversationId" = %s, "workspaceId" = %s'
+                ' WHERE "id" = %s',
+                ("conv-2a", "ws-2", "m-ws-move"),
+            )
+        self.assertGreater(self.revision_of("conv-1"), rev_old)
+        self.assertGreater(self.revision_of("conv-2a"), rev_new)
+
+    def test_source_id_and_created_at_composition_for_attachment(self) -> None:
+        created = "2026-03-01 10:00:00+00"
+        self.insert_message("ws-1", "conv-1", "m-source", created=created)
+        rev = self.revision_of("conv-1")
+        # Correct (messageId, messageCreatedAt) pair resolves the parent.
+        self.insert_attachment("ws-1", "conv-1", "att-ok", "m-source", created)
+        self.assertGreater(self.revision_of("conv-1"), rev)
+        # A mismatched messageCreatedAt makes the row orphan even with a known id.
+        rev2 = self.revision_of("conv-1")
+        with self.conn.cursor() as cur:
+            cur.execute(
+                'INSERT INTO "Attachment"'
+                ' ("id", "conversationId", "workspaceId", "messageId",'
+                ' "messageCreatedAt", "fileType", "originPath")'
+                " VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (
+                    "att-wrong",
+                    "conv-1",
+                    "ws-1",
+                    "m-source",
+                    "2026-04-01 10:00:00+00",
+                    "image",
+                    "s3://gate/att-wrong",
+                ),
+            )
+        self.assertEqual(self.revision_of("conv-1"), rev2)
 
 
 class AttachmentInvalidationTests(GateBase):
@@ -449,18 +515,26 @@ class CasPublishTests(GateBase):
         self.insert_message("ws-1", "conv-c1", "cm-1")
         snapshot_rev = self.revision_of("conv-c1")
         version = self.memory_row("conv-c1")[1]
-        epoch = self.epoch_of("ws-1")
-        # Message edited while the summary was being generated.
+        epoch = self.epoch_of()
+        # Simulate the future source trigger: a committed meaningful edit bumps
+        # the source revision in the same transaction.
         with self.conn.cursor() as cur:
             cur.execute(
                 "UPDATE \"Message\" SET \"text\" = 'new content'"
                 ' WHERE "id" = %s',
                 ("cm-1",),
             )
+            cur.execute(
+                'UPDATE "DialogMemorySource" SET "sourceRevision" ='
+                ' "sourceRevision" + 1 WHERE "conversationId" = %s',
+                ("conv-c1",),
+            )
         accepted = self.publish(
             "conv-c1", "stale", snapshot_rev, version, epoch
         )
-        self.assertFalse(accepted, "CAS accepted a summary built on old sourceRevision")
+        self.assertFalse(
+            accepted, "CAS accepted a summary built on old sourceRevision"
+        )
         self.assertEqual(self.memory_row("conv-c1")[0], "seed")
 
     def test_fresh_summary_passes_cas(self) -> None:
@@ -470,34 +544,149 @@ class CasPublishTests(GateBase):
             "fresh",
             self.revision_of("conv-c1"),
             self.memory_row("conv-c1")[1],
-            self.epoch_of("ws-1"),
+            self.epoch_of(),
         )
         self.assertTrue(accepted)
         self.assertEqual(self.memory_row("conv-c1")[0], "fresh")
+
+    def test_concurrent_publishers_same_snapshot_only_one_wins(self) -> None:
+        self.insert_message("ws-1", "conv-c1", "cm-conc")
+        rev = self.revision_of("conv-c1")
+        version = self.memory_row("conv-c1")[1]
+        epoch = self.epoch_of()
+        results: list[tuple[str, object]] = []
+        barrier = threading.Barrier(2)
+
+        def attempt(label: str) -> None:
+            try:
+                conn = _tx_connect()
+                with conn.cursor() as cur:
+                    cur.execute("SET search_path = dialog_memory_gate, public")
+                    barrier.wait(timeout=10)
+                    cur.execute(
+                        "SELECT publish_summary_candidate(%s, %s, %s, %s, %s)",
+                        ("conv-c1", f"summary-{label}", rev, version, epoch),
+                    )
+                    ok = bool(cur.fetchone()[0])
+                conn.commit()
+                conn.close()
+                results.append((label, ok))
+            except BaseException as exc:
+                results.append((label, exc))
+
+        t1 = threading.Thread(target=attempt, args=("A",))
+        t2 = threading.Thread(target=attempt, args=("B",))
+        t1.start()
+        t2.start()
+        t1.join(15)
+        t2.join(15)
+        self.assertFalse(t1.is_alive())
+        self.assertFalse(t2.is_alive())
+        winners = [r for r in results if r[1] is True]
+        self.assertEqual(len(winners), 1, f"unexpected results: {results}")
+
+    def test_publish_concurrent_with_edit_serializes_and_edit_wins(self) -> None:
+        self.insert_message("ws-1", "conv-c1", "cm-race")
+        rev = self.revision_of("conv-c1")
+        version = self.memory_row("conv-c1")[1]
+        epoch = self.epoch_of()
+        results: dict[str, object] = {}
+        barrier = threading.Barrier(2)
+
+        def publish() -> None:
+            try:
+                conn = _tx_connect()
+                with conn.cursor() as cur:
+                    cur.execute("SET search_path = dialog_memory_gate, public")
+                    barrier.wait(timeout=10)
+                    cur.execute(
+                        "SELECT publish_summary_candidate(%s, %s, %s, %s, %s)",
+                        ("conv-c1", "during-edit", rev, version, epoch),
+                    )
+                    ok = bool(cur.fetchone()[0])
+                conn.commit()
+                conn.close()
+                results["publish"] = ok
+            except BaseException as exc:
+                results["publish"] = exc
+
+        def edit() -> None:
+            try:
+                conn = _tx_connect()
+                with conn.cursor() as cur:
+                    cur.execute("SET search_path = dialog_memory_gate, public")
+                    barrier.wait(timeout=10)
+                    cur.execute(
+                        'UPDATE "Message" SET "text" = %s WHERE "id" = %s',
+                        ("edited", "cm-race"),
+                    )
+                    cur.execute(
+                        'UPDATE "DialogMemorySource" SET "sourceRevision" ='
+                        ' "sourceRevision" + 1 WHERE "conversationId" = %s',
+                        ("conv-c1",),
+                    )
+                conn.commit()
+                conn.close()
+                results["edit"] = "committed"
+            except BaseException as exc:
+                results["edit"] = exc
+
+        t1 = threading.Thread(target=publish)
+        t2 = threading.Thread(target=edit)
+        t1.start()
+        t2.start()
+        t1.join(15)
+        t2.join(15)
+        self.assertFalse(t1.is_alive())
+        self.assertFalse(t2.is_alive())
+        pub = results.get("publish")
+        self.assertIsNotNone(rev)
+        self.assertIsInstance(pub, bool, f"publish failed: {pub}")
+        self.assertFalse(pub, "publish won against a concurrent edit")
+        self.assertEqual(self.revision_of("conv-c1"), rev + 1)
 
 
 class TopologyTests(GateBase):
     def setUp(self) -> None:
         super().setUp()
         self.make_workspace("ws-1")
+        self.make_workspace("ws-2")
         self.make_conversation("ws-1", "conv-t1")
+        self.make_conversation("ws-2", "conv-t2")
         self.make_memory("ws-1", "conv-t1")
+        self.make_memory("ws-2", "conv-t2")
 
-    def _insert_shard(self, sid: str, status: str = "active") -> None:
+    def _insert_shard(
+        self, sid: str, is_active: bool = False, is_main: bool = False
+    ) -> None:
         with self.conn.cursor() as cur:
             cur.execute(
-                'INSERT INTO "MessageShard" ("id", "workspaceId", "shardIndex",'
-                ' "status") VALUES (%s, %s, 0, %s)',
-                (sid, "ws-1", status),
+                'INSERT INTO "MessageShard"'
+                ' ("id", "name", "host", "database", "user", "isActive", "isMain")'
+                " VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (sid, f"shard-{sid}", f"host-{sid}", "postgres", "postgres", is_active, is_main),
             )
 
-    def test_any_shard_insert_bumps_topology_epoch_including_inactive(self) -> None:
-        self.assertEqual(self.epoch_of("ws-1"), 0)
+    def _insert_time_range(
+        self, rid: str, shard_id: str, start: str, end: str
+    ) -> None:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                'INSERT INTO "ShardTimeRange"'
+                ' ("id", "shardId", "startTime", "endTime")'
+                " VALUES (%s, %s, %s, %s)",
+                (rid, shard_id, start, end),
+            )
+
+    def test_any_shard_insert_bumps_global_topology_epoch(self) -> None:
+        self.assertEqual(self.epoch_of(), 0)
         self._insert_shard("shard-1")
-        self.assertEqual(self.epoch_of("ws-1"), 1)
+        self.assertEqual(self.epoch_of(), 1)
+
+    def test_inactive_shard_insert_bumps_global_topology_epoch(self) -> None:
         # Inactive/archived registry rows are still shard registry rows.
-        self._insert_shard("shard-2", status="retired")
-        self.assertEqual(self.epoch_of("ws-1"), 2)
+        self._insert_shard("shard-2", is_active=False)
+        self.assertEqual(self.epoch_of(), 1)
 
     def test_shard_insert_blocks_publish_with_old_epoch(self) -> None:
         self.insert_message("ws-1", "conv-t1", "tm-1")
@@ -506,34 +695,127 @@ class TopologyTests(GateBase):
         self._insert_shard("shard-3")  # topology changed after snapshot
         self.assertFalse(self.publish("conv-t1", "snap", rev, version, 0))
 
+    def test_fresh_candidate_with_current_epoch_and_registry_is_rejected(self) -> None:
+        # Memory must stay disabled whenever ANY MessageShard row exists, even
+        # if the candidate was snapshot after the shard was inserted.
+        self.insert_message("ws-1", "conv-t1", "tm-fresh")
+        self._insert_shard("shard-present")
+        epoch = self.epoch_of()
+        rev = self.revision_of("conv-t1")
+        version = self.memory_row("conv-t1")[1]
+        self.assertFalse(
+            self.publish("conv-t1", "fresh", rev, version, epoch),
+            "publish accepted while MessageShard registry is non-empty",
+        )
+
     def test_registry_delete_does_not_revive_old_epoch_summary(self) -> None:
         self._insert_shard("shard-4")
-        epoch_with_shard = self.epoch_of("ws-1")
+        epoch_with_shard = self.epoch_of()
         with self.conn.cursor() as cur:
             cur.execute('DELETE FROM "MessageShard" WHERE "id" = %s', ("shard-4",))
         # Epoch is monotonic: deleting registry rows must not roll it back.
-        self.assertGreaterEqual(self.epoch_of("ws-1"), epoch_with_shard)
+        self.assertGreaterEqual(self.epoch_of(), epoch_with_shard)
         rev = self.revision_of("conv-t1")
         version = self.memory_row("conv-t1")[1]
         # A summary snapshotted under an older epoch stays rejected forever.
         self.assertFalse(self.publish("conv-t1", "ghost", rev, version, 0))
 
-    def test_shard_time_range_change_bumps_epoch(self) -> None:
-        before = self.epoch_of("ws-1")
+    def test_registry_delete_bumps_epoch(self) -> None:
+        self._insert_shard("shard-del")
+        before = self.epoch_of()
         with self.conn.cursor() as cur:
-            cur.execute(
-                'INSERT INTO "ShardTimeRange" ("id", "workspaceId",'
-                ' "messageShardId", "fromCreatedAt", "toCreatedAt") VALUES'
-                " (%s, %s, %s, %s, %s)",
-                (
-                    "range-1",
-                    "ws-1",
-                    "shard-x",
-                    "2026-01-01 00:00:00+00",
-                    "2026-06-01 00:00:00+00",
-                ),
-            )
-        self.assertGreater(self.epoch_of("ws-1"), before)
+            cur.execute('DELETE FROM "MessageShard" WHERE "id" = %s', ("shard-del",))
+        # GREEN trigger must increment the global epoch on registry delete.
+        self.assertGreater(self.epoch_of(), before)
+
+    def test_truncate_registry_bumps_topology_epoch(self) -> None:
+        self._insert_shard("shard-trunc")
+        before = self.epoch_of()
+        with self.conn.cursor() as cur:
+            cur.execute('TRUNCATE "MessageShard" CASCADE')
+        # GREEN trigger must invalidate memory on registry TRUNCATE.
+        self.assertGreater(self.epoch_of(), before)
+
+    def test_shard_time_range_change_bumps_global_epoch(self) -> None:
+        self._insert_shard("shard-x")
+        before = self.epoch_of()
+        self._insert_time_range(
+            "range-1",
+            "shard-x",
+            "2026-01-01 00:00:00+00",
+            "2026-06-01 00:00:00+00",
+        )
+        self.assertGreater(self.epoch_of(), before)
+
+    def test_cross_workspace_any_shard_invalidates_all_workspaces(self) -> None:
+        self.insert_message("ws-1", "conv-t1", "tm-w1")
+        self.insert_message("ws-2", "conv-t2", "tm-w2")
+        rev1 = self.revision_of("conv-t1")
+        rev2 = self.revision_of("conv-t2")
+        v1 = self.memory_row("conv-t1")[1]
+        v2 = self.memory_row("conv-t2")[1]
+        # The registry is global: no workspaceId on MessageShard.
+        self._insert_shard("shard-global")
+        self.assertFalse(self.publish("conv-t1", "w1-snap", rev1, v1, 0))
+        self.assertFalse(self.publish("conv-t2", "w2-snap", rev2, v2, 0))
+        # Snapshots taken at the current epoch are still rejected while
+        # MessageShard is non-empty.
+        epoch = self.epoch_of()
+        self.assertFalse(
+            self.publish("conv-t1", "w1-current", rev1, v1, epoch)
+        )
+        self.assertFalse(
+            self.publish("conv-t2", "w2-current", rev2, v2, epoch)
+        )
+
+    def test_stale_epoch_after_registry_insert_delete_rejects(self) -> None:
+        # Snapshot a candidate at the clean epoch 0, then mutate the registry,
+        # then remove the registry row. The candidate snapshotted at epoch 0
+        # must stay rejected even though the registry is empty again.
+        self.insert_message("ws-1", "conv-t1", "tm-stale")
+        rev = self.revision_of("conv-t1")
+        version = self.memory_row("conv-t1")[1]
+        self._insert_shard("shard-stale")
+        with self.conn.cursor() as cur:
+            cur.execute('DELETE FROM "MessageShard" WHERE "id" = %s', ("shard-stale",))
+        self.assertFalse(
+            self.publish("conv-t1", "stale", rev, version, 0),
+            "stale-epoch candidate accepted after registry insert/delete",
+        )
+
+    def test_fresh_epoch_after_registry_removal_accepts(self) -> None:
+        # A fresh summary snapshot at the post-removal epoch must be allowed to
+        # publish once the registry is empty.
+        self._insert_shard("shard-removal")
+        with self.conn.cursor() as cur:
+            cur.execute('DELETE FROM "MessageShard" WHERE "id" = %s', ("shard-removal",))
+        self.insert_message("ws-1", "conv-t1", "tm-fresh-after")
+        epoch = self.epoch_of()
+        self.assertGreater(epoch, 0, "registry removal should have bumped epoch")
+        accepted = self.publish(
+            "conv-t1",
+            "fresh-after-removal",
+            self.revision_of("conv-t1"),
+            self.memory_row("conv-t1")[1],
+            epoch,
+        )
+        self.assertTrue(accepted)
+        self.assertEqual(self.memory_row("conv-t1")[0], "fresh-after-removal")
+
+    def test_missing_topology_singleton_rejects(self) -> None:
+        # If the global topology row is absent the publish CAS cannot verify the
+        # epoch and must fail safely.
+        self.insert_message("ws-1", "conv-t1", "tm-no-topo")
+        with self.conn.cursor() as cur:
+            cur.execute('DELETE FROM "DialogMemoryTopology" WHERE "id" = %s', ("global",))
+        accepted = self.publish(
+            "conv-t1",
+            "no-topology",
+            self.revision_of("conv-t1"),
+            self.memory_row("conv-t1")[1],
+            0,
+        )
+        self.assertFalse(accepted)
 
     def test_new_partition_inherits_trigger(self) -> None:
         with self.conn.cursor() as cur:
