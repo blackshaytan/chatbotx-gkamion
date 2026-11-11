@@ -8,8 +8,8 @@ describe("canMarkChatRead", () => {
         hasMessage: true,
         isPending: false,
         isSupportSession: false,
-        lastMarkedAt: 1_000,
-        now: 2_999,
+        lastMarkedAt: 1000,
+        now: 2999,
       }),
     ).toBe(false)
     expect(
@@ -17,8 +17,8 @@ describe("canMarkChatRead", () => {
         hasMessage: true,
         isPending: false,
         isSupportSession: false,
-        lastMarkedAt: 1_000,
-        now: 3_000,
+        lastMarkedAt: 1000,
+        now: 3000,
       }),
     ).toBe(true)
   })
@@ -30,7 +30,7 @@ describe("canMarkChatRead", () => {
         isPending: false,
         isSupportSession: true,
         lastMarkedAt: 0,
-        now: 2_000,
+        now: 2000,
       }),
     ).toBe(false)
     expect(
@@ -39,7 +39,7 @@ describe("canMarkChatRead", () => {
         isPending: true,
         isSupportSession: false,
         lastMarkedAt: 0,
-        now: 2_000,
+        now: 2000,
       }),
     ).toBe(false)
   })

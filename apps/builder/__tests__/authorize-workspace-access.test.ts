@@ -1,7 +1,7 @@
 import type { HTTPMethod } from "@orpc/server"
 import { beforeEach, describe, expect, test, vi } from "vitest"
-import { FILTER_VALUE_LABELS_POST_PATH } from "@/features/contact-filter/lib/api-paths"
 import { CHATS_MARK_READ_PATH } from "@/features/chats/lib/api-paths"
+import { FILTER_VALUE_LABELS_POST_PATH } from "@/features/contact-filter/lib/api-paths"
 import { CONVERSATIONS_LIST_POST_PATH } from "@/features/conversations/lib/api-paths"
 
 const { getAccessState, isAtLimit, isCloud } = vi.hoisted(() => ({

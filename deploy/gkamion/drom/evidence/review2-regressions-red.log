@@ -1,0 +1,28 @@
+test_withdrawal_after_basket_before_order (test_review_regressions.Review.test_withdrawal_after_basket_before_order) ... FAIL
+test_conflicting_structured_delivery_address_blocks (test_review_regressions.Review.test_conflicting_structured_delivery_address_blocks) ... FAIL
+
+======================================================================
+FAIL: test_withdrawal_after_basket_before_order (test_review_regressions.Review.test_withdrawal_after_basket_before_order)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_review_regressions.py", line 98, in test_withdrawal_after_basket_before_order
+    with self.assertRaisesRegex(ValueError,'consent|confirm'):self.f.checkout_create(self.c['context_ref'],True)
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_conflicting_structured_delivery_address_blocks (test_review_regressions.Review.test_conflicting_structured_delivery_address_blocks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_review_regressions.py", line 103, in test_conflicting_structured_delivery_address_blocks
+    self.assertEqual(self.f.checkout_create(self.c['context_ref'],True)['status'],'readback_mismatch')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'created_verified' != 'readback_mismatch'
+- created_verified
++ readback_mismatch
+
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.101s
+
+FAILED (failures=2)

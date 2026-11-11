@@ -1,0 +1,2 @@
+exit=128
+fatal: could not read Username for 'https://github.com': terminal prompts disabled

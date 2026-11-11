@@ -1,4 +1,4 @@
-export const CHAT_READ_THROTTLE_MS = 2_000
+export const CHAT_READ_THROTTLE_MS = 2000
 
 export const canMarkChatRead = (props: {
   isPending: boolean
