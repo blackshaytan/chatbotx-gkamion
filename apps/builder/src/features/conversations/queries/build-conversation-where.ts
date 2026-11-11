@@ -141,17 +141,37 @@ export function buildConversationWhere(
   }
 
   // ── botCategory ──────────────────────────────────────────────────────────
-  if (input.botCategory) {
-    if (input.botCategory === "bot") {
-      where.botEnabled = true
-    } else if (input.botCategory === "human") {
-      where.botEnabled = false
-    }
-  }
-
-  // ── botEnabled (explicit boolean override) ───────────────────────────────
+  // Match isConversationActive: an expired pause means the bot is active even
+  // though botEnabled remains false until the next bot-state write. This keeps
+  // the inbox category in sync with the bot status shown in the conversation.
   if (input.botEnabled !== null && input.botEnabled !== undefined) {
+    // The explicit field filter has historically overridden botCategory.
     where.botEnabled = input.botEnabled
+  } else if (input.botCategory === "bot") {
+    const now = new Date()
+    where.AND = [
+      {
+        OR: [
+          { botEnabled: true },
+          { AND: [{ botEnabled: false }, { botResumeAt: { lt: now } }] },
+        ],
+      },
+    ]
+  } else if (input.botCategory === "human") {
+    const now = new Date()
+    where.AND = [
+      {
+        AND: [
+          { botEnabled: false },
+          {
+            OR: [
+              { botResumeAt: { isNull: true } },
+              { botResumeAt: { gte: now } },
+            ],
+          },
+        ],
+      },
+    ]
   }
 
   // ── assignedId ───────────────────────────────────────────────────────────
