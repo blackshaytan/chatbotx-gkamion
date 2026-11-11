@@ -30,8 +30,10 @@ import {
   loadConversationContext,
   selectHistory,
   selectNewMessages,
+  selectNotifications,
   stopRunQuietly,
   toInputMessages,
+  toNotificationInputs,
   withExternalAgentLock,
 } from "./external-agent-shared"
 
@@ -63,6 +65,7 @@ const isRunInput = (value: unknown): value is ExternalAgentRunInput =>
 const buildTurnInput = async (
   turn: ReplyTurn,
   history: MessageWithAttachments[],
+  notifications: MessageWithAttachments[],
 ): Promise<ExternalAgentRunInput> => {
   const { workspaceId, conversationId } = turn.data
   const { conversation, contactInbox } = turn.context
@@ -79,6 +82,7 @@ const buildTurnInput = async (
   const params: BuildRunInputParams = {
     messages: await toInputMessages(workspaceId, turn.newMessages),
     history: await toInputMessages(workspaceId, history),
+    notifications: toNotificationInputs(notifications),
     contact: {
       name: contact?.fullName?.trim() || null,
       phoneNumber: contact?.phoneNumber?.trim() || null,
@@ -112,6 +116,7 @@ const resolveRunInput = async (
   const runInput = await buildTurnInput(
     turn,
     includeHistory ? selectHistory(turn.messages, turn.newMessages) : [],
+    selectNotifications({ messages: turn.messages }),
   )
   await distributedStore.put(cacheKey, runInput, RUN_INPUT_CACHE_TTL_SECONDS)
   return runInput
@@ -147,7 +152,10 @@ const steerActiveRun = async (
     return false
   }
 
-  const { input } = await buildTurnInput(turn, [])
+  // The running turn already carries the notification block from its start;
+  // steering appends only the client's new text.
+  const { input } = await buildTurnInput(turn, [], [])
+
   let steer: { accepted: boolean }
   try {
     steer = await turn.runtime.client.steer(runId, input)

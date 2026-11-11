@@ -146,7 +146,7 @@ const runtime = {
 type TestMessage = {
   id: string
   messageType: "incoming" | "outgoing"
-  senderType: "contact" | "bot" | "user"
+  senderType: "contact" | "bot" | "user" | "api"
   text: string | null
   createdAt: Date
   attachments: { id: string; originPath: string }[]
@@ -166,13 +166,18 @@ const incoming = (
   ...overrides,
 })
 
-const outgoing = (id: string, seconds: number): TestMessage => ({
+const outgoing = (
+  id: string,
+  seconds: number,
+  overrides: Partial<TestMessage> = {},
+): TestMessage => ({
   id,
   messageType: "outgoing",
   senderType: "bot",
   text: `reply ${id}`,
   createdAt: at(seconds),
   attachments: [],
+  ...overrides,
 })
 
 const state = (overrides: Record<string, unknown> = {}) => ({
@@ -449,6 +454,73 @@ describe("processExternalAgentReply", () => {
     await run()
 
     expect(mocks.buildRunInput.mock.calls[0]?.[0].history).toEqual([])
+  })
+
+  test("adds bot and CRM notifications to the input even with history off", async () => {
+    const minutesAgo = (minutes: number) =>
+      new Date(Date.now() - minutes * 60_000)
+    mocks.listMessages.mockResolvedValue([
+      incoming("m-old", 100),
+      outgoing("n-pay", 0, {
+        senderType: "bot",
+        createdAt: minutesAgo(50),
+        text: "Предоплата — 83 руб.",
+      }),
+      outgoing("n-balance", 0, {
+        senderType: "api",
+        createdAt: minutesAgo(40),
+        text: "Баланс ЛК пополнен на 83 руб.",
+      }),
+      incoming("m-new-1", 110, {
+        createdAt: minutesAgo(5),
+        text: "Наличными выйдет 2900?",
+      }),
+    ])
+
+    await run()
+
+    const params = mocks.buildRunInput.mock.calls[0]?.[0]
+    expect(params.history).toEqual([])
+    expect(params.notifications).toEqual([
+      { source: "bot", text: "Предоплата — 83 руб." },
+      { source: "api", text: "Баланс ЛК пополнен на 83 руб." },
+    ])
+    expect(
+      params.messages.map((message: { text: string }) => message.text),
+    ).toEqual(["Наличными выйдет 2900?"])
+  })
+
+  test("drops notifications older than a day", async () => {
+    mocks.listMessages.mockResolvedValue([
+      incoming("m-old", 100),
+      outgoing("n-stale", 0, {
+        senderType: "api",
+        createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000),
+        text: "Заказ отправлен на сборку",
+      }),
+      incoming("m-new-1", 110, { createdAt: new Date() }),
+    ])
+
+    await run()
+
+    expect(mocks.buildRunInput.mock.calls[0]?.[0].notifications).toEqual([])
+  })
+
+  test("notifications alone never start a run or steer", async () => {
+    mocks.listMessages.mockResolvedValue([
+      incoming("m-old", 100),
+      outgoing("n-pay", 0, {
+        senderType: "api",
+        createdAt: new Date(),
+        text: "Баланс ЛК пополнен на 83 руб.",
+      }),
+    ])
+
+    await run()
+
+    expect(mocks.buildRunInput).not.toHaveBeenCalled()
+    expect(mocks.startRun).not.toHaveBeenCalled()
+    expect(mocks.steer).not.toHaveBeenCalled()
   })
 
   test("reuses the stored payload on a retry with the same idempotency key", async () => {
