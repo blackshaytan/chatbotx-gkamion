@@ -19,6 +19,7 @@ Contract names are fixed in docs/dialog-memory/T02-gate.md.
 
 from __future__ import annotations
 
+import json
 import os
 import pathlib
 import sys
@@ -340,19 +341,37 @@ class MessageInvalidationTests(GateBase):
         self.insert_message("ws-1", "conv-1", "m-9")
         rev0 = self.revision_of("conv-1")
         barrier = threading.Barrier(2)
+        observations: list[dict[str, object]] = []
         errors: list[BaseException] = []
 
         def bump(value: str) -> None:
             try:
                 conn = _raw_connect()
-                with conn.cursor() as cur:
-                    barrier.wait(timeout=10)
-                    cur.execute("SET search_path = dialog_memory_gate, public")
-                    cur.execute(
-                        'UPDATE "Message" SET "text" = %s WHERE "id" = %s',
-                        (value, "m-9"),
-                    )
-                conn.close()
+                try:
+                    with conn.cursor() as cur:
+                        barrier.wait(timeout=10)
+                        cur.execute("SET search_path = dialog_memory_gate, public")
+                        cur.execute(
+                            'UPDATE "Message" SET "text" = %s WHERE "id" = %s'
+                            ' RETURNING id, text, tableoid::regclass::text, xmin::text',
+                            (value, "m-9"),
+                        )
+                        rowcount = cur.rowcount
+                        row = cur.fetchone()
+                        observations.append(
+                            {
+                                "value": value,
+                                "rowcount": rowcount,
+                                "returned": {
+                                    "id": row[0] if row else None,
+                                    "text": row[1] if row else None,
+                                    "tableoid": row[2] if row else None,
+                                    "xmin": row[3] if row else None,
+                                },
+                            }
+                        )
+                finally:
+                    conn.close()
             except BaseException as exc:  # pragma: no cover - diagnostic
                 errors.append(exc)
                 raise
@@ -363,11 +382,39 @@ class MessageInvalidationTests(GateBase):
         t2.start()
         t1.join(15)
         t2.join(15)
-        self.assertFalse(errors, f"concurrent updates failed: {errors}")
-        self.assertFalse(t1.is_alive())
-        self.assertFalse(t2.is_alive())
+        with self.conn.cursor() as cur:
+            cur.execute("SET search_path = dialog_memory_gate, public")
+            cur.execute(
+                'SELECT text, tableoid::regclass::text, xmin::text'
+                ' FROM "Message" WHERE "id" = %s',
+                ("m-9",),
+            )
+            final = cur.fetchone()
+            cur.execute(
+                'SELECT "sourceRevision" FROM "DialogMemorySource"'
+                ' WHERE "conversationId" = %s',
+                ("conv-1",),
+            )
+            final_rev = cur.fetchone()
+        diagnostics = {
+            "before_revision": rev0,
+            "after_revision": final_rev[0] if final_rev else None,
+            "observations": observations,
+            "errors": [repr(e) for e in errors],
+            "final_row": {
+                "text": final[0] if final else None,
+                "tableoid": final[1] if final else None,
+                "xmin": final[2] if final else None,
+            },
+        }
+        print(json.dumps(diagnostics, sort_keys=True), flush=True)
+        self.assertFalse(errors, msg=repr(diagnostics))
+        self.assertFalse(t1.is_alive(), msg=repr(diagnostics))
+        self.assertFalse(t2.is_alive(), msg=repr(diagnostics))
         # Both updates must be reflected: no lost +1.
-        self.assertEqual(self.revision_of("conv-1"), rev0 + 2)
+        self.assertEqual(
+            self.revision_of("conv-1"), rev0 + 2, msg=repr(diagnostics)
+        )
 
     def test_unknown_conversation_never_auto_creates_memory(self) -> None:
         self.insert_message("ws-1", "conv-unknown", "m-10")

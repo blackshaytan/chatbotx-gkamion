@@ -251,4 +251,16 @@ CREATE TRIGGER dialogMemory_topology_invalidation_range
   FOR EACH STATEMENT
   EXECUTE FUNCTION dialogmemory_topology_invalidation_fn();
 
+DROP TRIGGER IF EXISTS dialogMemory_message_topology_invalidation ON "Message";
+CREATE TRIGGER dialogMemory_message_topology_invalidation
+  BEFORE TRUNCATE ON "Message"
+  FOR EACH STATEMENT
+  EXECUTE FUNCTION dialogmemory_topology_invalidation_fn();
+
+DROP TRIGGER IF EXISTS dialogMemory_attachment_topology_invalidation ON "Attachment";
+CREATE TRIGGER dialogMemory_attachment_topology_invalidation
+  BEFORE TRUNCATE ON "Attachment"
+  FOR EACH STATEMENT
+  EXECUTE FUNCTION dialogmemory_topology_invalidation_fn();
+
 COMMIT;
