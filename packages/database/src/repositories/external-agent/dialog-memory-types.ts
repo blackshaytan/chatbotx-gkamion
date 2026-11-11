@@ -78,6 +78,7 @@ export const DIALOG_MEMORY_REASONS = {
     RETENTION_QUERY_FAILED: "failed to query timescaledb retention metadata",
     TRANSACTION_RETRY_EXHAUSTED: "transaction retry exhausted",
     TRANSACTION_FAILED: "transaction failed",
+    HISTORY_PREFLIGHT_INVALID: "history page preflight metadata is invalid or unavailable",
   },
 } as const
 
@@ -122,6 +123,14 @@ export type DialogMemoryToken = {
   topologyEpoch: string
 }
 
+export type DialogMemorySnapshotInput = {
+  scope: DialogMemoryScope
+  limit?: number
+} & (
+  | { cursor: DialogMemoryCursor; expectedToken: DialogMemoryToken }
+  | { cursor?: null | undefined; expectedToken?: DialogMemoryToken | null }
+)
+
 export type DialogMemoryRegisterResult =
   | {
       kind: "ok"
@@ -144,7 +153,7 @@ const isCanonicalPositiveBigint = (value: unknown): value is string =>
   value.length <= 19 &&
   BigInt(value) <= PG_BIGINT_MAX
 
-const isCanonicalNonnegativeBigint = (value: unknown): value is string =>
+export const isCanonicalNonnegativeBigint = (value: unknown): value is string =>
   typeof value === "string" &&
   CANONICAL_NONNEGATIVE_BIGINT_RE.test(value) &&
   value.length <= 19 &&
@@ -497,7 +506,11 @@ export const validateDialogMemorySnapshotInput = (
         reason: DIALOG_MEMORY_REASONS.INVALID.EXPECTED_TOKEN_NOT_VALID,
       }
     }
-    expectedToken = candidate.expectedToken
+    expectedToken = {
+      sourceRevision: candidate.expectedToken.sourceRevision,
+      memoryVersion: candidate.expectedToken.memoryVersion,
+      topologyEpoch: candidate.expectedToken.topologyEpoch,
+    }
   }
 
   if (cursor !== undefined && expectedToken === undefined) {

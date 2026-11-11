@@ -49,7 +49,10 @@ page of the full main-DB conversation history.
 
 1. Validates `scope`, optional `limit` (default 100, 1..200), optional `cursor`
    (`{id, createdAtMicros}`), and optional `expectedToken` using pure validators.
-   `expectedToken` is required when `cursor` is provided.
+   `expectedToken` is required when `cursor` is provided. The public method
+   declares the input as `DialogMemorySnapshotInput`, a typed discriminated
+   union; the runtime validator still accepts `unknown` and rejects malformed
+   or `null` inputs safely.
 2. Runs the same guarded transaction as `register`: lock global topology, verify
    conversation ownership, reject message sharding, check retention policy, then
    lock `DialogMemorySource` and `DialogMemory`.
@@ -58,13 +61,19 @@ page of the full main-DB conversation history.
    `memoryVersion`, and global `topologyEpoch`, and compares it strictly with
    `expectedToken` when present. A mismatch returns `conflict` with no items.
 5. Validates that a provided cursor anchor exists in `Message` for the exact
-   scope before reading history.
+   scope; the `EXISTS` result is checked strictly (`!== true`) so non-boolean
+   or missing metadata never starts a data read.
 6. Reads history from canonical public `Message`/`Attachment` only, with
    microsecond-precision tuple cursors, no shard pools, no JS date rounding,
-   and no filtering by role/channel/kind/deletion status.
+   and no filtering by role/channel/kind/deletion status. Every `Message`
+   lookup after the issued reference list includes `workspaceId` and
+   `conversationId` ownership filters in addition to the primary-key pair.
 7. Groups attachments by the full parent reference `(workspaceId,
    conversationId, messageId, messageCreatedAt)` and enforces resource guards:
-   max 1000 attachments per page and an 8 MiB logical variable-payload limit.
+   the attachment count and logical byte-size preflight require well-formed
+   metadata; missing or malformed preflight rows return `unavailable` with
+   `HISTORY_PREFLIGHT_INVALID`, while counts above 1000 or logical bytes above
+   8 MiB return `unsupported`.
 
 ## Result shape
 

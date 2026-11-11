@@ -20,11 +20,13 @@ import {
   type DialogMemoryMessageDto,
   type DialogMemoryRegisterResult,
   type DialogMemoryScope,
+  type DialogMemorySnapshotInput,
   type DialogMemorySnapshotResult,
   type DialogMemoryToken,
   validateDialogMemoryConfig,
   validateDialogMemoryScope,
   validateDialogMemorySnapshotInput,
+  isCanonicalNonnegativeBigint,
 } from "./dialog-memory-types"
 import {
   DialogMemoryGuardError,
@@ -180,7 +182,7 @@ export const dialogMemoryRepository = {
   },
 
   async readSnapshot(
-    input: unknown,
+    input: DialogMemorySnapshotInput,
   ): Promise<DialogMemorySnapshotResult> {
     const validation = validateDialogMemorySnapshotInput(input)
     if (validation.kind === "invalid") {
@@ -190,7 +192,7 @@ export const dialogMemoryRepository = {
     const { scope, limit, cursor, expectedToken } = validation.value
 
     try {
-      return await runInMemoryTransaction(async (tx) => {
+      return await runInMemoryTransaction<DialogMemorySnapshotResult>(async (tx) => {
         const global = await loadLockedGlobalTopology(tx)
         await requireConversationOwnership(tx, scope)
         await guardNoMessageShards(tx)
@@ -241,7 +243,7 @@ export const dialogMemoryRepository = {
                 AND "conversationId" = ${scope.conversationId}::bigint
             ) AS "exists"
           `)
-          if (!anchor.rows[0]?.exists) {
+          if (anchor.rows[0]?.exists !== true) {
             return {
               kind: "invalid",
               reason: DIALOG_MEMORY_REASONS.INVALID.CURSOR_ANCHOR_NOT_IN_SCOPE,
@@ -415,7 +417,20 @@ async function readMainHistory(
     ) AS "sub"
   `)
 
-  if ((attachmentCountResult.rows[0]?.count ?? 0) > MAX_ATTACHMENT_COUNT) {
+  const attachmentCountRow = attachmentCountResult.rows[0]
+  if (
+    attachmentCountResult.rows.length !== 1 ||
+    typeof attachmentCountRow?.count !== "number" ||
+    !Number.isSafeInteger(attachmentCountRow.count) ||
+    attachmentCountRow.count < 0
+  ) {
+    throw new DialogMemoryGuardError(
+      "unavailable",
+      DIALOG_MEMORY_REASONS.UNAVAILABLE.HISTORY_PREFLIGHT_INVALID,
+    )
+  }
+
+  if (attachmentCountRow.count > MAX_ATTACHMENT_COUNT) {
     throw new DialogMemoryGuardError(
       "unsupported",
       DIALOG_MEMORY_REASONS.UNSUPPORTED.ATTACHMENT_OVERFLOW,
@@ -449,19 +464,30 @@ async function readMainHistory(
           AND ("messageId","messageCreatedAt") IN (${pairsFragment})
       ), 0)::bigint AS "attachmentBytes"
     FROM "${sql.raw(MESSAGE_TABLE)}"
-    WHERE ("id","createdAt") IN (${pairsFragment})
+    WHERE "workspaceId" = ${scope.workspaceId}::bigint
+      AND "conversationId" = ${scope.conversationId}::bigint
+      AND ("id","createdAt") IN (${pairsFragment})
   `)
 
   const payloadRow = payloadResult.rows[0]
-  if (payloadRow !== undefined) {
-    const totalBytes =
-      BigInt(payloadRow.messageBytes) + BigInt(payloadRow.attachmentBytes)
-    if (totalBytes > MAX_PAGE_LOGICAL_BYTES) {
-      throw new DialogMemoryGuardError(
-        "unsupported",
-        DIALOG_MEMORY_REASONS.UNSUPPORTED.PAYLOAD_TOO_LARGE,
-      )
-    }
+  if (
+    payloadRow === undefined ||
+    !isCanonicalNonnegativeBigint(payloadRow.messageBytes) ||
+    !isCanonicalNonnegativeBigint(payloadRow.attachmentBytes)
+  ) {
+    throw new DialogMemoryGuardError(
+      "unavailable",
+      DIALOG_MEMORY_REASONS.UNAVAILABLE.HISTORY_PREFLIGHT_INVALID,
+    )
+  }
+
+  const totalBytes =
+    BigInt(payloadRow.messageBytes) + BigInt(payloadRow.attachmentBytes)
+  if (totalBytes > MAX_PAGE_LOGICAL_BYTES) {
+    throw new DialogMemoryGuardError(
+      "unsupported",
+      DIALOG_MEMORY_REASONS.UNSUPPORTED.PAYLOAD_TOO_LARGE,
+    )
   }
 
   const messagesResult = await tx.execute<MessageRow>(sql`
@@ -485,7 +511,9 @@ async function readMainHistory(
       "attributes",
       "sendError"
     FROM "${sql.raw(MESSAGE_TABLE)}"
-    WHERE ("id","createdAt") IN (${pairsFragment})
+    WHERE "workspaceId" = ${scope.workspaceId}::bigint
+      AND "conversationId" = ${scope.conversationId}::bigint
+      AND ("id","createdAt") IN (${pairsFragment})
   `)
 
   const attachmentsResult = await tx.execute<AttachmentRow>(sql`
