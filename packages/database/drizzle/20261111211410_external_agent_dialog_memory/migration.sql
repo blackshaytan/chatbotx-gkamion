@@ -51,6 +51,7 @@ ALTER TABLE "DialogMemorySource" ADD CONSTRAINT "DialogMemorySource_workspaceId_
 INSERT INTO "DialogMemoryTopology" ("id", "topologyEpoch")
 VALUES ('global', 0)
 ON CONFLICT ("id") DO NOTHING;
+
 --> statement-breakpoint
 
 -- ═══════════════════════════════════════════════════════════════════════════════
@@ -62,6 +63,9 @@ ON CONFLICT ("id") DO NOTHING;
 -- API is finalised and CI (T02) is green.
 --
 -- Scope:
+--   * Message/Attachment AFTER ROW triggers take a shared lock on the global
+--     DialogMemoryTopology row before any source bump, serialising source
+--     activation with in-flight history writes.
 --   * Message/Attachment AFTER ROW triggers bump DialogMemorySource.sourceRevision
 --     for the affected (workspaceId, conversationId) when meaningful fields change.
 --   * MessageShard/ShardTimeRange BEFORE STATEMENT triggers bump the global
@@ -80,6 +84,29 @@ ON CONFLICT ("id") DO NOTHING;
 --   - updatedAt is bumped explicitly because Drizzle $onUpdate is not a DB trigger.
 --   - All function/table references are public-qualified and each function sets
 --     search_path = public with SECURITY INVOKER explicitly.
+--   - All writer functions are marked VOLATILE so READ COMMITTED writers use a fresh
+--     SQL-command snapshot after the shared global barrier is released.
+--
+-- Source-activation barrier:
+--   * dialogmemory_lock_source_generation_fn() acquires FOR SHARE on the global
+--     DialogMemoryTopology row at the start of every Message/Attachment write.
+--     The lock is held until transaction end and is compatible with other SHAREs.
+--   * A source-registration transaction must take an exclusive lock on the same
+--     global row (FOR UPDATE or unconditional UPDATE), create/activate the new
+--     DialogMemorySource row, and commit Source + Memory + global.updatedAt together.
+--   * Under READ COMMITTED the writer sees the freshly-committed Source row in the
+--     next command snapshot and bumps it normally.
+--   * Under REPEATABLE READ / SERIALIZABLE a writer whose snapshot predates the
+--     source activation receives 40001 on the locking read and must retry.
+--   * If the global singleton is missing the lock helper raises 40001 with a
+--     retry-the-transaction message; it never silently no-ops.
+--
+-- Attachment parent-not-found edge case (RR):
+--   * An old RR snapshot may not see a recently-inserted parent Message even though
+--     its DialogMemorySource already exists. When Attachment INSERT/UPDATE/DELETE
+--     cannot resolve the parent, dialogmemory_probe_source_snapshot_fn() locks any
+--     existing source pair under RR; a source row changed after the snapshot
+--     forces 40001. Under RC the probe is a no-op and takes no extra locks.
 --
 -- Owner preconditions are checked first: required tables must exist and be owned
 -- by the current migration role (or a role it inherits), reserved functions must
@@ -119,9 +146,8 @@ BEGIN
   END LOOP;
 
   -- 2. Reserved feature functions: if they already exist they must match the
-  --    expected signature (checked via to_regprocedure/pg_proc) and be owned by
-  --    the current role or an inheritable owner role. OID 20 for bigint is NOT
-  --    hardcoded; regtype resolution is used instead.
+  --    expected signature (checked via to_regprocedure/pg_proc, no hardcoded OID 20)
+  --    and be owned by the current role or an inheritable owner role.
   v_expected_name := 'dialogmemory_bump_source';
   v_proc := to_regprocedure('public.dialogmemory_bump_source(bigint, bigint)');
   IF v_proc IS NULL THEN
@@ -140,6 +166,38 @@ BEGIN
 
   v_expected_name := 'dialogmemory_bump_source_pair';
   v_proc := to_regprocedure('public.dialogmemory_bump_source_pair(bigint, bigint, bigint, bigint)');
+  IF v_proc IS NULL THEN
+    IF EXISTS (
+      SELECT 1
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public'
+        AND p.proname = v_expected_name
+    ) THEN
+      RAISE EXCEPTION 'T04 precondition failed: public.% exists with an unexpected signature', v_expected_name;
+    END IF;
+  ELSIF NOT pg_has_role(v_current_role, (SELECT proowner FROM pg_proc WHERE oid = v_proc), 'MEMBER') THEN
+    RAISE EXCEPTION 'T04 precondition failed: existing public.% is owned by a role not accessible to %', v_expected_name, v_current_role;
+  END IF;
+
+  v_expected_name := 'dialogmemory_lock_source_generation_fn';
+  v_proc := to_regprocedure('public.dialogmemory_lock_source_generation_fn()');
+  IF v_proc IS NULL THEN
+    IF EXISTS (
+      SELECT 1
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public'
+        AND p.proname = v_expected_name
+    ) THEN
+      RAISE EXCEPTION 'T04 precondition failed: public.% exists with an unexpected signature', v_expected_name;
+    END IF;
+  ELSIF NOT pg_has_role(v_current_role, (SELECT proowner FROM pg_proc WHERE oid = v_proc), 'MEMBER') THEN
+    RAISE EXCEPTION 'T04 precondition failed: existing public.% is owned by a role not accessible to %', v_expected_name, v_current_role;
+  END IF;
+
+  v_expected_name := 'dialogmemory_probe_source_snapshot_fn';
+  v_proc := to_regprocedure('public.dialogmemory_probe_source_snapshot_fn(bigint, bigint, bigint, bigint)');
   IF v_proc IS NULL THEN
     IF EXISTS (
       SELECT 1
@@ -314,6 +372,31 @@ BEGIN
 END $$;
 --> statement-breakpoint
 
+-- Shared lock on the global topology row. Every Message/Attachment write must
+-- hold this lock for the lifetime of its transaction so that source activation
+-- (a FOR UPDATE / NO KEY UPDATE on the same row) cannot interleave with an
+-- uncommitted history write.
+CREATE OR REPLACE FUNCTION public.dialogmemory_lock_source_generation_fn()
+RETURNS void
+LANGUAGE plpgsql
+VOLATILE
+SECURITY INVOKER
+SET search_path = public
+AS $fn$
+BEGIN
+  PERFORM 1
+    FROM public."DialogMemoryTopology"
+   WHERE "id" = 'global'
+   FOR SHARE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'DialogMemoryTopology global singleton is missing; retry the transaction'
+      USING ERRCODE = '40001';
+  END IF;
+END;
+$fn$;
+--> statement-breakpoint
+
 -- Bump an existing DialogMemorySource row for exactly one owner.
 -- No-op if the row does not exist (unknown conversation stays unknown).
 CREATE OR REPLACE FUNCTION public.dialogmemory_bump_source(
@@ -321,6 +404,7 @@ CREATE OR REPLACE FUNCTION public.dialogmemory_bump_source(
   p_conversation_id bigint
 ) RETURNS void
 LANGUAGE plpgsql
+VOLATILE
 SECURITY INVOKER
 SET search_path = public
 AS $fn$
@@ -343,6 +427,7 @@ CREATE OR REPLACE FUNCTION public.dialogmemory_bump_source_pair(
   p_new_conversation_id bigint
 ) RETURNS void
 LANGUAGE plpgsql
+VOLATILE
 SECURITY INVOKER
 SET search_path = public
 AS $fn$
@@ -362,15 +447,50 @@ END;
 $fn$;
 --> statement-breakpoint
 
+-- RR/SERIALIZABLE probe for Attachment writes whose parent Message is missing.
+-- A repeatable-read snapshot taken before the parent row committed can fail to
+-- see the parent, but the DialogMemorySource row created at registration time
+-- will be visible to FOR UPDATE. Locking it forces 40001 if it changed after the
+-- snapshot, preventing a silent lost invalidation. Under READ COMMITTED this
+-- helper returns immediately and takes no extra locks.
+CREATE OR REPLACE FUNCTION public.dialogmemory_probe_source_snapshot_fn(
+  p_old_workspace_id bigint,
+  p_old_conversation_id bigint,
+  p_new_workspace_id bigint,
+  p_new_conversation_id bigint
+) RETURNS void
+LANGUAGE plpgsql
+VOLATILE
+SECURITY INVOKER
+SET search_path = public
+AS $fn$
+BEGIN
+  IF current_setting('transaction_isolation') NOT IN ('repeatable read', 'serializable') THEN
+    RETURN;
+  END IF;
+
+  PERFORM 1
+    FROM public."DialogMemorySource"
+   WHERE ("workspaceId", "conversationId") = (p_old_workspace_id, p_old_conversation_id)
+      OR ("workspaceId", "conversationId") = (p_new_workspace_id, p_new_conversation_id)
+   ORDER BY "workspaceId", "conversationId"
+   FOR UPDATE;
+END;
+$fn$;
+--> statement-breakpoint
+
 CREATE OR REPLACE FUNCTION public.dialogmemory_message_invalidation_fn()
 RETURNS trigger
 LANGUAGE plpgsql
+VOLATILE
 SECURITY INVOKER
 SET search_path = public
 AS $fn$
 DECLARE
   v_meaningful boolean := false;
 BEGIN
+  PERFORM public.dialogmemory_lock_source_generation_fn();
+
   IF TG_OP = 'INSERT' THEN
     PERFORM public.dialogmemory_bump_source(NEW."workspaceId", NEW."conversationId");
     RETURN NEW;
@@ -417,6 +537,7 @@ $fn$;
 CREATE OR REPLACE FUNCTION public.dialogmemory_attachment_invalidation_fn()
 RETURNS trigger
 LANGUAGE plpgsql
+VOLATILE
 SECURITY INVOKER
 SET search_path = public
 AS $fn$
@@ -429,6 +550,8 @@ DECLARE
   v_old_found boolean := false;
   v_new_found boolean := false;
 BEGIN
+  PERFORM public.dialogmemory_lock_source_generation_fn();
+
   IF TG_OP = 'INSERT' THEN
     SELECT m."workspaceId", m."conversationId"
       INTO v_new_ws, v_new_cid
@@ -440,6 +563,13 @@ BEGIN
 
     IF FOUND THEN
       PERFORM public.dialogmemory_bump_source(v_new_ws, v_new_cid);
+    ELSE
+      -- Parent missing under RR may mean the row was created after our snapshot.
+      -- Probe the declared source pair; a post-snapshot source forces retry.
+      PERFORM public.dialogmemory_probe_source_snapshot_fn(
+        NULL, NULL,
+        NEW."workspaceId", NEW."conversationId"
+      );
     END IF;
 
     RETURN NEW;
@@ -456,6 +586,11 @@ BEGIN
 
     IF FOUND THEN
       PERFORM public.dialogmemory_bump_source(v_old_ws, v_old_cid);
+    ELSE
+      PERFORM public.dialogmemory_probe_source_snapshot_fn(
+        OLD."workspaceId", OLD."conversationId",
+        NULL, NULL
+      );
     END IF;
 
     RETURN OLD;
@@ -500,6 +635,15 @@ BEGIN
        AND m."conversationId" = NEW."conversationId";
     v_new_found := FOUND;
 
+    -- If a parent is missing we may be looking at an old RR snapshot. Lock any
+    -- existing source pair first so the lock order stays deterministic.
+    IF NOT v_old_found OR NOT v_new_found THEN
+      PERFORM public.dialogmemory_probe_source_snapshot_fn(
+        OLD."workspaceId", OLD."conversationId",
+        NEW."workspaceId", NEW."conversationId"
+      );
+    END IF;
+
     IF v_old_found AND v_new_found THEN
       PERFORM public.dialogmemory_bump_source_pair(v_old_ws, v_old_cid, v_new_ws, v_new_cid);
     ELSIF v_old_found THEN
@@ -519,6 +663,7 @@ $fn$;
 CREATE OR REPLACE FUNCTION public.dialogmemory_topology_invalidation_fn()
 RETURNS trigger
 LANGUAGE plpgsql
+VOLATILE
 SECURITY INVOKER
 SET search_path = public
 AS $fn$
@@ -540,6 +685,7 @@ $fn$;
 CREATE OR REPLACE FUNCTION public.dialogmemory_conversation_invalidation_fn()
 RETURNS trigger
 LANGUAGE plpgsql
+VOLATILE
 SECURITY INVOKER
 SET search_path = public
 AS $fn$
