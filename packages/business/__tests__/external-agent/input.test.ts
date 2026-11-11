@@ -4,6 +4,9 @@ import {
   type BuildRunInputParams,
   buildRunInput,
   EXTERNAL_AGENT_INPUT_MAX_CHARS,
+  EXTERNAL_AGENT_NOTIFICATION_MAX_CHARS,
+  EXTERNAL_AGENT_NOTIFICATION_MAX_COUNT,
+  type ExternalAgentNotification,
   readGkamionContactFields,
 } from "../../src/external-agent/input"
 
@@ -155,5 +158,104 @@ describe("buildRunInput", () => {
     expect(result.input).toHaveLength(EXTERNAL_AGENT_INPUT_MAX_CHARS)
     expect(result.input.endsWith("КОНЕЦ")).toBe(true)
     expect(result.input.startsWith("Предыдущая переписка:")).toBe(false)
+  })
+})
+
+describe("buildRunInput notifications", () => {
+  const notifications: ExternalAgentNotification[] = [
+    { source: "bot", text: "Предоплата — 83 руб." },
+    { source: "api", text: "Баланс ЛК пополнен на 83 руб." },
+    { source: "bot", text: "Заказ отправлен на сборку" },
+  ]
+
+  test("puts payment and status notifications before the new messages", () => {
+    const result = buildRunInput({
+      ...baseParams,
+      notifications,
+      messages: [
+        { role: "contact", text: "Наличными выйдет 2900?", attachmentUrls: [] },
+      ],
+    })
+
+    expect(result.input).toBe(
+      [
+        "Уведомления по заказу (платформа и CRM, не слова клиента):",
+        "Бот: Предоплата — 83 руб.",
+        "Система: Баланс ЛК пополнен на 83 руб.",
+        "Бот: Заказ отправлен на сборку",
+        "",
+        "Наличными выйдет 2900?",
+      ].join("\n"),
+    )
+  })
+
+  test("keeps notifications when client history is off", () => {
+    const result = buildRunInput({
+      ...baseParams,
+      history: [],
+      notifications,
+      messages: [{ role: "contact", text: "Да", attachmentUrls: [] }],
+    })
+
+    expect(result.input).toContain("Бот: Предоплата — 83 руб.")
+    expect(result.input).not.toContain("Предыдущая переписка:")
+  })
+
+  test("keeps only the newest notifications up to the count cap", () => {
+    const many: ExternalAgentNotification[] = Array.from(
+      { length: 30 },
+      (_, index) => ({ source: "bot" as const, text: `уведомление #${index}` }),
+    )
+
+    const result = buildRunInput({ ...baseParams, notifications: many })
+
+    expect(result.input).toContain(`уведомление #${29}`)
+    expect(result.input).toContain(
+      `уведомление #${30 - EXTERNAL_AGENT_NOTIFICATION_MAX_COUNT}`,
+    )
+    expect(result.input).not.toContain(
+      `уведомление #${30 - EXTERNAL_AGENT_NOTIFICATION_MAX_COUNT - 1}`,
+    )
+    expect(result.input.match(/уведомление #/g)).toHaveLength(
+      EXTERNAL_AGENT_NOTIFICATION_MAX_COUNT,
+    )
+  })
+
+  test("drops the oldest notifications when the block is too long", () => {
+    const bulky: ExternalAgentNotification[] = Array.from(
+      { length: 8 },
+      (_, index) => ({
+        source: "bot" as const,
+        text: `#${index} ${"я".repeat(400)}`,
+      }),
+    )
+
+    const result = buildRunInput({ ...baseParams, notifications: bulky })
+
+    const block = result.input.split("\n\n")[0] ?? ""
+    expect(block.length).toBeLessThanOrEqual(
+      EXTERNAL_AGENT_NOTIFICATION_MAX_CHARS,
+    )
+    expect(result.input).toContain("#7 ")
+    expect(result.input).not.toContain("#0 ")
+  })
+
+  test("skips notifications without text and adds no block when there are none", () => {
+    const withEmpty = buildRunInput({
+      ...baseParams,
+      notifications: [
+        { source: "bot", text: null },
+        { source: "api", text: "   " },
+      ],
+      messages: [{ role: "contact", text: "Да", attachmentUrls: [] }],
+    })
+
+    expect(withEmpty.input).toBe("Да")
+    expect(
+      buildRunInput({
+        ...baseParams,
+        messages: [{ role: "contact", text: "Да", attachmentUrls: [] }],
+      }).input,
+    ).toBe("Да")
   })
 })
