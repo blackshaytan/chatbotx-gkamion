@@ -143,11 +143,11 @@ class TimescaleUpstream10902CharacterizationTests(ts.TimescaleGateBase):
                     first_obs["returned"] = _row_dict(cur.fetchone(), first_keys)
                     first_ready.set()
                     if not first_can_commit.wait(timeout=10):
-                        if abort.is_set():
-                            return  # controller failed; rollback in finally
                         raise TimeoutError(
                             "first writer was not released within timeout"
                         )
+                    if abort.is_set():
+                        return  # controller failed; rollback in finally
                 first_conn.commit()
             except BaseException as exc:  # pragma: no cover - diagnostic
                 errors.append(exc)
@@ -235,8 +235,10 @@ class TimescaleUpstream10902CharacterizationTests(ts.TimescaleGateBase):
 
             # Only now release the first writer.
             first_can_commit.set()
-        finally:
+        except BaseException:
             abort.set()
+            raise
+        finally:
             first_can_commit.set()
             t1.join(15)
             t2.join(15)

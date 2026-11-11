@@ -424,6 +424,10 @@ class MessageInvalidationTests(GateBase):
         self.assertFalse(t2.is_alive(), msg=repr(diagnostics))
         self.assertEqual(observations.get("m-dist-a", {}).get("rowcount"), 1)
         self.assertEqual(observations.get("m-dist-b", {}).get("rowcount"), 1)
+        self.assertEqual(observations["m-dist-a"]["returned"]["id"], "m-dist-a")
+        self.assertEqual(observations["m-dist-a"]["returned"]["text"], "a")
+        self.assertEqual(observations["m-dist-b"]["returned"]["id"], "m-dist-b")
+        self.assertEqual(observations["m-dist-b"]["returned"]["text"], "b")
         self.assertEqual(final_a[1], "a")
         self.assertEqual(final_b[1], "b")
         self.assertEqual(
