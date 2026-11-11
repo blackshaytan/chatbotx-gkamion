@@ -69,7 +69,7 @@ Dedicated schema `dialog_memory_gate` with a representative subset:
   to catch up to the current global epoch when the registry is empty and the
   source revision/memory version still match.
 
-## Future prototype contract (scripts/dialog-memory-gate/invalidation.sql)
+## Prototype contract (scripts/dialog-memory-gate/invalidation.sql)
 
 FIXED NAMES — the RED suite asserts these effects; the file is loaded by the
 harness when it exists (GREEN stage). It must:
@@ -81,17 +81,26 @@ harness when it exists (GREEN stage). It must:
   "deletedAt", identity columns). UPDATEs touching only "updatedAt" are
   content-neutral and must NOT bump.
 - `dialogMemory_attachment_invalidation` trigger ON "Attachment": same
-  semantics, resolved through parent identity ("conversationId",
-  "messageId", "messageCreatedAt"). Rows without a resolvable parent must
-  not touch any other conversation's memory.
+  semantics, resolved through parent identity ("messageId",
+  "messageCreatedAt"). Rows without a resolvable parent must not touch any
+  other conversation's memory.
 - `dialogMemory_topology_invalidation` triggers ON "MessageShard" and
   "ShardTimeRange": bump the single global "DialogMemoryTopology"."topologyEpoch"
-  on ANY insert (including inactive rows), on meaningful changes, and on
+  on ANY insert (including inactive rows), on any change, and on
   DELETE / TRUNCATE; epoch is monotonic and must never decrement or revive
   older epochs.
 
 The test file never creates these triggers; doing so inside tests would turn
 RED green by accident.
+
+## GREEN pending note
+
+`scripts/dialog-memory-gate/invalidation.sql` has been added with the prototype
+triggers above. The harness now applies it automatically when present, so the
+RED failures are expected to turn into passing assertions on hosted CI. This
+file is a dedicated test-schema prototype, not a production migration; do not
+run deployment or push workflows from this task — parent will trigger hosted
+validation.
 
 ## Coverage
 
