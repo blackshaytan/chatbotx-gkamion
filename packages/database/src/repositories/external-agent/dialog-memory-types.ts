@@ -6,7 +6,7 @@
  */
 
 const PG_BIGINT_MAX = 9223372036854775807n
-const PG_INTEGER_MAX = 2147483647
+const PG_INTEGER_MAX = 2_147_483_647
 
 /** Inclusive page size bounds from the T04 snapshot contract. */
 export const DIALOG_MEMORY_PAGE_LIMIT_MIN = 1
@@ -30,11 +30,11 @@ export const DIALOG_MEMORY_REASONS = {
       "cursor.id must be a canonical positive bigint string within PostgreSQL bigint range",
     CURSOR_DATE_NOT_MICROSECOND_UTC:
       "cursor.createdAtMicros must be a YYYY-MM-DDTHH:mm:ss.ffffffZ UTC timestamp",
-    EXPECTED_TOKEN_NOT_VALID: "expectedToken is not a valid dialog memory token",
+    EXPECTED_TOKEN_NOT_VALID:
+      "expectedToken is not a valid dialog memory token",
     MISSING_EXPECTED_TOKEN_WITH_CURSOR:
       "expectedToken is required when cursor is provided",
-    CURSOR_ANCHOR_NOT_IN_SCOPE:
-      "cursor anchor does not belong to this scope",
+    CURSOR_ANCHOR_NOT_IN_SCOPE: "cursor anchor does not belong to this scope",
   },
   NOT_FOUND: {
     CONVERSATION: "conversation not found or contact mismatch",
@@ -42,8 +42,7 @@ export const DIALOG_MEMORY_REASONS = {
   UNSUPPORTED: {
     MESSAGE_SHARDED:
       "message sharding is not supported for dialog memory scope v1",
-    RETENTION_JOB:
-      "unsupported TimescaleDB job on Message or Attachment",
+    RETENTION_JOB: "unsupported TimescaleDB job on Message or Attachment",
     ATTACHMENT_OVERFLOW:
       "history page would contain more than 1000 attachments",
     PAYLOAD_TOO_LARGE:
@@ -61,11 +60,13 @@ export const DIALOG_MEMORY_REASONS = {
     TOKEN_STALE: "expected token is stale",
   },
   UNAVAILABLE: {
-    GLOBAL_TOPOLOGY_MISSING: "global dialog memory topology singleton is missing",
+    GLOBAL_TOPOLOGY_MISSING:
+      "global dialog memory topology singleton is missing",
     RETENTION_QUERY_FAILED: "failed to query timescaledb retention metadata",
     TRANSACTION_RETRY_EXHAUSTED: "transaction retry exhausted",
     TRANSACTION_FAILED: "transaction failed",
-    HISTORY_PREFLIGHT_INVALID: "history page preflight metadata is invalid or unavailable",
+    HISTORY_PREFLIGHT_INVALID:
+      "history page preflight metadata is invalid or unavailable",
   },
 } as const
 
@@ -159,7 +160,9 @@ export const validateDialogMemoryScope = (
   if (typeof input !== "object" || input === null) {
     return {
       kind: "invalid",
-      reason: DIALOG_MEMORY_REASONS.INVALID.WORKSPACE_ID_NOT_CANONICAL_POSITIVE_BIGINT,
+      reason:
+        DIALOG_MEMORY_REASONS.INVALID
+          .WORKSPACE_ID_NOT_CANONICAL_POSITIVE_BIGINT,
     }
   }
 
@@ -172,19 +175,25 @@ export const validateDialogMemoryScope = (
   if (!isCanonicalPositiveBigint(candidate.workspaceId)) {
     return {
       kind: "invalid",
-      reason: DIALOG_MEMORY_REASONS.INVALID.WORKSPACE_ID_NOT_CANONICAL_POSITIVE_BIGINT,
+      reason:
+        DIALOG_MEMORY_REASONS.INVALID
+          .WORKSPACE_ID_NOT_CANONICAL_POSITIVE_BIGINT,
     }
   }
   if (!isCanonicalPositiveBigint(candidate.conversationId)) {
     return {
       kind: "invalid",
-      reason: DIALOG_MEMORY_REASONS.INVALID.CONVERSATION_ID_NOT_CANONICAL_POSITIVE_BIGINT,
+      reason:
+        DIALOG_MEMORY_REASONS.INVALID
+          .CONVERSATION_ID_NOT_CANONICAL_POSITIVE_BIGINT,
     }
   }
   if (!isCanonicalPositiveBigint(candidate.expectedContactId)) {
     return {
       kind: "invalid",
-      reason: DIALOG_MEMORY_REASONS.INVALID.EXPECTED_CONTACT_ID_NOT_CANONICAL_POSITIVE_BIGINT,
+      reason:
+        DIALOG_MEMORY_REASONS.INVALID
+          .EXPECTED_CONTACT_ID_NOT_CANONICAL_POSITIVE_BIGINT,
     }
   }
 
@@ -208,7 +217,9 @@ export const validateDialogMemoryConfig = (
   if (typeof input !== "object" || input === null) {
     return {
       kind: "invalid",
-      reason: DIALOG_MEMORY_REASONS.INVALID.SCHEMA_VERSION_NOT_INTEGER_IN_PG_INTEGER_RANGE,
+      reason:
+        DIALOG_MEMORY_REASONS.INVALID
+          .SCHEMA_VERSION_NOT_INTEGER_IN_PG_INTEGER_RANGE,
     }
   }
 
@@ -227,7 +238,9 @@ export const validateDialogMemoryConfig = (
   ) {
     return {
       kind: "invalid",
-      reason: DIALOG_MEMORY_REASONS.INVALID.SCHEMA_VERSION_NOT_INTEGER_IN_PG_INTEGER_RANGE,
+      reason:
+        DIALOG_MEMORY_REASONS.INVALID
+          .SCHEMA_VERSION_NOT_INTEGER_IN_PG_INTEGER_RANGE,
     }
   }
   if (!isNonEmptyString(candidate.promptVersion)) {
@@ -348,9 +361,17 @@ function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0
 }
 
-function isValidCalendarDate(year: number, month: number, day: number): boolean {
-  if (year < 1 || year > 9999) return false
-  if (month < 1 || month > 12) return false
+function isValidCalendarDate(
+  year: number,
+  month: number,
+  day: number,
+): boolean {
+  if (year < 1 || year > 9999) {
+    return false
+  }
+  if (month < 1 || month > 12) {
+    return false
+  }
   const daysInMonth = [
     31,
     isLeapYear(year) ? 29 : 28,
@@ -369,8 +390,12 @@ function isValidCalendarDate(year: number, month: number, day: number): boolean 
 }
 
 function isValidMicrosecondUtc(value: unknown): value is string {
-  if (typeof value !== "string") return false
-  if (!MICROSECOND_UTC_RE.test(value)) return false
+  if (typeof value !== "string") {
+    return false
+  }
+  if (!MICROSECOND_UTC_RE.test(value)) {
+    return false
+  }
 
   const [datePart, timePart] = value.split("T")
   const [yearStr, monthStr, dayStr] = datePart.split("-")
@@ -383,7 +408,9 @@ function isValidMicrosecondUtc(value: unknown): value is string {
   const minute = Number(minuteStr)
   const second = Number(secondStr)
 
-  if (!isValidCalendarDate(year, month, day)) return false
+  if (!isValidCalendarDate(year, month, day)) {
+    return false
+  }
   if (
     hour < 0 ||
     hour > 23 ||
@@ -467,8 +494,7 @@ export const validateDialogMemorySnapshotInput = (
       return {
         kind: "invalid",
         reason:
-          DIALOG_MEMORY_REASONS.INVALID
-            .CURSOR_ID_NOT_CANONICAL_POSITIVE_BIGINT,
+          DIALOG_MEMORY_REASONS.INVALID.CURSOR_ID_NOT_CANONICAL_POSITIVE_BIGINT,
       }
     }
 
@@ -486,7 +512,10 @@ export const validateDialogMemorySnapshotInput = (
   }
 
   let expectedToken: DialogMemoryToken | undefined
-  if (candidate.expectedToken !== undefined && candidate.expectedToken !== null) {
+  if (
+    candidate.expectedToken !== undefined &&
+    candidate.expectedToken !== null
+  ) {
     if (!isValidDialogMemoryToken(candidate.expectedToken)) {
       return {
         kind: "invalid",

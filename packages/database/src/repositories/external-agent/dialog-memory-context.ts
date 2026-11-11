@@ -15,19 +15,19 @@ import {
   sql,
   type Transaction,
 } from "../../client"
-import type {
-  DialogMemoryModel,
-  DialogMemorySourceModel,
-  DialogMemoryTopologyModel,
-} from "../../types"
 import {
   conversationModel,
   dialogMemoryModel,
   dialogMemorySourceModel,
   dialogMemoryTopologyModel,
 } from "../../schema"
-import { setLocalStatementTimeout } from "../../statement-timeout"
 import { MessageShardRegistry } from "../../sharding/message/registry"
+import { setLocalStatementTimeout } from "../../statement-timeout"
+import type {
+  DialogMemoryModel,
+  DialogMemorySourceModel,
+  DialogMemoryTopologyModel,
+} from "../../types"
 import {
   DIALOG_MEMORY_REASONS,
   type DialogMemoryDto,
@@ -49,16 +49,17 @@ const STATEMENT_TIMEOUT = "5s" as const
  * corresponding discriminated result. It never carries raw SQL or PII.
  */
 export class DialogMemoryGuardError extends Error {
+  readonly kind: "not_found" | "unsupported" | "inconsistent" | "unavailable"
+  readonly reason: string
+
   constructor(
-    public readonly kind:
-      | "not_found"
-      | "unsupported"
-      | "inconsistent"
-      | "unavailable",
-    public readonly reason: string,
+    kind: "not_found" | "unsupported" | "inconsistent" | "unavailable",
+    reason: string,
   ) {
     super(`dialog-memory-guard:${kind}`)
     this.name = "DialogMemoryGuardError"
+    this.kind = kind
+    this.reason = reason
   }
 }
 
@@ -67,9 +68,12 @@ export class DialogMemoryGuardError extends Error {
  * convert this to `unavailable` with a constant reason.
  */
 export class DialogMemoryTransactionError extends Error {
-  constructor(public readonly reason: string) {
+  readonly reason: string
+
+  constructor(reason: string) {
     super("dialog-memory-transaction-error")
     this.name = "DialogMemoryTransactionError"
+    this.reason = reason
   }
 }
 
@@ -314,18 +318,24 @@ export async function loadLockedSourceAndMemory(
   const [memory] = await tx
     .select({
       ...getTableColumns(dialogMemoryModel),
-      coverageCreatedAtFormatted: sql<string | null>`to_char(${dialogMemoryModel.coverageCreatedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`.as(
+      coverageCreatedAtFormatted: sql<
+        string | null
+      >`to_char(${dialogMemoryModel.coverageCreatedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`.as(
         "coverageCreatedAtFormatted",
       ),
-      lastAttemptAtFormatted: sql<string | null>`to_char(${dialogMemoryModel.lastAttemptAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`.as(
+      lastAttemptAtFormatted: sql<
+        string | null
+      >`to_char(${dialogMemoryModel.lastAttemptAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`.as(
         "lastAttemptAtFormatted",
       ),
-      createdAtFormatted: sql<string>`to_char(${dialogMemoryModel.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`.as(
-        "createdAtFormatted",
-      ),
-      updatedAtFormatted: sql<string>`to_char(${dialogMemoryModel.updatedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`.as(
-        "updatedAtFormatted",
-      ),
+      createdAtFormatted:
+        sql<string>`to_char(${dialogMemoryModel.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`.as(
+          "createdAtFormatted",
+        ),
+      updatedAtFormatted:
+        sql<string>`to_char(${dialogMemoryModel.updatedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`.as(
+          "updatedAtFormatted",
+        ),
     })
     .from(dialogMemoryModel)
     .where(

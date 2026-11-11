@@ -13,6 +13,17 @@ import {
   dialogMemoryTopologyModel,
 } from "../../schema"
 import {
+  buildMemoryDto,
+  DialogMemoryGuardError,
+  DialogMemoryTransactionError,
+  guardNoMessageShards,
+  guardRetentionPolicy,
+  loadLockedGlobalTopology,
+  loadLockedSourceAndMemory,
+  requireConversationOwnership,
+  runInMemoryTransaction,
+} from "./dialog-memory-context"
+import {
   DIALOG_MEMORY_REASONS,
   type DialogMemoryAttachmentDto,
   type DialogMemoryConfig,
@@ -23,23 +34,11 @@ import {
   type DialogMemorySnapshotInput,
   type DialogMemorySnapshotResult,
   type DialogMemoryToken,
+  isCanonicalNonnegativeBigint,
   validateDialogMemoryConfig,
   validateDialogMemoryScope,
   validateDialogMemorySnapshotInput,
-  isCanonicalNonnegativeBigint,
 } from "./dialog-memory-types"
-import {
-  DialogMemoryGuardError,
-  DialogMemoryTransactionError,
-  buildMemoryDto,
-  guardNoMessageShards,
-  guardRetentionPolicy,
-  loadLockedGlobalTopology,
-  loadLockedSourceAndMemory,
-  requireConversationOwnership,
-  runInMemoryTransaction,
-  type MemorySelectRow,
-} from "./dialog-memory-context"
 
 const MESSAGE_TABLE = "Message"
 const ATTACHMENT_TABLE = "Attachment"
@@ -88,7 +87,7 @@ export const dialogMemoryRepository = {
         let finalSource = source
         let finalMemory = memory
 
-        if (!hasSource && !hasMemory) {
+        if (!(hasSource || hasMemory)) {
           const sourceInsertRows = await tx
             .insert(dialogMemorySourceModel)
             .values({
@@ -192,48 +191,49 @@ export const dialogMemoryRepository = {
     const { scope, limit, cursor, expectedToken } = validation.value
 
     try {
-      return await runInMemoryTransaction<DialogMemorySnapshotResult>(async (tx) => {
-        const global = await loadLockedGlobalTopology(tx)
-        await requireConversationOwnership(tx, scope)
-        await guardNoMessageShards(tx)
-        await guardRetentionPolicy(tx)
+      return await runInMemoryTransaction<DialogMemorySnapshotResult>(
+        async (tx) => {
+          const global = await loadLockedGlobalTopology(tx)
+          await requireConversationOwnership(tx, scope)
+          await guardNoMessageShards(tx)
+          await guardRetentionPolicy(tx)
 
-        const { source, memory } = await loadLockedSourceAndMemory(tx, scope)
-        if (source === undefined && memory === undefined) {
-          return {
-            kind: "unregistered",
-            reason: DIALOG_MEMORY_REASONS.UNREGISTERED.SCOPE_NOT_REGISTERED,
+          const { source, memory } = await loadLockedSourceAndMemory(tx, scope)
+          if (source === undefined && memory === undefined) {
+            return {
+              kind: "unregistered",
+              reason: DIALOG_MEMORY_REASONS.UNREGISTERED.SCOPE_NOT_REGISTERED,
+            }
           }
-        }
-        if (source === undefined || memory === undefined) {
-          throw new DialogMemoryGuardError(
-            "inconsistent",
-            source === undefined
-              ? DIALOG_MEMORY_REASONS.INCONSISTENT.MEMORY_WITHOUT_SOURCE
-              : DIALOG_MEMORY_REASONS.INCONSISTENT.SOURCE_WITHOUT_MEMORY,
-          )
-        }
-
-        const actualToken: DialogMemoryToken = {
-          sourceRevision: source.sourceRevision,
-          memoryVersion: memory.memoryVersion,
-          topologyEpoch: global.topologyEpoch,
-        }
-
-        if (
-          expectedToken !== undefined &&
-          (expectedToken.sourceRevision !== actualToken.sourceRevision ||
-            expectedToken.memoryVersion !== actualToken.memoryVersion ||
-            expectedToken.topologyEpoch !== actualToken.topologyEpoch)
-        ) {
-          return {
-            kind: "conflict",
-            reason: DIALOG_MEMORY_REASONS.CONFLICT.TOKEN_STALE,
+          if (source === undefined || memory === undefined) {
+            throw new DialogMemoryGuardError(
+              "inconsistent",
+              source === undefined
+                ? DIALOG_MEMORY_REASONS.INCONSISTENT.MEMORY_WITHOUT_SOURCE
+                : DIALOG_MEMORY_REASONS.INCONSISTENT.SOURCE_WITHOUT_MEMORY,
+            )
           }
-        }
 
-        if (cursor !== undefined) {
-          const anchor = await tx.execute<{ exists: boolean }>(sql`
+          const actualToken: DialogMemoryToken = {
+            sourceRevision: source.sourceRevision,
+            memoryVersion: memory.memoryVersion,
+            topologyEpoch: global.topologyEpoch,
+          }
+
+          if (
+            expectedToken !== undefined &&
+            (expectedToken.sourceRevision !== actualToken.sourceRevision ||
+              expectedToken.memoryVersion !== actualToken.memoryVersion ||
+              expectedToken.topologyEpoch !== actualToken.topologyEpoch)
+          ) {
+            return {
+              kind: "conflict",
+              reason: DIALOG_MEMORY_REASONS.CONFLICT.TOKEN_STALE,
+            }
+          }
+
+          if (cursor !== undefined) {
+            const anchor = await tx.execute<{ exists: boolean }>(sql`
             SELECT EXISTS(
               SELECT 1
               FROM "${sql.raw(MESSAGE_TABLE)}"
@@ -243,26 +243,28 @@ export const dialogMemoryRepository = {
                 AND "conversationId" = ${scope.conversationId}::bigint
             ) AS "exists"
           `)
-          if (anchor.rows[0]?.exists !== true) {
-            return {
-              kind: "invalid",
-              reason: DIALOG_MEMORY_REASONS.INVALID.CURSOR_ANCHOR_NOT_IN_SCOPE,
+            if (anchor.rows[0]?.exists !== true) {
+              return {
+                kind: "invalid",
+                reason:
+                  DIALOG_MEMORY_REASONS.INVALID.CURSOR_ANCHOR_NOT_IN_SCOPE,
+              }
             }
           }
-        }
 
-        const history = await readMainHistory(tx, scope, { limit, cursor })
+          const history = await readMainHistory(tx, scope, { limit, cursor })
 
-        return {
-          kind: "ok",
-          scope,
-          token: actualToken,
-          memory: buildMemoryDto(memory),
-          items: history.items,
-          hasMore: history.hasMore,
-          nextCursor: history.nextCursor,
-        }
-      })
+          return {
+            kind: "ok",
+            scope,
+            token: actualToken,
+            memory: buildMemoryDto(memory),
+            items: history.items,
+            hasMore: history.hasMore,
+            nextCursor: history.nextCursor,
+          }
+        },
+      )
     } catch (error) {
       if (error instanceof DialogMemoryGuardError) {
         return { kind: error.kind, reason: error.reason }
@@ -277,8 +279,6 @@ export const dialogMemoryRepository = {
     }
   },
 }
-
-export type { MemorySelectRow }
 
 type MessageRefRow = {
   id: string
@@ -347,13 +347,10 @@ function messageKey(row: { id: string; createdAtMicros: string }): string {
   return `${row.id}#${row.createdAtMicros}`
 }
 
-function buildPairsFragment(
-  pairs: { id: string; createdAtMicros: string }[],
-) {
+function buildPairsFragment(pairs: { id: string; createdAtMicros: string }[]) {
   return sql.join(
     pairs.map(
-      (pair) =>
-        sql`(${pair.id}::bigint, ${pair.createdAtMicros}::timestamptz)`,
+      (pair) => sql`(${pair.id}::bigint, ${pair.createdAtMicros}::timestamptz)`,
     ),
     sql`, `,
   )
@@ -376,9 +373,9 @@ async function readMainHistory(
   pagination: Pagination,
 ): Promise<ReadHistoryResult> {
   const cursorClause =
-    pagination.cursor !== undefined
-      ? sql`AND ("createdAt","id") < (${pagination.cursor.createdAtMicros}::timestamptz, ${pagination.cursor.id}::bigint)`
-      : sql``
+    pagination.cursor === undefined
+      ? sql``
+      : sql`AND ("createdAt","id") < (${pagination.cursor.createdAtMicros}::timestamptz, ${pagination.cursor.id}::bigint)`
 
   const refsResult = await tx.execute<MessageRefRow>(sql`
     SELECT
@@ -395,9 +392,17 @@ async function readMainHistory(
   const allRefs = refsResult.rows
   const issuedRefs = allRefs.slice(0, pagination.limit)
   const hasMore = allRefs.length > pagination.limit
-  const nextCursor: DialogMemoryCursor | null = hasMore
-    ? issuedRefs[issuedRefs.length - 1]!
-    : null
+  const lastIssued = issuedRefs.at(-1)
+
+  if (hasMore && lastIssued === undefined) {
+    throw new DialogMemoryGuardError(
+      "unavailable",
+      DIALOG_MEMORY_REASONS.UNAVAILABLE.HISTORY_PREFLIGHT_INVALID,
+    )
+  }
+
+  const nextCursor: DialogMemoryCursor | null =
+    hasMore && lastIssued !== undefined ? lastIssued : null
 
   if (issuedRefs.length === 0) {
     return { items: [], hasMore: false, nextCursor: null }
