@@ -73,7 +73,8 @@ jobs:
           --health-retries 10
     env:
       # Explicit dedicated CI database + password for the Timescale service.
-      DIALOG_MEMORY_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dialog_memory_gate
+      DIALOG_MEMORY_TEST_DATABASE_URL: postgresql://postgres@localhost:5432/dialog_memory_gate
+      PGPASSWORD: postgres
       DIALOG_MEMORY_TEST_ALLOW_WRITES: "1"
     steps:
       - name: Checkout
