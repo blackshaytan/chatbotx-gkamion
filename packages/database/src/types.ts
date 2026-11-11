@@ -249,6 +249,16 @@ export type ExternalAgentConversationStateModel =
   typeof schema.externalAgentConversationStateModel.$inferSelect
 export type ExternalAgentChatStateModel =
   typeof schema.externalAgentChatStateModel.$inferSelect
+export type DialogMemorySourceModel =
+  typeof schema.dialogMemorySourceModel.$inferSelect
+export type DialogMemorySourceInsert =
+  typeof schema.dialogMemorySourceModel.$inferInsert
+export type DialogMemoryModel = typeof schema.dialogMemoryModel.$inferSelect
+export type DialogMemoryInsert = typeof schema.dialogMemoryModel.$inferInsert
+export type DialogMemoryTopologyModel =
+  typeof schema.dialogMemoryTopologyModel.$inferSelect
+export type DialogMemoryTopologyInsert =
+  typeof schema.dialogMemoryTopologyModel.$inferInsert
 export type MessengerMessageTemplateModel =
   typeof schema.messengerMessageTemplateModel.$inferSelect
 export type WhatsappFlowModel = typeof schema.whatsappFlowModel.$inferSelect

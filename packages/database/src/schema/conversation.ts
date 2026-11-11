@@ -90,6 +90,10 @@ export const conversationModel = pgTable(
       table.inboxActivityAt.desc().nullsLast(),
       table.id.desc(),
     ),
+    uniqueIndex("Conversation_workspaceId_id_key").on(
+      table.workspaceId,
+      table.id,
+    ),
     // Unread conversations first, then the same activity order as the inbox list.
     index("Conversation_workspaceId_inboxUnread_inboxActivityAt_id_idx").using(
       "btree",

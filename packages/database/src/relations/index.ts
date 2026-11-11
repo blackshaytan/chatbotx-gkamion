@@ -66,6 +66,7 @@ import { workspaceUsageRelations } from "./enterprise/workspace-usage"
 import { errorLogRelations } from "./error-log"
 import { externalAgentRelations } from "./external-agent"
 import { externalAgentChatStateRelations } from "./external-agent-chat-state"
+import { externalAgentDialogMemoryRelations } from "./external-agent-dialog-memory"
 import { externalCrmRelations } from "./external-crm"
 import { externalWebhookRelations } from "./external-webhook"
 import { facebookLeadAdsAutomationRelations } from "./facebook-lead-ads-automation"
@@ -299,8 +300,9 @@ export const relations = {
   ...webhookRelations,
   ...webhookExecutionRelations,
   ...externalAgentRelations,
-  ...externalCrmRelations,
   ...externalAgentChatStateRelations,
+  ...externalAgentDialogMemoryRelations,
+  ...externalCrmRelations,
   ...externalWebhookRelations,
   ...conditionRelations,
   ...triggerStatsRelations,
