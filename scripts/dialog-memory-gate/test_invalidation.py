@@ -1007,6 +1007,38 @@ class TopologyTests(GateBase):
         )
         self.assertFalse(accepted)
 
+    def test_truncate_message_bumps_topology_epoch(self) -> None:
+        # RED: Message TRUNCATE is a destructive storage event that must
+        # invalidate the entire memory view, not just the source rows it removes.
+        self.insert_message("ws-1", "conv-t1", "tm-trunc-msg")
+        before_epoch = self.epoch_of()
+        rev = self.revision_of("conv-t1")
+        version = self.memory_row("conv-t1")[1]
+        with self.conn.cursor() as cur:
+            cur.execute('TRUNCATE "Message" CASCADE')
+        self.assertGreater(self.epoch_of(), before_epoch)
+        self.assertFalse(
+            self.publish("conv-t1", "after-trunc-msg", rev, version, before_epoch),
+            "old-epoch candidate accepted after TRUNCATE Message",
+        )
+
+    def test_truncate_attachment_bumps_topology_epoch(self) -> None:
+        # RED: Attachment TRUNCATE is equally destructive and must bump the global
+        # topology epoch so no pre-truncate summary can be published.
+        created = "2026-03-01 10:00:00+00"
+        self.insert_message("ws-1", "conv-t1", "tm-trunc-att", created=created)
+        self.insert_attachment("ws-1", "conv-t1", "att-trunc-att", "tm-trunc-att", created)
+        before_epoch = self.epoch_of()
+        rev = self.revision_of("conv-t1")
+        version = self.memory_row("conv-t1")[1]
+        with self.conn.cursor() as cur:
+            cur.execute('TRUNCATE "Attachment" CASCADE')
+        self.assertGreater(self.epoch_of(), before_epoch)
+        self.assertFalse(
+            self.publish("conv-t1", "after-trunc-att", rev, version, before_epoch),
+            "old-epoch candidate accepted after TRUNCATE Attachment",
+        )
+
     def test_new_partition_inherits_trigger(self) -> None:
         with self.conn.cursor() as cur:
             cur.execute(

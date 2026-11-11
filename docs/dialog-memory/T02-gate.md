@@ -39,6 +39,30 @@ RED-stage integration gate for the agreed mainDB-only v1 dialog memory design.
     any write.
   - `DIALOG_MEMORY_TEST_ALLOW_WRITES=1` is required.
 
+## Hosted TimescaleDB stage
+
+The declarative-partition proof above is stage 1 only. Production storage is
+TimescaleDB, so a second mandatory job exercises the same contract on real
+hypertables:
+
+- Workflow: `timescale-gate` job in `.github/workflows/dialog-memory-gate.yml`
+  (and its copy in `.github/workflows/gkamion-checks.yml`). Like the mainDB job,
+  it is manual `workflow_dispatch`; default branch routing is unchanged.
+- Engine: pinned production image
+  `timescale/timescaledb-ha@sha256:527b9bf3b0bdb654e18240217ded559282702cf34d005502540eb0bbe6f5d355`
+  (PostgreSQL 18.6 + TimescaleDB 2.30.2), dedicated database
+  `dialog_memory_gate`, explicit URL/password env.
+- Test file: `scripts/dialog-memory-gate/test_timescale.py` reuses the base
+  classes from `test_invalidation.py`. The fixture is transformed in-place into
+  hypertables with compression enabled; no duplicate test logic is maintained.
+- Version gate: the Timescale test asserts the exact server major (18) and
+  extension version (2.30.2). If the hosted image or functions change, CI will
+  show the real failure instead of silently falling back to plain PostgreSQL.
+- Compression proof: `TimescaleCompressedTests` seeds rows, compresses every
+  actual chunk via `public.compress_chunk`, asserts `is_compressed` from
+  `timescaledb_information.chunks`, then proves Message/Attachment UPDATE/DELETE
+  and stale publish rejection still work on compressed data.
+
 ## Fixture (scripts/dialog-memory-gate/fixture.sql)
 
 Dedicated schema `dialog_memory_gate` with a representative subset:
@@ -157,3 +181,21 @@ below.
 16. Missing global topology singleton rejects publish safely.
 17. All test harness connections carry a `statement_timeout` so concurrent
     threads fail fast instead of hanging.
+
+## Known boundaries / honest RED items
+
+- **TRUNCATE on Message / Attachment.** The current `invalidation.sql`
+  prototype has row triggers for INSERT/UPDATE/DELETE on those hypertables, but
+  no `BEFORE TRUNCATE` statement trigger. Therefore the two new
+  `test_truncate_*_bumps_topology_epoch` tests are intentionally RED. A future
+  trigger change must bump the global `DialogMemoryTopology.topologyEpoch` on
+  those TRUNCATE events and must never roll the epoch back.
+- **Retention / administrative chunk drops.** `STORAGE-CONTRACT-v1` does not
+  permit retention policies on `Message` / `Attachment` while memory is enabled.
+  Manual `drop_chunks` on those hypertables is only allowed when memory is off
+  and a full rebuild is performed. Those administrative operations are outside
+  the DML invalidation guarantee and are intentionally not covered by wide
+  database-wide event triggers in this task.
+- Production retention automation exists only for analytics tables;
+  `Message`/`Attachment` compression is real, but the service-stage automation
+  guard tests are a separate follow-up.
