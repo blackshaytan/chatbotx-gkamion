@@ -95,6 +95,43 @@ All reasons are constant strings; no raw SQL, messages or PII are returned.
 - `publish` / `reset` / package barrel exports (C).
 - No stubs or TODO implementations for those methods.
 
+## What C adds
+
+- `dialogMemoryRepository.publishIfUnchanged(input)` and
+  `dialogMemoryRepository.resetDerived(input)` are real methods backed by a
+  new internal CAS publication module.
+- Both operations reuse the same guarded transaction as `register` and
+  `readSnapshot`: global topology `FOR UPDATE`, conversation ownership, shard
+  guard, retention guard, then source/memory `FOR UPDATE`.
+- Input is validated at the boundary (scope, expected token triple, config for
+  publish, and structural JSON-only summary with 8 MiB/32-depth bounds).
+- CAS compares the caller's expected `sourceRevision`, `memoryVersion` and
+  `topologyEpoch` against the current source/global/memory. Any mismatch
+  returns `conflict` without mutation. The actual `UPDATE` also carries scoped
+  `EXISTS` subqueries on the current source revision and global epoch, so the
+  database enforces the triple CAS.
+- On success `memoryVersion` is bumped in SQL, `updatedAt` and
+  `lastAttemptAt` are set to `clock_timestamp()`, and the method returns the
+  new actual token plus a fresh DTO.
+- `coverage` is an optional checkpoint cursor (null or an exact message ref
+  verified in the same transaction). It does **not** represent delivery, run
+  progress, or idempotency markers; raw tail remains available for future
+  replay/trim logic.
+- `summary` is an opaque plain JSON object. The full covered manifest metadata
+  can be part of it; there is no 256 KiB or last-30 hidden limit in the
+  repository layer.
+- `resetDerived` clears only derived memory fields (`summary`, coverage pair,
+  `lastError`, `lastAttemptAt`, `coveredSourceRevision` reset to `'0'`). It
+  preserves source, config, model/provider/prompt and does not touch messages,
+  attachments, conversation or global topology.
+
+## Public barrel exports
+
+`packages/database/src/repositories/external-agent/index.ts` now exports
+`dialogMemoryRepository` and the public input/output/DTO types from
+`dialog-memory-types`. Internal context helpers, validators and row types are
+not advertised.
+
 ## Verification status
 
 - `git diff --check` clean.

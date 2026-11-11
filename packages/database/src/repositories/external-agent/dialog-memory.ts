@@ -23,13 +23,18 @@ import {
   requireConversationOwnership,
   runInMemoryTransaction,
 } from "./dialog-memory-context"
+import { publishIfUnchanged, resetDerived } from "./dialog-memory-publication"
 import {
   DIALOG_MEMORY_REASONS,
   type DialogMemoryAttachmentDto,
   type DialogMemoryConfig,
   type DialogMemoryCursor,
   type DialogMemoryMessageDto,
+  type DialogMemoryPublishInput,
+  type DialogMemoryPublishResult,
   type DialogMemoryRegisterResult,
+  type DialogMemoryResetInput,
+  type DialogMemoryResetResult,
   type DialogMemoryScope,
   type DialogMemorySnapshotInput,
   type DialogMemorySnapshotResult,
@@ -277,6 +282,18 @@ export const dialogMemoryRepository = {
         reason: DIALOG_MEMORY_REASONS.UNAVAILABLE.TRANSACTION_FAILED,
       }
     }
+  },
+
+  publishIfUnchanged(
+    input: DialogMemoryPublishInput,
+  ): Promise<DialogMemoryPublishResult> {
+    return publishIfUnchanged(input)
+  },
+
+  resetDerived(
+    input: DialogMemoryResetInput,
+  ): Promise<DialogMemoryResetResult> {
+    return resetDerived(input)
   },
 }
 

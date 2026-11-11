@@ -35,6 +35,17 @@ export const DIALOG_MEMORY_REASONS = {
     MISSING_EXPECTED_TOKEN_WITH_CURSOR:
       "expectedToken is required when cursor is provided",
     CURSOR_ANCHOR_NOT_IN_SCOPE: "cursor anchor does not belong to this scope",
+    COVERAGE_NOT_IN_SCOPE:
+      "coverage cursor does not point to a message in this scope",
+    COVERAGE_MUST_BE_NULL_OR_CURSOR: "coverage must be null or a valid cursor",
+    SUMMARY_NOT_JSON_OBJECT: "summary must be a plain JSON object",
+    SUMMARY_DEPTH_EXCEEDED: "summary exceeds the maximum nesting depth",
+    SUMMARY_PAYLOAD_TOO_LARGE:
+      "summary payload exceeds the supported size limit",
+    SUMMARY_INVALID_VALUE:
+      "summary contains a value that is not JSON-serializable",
+    PUBLISH_INPUT_INVALID: "publish input is not a valid object",
+    RESET_INPUT_INVALID: "reset input is not a valid object",
   },
   NOT_FOUND: {
     CONVERSATION: "conversation not found or contact mismatch",
@@ -542,6 +553,403 @@ export const validateDialogMemorySnapshotInput = (
       scope: scopeResult.scope,
       limit,
       cursor,
+      expectedToken,
+    },
+  }
+}
+
+export type DialogMemoryPublishInput = {
+  scope: DialogMemoryScope
+  expectedToken: DialogMemoryToken
+  summary: unknown
+  coverage: DialogMemoryCursor | null
+  config: DialogMemoryConfig
+}
+
+export type DialogMemoryResetInput = {
+  scope: DialogMemoryScope
+  expectedToken: DialogMemoryToken
+}
+
+export type DialogMemoryPublishResult =
+  | {
+      kind: "ok"
+      token: DialogMemoryToken
+      memory: DialogMemoryDto
+    }
+  | { kind: "conflict"; reason: string }
+  | { kind: "unregistered"; reason: string }
+  | { kind: "inconsistent"; reason: string }
+  | { kind: "unsupported"; reason: string }
+  | { kind: "not_found"; reason: string }
+  | { kind: "invalid"; reason: string }
+  | { kind: "unavailable"; reason: string }
+
+export type DialogMemoryResetResult =
+  | {
+      kind: "ok"
+      token: DialogMemoryToken
+      memory: DialogMemoryDto
+    }
+  | { kind: "conflict"; reason: string }
+  | { kind: "unregistered"; reason: string }
+  | { kind: "inconsistent"; reason: string }
+  | { kind: "unsupported"; reason: string }
+  | { kind: "not_found"; reason: string }
+  | { kind: "invalid"; reason: string }
+  | { kind: "unavailable"; reason: string }
+
+export type DialogMemoryPublishInputValidationResult =
+  | {
+      kind: "ok"
+      value: {
+        scope: DialogMemoryScope
+        expectedToken: DialogMemoryToken
+        summaryJson: string
+        coverage: DialogMemoryCursor | null
+        config: DialogMemoryConfig
+      }
+    }
+  | { kind: "invalid"; reason: string }
+
+export type DialogMemoryResetInputValidationResult =
+  | {
+      kind: "ok"
+      value: {
+        scope: DialogMemoryScope
+        expectedToken: DialogMemoryToken
+      }
+    }
+  | { kind: "invalid"; reason: string }
+
+const MAX_SUMMARY_DEPTH = 32
+const MAX_SUMMARY_BYTES = 8 * 1024 * 1024
+
+class SummaryValidationError extends Error {
+  readonly reason: string
+
+  constructor(reason: string) {
+    super("summary-validation-error")
+    this.name = "SummaryValidationError"
+    this.reason = reason
+  }
+}
+
+function failSummary(reason: string): never {
+  throw new SummaryValidationError(reason)
+}
+
+function escapeJsonString(value: string): string {
+  let result = '"'
+  for (const char of value) {
+    const code = char.charCodeAt(0)
+    if (code === 0x22) {
+      result += '\\"'
+    } else if (code === 0x5c) {
+      result += "\\\\"
+    } else if (code < 0x20) {
+      result += `\\u${code.toString(16).padStart(4, "0")}`
+    } else {
+      result += char
+    }
+  }
+  result += '"'
+  return result
+}
+
+type JsonWriter = {
+  parts: string[]
+  bytes: number
+  encoder: TextEncoder
+}
+
+function appendToWriter(writer: JsonWriter, part: string): void {
+  writer.parts.push(part)
+  writer.bytes += writer.encoder.encode(part).length
+  if (writer.bytes > MAX_SUMMARY_BYTES) {
+    failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_PAYLOAD_TOO_LARGE)
+  }
+}
+
+function writeJsonValue(
+  value: unknown,
+  depth: number,
+  seen: WeakSet<object>,
+  writer: JsonWriter,
+): void {
+  if (depth > MAX_SUMMARY_DEPTH) {
+    failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_DEPTH_EXCEEDED)
+  }
+
+  switch (typeof value) {
+    case "string": {
+      appendToWriter(writer, escapeJsonString(value))
+      return
+    }
+    case "number": {
+      if (!Number.isFinite(value)) {
+        failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+      }
+      appendToWriter(writer, String(value))
+      return
+    }
+    case "boolean": {
+      appendToWriter(writer, value ? "true" : "false")
+      return
+    }
+    case "object": {
+      if (value === null) {
+        appendToWriter(writer, "null")
+        return
+      }
+
+      if (Array.isArray(value)) {
+        if (value.length === 0) {
+          appendToWriter(writer, "[]")
+          return
+        }
+        if (seen.has(value)) {
+          failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+        }
+        seen.add(value)
+        appendToWriter(writer, "[")
+        for (let i = 0; i < value.length; i++) {
+          if (!(i in value)) {
+            failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+          }
+          if (i > 0) {
+            appendToWriter(writer, ",")
+          }
+          writeJsonValue(value[i], depth + 1, seen, writer)
+        }
+        appendToWriter(writer, "]")
+        seen.delete(value)
+        return
+      }
+
+      if (seen.has(value)) {
+        failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+      }
+
+      const prototype = Object.getPrototypeOf(value)
+      if (prototype !== null && prototype !== Object.prototype) {
+        failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+      }
+
+      if (Object.getOwnPropertySymbols(value).length > 0) {
+        failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+      }
+
+      const keys = Object.keys(value)
+      if (keys.length === 0) {
+        appendToWriter(writer, "{}")
+        return
+      }
+
+      seen.add(value)
+      appendToWriter(writer, "{")
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i]
+        const descriptor = Object.getOwnPropertyDescriptor(value, key)
+        if (
+          descriptor === undefined ||
+          "get" in descriptor ||
+          "set" in descriptor
+        ) {
+          failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+        }
+        if (i > 0) {
+          appendToWriter(writer, ",")
+        }
+        appendToWriter(writer, escapeJsonString(key))
+        appendToWriter(writer, ":")
+        writeJsonValue(descriptor.value, depth + 1, seen, writer)
+      }
+      appendToWriter(writer, "}")
+      seen.delete(value)
+      return
+    }
+    default: {
+      failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+    }
+  }
+}
+
+export type DialogMemorySummaryValidationResult =
+  | { kind: "ok"; summaryJson: string }
+  | { kind: "invalid"; reason: string }
+
+export const validateDialogMemorySummary = (
+  input: unknown,
+): DialogMemorySummaryValidationResult => {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+    return {
+      kind: "invalid",
+      reason: DIALOG_MEMORY_REASONS.INVALID.SUMMARY_NOT_JSON_OBJECT,
+    }
+  }
+
+  const prototype = Object.getPrototypeOf(input)
+  if (prototype !== null && prototype !== Object.prototype) {
+    return {
+      kind: "invalid",
+      reason: DIALOG_MEMORY_REASONS.INVALID.SUMMARY_NOT_JSON_OBJECT,
+    }
+  }
+
+  try {
+    const writer: JsonWriter = {
+      parts: [],
+      bytes: 0,
+      encoder: new TextEncoder(),
+    }
+    writeJsonValue(input, 1, new WeakSet(), writer)
+    return {
+      kind: "ok",
+      summaryJson: writer.parts.join(""),
+    }
+  } catch (error) {
+    if (error instanceof SummaryValidationError) {
+      return { kind: "invalid", reason: error.reason }
+    }
+    return {
+      kind: "invalid",
+      reason: DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE,
+    }
+  }
+}
+
+export const validateDialogMemoryPublishInput = (
+  input: unknown,
+): DialogMemoryPublishInputValidationResult => {
+  if (typeof input !== "object" || input === null) {
+    return {
+      kind: "invalid",
+      reason: DIALOG_MEMORY_REASONS.INVALID.PUBLISH_INPUT_INVALID,
+    }
+  }
+
+  const candidate = input as {
+    scope?: unknown
+    expectedToken?: unknown
+    summary?: unknown
+    coverage?: unknown
+    config?: unknown
+  }
+
+  const scopeResult = validateDialogMemoryScope(candidate.scope)
+  if (scopeResult.kind === "invalid") {
+    return scopeResult
+  }
+
+  if (!isValidDialogMemoryToken(candidate.expectedToken)) {
+    return {
+      kind: "invalid",
+      reason: DIALOG_MEMORY_REASONS.INVALID.EXPECTED_TOKEN_NOT_VALID,
+    }
+  }
+  const expectedToken: DialogMemoryToken = {
+    sourceRevision: candidate.expectedToken.sourceRevision,
+    memoryVersion: candidate.expectedToken.memoryVersion,
+    topologyEpoch: candidate.expectedToken.topologyEpoch,
+  }
+
+  const summaryResult = validateDialogMemorySummary(candidate.summary)
+  if (summaryResult.kind === "invalid") {
+    return summaryResult
+  }
+
+  if (candidate.coverage === undefined) {
+    return {
+      kind: "invalid",
+      reason: DIALOG_MEMORY_REASONS.INVALID.COVERAGE_MUST_BE_NULL_OR_CURSOR,
+    }
+  }
+
+  let coverage: DialogMemoryCursor | null = null
+  if (candidate.coverage !== null) {
+    if (typeof candidate.coverage !== "object" || candidate.coverage === null) {
+      return {
+        kind: "invalid",
+        reason: DIALOG_MEMORY_REASONS.INVALID.CURSOR_DATE_NOT_MICROSECOND_UTC,
+      }
+    }
+    const cursorCandidate = candidate.coverage as {
+      id?: unknown
+      createdAtMicros?: unknown
+    }
+    if (!isCanonicalPositiveBigint(cursorCandidate.id)) {
+      return {
+        kind: "invalid",
+        reason:
+          DIALOG_MEMORY_REASONS.INVALID.CURSOR_ID_NOT_CANONICAL_POSITIVE_BIGINT,
+      }
+    }
+    if (!isValidMicrosecondUtc(cursorCandidate.createdAtMicros)) {
+      return {
+        kind: "invalid",
+        reason: DIALOG_MEMORY_REASONS.INVALID.CURSOR_DATE_NOT_MICROSECOND_UTC,
+      }
+    }
+    coverage = {
+      id: cursorCandidate.id,
+      createdAtMicros: cursorCandidate.createdAtMicros,
+    }
+  }
+
+  const configResult = validateDialogMemoryConfig(candidate.config)
+  if (configResult.kind === "invalid") {
+    return configResult
+  }
+
+  return {
+    kind: "ok",
+    value: {
+      scope: scopeResult.scope,
+      expectedToken,
+      summaryJson: summaryResult.summaryJson,
+      coverage,
+      config: configResult.config,
+    },
+  }
+}
+
+export const validateDialogMemoryResetInput = (
+  input: unknown,
+): DialogMemoryResetInputValidationResult => {
+  if (typeof input !== "object" || input === null) {
+    return {
+      kind: "invalid",
+      reason: DIALOG_MEMORY_REASONS.INVALID.RESET_INPUT_INVALID,
+    }
+  }
+
+  const candidate = input as {
+    scope?: unknown
+    expectedToken?: unknown
+  }
+
+  const scopeResult = validateDialogMemoryScope(candidate.scope)
+  if (scopeResult.kind === "invalid") {
+    return scopeResult
+  }
+
+  if (!isValidDialogMemoryToken(candidate.expectedToken)) {
+    return {
+      kind: "invalid",
+      reason: DIALOG_MEMORY_REASONS.INVALID.EXPECTED_TOKEN_NOT_VALID,
+    }
+  }
+  const expectedToken: DialogMemoryToken = {
+    sourceRevision: candidate.expectedToken.sourceRevision,
+    memoryVersion: candidate.expectedToken.memoryVersion,
+    topologyEpoch: candidate.expectedToken.topologyEpoch,
+  }
+
+  return {
+    kind: "ok",
+    value: {
+      scope: scopeResult.scope,
       expectedToken,
     },
   }
