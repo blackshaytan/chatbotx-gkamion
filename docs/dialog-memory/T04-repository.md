@@ -1,4 +1,4 @@
-# T04 B1 — Dialog memory repository
+# T04 B1/B2 — Dialog memory repository
 
 ## Files
 

@@ -12,19 +12,6 @@ const PG_INTEGER_MAX = 2147483647
 export const DIALOG_MEMORY_PAGE_LIMIT_MIN = 1
 export const DIALOG_MEMORY_PAGE_LIMIT_MAX = 200
 
-/**
- * Fail-closed ceilings for one issued history page.
- * The contract requires a volume bound and forbids silent truncation, but it
- * does not fix the number. Crossing either ceiling returns `unsupported`
- * and no items. 64 MiB is the declared Attachment.size sum; 4096 is the
- * metadata-row ceiling so a page cannot be materialized unbounded.
- */
-export const DIALOG_MEMORY_PAGE_ATTACHMENT_BYTE_BUDGET = 67_108_864
-export const DIALOG_MEMORY_PAGE_ATTACHMENT_ROW_BUDGET = 4096
-
-const CURSOR_MICROS_RE =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/
-
 export const DIALOG_MEMORY_REASONS = {
   INVALID: {
     WORKSPACE_ID_NOT_CANONICAL_POSITIVE_BIGINT:
