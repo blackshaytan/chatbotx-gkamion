@@ -343,7 +343,7 @@ class MessageInvalidationTests(GateBase):
         self.insert_message("ws-1", "conv-1", "m-dist-b", created=created, text="hello")
         rev0 = self.revision_of("conv-1")
         barrier = threading.Barrier(2)
-        observations: dict[str, dict[str, object]] = {}
+        observations: dict[str, dict[str, Any]] = {}
         errors: list[BaseException] = []
 
         def bump(mid: str, value: str) -> None:
