@@ -12,6 +12,9 @@ import type { DromInboundEvent } from "./event"
 const RETENTION_MS = 60 * 24 * 60 * 60 * 1000
 const PHOTO_PLACEHOLDER = "📷 Фото"
 const NUMERIC = /^\d+$/
+/** Dialog lines mirrored into the event as data (both directions). */
+const HISTORY_LIMIT = 20
+const HISTORY_TEXT_LIMIT = 400
 
 export type DromDialogCursor = {
   /** Newest buyer chat message already turned into an event. */
@@ -25,6 +28,34 @@ export type DromDialogCursor = {
 }
 
 export type DromCursor = { dialogs: Record<string, DromDialogCursor> }
+
+/** One dialog line carried as data, so the assistant sees what both sides said. */
+export type DromHistoryItem = {
+  direction: "in" | "out"
+  time: string
+  text: string
+}
+
+/**
+ * The dialog as both sides see it. ChatbotX only turns buyer lines into
+ * events, so everything the shop wrote in DROM's own cabinet (including the
+ * price/part offer a buyer replies to) never became a message row. Shipping
+ * the whole tail with the event keeps the assistant's picture complete.
+ */
+const chatHistory = (view: DromView): DromHistoryItem[] =>
+  view.messages
+    .filter((message) => !message.isDealSystem)
+    // "unknown" cannot be attributed to a side; guessing would mislabel it.
+    .filter((message) => message.direction !== "unknown")
+    .filter((message) => message.text || message.images.length > 0)
+    .slice(-HISTORY_LIMIT)
+    .map(
+      (message): DromHistoryItem => ({
+        direction: message.direction === "out" ? "out" : "in",
+        time: message.time.slice(0, 20),
+        text: (message.text || PHOTO_PLACEHOLDER).slice(0, HISTORY_TEXT_LIMIT),
+      }),
+    )
 
 const readCursor = (cursor: PollCursor | null): DromCursor => ({
   dialogs: {
@@ -122,6 +153,7 @@ const toEvent = (
   view: DromView,
   deal: DromDeal | null,
   message: DromMessage,
+  history: DromHistoryItem[],
 ): DromInboundEvent | null => {
   const text =
     message.text || (message.images.length > 0 ? PHOTO_PLACEHOLDER : "")
@@ -139,6 +171,7 @@ const toEvent = (
     isDealSystem: message.isDealSystem,
     listing: view.listing,
     deal,
+    history,
   }
 }
 
@@ -166,9 +199,18 @@ const pollDialog = async (
     }
   }
 
+  // The snapshot rides on the first event only: one copy per poll, not per line.
+  const history = chatHistory(view)
   const events = messages
-    .map((message) =>
-      toEvent(brief.dialogId, interlocutor, view, deal, message),
+    .map((message, index) =>
+      toEvent(
+        brief.dialogId,
+        interlocutor,
+        view,
+        deal,
+        message,
+        index === 0 ? history : [],
+      ),
     )
     .filter((event): event is DromInboundEvent => event !== null)
   const newDealIds = messages

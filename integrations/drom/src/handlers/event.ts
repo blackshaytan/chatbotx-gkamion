@@ -32,6 +32,13 @@ const dealSchema = z.object({
   ),
 }) satisfies z.ZodType<DromDeal>
 
+/** Dialog lines shipped as data beside the event (never as directives). */
+export const dromHistoryItemSchema = z.object({
+  direction: z.enum(["in", "out"]),
+  time: z.string().max(40),
+  text: z.string().max(500),
+})
+
 /** One buyer message found by `pollDrom`, the `incomingMessage` payload. */
 export const dromInboundEventSchema = z.object({
   kind: z.literal("message"),
@@ -44,6 +51,8 @@ export const dromInboundEventSchema = z.object({
   isDealSystem: z.boolean(),
   listing: listingSchema.nullable(),
   deal: dealSchema.nullable(),
+  /** Tail of the whole dialog, both directions; empty on later events of a poll. */
+  history: z.array(dromHistoryItemSchema).default([]),
 })
 
 export type DromInboundEvent = z.infer<typeof dromInboundEventSchema>

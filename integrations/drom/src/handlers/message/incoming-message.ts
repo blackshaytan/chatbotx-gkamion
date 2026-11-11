@@ -101,6 +101,7 @@ export const receiveMessage = async ({
           dialogId: event.dialogId,
           listing: event.listing,
           deal: event.deal,
+          ...(event.history.length ? { history: event.history } : {}),
         },
       },
     },
