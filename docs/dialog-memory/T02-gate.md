@@ -102,6 +102,28 @@ file is a dedicated test-schema prototype, not a production migration; do not
 run deployment or push workflows from this task — parent will trigger hosted
 validation.
 
+## Race-test fix (CI 43088934787)
+
+The original `test_publish_concurrent_with_edit_serializes_and_edit_wins` used
+an unordered `threading.Barrier` and manually bumped `sourceRevision` inside the
+edit thread, asserting that `publish` always loses a race. That is the wrong
+invariant: the two operations can linearize in either order. The hosted failure
+in run 43088934787 was the test expectation, not the contract, so the test has
+been replaced by two deterministic, event-driven interleavings:
+
+- **edit-before-publish**: `edit` updates `Message` (the trigger bumps
+  `DialogMemorySource`) and stays open; `publish` attempts with the old snapshot;
+  `edit` commits first; `publish` must observe the bumped `sourceRevision` and
+  return `false`. No manual `sourceRevision` UPDATE in the edit thread.
+- **publish-before-edit**: `publish` acquires the source/topology/memory locks and
+  wins; `edit` then starts, bumps `sourceRevision` after the locks are released;
+  a second `publish` using the old `sourceRevision` but the new `memoryVersion`
+  must fail CAS.
+
+No `sleep`; short transactions; the same statement-timeout and join assertions are
+kept. The suite is still RED on the attachment-source-isolation regressions
+below.
+
 ## Coverage
 
 1. Message INSERT (normal and past partition date), UPDATE text,
@@ -109,14 +131,17 @@ validation.
    sender/channel provenance change, conversation reassignment (old + new
    owner), cross-workspace reassignment.
 2. Attachment insert/update/delete; attachment without a resolvable parent
-   leaves foreign memory untouched; source identity requires both
-   `messageId` and `messageCreatedAt`.
+   leaves foreign memory untouched; source identity requires the full
+   tuple (`workspaceId`, `conversationId`, `messageId`, `messageCreatedAt`).
+   Forged attachments that reference a real foreign message by id/createdAt
+   but carry their own workspace/conversation must not bump the foreign owner.
 3. Rolled back transaction does not move the committed sourceRevision.
 4. updatedAt-only update is content-neutral (no invalidation).
 5. Two concurrent UPDATEs serialize sourceRevision with no lost update.
 6. Stale summary fails CAS after a Message edit; fresh summary passes.
-7. Concurrent publishers of the same snapshot: exactly one wins; publish
-   concurrent with a committed edit serializes and the edit wins.
+7. Deterministic publish/edit interleavings: edit-before-publish rejects the
+   stale snapshot; publish-before-edit is allowed and a subsequent stale
+   re-publish is rejected.
 8. ANY MessageShard insert (incl. inactive) bumps the global topology epoch
    and blocks publish with an old epoch; registry DELETE / TRUNCATE also
    invalidates and never rolls the epoch back.

@@ -453,10 +453,12 @@ class AttachmentInvalidationTests(GateBase):
         self.make_workspace("ws-2")
         self.make_conversation("ws-1", "conv-a1")
         self.make_conversation("ws-1", "conv-a2")
+        self.make_conversation("ws-2", "conv-a3")
         self.make_memory("ws-1", "conv-a1")
         self.make_memory("ws-1", "conv-a2")
         self.insert_message("ws-1", "conv-a1", "am-1", created=self.DATE)
         self.insert_message("ws-1", "conv-a2", "am-2", created=self.DATE)
+        self.insert_message("ws-2", "conv-a3", "am-3", created=self.DATE)
 
     def test_attachment_insert_invalidates_parent_conversation(self) -> None:
         self.insert_message("ws-1", "conv-a1", "am-3", created=self.DATE)
@@ -502,6 +504,94 @@ class AttachmentInvalidationTests(GateBase):
                 ),
             )
         self.assertEqual(self.revision_of("conv-a2"), rev_other)
+
+    def test_forged_attachment_insert_does_not_bump_foreign_owner(self) -> None:
+        # The attachment row lives in ws-1/conv-a1 but references a real foreign
+        # message am-3 in ws-2/conv-a3 by its (messageId, messageCreatedAt).
+        # A trigger that resolves parent by id/createdAt only would wrongly bump
+        # the foreign owner's sourceRevision.
+        foreign_rev = self.revision_of("conv-a3")
+        with self.conn.cursor() as cur:
+            cur.execute(
+                'INSERT INTO "Attachment" ("id", "conversationId",'
+                ' "workspaceId", "messageId", "messageCreatedAt", "fileType",'
+                ' "originPath") VALUES (%s, %s, %s, %s, %s, %s, %s)',
+                (
+                    "att-forged-insert",
+                    "conv-a1",
+                    "ws-1",
+                    "am-3",
+                    self.DATE,
+                    "image",
+                    "s3://gate/att-forged-insert",
+                ),
+            )
+        self.assertEqual(
+            self.revision_of("conv-a3"),
+            foreign_rev,
+            "forged attachment insert bumped the real foreign owner's sourceRevision",
+        )
+
+    def test_forged_attachment_update_does_not_bump_foreign_owner(self) -> None:
+        # Same workspace, different conversation: forged parent is am-2 in
+        # ws-1/conv-a2, but the attachment row belongs to conv-a1.
+        with self.conn.cursor() as cur:
+            cur.execute(
+                'INSERT INTO "Attachment" ("id", "conversationId",'
+                ' "workspaceId", "messageId", "messageCreatedAt", "fileType",'
+                ' "originPath") VALUES (%s, %s, %s, %s, %s, %s, %s)',
+                (
+                    "att-forged-update",
+                    "conv-a1",
+                    "ws-1",
+                    "am-2",
+                    self.DATE,
+                    "image",
+                    "s3://gate/att-forged-update",
+                ),
+            )
+        # A buggy INSERT may already have bumped the foreign owner once;
+        # capture the post-insert value and ensure UPDATE does not bump again.
+        foreign_rev_after_insert = self.revision_of("conv-a2")
+        with self.conn.cursor() as cur:
+            cur.execute(
+                'UPDATE "Attachment" SET "name" = %s WHERE "id" = %s',
+                ("renamed.png", "att-forged-update"),
+            )
+        self.assertEqual(
+            self.revision_of("conv-a2"),
+            foreign_rev_after_insert,
+            "forged attachment update bumped the real foreign owner's sourceRevision again",
+        )
+
+    def test_forged_attachment_delete_does_not_bump_foreign_owner(self) -> None:
+        # Cross-workspace forged parent again: the attachment belongs to
+        # ws-1/conv-a1 but references am-3 in ws-2/conv-a3.
+        with self.conn.cursor() as cur:
+            cur.execute(
+                'INSERT INTO "Attachment" ("id", "conversationId",'
+                ' "workspaceId", "messageId", "messageCreatedAt", "fileType",'
+                ' "originPath") VALUES (%s, %s, %s, %s, %s, %s, %s)',
+                (
+                    "att-forged-delete",
+                    "conv-a1",
+                    "ws-1",
+                    "am-3",
+                    self.DATE,
+                    "image",
+                    "s3://gate/att-forged-delete",
+                ),
+            )
+        foreign_rev_after_insert = self.revision_of("conv-a3")
+        with self.conn.cursor() as cur:
+            cur.execute(
+                'DELETE FROM "Attachment" WHERE "id" = %s', ("att-forged-delete",)
+            )
+        self.assertEqual(
+            self.revision_of("conv-a3"),
+            foreign_rev_after_insert,
+            "forged attachment delete bumped the real foreign owner's sourceRevision again",
+        )
 
 
 class CasPublishTests(GateBase):
@@ -585,20 +675,47 @@ class CasPublishTests(GateBase):
         winners = [r for r in results if r[1] is True]
         self.assertEqual(len(winners), 1, f"unexpected results: {results}")
 
-    def test_publish_concurrent_with_edit_serializes_and_edit_wins(self) -> None:
-        self.insert_message("ws-1", "conv-c1", "cm-race")
+    def test_edit_holds_source_lock_and_publish_after_edit_fails(self) -> None:
+        """Deterministic interleaving: edit updates Message (the trigger bumps
+        DialogMemorySource) and stays open; publish attempts with the old
+        snapshot; edit commits first; publish observes the bumped sourceRevision
+        and returns false. No manual sourceRevision bump in the edit thread.
+        """
+        self.insert_message("ws-1", "conv-c1", "cm-race-edit-first")
         rev = self.revision_of("conv-c1")
         version = self.memory_row("conv-c1")[1]
         epoch = self.epoch_of()
         results: dict[str, object] = {}
-        barrier = threading.Barrier(2)
+        edit_ready = threading.Event()
+        publish_attempting = threading.Event()
+        edit_can_commit = threading.Event()
 
-        def publish() -> None:
+        def edit() -> None:
             try:
                 conn = _tx_connect()
                 with conn.cursor() as cur:
                     cur.execute("SET search_path = dialog_memory_gate, public")
-                    barrier.wait(timeout=10)
+                    cur.execute(
+                        'UPDATE "Message" SET "text" = %s WHERE "id" = %s',
+                        ("edited", "cm-race-edit-first"),
+                    )
+                    # The AFTER ROW trigger has bumped DialogMemorySource and the
+                    # source row lock is held until this transaction commits.
+                    edit_ready.set()
+                    edit_can_commit.wait(timeout=10)
+                conn.commit()
+                conn.close()
+                results["edit"] = "committed"
+            except BaseException as exc:
+                results["edit"] = exc
+
+        def publish() -> None:
+            try:
+                edit_ready.wait(timeout=10)
+                conn = _tx_connect()
+                with conn.cursor() as cur:
+                    cur.execute("SET search_path = dialog_memory_gate, public")
+                    publish_attempting.set()
                     cur.execute(
                         "SELECT publish_summary_candidate(%s, %s, %s, %s, %s)",
                         ("conv-c1", "during-edit", rev, version, epoch),
@@ -610,21 +727,79 @@ class CasPublishTests(GateBase):
             except BaseException as exc:
                 results["publish"] = exc
 
-        def edit() -> None:
+        t1 = threading.Thread(target=edit)
+        t2 = threading.Thread(target=publish)
+        t1.start()
+        t2.start()
+        self.assertTrue(
+            edit_ready.wait(timeout=10), "edit never acquired source lock"
+        )
+        self.assertTrue(
+            publish_attempting.wait(timeout=10), "publish never started"
+        )
+        edit_can_commit.set()
+        t1.join(15)
+        t2.join(15)
+        self.assertFalse(t1.is_alive())
+        self.assertFalse(t2.is_alive())
+        self.assertEqual(
+            results.get("edit"), "committed", f"edit failed: {results.get('edit')}"
+        )
+        pub = results.get("publish")
+        self.assertIsNotNone(rev)
+        self.assertIsInstance(pub, bool, f"publish failed: {pub}")
+        self.assertFalse(pub, "publish succeeded against a concurrent edit")
+        self.assertEqual(self.revision_of("conv-c1"), rev + 1)
+
+    def test_publish_holds_locks_and_edit_after_publish_is_detected_as_dirty(
+        self,
+    ) -> None:
+        """Deterministic interleaving: publish acquires the source/topology
+        locks and wins; edit then updates Message (the trigger bumps sourceRevision
+        after the locks are released); a later publish with the old sourceRevision
+        but the new memoryVersion must fail CAS.
+        """
+        self.insert_message("ws-1", "conv-c1", "cm-race-publish-first")
+        rev = self.revision_of("conv-c1")
+        version = self.memory_row("conv-c1")[1]
+        epoch = self.epoch_of()
+        results: dict[str, object] = {}
+        publish_locked = threading.Event()
+        edit_attempting = threading.Event()
+        publish_can_commit = threading.Event()
+
+        def publish() -> None:
             try:
                 conn = _tx_connect()
                 with conn.cursor() as cur:
                     cur.execute("SET search_path = dialog_memory_gate, public")
-                    barrier.wait(timeout=10)
+                    cur.execute(
+                        "SELECT publish_summary_candidate(%s, %s, %s, %s, %s)",
+                        ("conv-c1", "publish-first", rev, version, epoch),
+                    )
+                    ok = bool(cur.fetchone()[0])
+                    # The function left source/topology/memory rows locked.
+                    publish_locked.set()
+                    publish_can_commit.wait(timeout=10)
+                conn.commit()
+                conn.close()
+                results["publish"] = ok
+            except BaseException as exc:
+                results["publish"] = exc
+
+        def edit() -> None:
+            try:
+                publish_locked.wait(timeout=10)
+                conn = _tx_connect()
+                with conn.cursor() as cur:
+                    cur.execute("SET search_path = dialog_memory_gate, public")
+                    edit_attempting.set()
                     cur.execute(
                         'UPDATE "Message" SET "text" = %s WHERE "id" = %s',
-                        ("edited", "cm-race"),
+                        ("edited-after-publish", "cm-race-publish-first"),
                     )
-                    cur.execute(
-                        'UPDATE "DialogMemorySource" SET "sourceRevision" ='
-                        ' "sourceRevision" + 1 WHERE "conversationId" = %s',
-                        ("conv-c1",),
-                    )
+                    # The AFTER ROW trigger bumps sourceRevision after the
+                    # publish transaction releases the source row lock.
                 conn.commit()
                 conn.close()
                 results["edit"] = "committed"
@@ -635,6 +810,13 @@ class CasPublishTests(GateBase):
         t2 = threading.Thread(target=edit)
         t1.start()
         t2.start()
+        self.assertTrue(
+            publish_locked.wait(timeout=10), "publish never acquired locks"
+        )
+        self.assertTrue(
+            edit_attempting.wait(timeout=10), "edit never started"
+        )
+        publish_can_commit.set()
         t1.join(15)
         t2.join(15)
         self.assertFalse(t1.is_alive())
@@ -642,8 +824,16 @@ class CasPublishTests(GateBase):
         pub = results.get("publish")
         self.assertIsNotNone(rev)
         self.assertIsInstance(pub, bool, f"publish failed: {pub}")
-        self.assertFalse(pub, "publish won against a concurrent edit")
+        self.assertTrue(pub, "publish should succeed while holding the snapshot locks")
+        self.assertEqual(
+            results.get("edit"), "committed", f"edit failed: {results.get('edit')}"
+        )
         self.assertEqual(self.revision_of("conv-c1"), rev + 1)
+        new_version = self.memory_row("conv-c1")[1]
+        self.assertFalse(
+            self.publish("conv-c1", "after-edit", rev, new_version, epoch),
+            "CAS missed the sourceRevision bump that happened after publish",
+        )
 
 
 class TopologyTests(GateBase):
