@@ -365,17 +365,45 @@ describe("extractContactInfo — skip flags", () => {
 })
 
 describe("extractContactInfo — region preference", () => {
-  test("defaultCountry tried first, then fallback to VN/US", () => {
-    // PH-style not provided so VN parses 0912345678 successfully.
-    expect(extractContactInfo("call 0912345678", "PH").phoneNumber).toBe(
-      "+84912345678",
-    )
+  test("a known country does not re-read a local number as Vietnamese", () => {
+    expect(
+      extractContactInfo("call 0912345678", "PH").phoneNumber,
+    ).toBeUndefined()
   })
 
-  test("US number under VN defaultCountry still resolves via US fallback", () => {
-    // "+1 ..." is unambiguously US — VN parse fails, US fallback succeeds.
+  test("explicit international prefix is read in the workspace country", () => {
     expect(extractContactInfo("US +1 415 555 0199", "VN").phoneNumber).toBe(
       "+14155550199",
     )
+  })
+
+  test("Russian workspace keeps a typed Russian phone", () => {
+    expect(
+      extractContactInfo("телефон +7 (926) 341-62-61", "RU").phoneNumber,
+    ).toBe("+79263416261")
+    expect(extractContactInfo("номер 89263416261", "RU").phoneNumber).toBe(
+      "+79263416261",
+    )
+  })
+
+  test("Russian workspace ignores a ZZAP order id and an article number", () => {
+    expect(
+      extractContactInfo(
+        "Сообщение по заказу 324955656\n\nДа. Новый срок подтверждаю.",
+        "RU",
+      ).phoneNumber,
+    ).toBeUndefined()
+    expect(
+      extractContactInfo(
+        "Радиатор системы охлаждения BMW E36 Reach 1411295132 за 5 238₽",
+        "RU",
+      ).phoneNumber,
+    ).toBeUndefined()
+  })
+
+  test("Russian workspace still reads an explicit foreign phone", () => {
+    expect(
+      extractContactInfo("звоните +84 90 1234 567", "RU").phoneNumber,
+    ).toBe("+84901234567")
   })
 })
