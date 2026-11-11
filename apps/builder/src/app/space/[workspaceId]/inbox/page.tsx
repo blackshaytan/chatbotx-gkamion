@@ -1,3 +1,4 @@
+import { isWorkspaceAdminMember } from "@chatbotx.io/business/workspace-member/predicates"
 import { getIdFromParams } from "@chatbotx.io/utils"
 import { Loader2Icon } from "lucide-react"
 import { cookies } from "next/headers"
@@ -41,6 +42,7 @@ export default async function InboxPage({
     permissions: targetWorkspaceMember.permissions,
     userId: user.id,
   })
+  const canFilterBotCategory = isWorkspaceAdminMember(targetWorkspaceMember)
   if (!contactPermissionScope) {
     return notFound()
   }
@@ -57,6 +59,7 @@ export default async function InboxPage({
         }
       >
         <InboxContent
+          canFilterBotCategory={canFilterBotCategory}
           canViewEmailAndPhone={contactPermissionScope.canViewEmailAndPhone}
           contactPermissionScope={contactPermissionScope}
           conversationId={conversationId}
@@ -69,12 +72,14 @@ export default async function InboxPage({
 }
 
 async function InboxContent({
+  canFilterBotCategory,
   canViewEmailAndPhone,
   contactPermissionScope,
   conversationId,
   layout,
   workspaceId,
 }: {
+  canFilterBotCategory: boolean
   canViewEmailAndPhone: boolean
   contactPermissionScope: ContactPermissionScope
   conversationId?: string
@@ -85,11 +90,13 @@ async function InboxContent({
     workspaceId,
     conversationId,
     contactPermissionScope,
+    canFilterBotCategory,
   })
 
   return (
     <ChatStoreProvider initialState={initialState ?? undefined}>
       <ChatLayout
+        canFilterBotCategory={canFilterBotCategory}
         canViewEmailAndPhone={canViewEmailAndPhone}
         layout={layout}
         workspaceId={workspaceId}

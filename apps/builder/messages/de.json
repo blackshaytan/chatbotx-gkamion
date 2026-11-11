@@ -3917,6 +3917,13 @@
       "note": "Notiz",
       "unresolvedProduct": "Nicht in Ihrem Katalog gefunden"
     },
+    "dromContext": {
+      "listingPrefix": "Kunde schreibt aus dem Inserat",
+      "dealPrefix": "Kunde hat eine Bestellung aufgegeben",
+      "openListing": "Inserat öffnen",
+      "openDeal": "Bestellung öffnen",
+      "itemsCount": "Positionen: {count}"
+    },
     "referredProduct": {
       "askedAbout": "Hat nach diesem Produkt gefragt"
     },

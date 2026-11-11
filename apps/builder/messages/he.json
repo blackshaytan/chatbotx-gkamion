@@ -1691,6 +1691,13 @@
       "note": "הערה",
       "unresolvedProduct": "לא נמצא בקטלוג שלך"
     },
+    "dromContext": {
+      "listingPrefix": "הלקוח כותב מהמודעה",
+      "dealPrefix": "הלקוח ביצע הזמנה",
+      "openListing": "פתיחת המודעה",
+      "openDeal": "פתיחת ההזמנה",
+      "itemsCount": "פריטים: {count}"
+    },
     "referredProduct": {
       "askedAbout": "שאל על מוצר זה"
     },

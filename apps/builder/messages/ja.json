@@ -3896,6 +3896,13 @@
       "note": "メモ",
       "unresolvedProduct": "カタログに見つかりません"
     },
+    "dromContext": {
+      "listingPrefix": "顧客が出品から書き込みました",
+      "dealPrefix": "顧客が注文しました",
+      "openListing": "出品を開く",
+      "openDeal": "注文を開く",
+      "itemsCount": "商品数: {count}"
+    },
     "referredProduct": {
       "askedAbout": "この商品について質問しました"
     },

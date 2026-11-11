@@ -3917,6 +3917,13 @@
       "note": "Catatan",
       "unresolvedProduct": "Tidak ditemukan di katalog Anda"
     },
+    "dromContext": {
+      "listingPrefix": "Pelanggan menulis dari iklan",
+      "dealPrefix": "Pelanggan membuat pesanan",
+      "openListing": "Buka iklan",
+      "openDeal": "Buka pesanan",
+      "itemsCount": "Item: {count}"
+    },
     "referredProduct": {
       "askedAbout": "Bertanya tentang produk ini"
     },

@@ -108,6 +108,27 @@ describe("getInboxInitialState", () => {
     expect(state).not.toHaveProperty("activeConversationAutoSelected")
     expect(state?.messagesSeed).toBeUndefined()
     expect(state?.seededContact).toBeUndefined()
+    expect(mockListConversations.mock.calls[0]?.[0]).not.toHaveProperty(
+      "botCategory",
+    )
+  })
+
+  test("seeds only human conversations when the member cannot choose a bot category", async () => {
+    mockSeedRequests()
+
+    await getInboxInitialState({
+      workspaceId: "workspace-1",
+      contactPermissionScope,
+      canFilterBotCategory: false,
+    })
+
+    expect(mockListConversations).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workspaceId: "workspace-1",
+        botCategory: "human",
+      }),
+      { includeEmailAndPhone: true },
+    )
   })
 
   test("selects a deep-linked conversation, reverses its messages, and seeds its contact", async () => {

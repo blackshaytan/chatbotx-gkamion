@@ -3959,6 +3959,13 @@
       "note": "Ghi chú",
       "unresolvedProduct": "Không tìm thấy trong danh mục"
     },
+    "dromContext": {
+      "listingPrefix": "Khách viết từ tin đăng",
+      "dealPrefix": "Khách đã đặt hàng",
+      "openListing": "Mở tin đăng",
+      "openDeal": "Mở đơn hàng",
+      "itemsCount": "Số mặt hàng: {count}"
+    },
     "referredProduct": {
       "askedAbout": "Đã hỏi về sản phẩm này"
     },

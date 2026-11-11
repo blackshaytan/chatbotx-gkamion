@@ -36,6 +36,7 @@ import { followConversationAction } from "./actions/follow-conversation.action"
 import { unarchiveConversationAction } from "./actions/unarchive-conversation.action"
 import { unfollowConversationAction } from "./actions/unfollow-conversation.action"
 import { ThreadControlPassMenuItem } from "./components/thread-control-pass-menu-item"
+import { useInvalidateInboxUnread } from "./hooks/use-invalidate-inbox-unread"
 import { useMarkConversationUnread } from "./hooks/use-mark-conversation-unread"
 import type { ListConversationItemResource } from "./schema/resource"
 
@@ -47,6 +48,7 @@ export function ConversationAction({ conversation }: ConversationActionProps) {
   const t = useTranslations()
   const workspaceId = useWorkspaceId()
   const queryClient = useQueryClient()
+  const invalidateInboxUnread = useInvalidateInboxUnread()
 
   const {
     deleteConversation,
@@ -103,6 +105,7 @@ export function ConversationAction({ conversation }: ConversationActionProps) {
         // Reload conversation list
         resetConversationState()
         loadMoreConversations(workspaceId)
+        invalidateInboxUnread()
       },
       onError: ({ error }) => {
         if (error.serverError) {
@@ -123,6 +126,7 @@ export function ConversationAction({ conversation }: ConversationActionProps) {
         // Reload conversation list
         resetConversationState()
         loadMoreConversations(workspaceId)
+        invalidateInboxUnread()
       },
       onError: ({ error }) => {
         if (error.serverError) {

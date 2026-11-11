@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react"
 import { ChatsRealtimeSync } from "@/features/chats/components/chats-realtime-sync"
+import { InboxUnreadRealtimeSync } from "@/features/conversations/components/inbox-unread-realtime-sync"
 import { WhatsappCallPanel } from "@/features/integration-whatsapp/calling/voip/whatsapp-call-panel"
 import { WhatsappCallRealtime } from "@/features/integration-whatsapp/calling/voip/whatsapp-call-realtime"
 import { WhatsappVoipCallProvider } from "@/features/integration-whatsapp/calling/voip/whatsapp-voip-call-context"
@@ -52,6 +53,7 @@ export function WorkspaceRealtimeShell({
     <WorkspaceRealtimeProvider>
       <TasksRealtimeSync />
       <ChatsRealtimeSync />
+      <InboxUnreadRealtimeSync />
       <NotificationsRealtimeSync />
       {callHistoryEnabled && <WhatsappCallInfoSheet />}
       {callingEnabled ? (

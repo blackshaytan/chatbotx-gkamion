@@ -1,11 +1,13 @@
 import {
   and,
+  countWithRelationsFilter,
   type DatabaseClient,
   db,
   eq,
   isNotNull,
   isNull,
 } from "../../client"
+import { conversationUnreadWhere } from "../../queries/conversation-unread"
 import { conversationModel } from "../../schema"
 import type { ConversationModel } from "../../types"
 
@@ -65,6 +67,28 @@ export async function assignUserIfUnassigned(
       ),
     )
     .returning()
+}
+
+/**
+ * Conversations the default inbox shows as unread: not archived, contact not
+ * blocked, and either a client message or a manager handover is newer than
+ * the last time an agent opened the thread. Matches the inbox list predicate.
+ */
+export async function countInboxUnread(
+  params: { workspaceId: string },
+  tx: DatabaseClient = db,
+): Promise<number> {
+  return await countWithRelationsFilter({
+    client: tx,
+    table: conversationModel,
+    tsName: "conversationModel",
+    where: {
+      workspaceId: params.workspaceId,
+      archivedAt: { isNull: true },
+      contact: { blockedAt: { isNull: true } },
+      OR: conversationUnreadWhere.OR,
+    },
+  })
 }
 
 export async function assignTargetIfUnassigned(

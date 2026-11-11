@@ -1845,6 +1845,13 @@
       "note": "備註",
       "unresolvedProduct": "未在您的目錄中找到"
     },
+    "dromContext": {
+      "listingPrefix": "客戶從商品刊登處寫信",
+      "dealPrefix": "客戶已下單",
+      "openListing": "開啟刊登",
+      "openDeal": "開啟訂單",
+      "itemsCount": "商品數：{count}"
+    },
     "referredProduct": {
       "askedAbout": "詢問了此商品"
     },

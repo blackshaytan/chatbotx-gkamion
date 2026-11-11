@@ -3917,6 +3917,13 @@
       "note": "Huomautus",
       "unresolvedProduct": "Ei löytynyt luettelostasi"
     },
+    "dromContext": {
+      "listingPrefix": "Asiakas kirjoittaa ilmoituksesta",
+      "dealPrefix": "Asiakas teki tilauksen",
+      "openListing": "Avaa ilmoitus",
+      "openDeal": "Avaa tilaus",
+      "itemsCount": "Tuotteet: {count}"
+    },
     "referredProduct": {
       "askedAbout": "Kysyi tästä tuotteesta"
     },

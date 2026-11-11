@@ -3917,6 +3917,13 @@
       "note": "Not",
       "unresolvedProduct": "Kataloğunuzda bulunamadı"
     },
+    "dromContext": {
+      "listingPrefix": "Müşteri ilandan yazıyor",
+      "dealPrefix": "Müşteri sipariş verdi",
+      "openListing": "İlanı aç",
+      "openDeal": "Siparişi aç",
+      "itemsCount": "Ürün sayısı: {count}"
+    },
     "referredProduct": {
       "askedAbout": "Bu ürün hakkında soru sordu"
     },
