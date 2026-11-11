@@ -34,6 +34,7 @@ import {
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
+import { resolveActiveContactInbox } from "@/features/conversations/utils/contact-inbox"
 import { MediaLibraryTrigger } from "@/features/media-library/components/media-library-trigger"
 import { CreateTaskDialog } from "@/features/tasks/components/create-task-dialog"
 import { toMarkdownQuote } from "@/features/tasks/lib/message-quote"
@@ -288,7 +289,9 @@ export const MessageActions = ({
   const activeConversation = conversations.find(
     (c) => c.id === activeConversationId,
   )
-  const channel = activeConversation?.contactInboxes?.[0]?.channel
+  const channel = resolveActiveContactInbox(
+    activeConversation?.contactInboxes,
+  )?.channel
 
   const isDeleted = message.deletedAt != null
   const isComment = message.type === "comment"

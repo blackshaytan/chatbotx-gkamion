@@ -9,6 +9,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { useEffect } from "react"
 import { useChatStore } from "@/features/chat/store/chat-store-provider"
 import { useWorkspaceId } from "@/hooks/routing"
+import { resolveActiveContactInbox } from "../utils/contact-inbox"
 
 export function ConversationInfo() {
   const t = useTranslations()
@@ -20,9 +21,8 @@ export function ConversationInfo() {
   const activeConversation = conversations.find(
     (c) => c.id === activeConversationId,
   )
-  const channel = activeConversation?.contactInboxes?.[0]?.channel as
-    | ChannelType
-    | undefined
+  const channel = resolveActiveContactInbox(activeConversation?.contactInboxes)
+    ?.channel as ChannelType | undefined
   const postLink =
     activePost?.link ??
     (channel && activeConversation?.sourceId
