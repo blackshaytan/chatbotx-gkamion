@@ -163,7 +163,13 @@ export const toInputMessages = async (
   await Promise.all(
     messages.map(async (message) => ({
       role: toInputRole(message.senderType),
+      id: message.id,
+      createdAt: message.createdAt.toISOString(),
       text: message.text,
+      contentAttributes:
+        message.senderType === "contact" && message.messageType === "incoming"
+          ? message.contentAttributes
+          : undefined,
       attachmentUrls: await Promise.all(
         message.attachments
           .filter((attachment) => !isFailedOriginPath(attachment.originPath))
@@ -189,7 +195,9 @@ export const toInputMessages = async (
  * job's `url` (`sendChatMessage` re-hosts the file) and dropped from the text.
  * If the download fails, `sendChatMessage` falls back to text with the URL.
  * Photo-in-bubble request by the owner, 03.11. */
-export const resolveAgentPhotoReply = (output: string): { text: string; url?: string } => {
+export const resolveAgentPhotoReply = (
+  output: string,
+): { text: string; url?: string } => {
   const md = output.match(/!\[[^\]\n]*]\((https?:\/\/[^)\s]+)\)/)
   if (md) {
     return { text: output.replace(md[0], "").trim(), url: md[1] }

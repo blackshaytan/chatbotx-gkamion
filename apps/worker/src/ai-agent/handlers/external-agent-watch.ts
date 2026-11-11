@@ -30,9 +30,9 @@ import {
   handOverToHuman,
   listRecentMessages,
   loadConversationContext,
+  resolveAgentPhotoReply,
   selectNewMessages,
   sendClientText,
-  resolveAgentPhotoReply,
   stopRunQuietly,
   withExternalAgentLock,
 } from "./external-agent-shared"
@@ -91,6 +91,7 @@ const failRun = async (
   event: "unavailable" | "timeout",
   error: unknown,
 ): Promise<void> => {
+  interimSentRuns.delete(batch.data.runId)
   const closed = await patchRun(batch, {
     ...batch.tracking,
     runId: null,
@@ -128,6 +129,126 @@ const enqueueNewMessagesReply = async (batch: WatchBatch): Promise<void> => {
   })
 }
 
+/**
+ * Замок качества (04.11): перед отправкой финального текста клиенту спрашиваем
+ * локальный сервис-замок (`geka-gate.py`) — нет ли брака: служебных фраз,
+ * схем-лейблов, картинок при отключённых фото, чисел, которых нет в выводе
+ * инструментов прогона.
+ *
+ * Контракт: fail-open. Замок недоступен, ответил ошибкой или не уложился в
+ * таймаут -> ответ уходит клиенту как раньше. Выключается
+ * QUALITY_GATE_ENABLED=false без пересборки.
+ */
+type QualityGateResult = {
+  allow: boolean
+  reasons: string[]
+  holdText: string
+  blocked: boolean
+}
+
+const QUALITY_GATE_HOLD_FALLBACK = "Уточняю, секунду."
+
+/** Прогоны, в которых клиент уже получил промежуточное сообщение: если финал
+ * заблокирован, ответ до клиента уже доехал — «Уточняю» и досыл не нужны. */
+const interimSentRuns = new Set<string>()
+
+/** Когда клиент в этом диалоге последний раз получил ЛЮБОЕ сообщение.
+ * «Уточняю, секунду» после уже доставленного ответа — парадокс, который ловим здесь. */
+const lastDeliveredAt = new Map<string, number>()
+const HOLD_SUPPRESS_MS = Number(
+  process.env.QUALITY_GATE_HOLD_SUPPRESS_MS ?? 180_000,
+)
+
+const runQualityGate = async (input: {
+  runId: string
+  conversationId: string
+  text: string
+}): Promise<QualityGateResult> => {
+  const url = process.env.QUALITY_GATE_URL
+  const allow: QualityGateResult = {
+    allow: true,
+    reasons: [],
+    holdText: QUALITY_GATE_HOLD_FALLBACK,
+    blocked: false,
+  }
+  if (!url || process.env.QUALITY_GATE_ENABLED === "false") {
+    return allow
+  }
+  const timeoutMs = Number(process.env.QUALITY_GATE_TIMEOUT_MS ?? 1200)
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input),
+      signal: controller.signal,
+    })
+    if (!response.ok) {
+      logger.warn(
+        { status: response.status },
+        "Quality gate: HTTP error, fail-open",
+      )
+      return allow
+    }
+    const data = (await response.json()) as {
+      allow?: boolean
+      reasons?: string[]
+      hold_text?: string
+    }
+    return {
+      allow: data.allow !== false,
+      reasons: data.reasons ?? [],
+      holdText: data.hold_text || QUALITY_GATE_HOLD_FALLBACK,
+      blocked: data.allow === false,
+    }
+  } catch (err) {
+    logger.warn({ err }, "Quality gate: unavailable, fail-open")
+    return allow
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/** Уведомление Джарвису о заблокированном ответе (Hermes webhook, fire-and-forget). */
+const notifyGateBlocked = async (input: {
+  runId: string
+  conversationId: string
+  text: string
+  reasons: string[]
+}): Promise<void> => {
+  const url = process.env.QUALITY_GATE_ALERT_URL
+  const secret = process.env.QUALITY_GATE_ALERT_SECRET
+  if (!url) {
+    return
+  }
+  try {
+    const body = JSON.stringify({
+      // Адаптер Hermes читает event_type/type (поле event он игнорирует).
+      event_type: "gate_blocked",
+      type: "gate_blocked",
+      ...input,
+      at: new Date().toISOString(),
+    })
+    const signature = secret
+      ? (await import("node:crypto"))
+          .createHmac("sha256", secret)
+          .update(body)
+          .digest("hex")
+      : undefined
+    await fetch(url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...(signature ? { "x-webhook-signature": signature } : {}),
+      },
+      body,
+    })
+  } catch (err) {
+    logger.warn({ err }, "Quality gate: alert delivery failed")
+  }
+}
+
 const completeRun = async (
   batch: WatchBatch,
   output: string,
@@ -148,13 +269,62 @@ const completeRun = async (
   // into the send job's `url` (the bubble renders it as an attachment).
   const photo = resolveAgentPhotoReply(text)
   const photoText = photo.url ? photo.text : text
-  const shouldSend = (photoText !== "" || Boolean(photo.url)) && Boolean(conversation?.botEnabled)
-  if (shouldSend) {
+  const shouldSend =
+    (photoText !== "" || Boolean(photo.url)) &&
+    Boolean(conversation?.botEnabled)
+  // Замок качества: брак не доезжает до клиента (04.11).
+  const gate: QualityGateResult = shouldSend
+    ? await runQualityGate({
+        runId: batch.data.runId,
+        conversationId: batch.data.conversationId,
+        text: photoText,
+      })
+    : {
+        allow: true,
+        reasons: [],
+        holdText: QUALITY_GATE_HOLD_FALLBACK,
+        blocked: false,
+      }
+  let sent = false
+  if (shouldSend && gate.allow) {
     await sendClientText({
       context: batch.context,
       text: photoText,
       ...(photo.url ? { url: photo.url } : {}),
       jobId: sendJobId(batch.data, "final"),
+    })
+    sent = true
+    lastDeliveredAt.set(batch.data.conversationId, Date.now())
+  } else if (
+    shouldSend &&
+    gate.blocked &&
+    (interimSentRuns.has(batch.data.runId) ||
+      Date.now() - (lastDeliveredAt.get(batch.data.conversationId) ?? 0) <
+        HOLD_SUPPRESS_MS)
+  ) {
+    logger.warn(
+      { runId: batch.data.runId, reasons: gate.reasons },
+      "Quality gate: final blocked but interim already delivered to the client",
+    )
+  } else if (shouldSend && gate.blocked) {
+    // Клиент не остаётся в тишине: фраза-задержка, точный ответ доотправляет
+    // Джарвис после разбора кейса.
+    logger.warn(
+      { runId: batch.data.runId, reasons: gate.reasons },
+      "Quality gate: reply blocked before delivery",
+    )
+    await sendClientText({
+      context: batch.context,
+      text: gate.holdText,
+      jobId: sendJobId(batch.data, "hold"),
+      signAsExternalAgent: false,
+    })
+    lastDeliveredAt.set(batch.data.conversationId, Date.now())
+    await notifyGateBlocked({
+      runId: batch.data.runId,
+      conversationId: batch.data.conversationId,
+      text: photoText,
+      reasons: gate.reasons,
     })
   }
 
@@ -163,8 +333,8 @@ const completeRun = async (
     runId: null,
     runStartedAt: null,
     failureCount: 0,
-    lastError: null,
-    ...(shouldSend ? { lastClientSendAt: new Date() } : {}),
+    lastError: gate.blocked ? "gate_blocked" : null,
+    ...(sent ? { lastClientSendAt: new Date() } : {}),
   })
   if (closed && conversation?.botEnabled) {
     await enqueueNewMessagesReply(batch)
@@ -179,12 +349,29 @@ const applyEvent = async (
   await applyRunEvent(
     {
       tracking: batch.tracking,
-      postInterim: (text, step) =>
-        sendClientText({
+      // Промежуточные сообщения тоже проходят замок: именно через них
+      // 04.11 ушёл клиенту служебный «отчёт о работе».
+      postInterim: async (text, step) => {
+        const gate = await runQualityGate({
+          runId: batch.data.runId,
+          conversationId: batch.data.conversationId,
+          text,
+        })
+        if (!gate.allow) {
+          logger.warn(
+            { runId: batch.data.runId, step, reasons: gate.reasons },
+            "Quality gate: interim message dropped",
+          )
+          return
+        }
+        await sendClientText({
           context: batch.context,
           text,
           jobId: sendJobId(batch.data, step),
-        }),
+        })
+        interimSentRuns.add(batch.data.runId)
+        lastDeliveredAt.set(batch.data.conversationId, Date.now())
+      },
       patchTracking: (tracking) => patchRun(batch, tracking),
       complete: (output) => completeRun(batch, output),
       fail: (error) => failRun(batch, "unavailable", error),
