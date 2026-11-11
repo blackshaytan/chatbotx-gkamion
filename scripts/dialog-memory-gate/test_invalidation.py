@@ -407,7 +407,7 @@ class MessageInvalidationTests(GateBase):
                 "xmin": final[2] if final else None,
             },
         }
-        print(json.dumps(diagnostics, sort_keys=True), flush=True)
+        print(json.dumps(diagnostics, sort_keys=True, default=str), flush=True)
         self.assertFalse(errors, msg=repr(diagnostics))
         self.assertFalse(t1.is_alive(), msg=repr(diagnostics))
         self.assertFalse(t2.is_alive(), msg=repr(diagnostics))
