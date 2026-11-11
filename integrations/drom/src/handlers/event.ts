@@ -28,6 +28,8 @@ const dealSchema = z.object({
       qty: z.number(),
       url: z.string(),
       annotation: z.string(),
+      article: z.string(),
+      brand: z.string(),
     }),
   ),
 }) satisfies z.ZodType<DromDeal>
@@ -42,6 +44,8 @@ export const dromInboundEventSchema = z.object({
   text: z.string(),
   images: z.array(imageSchema),
   isDealSystem: z.boolean(),
+  /** Store-only import: the dialog was already answered outside ChatbotX. */
+  silent: z.boolean().default(false),
   listing: listingSchema.nullable(),
   deal: dealSchema.nullable(),
 })

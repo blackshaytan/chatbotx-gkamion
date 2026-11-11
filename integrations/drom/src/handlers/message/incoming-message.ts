@@ -105,6 +105,8 @@ export const receiveMessage = async ({
       },
     },
     contact: toContact(event),
+    // A silent event is a deal the shop already answered: store it, no reply.
+    suppressAutomation: event.silent,
     postbackAction: null,
     quickReplyAction: null,
     ref: null,

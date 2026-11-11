@@ -370,9 +370,12 @@ export const receiveMessage = async (
   // A standby delivery is a listen-only copy of a thread another responder
   // owns: it is stored, but must not start any automation (one early guard
   // instead of per-branch checks; `canAutomate` replaces `isWorkspaceActive`
-  // in every automation branch below).
+  // in every automation branch below). A channel can ask for the same
+  // store-only treatment outright — a dialog it already answered itself.
   const threadControl = parsedMessage.threadControl
-  const suppressAutomation = threadControl?.delivery === "standby"
+  const suppressAutomation =
+    parsedMessage.suppressAutomation === true ||
+    threadControl?.delivery === "standby"
   const historyOnly =
     parsedMessage.historyOnly === true &&
     parsedIncomingMessage?.messageType === "outgoing"

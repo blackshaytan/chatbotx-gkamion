@@ -4,6 +4,7 @@ import {
   isDromImageUrl,
   normalizeOrderUrl,
   parseBriefs,
+  parseBulletinFacts,
   parseDeal,
   parseMessageImages,
   parsePriceFromTitle,
@@ -279,6 +280,8 @@ describe("parseDeal", () => {
           qty: 1,
           url: "https://baza.drom.ru/dealview/10000001/good/20000001",
           annotation: "Под заказ, Доставка в течение 1 дня, TESTBRAND",
+          article: "",
+          brand: "",
         },
       ],
     })
@@ -298,6 +301,34 @@ describe("parseDeal", () => {
     expect(deal.items).toEqual([
       expect.objectContaining({ price: 1473, qty: 2 }),
     ])
+  })
+})
+
+describe("parseBulletinFacts", () => {
+  test("reads «Номер запчасти» and «Производитель» from data-field markup", () => {
+    const html = `
+<div class="bull-item__params">
+  <div class="row" data-field="manufacturer"><div class="label">Производитель</div><div class="value">BMW</div></div>
+  <div class="row" data-field="autoPartsOemNumber"><div class="label">Номер запчасти</div><div class="value"><a href="/x">51477326465</a></div></div>
+</div>`
+    expect(parseBulletinFacts(html)).toEqual({
+      article: "51477326465",
+      brand: "BMW",
+    })
+  })
+
+  test("falls back to plain label/value markup and an empty card", () => {
+    const html = `
+<div class="label">Номер запчасти</div><div class="value"><span>9109-903</span></div>
+<div class="label">Производитель</div><div class="value">LEDO</div>`
+    expect(parseBulletinFacts(html)).toEqual({
+      article: "9109-903",
+      brand: "LEDO",
+    })
+    expect(parseBulletinFacts("<html></html>")).toEqual({
+      article: "",
+      brand: "",
+    })
   })
 })
 

@@ -14,6 +14,9 @@ const DEAL_HTML = readFileSync(
   new URL("./fixtures/deal-cdek.html", import.meta.url),
   "utf8",
 )
+const CARD_HTML = `
+<div class="row" data-field="manufacturer"><div class="label">Производитель</div><div class="value">BMW</div></div>
+<div class="row" data-field="autoPartsOemNumber"><div class="label">Номер запчасти</div><div class="value">51477326465</div></div>`
 
 type View = ReturnType<typeof dialogView>
 
@@ -44,6 +47,14 @@ const mockDrom = (
           })
         : new HttpResponse(null, { status: dealStatus })
     }),
+    // Position card read for «Номер запчасти» / «Производитель».
+    http.get(
+      `${DROM_BASE}/dealview/:deal/good/:good`,
+      () =>
+        new HttpResponse(CARD_HTML, {
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        }),
+    ),
   )
   return { viewed, deals }
 }
@@ -253,5 +264,86 @@ describe("pollDrom", () => {
     })
     const { events } = await poll(null)
     expect(events[0]?.interlocutor).toBe("buyer-login")
+  })
+
+  test("a read dialog first seen after the watermark imports its deal silently", async () => {
+    const { deals } = mockDrom(
+      [brief("100", { lastMessageDate: 1_700_000_500 })],
+      {
+        "100": dialogView("100", [{ id: "5", text: "Когда отправите?" }], {
+          extra: dealLine("hash1"),
+          header: orderHeader("10000001"),
+        }),
+      },
+    )
+    const { events, cursor } = await poll({
+      dialogs: {},
+      silentScanFrom: 1_700_000_000,
+    })
+    expect(events.map((e) => e.messageId)).toEqual(["deal:hash1"])
+    expect(events[0]).toMatchObject({
+      silent: true,
+      isDealSystem: true,
+      deal: { buyerName: "Иван Тестов" },
+    })
+    expect(deals).toEqual(["10000001"])
+    expect(cursor.dialogs["100"]).toMatchObject({
+      lastInboundId: "5",
+      lastMessageDate: 1_700_000_500,
+      seenDealIds: ["deal:hash1"],
+      fetchedDealUrls: ["https://baza.drom.ru/deal/10000001"],
+    })
+  })
+
+  test("a read dialog without a deal line is recorded once and not viewed again", async () => {
+    const { viewed } = mockDrom(
+      [brief("100", { lastMessageDate: 1_700_000_500 })],
+      { "100": dialogView("100", [{ id: "5", text: "спасибо" }]) },
+    )
+    const first = await poll({ dialogs: {}, silentScanFrom: 1_700_000_000 })
+    expect(first.events).toEqual([])
+    expect(first.cursor.dialogs["100"]).toMatchObject({ lastInboundId: "5" })
+    expect(viewed).toEqual(["100"])
+
+    const second = await poll(first.cursor)
+    expect(second.events).toEqual([])
+    expect(viewed).toEqual(["100"])
+  })
+
+  test("a read dialog that moved before the watermark is left alone", async () => {
+    const { viewed } = mockDrom(
+      [brief("100", { lastMessageDate: 1_699_999_000 })],
+      { "100": dialogView("100", [{ id: "5", text: "старое" }]) },
+    )
+    const { events } = await poll({
+      dialogs: {},
+      silentScanFrom: 1_700_000_000,
+    })
+    expect(events).toEqual([])
+    expect(viewed).toEqual([])
+  })
+
+  test("the first poll starts the silent scan at its own time", async () => {
+    const { viewed } = mockDrom(
+      [brief("100", { lastMessageDate: 1_700_000_500 })],
+      { "100": dialogView("100", [{ id: "5", text: "старое" }]) },
+    )
+    const { events, cursor } = await poll(null)
+    expect(events).toEqual([])
+    expect(viewed).toEqual([])
+    expect(cursor.silentScanFrom).toBe(1_792_490_400)
+  })
+
+  test("an unread dialog keeps the normal path and is not sniffed twice", async () => {
+    const { viewed } = mockDrom([brief("100", { isUnread: true })], {
+      "100": dialogView("100", [{ id: "5", text: "Есть?" }]),
+    })
+    const { events } = await poll({
+      dialogs: {},
+      silentScanFrom: 1_699_000_000,
+    })
+    expect(events.map((e) => e.messageId)).toEqual(["5"])
+    expect(events[0]?.silent).toBe(false)
+    expect(viewed).toEqual(["100"])
   })
 })
