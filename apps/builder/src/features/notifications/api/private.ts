@@ -1,13 +1,13 @@
 import "@/features/notifications/lib/notification-realtime"
+import {
+  notificationService,
+  resolveTenantSettings,
+} from "@chatbotx.io/business"
 import type {
   ChatNotificationPayload,
   NotificationPayload,
   TaskNotificationType,
 } from "@chatbotx.io/database/partials"
-import {
-  notificationService,
-  resolveTenantSettings,
-} from "@chatbotx.io/business"
 import { z } from "zod"
 import { buildTaskUrl } from "@/features/tasks/lib/task-url"
 import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"

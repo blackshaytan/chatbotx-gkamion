@@ -115,6 +115,25 @@ const tryRegions = (
 }
 
 /**
+ * Regions to try. A known caller country is used alone: local numbers are
+ * read there, and a leading "+" is still international. VN/US are only the
+ * fallback when the caller supplies no known country, so an order id or an
+ * article number is not re-read as a foreign phone.
+ */
+const regionsFor = (
+  region?: CountryCode | CountryCode[] | string | null,
+): CountryCode[] => {
+  const requested = (Array.isArray(region) ? region : [region]).filter(
+    (value): value is string => typeof value === "string" && value.length > 0,
+  )
+  const known = requested.filter(isSupportedCountry)
+  if (known.length > 0) {
+    return known
+  }
+  return FALLBACK_REGIONS
+}
+
+/**
  * Port of PHP `parsePhoneNumber` (chatbotai `app/Helpers/functions.php`).
  *
  * Two-stage: strict digit-run scan → loose `getCommonPhoneNumber` fallback.
@@ -127,14 +146,7 @@ export const parsePhoneNumber = (
   if (!text) {
     return null
   }
-  let regions: CountryCode[]
-  if (Array.isArray(region)) {
-    regions = region as CountryCode[]
-  } else if (region) {
-    regions = [region as CountryCode, ...FALLBACK_REGIONS]
-  } else {
-    regions = FALLBACK_REGIONS
-  }
+  const regions = regionsFor(region)
 
   let result = tryRegions(text, regions)
   if (!result) {

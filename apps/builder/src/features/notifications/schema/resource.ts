@@ -1,6 +1,6 @@
 import {
-  chatNotificationTypes,
   type ChatNotificationPayload,
+  chatNotificationTypes,
   type NotificationPayload,
   taskNotificationTypes,
 } from "@chatbotx.io/database/partials"

@@ -191,6 +191,29 @@ describe("updateContactFromMessage", () => {
     expect(mockEmitContactInfoUpdated).not.toHaveBeenCalled()
   })
 
+  test("Russian workspace does not overwrite the phone with a ZZAP order id", async () => {
+    const result = await updateContactFromMessage({
+      contactId: "c1",
+      workspaceId: "w1",
+      text: "Сообщение по заказу 324955656\n\nДа. Новый срок подтверждаю.",
+      defaultCountry: "RU",
+    })
+    expect(result).toEqual({})
+    expect(mockUpdate).not.toHaveBeenCalled()
+    expect(mockFindFirstWorkspace).not.toHaveBeenCalled()
+  })
+
+  test("Russian workspace still stores a phone the customer typed", async () => {
+    const result = await updateContactFromMessage({
+      contactId: "c1",
+      workspaceId: "w1",
+      text: "мой телефон +7 (926) 341-62-61",
+      defaultCountry: "RU",
+    })
+    expect(result).toEqual({ phoneNumber: "+79263416261" })
+    expect(mockSet).toHaveBeenCalledWith({ phoneNumber: "+79263416261" })
+  })
+
   test("channel-agnostic: same call shape works for any caller (no channel arg)", async () => {
     // The helper takes no channel param — callers from messenger, whatsapp,
     // telegram, zalo, webchat all invoke it the same way. Asserting the

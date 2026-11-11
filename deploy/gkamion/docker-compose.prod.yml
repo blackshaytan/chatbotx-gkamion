@@ -39,7 +39,9 @@ services:
     build:
       context: ../..
       dockerfile: apps/worker/docker/Dockerfile
-    mem_limit: 3g
+    # 3g не хватало: реальное потребление воркера ~4.1 ГБ, cgroup-OOM давал
+    # exit 137 (инцидент 04.11). Лимит поднят до 5g.
+    mem_limit: 5g
 
   # partykit binds every interface regardless of HOSTNAME, so realtime runs on
   # a bridge network and is published on loopback only. It needs no infra —
