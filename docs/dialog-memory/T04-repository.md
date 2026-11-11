@@ -42,9 +42,47 @@ Discriminated union:
 
 All failure reasons are constant strings; no raw SQL, messages or PII are returned.
 
-## What is intentionally not in B1
+## What B2 adds
 
-- `readSnapshot` / history read (B2).
+`dialogMemoryRepository.readSnapshot(input)` returns a reverse-chronological
+page of the full main-DB conversation history.
+
+1. Validates `scope`, optional `limit` (default 100, 1..200), optional `cursor`
+   (`{id, createdAtMicros}`), and optional `expectedToken` using pure validators.
+   `expectedToken` is required when `cursor` is provided.
+2. Runs the same guarded transaction as `register`: lock global topology, verify
+   conversation ownership, reject message sharding, check retention policy, then
+   lock `DialogMemorySource` and `DialogMemory`.
+3. Detects unregistered / inconsistent source-memory pairs.
+4. Builds the actual token from the **current** `sourceRevision`,
+   `memoryVersion`, and global `topologyEpoch`, and compares it strictly with
+   `expectedToken` when present. A mismatch returns `conflict` with no items.
+5. Validates that a provided cursor anchor exists in `Message` for the exact
+   scope before reading history.
+6. Reads history from canonical public `Message`/`Attachment` only, with
+   microsecond-precision tuple cursors, no shard pools, no JS date rounding,
+   and no filtering by role/channel/kind/deletion status.
+7. Groups attachments by the full parent reference `(workspaceId,
+   conversationId, messageId, messageCreatedAt)` and enforces resource guards:
+   max 1000 attachments per page and an 8 MiB logical variable-payload limit.
+
+## Result shape
+
+Discriminated union with all failure variants typed:
+
+- `ok` with `{ scope, token, memory, items, hasMore, nextCursor }`
+- `not_found`
+- `unsupported`
+- `inconsistent`
+- `unregistered`
+- `conflict`
+- `invalid`
+- `unavailable`
+
+All reasons are constant strings; no raw SQL, messages or PII are returned.
+
+## What is intentionally not in B2
+
 - `publish` / `reset` / package barrel exports (C).
 - No stubs or TODO implementations for those methods.
 
@@ -52,4 +90,4 @@ All failure reasons are constant strings; no raw SQL, messages or PII are return
 
 - `git diff --check` clean.
 - Full TypeScript build, tests, migration runs and runtime DB checks are deferred
-  to B2/C/hosted CI as agreed for this milestone.
+  to C/hosted CI as agreed for this milestone.
