@@ -461,9 +461,9 @@ class AttachmentInvalidationTests(GateBase):
         self.insert_message("ws-2", "conv-a3", "am-3", created=self.DATE)
 
     def test_attachment_insert_invalidates_parent_conversation(self) -> None:
-        self.insert_message("ws-1", "conv-a1", "am-3", created=self.DATE)
+        self.insert_message("ws-1", "conv-a1", "am-valid-insert", created=self.DATE)
         rev0 = self.revision_of("conv-a1")
-        self.insert_attachment("ws-1", "conv-a1", "att-1", "am-3", self.DATE)
+        self.insert_attachment("ws-1", "conv-a1", "att-1", "am-valid-insert", self.DATE)
         self.assertGreater(self.revision_of("conv-a1"), rev0)
 
     def test_attachment_update_invalidates_parent_conversation(self) -> None:

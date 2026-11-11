@@ -13,8 +13,8 @@
 --     singleton if it is missing (fail closed).
 --   - Two-owner bumps happen in a deterministic source-row lock order to avoid
 --     swap deadlocks.
---   - Attachment parent resolution uses (messageId, messageCreatedAt), never the
---     attachment's own createdAt.
+--   - Attachment parent resolution uses ("workspaceId", "conversationId",
+--     "messageId", "messageCreatedAt"), never the attachment's own createdAt.
 
 SET client_min_messages = notice;
 
@@ -138,7 +138,9 @@ BEGIN
       INTO v_new_ws, v_new_cid
       FROM "Message" m
      WHERE m."id" = NEW."messageId"
-       AND m."createdAt" = NEW."messageCreatedAt";
+       AND m."createdAt" = NEW."messageCreatedAt"
+       AND m."workspaceId" = NEW."workspaceId"
+       AND m."conversationId" = NEW."conversationId";
 
     IF FOUND THEN
       PERFORM bump_source(v_new_ws, v_new_cid);
@@ -152,7 +154,9 @@ BEGIN
       INTO v_old_ws, v_old_cid
       FROM "Message" m
      WHERE m."id" = OLD."messageId"
-       AND m."createdAt" = OLD."messageCreatedAt";
+       AND m."createdAt" = OLD."messageCreatedAt"
+       AND m."workspaceId" = OLD."workspaceId"
+       AND m."conversationId" = OLD."conversationId";
 
     IF FOUND THEN
       PERFORM bump_source(v_old_ws, v_old_cid);
@@ -186,14 +190,18 @@ BEGIN
       INTO v_old_ws, v_old_cid
       FROM "Message" m
      WHERE m."id" = OLD."messageId"
-       AND m."createdAt" = OLD."messageCreatedAt";
+       AND m."createdAt" = OLD."messageCreatedAt"
+       AND m."workspaceId" = OLD."workspaceId"
+       AND m."conversationId" = OLD."conversationId";
     v_old_found := FOUND;
 
     SELECT m."workspaceId", m."conversationId"
       INTO v_new_ws, v_new_cid
       FROM "Message" m
      WHERE m."id" = NEW."messageId"
-       AND m."createdAt" = NEW."messageCreatedAt";
+       AND m."createdAt" = NEW."messageCreatedAt"
+       AND m."workspaceId" = NEW."workspaceId"
+       AND m."conversationId" = NEW."conversationId";
     v_new_found := FOUND;
 
     IF v_old_found AND v_new_found THEN

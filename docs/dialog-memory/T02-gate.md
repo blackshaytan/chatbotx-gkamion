@@ -47,7 +47,7 @@ Dedicated schema `dialog_memory_gate` with a representative subset:
   ("createdAt")`; two current partitions "Message_2026_h1" /
   "Message_2026_h2"; tests create "Message_2027" to verify partition
   trigger inheritance (a trigger on the parent applies to future partitions).
-- "Attachment": parent identity via ("messageId", "messageCreatedAt"), no FK.
+- "Attachment": parent identity via ("workspaceId", "conversationId", "messageId", "messageCreatedAt"), no FK.
 - "Workspace" / "Conversation": minimal.
 - "MessageShard" / "ShardTimeRange": **global** shard registry shaped after
   `packages/database/src/sharding/message/schema/shard.ts` and
@@ -81,9 +81,9 @@ harness when it exists (GREEN stage). It must:
   "deletedAt", identity columns). UPDATEs touching only "updatedAt" are
   content-neutral and must NOT bump.
 - `dialogMemory_attachment_invalidation` trigger ON "Attachment": same
-  semantics, resolved through parent identity ("messageId",
-  "messageCreatedAt"). Rows without a resolvable parent must not touch any
-  other conversation's memory.
+  semantics, resolved through parent identity ("workspaceId", "conversationId",
+  "messageId", "messageCreatedAt"). Rows without a resolvable parent must not
+  touch any other conversation's memory.
 - `dialogMemory_topology_invalidation` triggers ON "MessageShard" and
   "ShardTimeRange": bump the single global "DialogMemoryTopology"."topologyEpoch"
   on ANY insert (including inactive rows), on any change, and on
