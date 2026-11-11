@@ -844,6 +844,95 @@ describe("receiveMessage — message repository branch", () => {
     mockMarkReadByOutbound.mockResolvedValue(true)
   })
 
+  test("stores ZZAP seller history without emitting automation or replies", async () => {
+    vi.mocked(
+      integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+    ).mockResolvedValue({
+      inbox: { ...fakeInbox, channel: "zzap" },
+      integrationRow: fakeIntegrationRow,
+    } as never)
+    const originalDate = new Date("2026-11-07T06:50:20.000Z")
+    mockFindLastByConversation.mockResolvedValue([])
+    mockRunChannelHandler.mockResolvedValue({
+      message: {
+        ...baseIncomingMessage,
+        sourceId: "zzap-out:history",
+        messageType: "outgoing",
+        attachments: [],
+      },
+      contact: { sourceId: "buyer-key", firstName: "Buyer" },
+      postbackAction: null,
+      quickReplyAction: null,
+      ref: null,
+      historyOnly: true,
+      createdAt: originalDate,
+    })
+    mockCreateOrUpdate.mockResolvedValue({
+      message: {
+        ...fakeCreatedMessage,
+        messageType: "outgoing",
+        senderType: "user",
+        createdAt: originalDate,
+      },
+      isNew: true,
+    })
+
+    await receiveMessage(baseProps)
+
+    expect(mockCreateOrUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        createdAt: originalDate,
+        messageType: "outgoing",
+      }),
+    )
+    expect(mockBroadcast).toHaveBeenCalled()
+    expect(mockEmit).not.toHaveBeenCalled()
+    expect(mockChatQueueAdd).not.toHaveBeenCalled()
+    expect(mockIntegrationQueueAdd).not.toHaveBeenCalled()
+    expect(mockAutomatedResponseEnqueueFlowAction).not.toHaveBeenCalled()
+  })
+
+  test("does not store a ZZAP echo of a message ChatbotX already sent", async () => {
+    vi.mocked(
+      integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+    ).mockResolvedValue({
+      inbox: { ...fakeInbox, channel: "zzap" },
+      integrationRow: fakeIntegrationRow,
+    } as never)
+    mockFindLastByConversation.mockResolvedValueOnce([
+      {
+        ...fakeCreatedMessage,
+        id: "sent-by-bot",
+        senderType: "bot",
+        senderId: null,
+        messageType: "outgoing",
+        text: "Цена 7 855 ₽.\n\nНапишите, какой вариант выбрать.",
+        attachments: [],
+      },
+    ])
+    mockRunChannelHandler.mockResolvedValue({
+      message: {
+        ...baseIncomingMessage,
+        sourceId: "zzap-out:echo",
+        messageType: "outgoing",
+        text: "Цена 7 855 ?.\nНапишите, какой вариант выбрать.",
+        attachments: [],
+      },
+      contact: { sourceId: "buyer-key", firstName: "Buyer" },
+      postbackAction: null,
+      quickReplyAction: null,
+      ref: null,
+      historyOnly: true,
+      createdAt: new Date("2026-11-07T12:32:51.000Z"),
+    })
+
+    await receiveMessage(baseProps)
+
+    expect(mockCreateOrUpdate).not.toHaveBeenCalled()
+    expect(mockBroadcast).not.toHaveBeenCalled()
+    expect(mockEmit).not.toHaveBeenCalled()
+  })
+
   test("calls repository.createOrUpdate() when message has no attachments", async () => {
     mockRunChannelHandler.mockResolvedValue({
       message: { ...baseIncomingMessage, attachments: [] },

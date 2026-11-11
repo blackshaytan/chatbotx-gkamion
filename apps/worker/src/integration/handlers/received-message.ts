@@ -166,6 +166,10 @@ import {
 } from "./sync-ad-labels"
 import { recordInboundThreadControl } from "./thread-control-inbound"
 import { resolveTiktokCommenterIdentity } from "./tiktok-comment-identity"
+import {
+  isChatbotXOutgoing,
+  isSameZzapHistoryEcho,
+} from "./zzap-history-echo"
 
 type ContactInboxTracking = ContactInboxTrackingData
 
@@ -361,6 +365,7 @@ export const receiveMessage = async (
     quickReplyAction: rawQuickReplyAction,
     ref,
     referralSource,
+    createdAt: channelCreatedAt,
   } = parsedMessage
   // A standby delivery is a listen-only copy of a thread another responder
   // owns: it is stored, but must not start any automation (one early guard
@@ -368,7 +373,10 @@ export const receiveMessage = async (
   // in every automation branch below).
   const threadControl = parsedMessage.threadControl
   const suppressAutomation = threadControl?.delivery === "standby"
-  const canAutomate = isWorkspaceActive && !suppressAutomation
+  const historyOnly =
+    parsedMessage.historyOnly === true &&
+    parsedIncomingMessage?.messageType === "outgoing"
+  const canAutomate = isWorkspaceActive && !suppressAutomation && !historyOnly
   const appointmentCancelToken = suppressAutomation
     ? null
     : parseAppointmentCancelPostback(rawPostbackAction)
@@ -563,6 +571,8 @@ export const receiveMessage = async (
         conversation,
         incomingMessage,
         storageUrl,
+        createdAt: channelCreatedAt ?? undefined,
+        historyOnly,
         // A Business-AI (Meta AI) reply on standby keeps the conversation
         // unread so a human agent monitors the AI (Integration Guide §5.3).
         keepUnread: threadControl?.ownerRole === "ai_agent",
@@ -990,6 +1000,14 @@ const SELF_SENT_ECHO_WINDOW_MS = 2 * 60 * 1000
 const SELF_SENT_ECHO_LOOKBACK = 10
 
 /**
+ * A ZZAP poll can echo our own send a few minutes later. The window covers
+ * the poll interval plus a rate-limit pause, and only rows ChatbotX itself
+ * wrote are eligible, so a seller repeating a short reply on ZZAP is kept.
+ */
+const HISTORY_ECHO_WINDOW_MS = 30 * 60 * 1000
+const HISTORY_ECHO_LOOKBACK = 30
+
+/**
  * Mirrors the `user &&` gate on the inbox call site
  * (`apps/builder/src/features/messages/actions/create-message.action.ts`):
  * only a message a human agent actually typed may trigger "Page" keyword
@@ -1112,6 +1130,7 @@ type SaveAndBroadcastMessageProps = {
   contactInboxTracking?: ContactInboxTracking
   contactLocation?: ContactLocation | null
   createdAt?: Date
+  historyOnly?: boolean
   storageUrl: string
   /**
    * A Business-AI (Meta AI) reply arriving on standby: record its activity but
@@ -1248,6 +1267,29 @@ const emitMessageReceived = ({
   })
 }
 
+const findChatbotXHistoryOriginal = async (input: {
+  repository: IMessageRepository
+  conversation: ConversationModel
+  text: string | null | undefined
+}): Promise<MessageWithAttachments | null> => {
+  const recent = await input.repository.findLastByConversation(
+    input.conversation.id,
+    {
+      limit: HISTORY_ECHO_LOOKBACK,
+      messageTypes: ["outgoing"],
+      sinceTime: new Date(Date.now() - HISTORY_ECHO_WINDOW_MS),
+      workspaceId: input.conversation.workspaceId,
+    },
+  )
+  return (
+    recent.find(
+      (candidate) =>
+        isChatbotXOutgoing(candidate) &&
+        isSameZzapHistoryEcho(candidate.text, input.text),
+    ) ?? null
+  )
+}
+
 const persistMessage = async (
   props: SaveAndBroadcastMessageProps,
 ): Promise<SaveMessageResult> => {
@@ -1260,6 +1302,31 @@ const persistMessage = async (
   // interaction after persistNewMessageSideEffects updates tracking.
   const isFirstIncomingMessage =
     inbound && contactInbox.lastIncomingMessageAt === null
+
+  // ZZAP re-lists our own send with a different sourceId. Skip that copy when
+  // the text still matches a message this workspace already stored.
+  if (props.historyOnly && !inbound) {
+    try {
+      const original = await findChatbotXHistoryOriginal({
+        repository,
+        conversation,
+        text: incomingMessage.text,
+      })
+      if (original) {
+        return { message: original, isNew: false }
+      }
+    } catch (err) {
+      logger.warn(
+        {
+          err,
+          workspaceId: inbox.workspaceId,
+          conversationId: conversation.id,
+        },
+        "Unable to match a ZZAP history echo to a ChatbotX send",
+      )
+    }
+  }
+
   const messageInput = buildMessageInput({ ...props, inbound })
   const attachmentInputs = buildAttachmentInputs({
     incomingMessage,
@@ -1349,7 +1416,7 @@ const persistMessage = async (
     }
   }
 
-  if (isNew) {
+  if (isNew && !props.historyOnly) {
     emitMessageReceived({
       inbox,
       contactInbox,

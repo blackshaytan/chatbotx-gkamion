@@ -73,6 +73,14 @@ export type ReceivedMessageResult = {
   referral?: MessageReferral | null
   buttonTitle?: string | null
   /**
+   * Optional original timestamp supplied by the channel (e.g. poll-based
+   * providers). When present, the worker stamps the stored `Message.createdAt`
+   * with it instead of the ingestion time.
+   */
+  createdAt?: Date | null
+  /** Store an outgoing channel history entry without triggering automation. */
+  historyOnly?: boolean
+  /**
    * Origin of an outgoing echo, when the channel can tell. Unset or null
    * means "not an echo" or "unknown", which the worker treats as first-party.
    */
