@@ -45,7 +45,7 @@ describe("QuestionnaireApplicantNameCell", () => {
     container.remove()
   })
 
-  test("converts storage avatars and preserves absolute URLs", () => {
+  test("finalizes storage keys and replaces an external avatar URL with the pack", () => {
     act(() => {
       root.render(
         <QuestionnaireApplicantNameCell
@@ -89,6 +89,6 @@ describe("QuestionnaireApplicantNameCell", () => {
     expect(
       container.querySelector<HTMLElement>("[data-testid='avatar-image']")
         ?.dataset.src,
-    ).toBe("https://images.example.com/avatar.png")
+    ).toBe("/contact-avatars/06.svg")
   })
 })
