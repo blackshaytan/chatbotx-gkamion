@@ -12,7 +12,6 @@ import {
 import type { ContactPermissionScope } from "@/features/contacts/permissions"
 import { getContact } from "@/features/contacts/queries/get-contact.query"
 import { sortInboxConversations } from "@/features/conversations/lib/compare-inbox-conversations"
-import { resolveInboxListBotCategory } from "@/features/conversations/lib/inbox-bot-category"
 import {
   findConversation,
   listConversations,
@@ -159,24 +158,19 @@ const loadInitialState = async ({
   workspaceId,
   urlConversation,
   contactPermissionScope,
-  canFilterBotCategory,
 }: {
   workspaceId: string
   urlConversation: UrlConversation
   contactPermissionScope: ContactPermissionScope
-  canFilterBotCategory: boolean
 }): Promise<ChatStoreInitialState | null> => {
   const conversationId =
     urlConversation.kind === "valid" ? urlConversation.id : undefined
   const conversationsPromise = listConversations(
-    resolveInboxListBotCategory(
-      {
-        workspaceId,
-        perPage: INBOX_CONVERSATIONS_PER_PAGE,
-        cursor: "",
-      },
-      canFilterBotCategory,
-    ),
+    {
+      workspaceId,
+      perPage: INBOX_CONVERSATIONS_PER_PAGE,
+      cursor: "",
+    },
     {
       includeEmailAndPhone: contactPermissionScope.canViewEmailAndPhone,
     },
@@ -292,12 +286,10 @@ export const getInboxInitialState = async ({
   workspaceId,
   conversationId,
   contactPermissionScope,
-  canFilterBotCategory = true,
 }: {
   workspaceId: string
   conversationId?: string
   contactPermissionScope: ContactPermissionScope
-  canFilterBotCategory?: boolean
 }): Promise<ChatStoreInitialState | null> => {
   try {
     const signal = AbortSignal.timeout(INBOX_SEED_TIMEOUT_MS)
@@ -306,7 +298,6 @@ export const getInboxInitialState = async ({
         workspaceId,
         urlConversation: parseUrlConversation(conversationId),
         contactPermissionScope,
-        canFilterBotCategory,
       }),
       signal,
       "Inbox initial state seed timed out",

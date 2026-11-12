@@ -26,14 +26,13 @@ import { useContactAssigneeOptions } from "../users/provider/user-hook"
 import { ConversationFilter } from "./conversation-filter"
 import ConversationItem from "./conversation-item"
 import { useConversationIdParam } from "./hooks/use-conversation-id-param"
-import { inboxBotCategoryOptionValues } from "./lib/inbox-bot-category"
+
+const botCategoryValues = ["all", "human", "bot"] as const
 
 export default function ConversationList({
-  canFilterBotCategory = true,
   canViewEmailAndPhone = true,
   workspaceId,
 }: {
-  canFilterBotCategory?: boolean
   canViewEmailAndPhone?: boolean
   workspaceId: string
 }) {
@@ -101,9 +100,7 @@ export default function ConversationList({
     })
   }, 300)
 
-  const botCategoryOptions = inboxBotCategoryOptionValues(
-    canFilterBotCategory,
-  ).map((value) => ({
+  const botCategoryOptions = botCategoryValues.map((value) => ({
     label: {
       all: t("broadcasts.filters.all"),
       human: t("analytics.human"),

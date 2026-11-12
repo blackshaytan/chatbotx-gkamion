@@ -113,24 +113,6 @@ describe("getInboxInitialState", () => {
     )
   })
 
-  test("seeds only human conversations when the member cannot choose a bot category", async () => {
-    mockSeedRequests()
-
-    await getInboxInitialState({
-      workspaceId: "workspace-1",
-      contactPermissionScope,
-      canFilterBotCategory: false,
-    })
-
-    expect(mockListConversations).toHaveBeenCalledWith(
-      expect.objectContaining({
-        workspaceId: "workspace-1",
-        botCategory: "human",
-      }),
-      { includeEmailAndPhone: true },
-    )
-  })
-
   test("selects a deep-linked conversation, reverses its messages, and seeds its contact", async () => {
     mockDeepLinkSeedRequests()
 

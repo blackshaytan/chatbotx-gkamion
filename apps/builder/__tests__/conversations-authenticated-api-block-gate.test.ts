@@ -247,7 +247,7 @@ describe("conversationsAuthenticatedAPI — PII permission gate", () => {
 })
 
 describe("conversationsAuthenticatedAPI — inbox bot category", () => {
-  test("pins a regular member to Human on both list endpoints", async () => {
+  test("keeps a regular member's requested category on both list endpoints", async () => {
     canViewContactEmailAndPhone.mockReturnValue(false)
     listConversations.mockResolvedValue({ data: [], nextCursor: null })
 
@@ -257,7 +257,7 @@ describe("conversationsAuthenticatedAPI — inbox bot category", () => {
     }
     const input = {
       workspaceId: "workspace-1",
-      botCategory: "all" as const,
+      botCategory: "bot" as const,
     }
 
     for (const path of [LIST_PATH, CONVERSATIONS_LIST_POST_PATH]) {
@@ -272,7 +272,7 @@ describe("conversationsAuthenticatedAPI — inbox bot category", () => {
       })
 
       expect(listConversations).toHaveBeenCalledWith(
-        { workspaceId: "workspace-1", botCategory: "human" },
+        { workspaceId: "workspace-1", botCategory: "bot" },
         { includeEmailAndPhone: false },
       )
     }

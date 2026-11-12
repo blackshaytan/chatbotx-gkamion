@@ -1,5 +1,4 @@
 import { conversationService } from "@chatbotx.io/business"
-import { isWorkspaceAdminMember } from "@chatbotx.io/business/workspace-member/predicates"
 import { channelTypes } from "@chatbotx.io/database/partials"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import z from "zod"
@@ -9,7 +8,6 @@ import { assertWorkspaceNotBlocked } from "@/lib/workspace-quota"
 import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"
 import { authorizedAPI } from "@/orpc"
 import { CONVERSATIONS_LIST_POST_PATH } from "../lib/api-paths"
-import { resolveInboxListBotCategory } from "../lib/inbox-bot-category"
 import { getPostDetailsQuery } from "../queries/get-post-details.query"
 import {
   findConversation,
@@ -51,17 +49,11 @@ export const conversationsAuthenticatedAPI = {
     .output(listConversationsResponse)
     .handler(
       async ({ input, context }) =>
-        await listConversations(
-          resolveInboxListBotCategory(
-            input,
-            isWorkspaceAdminMember(context.workspaceMember),
+        await listConversations(input, {
+          includeEmailAndPhone: canViewContactEmailAndPhone(
+            context.workspaceMember.permissions,
           ),
-          {
-            includeEmailAndPhone: canViewContactEmailAndPhone(
-              context.workspaceMember.permissions,
-            ),
-          },
-        ),
+        }),
     ),
 
   listConversationsByPOSTAuthenticatedAPI: authorizedAPI
@@ -76,17 +68,11 @@ export const conversationsAuthenticatedAPI = {
     .output(listConversationsResponse)
     .handler(
       async ({ input, context }) =>
-        await listConversations(
-          resolveInboxListBotCategory(
-            input,
-            isWorkspaceAdminMember(context.workspaceMember),
+        await listConversations(input, {
+          includeEmailAndPhone: canViewContactEmailAndPhone(
+            context.workspaceMember.permissions,
           ),
-          {
-            includeEmailAndPhone: canViewContactEmailAndPhone(
-              context.workspaceMember.permissions,
-            ),
-          },
-        ),
+        }),
     ),
 
   findConversationAuthenticatedAPI: authorizedAPI

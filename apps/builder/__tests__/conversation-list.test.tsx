@@ -106,19 +106,7 @@ describe("ConversationList", () => {
     container.remove()
   })
 
-  test("shows only Human in the bot-category menu for a regular member", () => {
-    act(() => {
-      root.render(
-        <ConversationList canFilterBotCategory={false} workspaceId="ws-1" />,
-      )
-    })
-
-    expect(botCategorySelectProps.current?.options).toEqual([
-      { label: "analytics.human", value: "human" },
-    ])
-  })
-
-  test("shows All, Human and Bot to a workspace admin", () => {
+  test("shows All, Human and Bot to every operator", () => {
     act(() => {
       root.render(<ConversationList workspaceId="ws-1" />)
     })
