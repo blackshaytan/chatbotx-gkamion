@@ -44,6 +44,8 @@ export const DIALOG_MEMORY_REASONS = {
       "summary payload exceeds the supported size limit",
     SUMMARY_INVALID_VALUE:
       "summary contains a value that is not JSON-serializable",
+    SUMMARY_INVALID_STRING:
+      "summary contains a string value that cannot be stored in PostgreSQL jsonb",
     PUBLISH_INPUT_INVALID: "publish input is not a valid object",
     RESET_INPUT_INVALID: "reset input is not a valid object",
   },
@@ -58,11 +60,15 @@ export const DIALOG_MEMORY_REASONS = {
       "history page would contain more than 1000 attachments",
     PAYLOAD_TOO_LARGE:
       "history page logical payload exceeds the supported size limit",
+    SUMMARY_PAYLOAD_TOO_LARGE:
+      "summary payload exceeds the supported size limit",
   },
   INCONSISTENT: {
     SOURCE_WITHOUT_MEMORY: "DialogMemorySource exists without DialogMemory",
     MEMORY_WITHOUT_SOURCE: "DialogMemory exists without DialogMemorySource",
     PARTIAL_INSERT: "partial source/memory insert detected",
+    UPDATE_AFFECTED_ROWS_UNEXPECTED:
+      "CAS update affected an unexpected number of rows",
   },
   UNREGISTERED: {
     SCOPE_NOT_REGISTERED: "dialog memory scope is not registered",
@@ -611,6 +617,7 @@ export type DialogMemoryPublishInputValidationResult =
       }
     }
   | { kind: "invalid"; reason: string }
+  | { kind: "unsupported"; reason: string }
 
 export type DialogMemoryResetInputValidationResult =
   | {
@@ -635,26 +642,45 @@ class SummaryValidationError extends Error {
   }
 }
 
+class SummaryOversizeError extends Error {
+  readonly reason: string
+
+  constructor(reason: string) {
+    super("summary-oversize-error")
+    this.name = "SummaryOversizeError"
+    this.reason = reason
+  }
+}
+
 function failSummary(reason: string): never {
   throw new SummaryValidationError(reason)
 }
 
-function escapeJsonString(value: string): string {
-  let result = '"'
-  for (const char of value) {
-    const code = char.charCodeAt(0)
-    if (code === 0x22) {
-      result += '\\"'
-    } else if (code === 0x5c) {
-      result += "\\\\"
-    } else if (code < 0x20) {
-      result += `\\u${code.toString(16).padStart(4, "0")}`
-    } else {
-      result += char
+function failOversize(reason: string): never {
+  throw new SummaryOversizeError(reason)
+}
+
+function isJsonbCompatibleString(value: string): boolean {
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i)
+    if (code === 0x00_00) {
+      return false
+    }
+    if (code >= 0xd8_00 && code <= 0xdb_ff) {
+      const next = value.charCodeAt(i + 1)
+      if (!(next >= 0xdc_00 && next <= 0xdf_ff)) {
+        return false
+      }
+      i++
+    } else if (code >= 0xdc_00 && code <= 0xdf_ff) {
+      return false
     }
   }
-  result += '"'
-  return result
+  return true
+}
+
+function escapeJsonString(value: string): string {
+  return JSON.stringify(value)
 }
 
 type JsonWriter = {
@@ -667,7 +693,7 @@ function appendToWriter(writer: JsonWriter, part: string): void {
   writer.parts.push(part)
   writer.bytes += writer.encoder.encode(part).length
   if (writer.bytes > MAX_SUMMARY_BYTES) {
-    failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_PAYLOAD_TOO_LARGE)
+    failOversize(DIALOG_MEMORY_REASONS.UNSUPPORTED.SUMMARY_PAYLOAD_TOO_LARGE)
   }
 }
 
@@ -683,6 +709,9 @@ function writeJsonValue(
 
   switch (typeof value) {
     case "string": {
+      if (!isJsonbCompatibleString(value)) {
+        failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_STRING)
+      }
       appendToWriter(writer, escapeJsonString(value))
       return
     }
@@ -704,6 +733,40 @@ function writeJsonValue(
       }
 
       if (Array.isArray(value)) {
+        if (Object.getPrototypeOf(value) !== Array.prototype) {
+          failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+        }
+        if (Object.getOwnPropertySymbols(value).length > 0) {
+          failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+        }
+
+        const names = Object.getOwnPropertyNames(value)
+        for (const name of names) {
+          if (name === "length") {
+            continue
+          }
+          const index = Number(name)
+          if (!Number.isInteger(index) || index < 0 || index >= value.length) {
+            failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+          }
+          const descriptor = Object.getOwnPropertyDescriptor(value, name)
+          if (
+            descriptor === undefined ||
+            !descriptor.enumerable ||
+            !("value" in descriptor) ||
+            descriptor.get !== undefined ||
+            descriptor.set !== undefined
+          ) {
+            failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+          }
+        }
+
+        for (let i = 0; i < value.length; i++) {
+          if (!Object.hasOwn(value, String(i))) {
+            failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+          }
+        }
+
         if (value.length === 0) {
           appendToWriter(writer, "[]")
           return
@@ -714,13 +777,14 @@ function writeJsonValue(
         seen.add(value)
         appendToWriter(writer, "[")
         for (let i = 0; i < value.length; i++) {
-          if (!(i in value)) {
-            failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
-          }
           if (i > 0) {
             appendToWriter(writer, ",")
           }
-          writeJsonValue(value[i], depth + 1, seen, writer)
+          const descriptor = Object.getOwnPropertyDescriptor(value, String(i))
+          if (descriptor === undefined || !("value" in descriptor)) {
+            failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
+          }
+          writeJsonValue(descriptor.value, depth + 1, seen, writer)
         }
         appendToWriter(writer, "]")
         seen.delete(value)
@@ -740,7 +804,7 @@ function writeJsonValue(
         failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
       }
 
-      const keys = Object.keys(value)
+      const keys = Object.getOwnPropertyNames(value)
       if (keys.length === 0) {
         appendToWriter(writer, "{}")
         return
@@ -753,13 +817,18 @@ function writeJsonValue(
         const descriptor = Object.getOwnPropertyDescriptor(value, key)
         if (
           descriptor === undefined ||
-          "get" in descriptor ||
-          "set" in descriptor
+          !descriptor.enumerable ||
+          !("value" in descriptor) ||
+          descriptor.get !== undefined ||
+          descriptor.set !== undefined
         ) {
           failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_VALUE)
         }
         if (i > 0) {
           appendToWriter(writer, ",")
+        }
+        if (!isJsonbCompatibleString(key)) {
+          failSummary(DIALOG_MEMORY_REASONS.INVALID.SUMMARY_INVALID_STRING)
         }
         appendToWriter(writer, escapeJsonString(key))
         appendToWriter(writer, ":")
@@ -778,6 +847,7 @@ function writeJsonValue(
 export type DialogMemorySummaryValidationResult =
   | { kind: "ok"; summaryJson: string }
   | { kind: "invalid"; reason: string }
+  | { kind: "unsupported"; reason: string }
 
 export const validateDialogMemorySummary = (
   input: unknown,
@@ -811,6 +881,9 @@ export const validateDialogMemorySummary = (
   } catch (error) {
     if (error instanceof SummaryValidationError) {
       return { kind: "invalid", reason: error.reason }
+    }
+    if (error instanceof SummaryOversizeError) {
+      return { kind: "unsupported", reason: error.reason }
     }
     return {
       kind: "invalid",
@@ -855,7 +928,7 @@ export const validateDialogMemoryPublishInput = (
   }
 
   const summaryResult = validateDialogMemorySummary(candidate.summary)
-  if (summaryResult.kind === "invalid") {
+  if (summaryResult.kind !== "ok") {
     return summaryResult
   }
 

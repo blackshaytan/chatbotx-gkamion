@@ -135,5 +135,10 @@ not advertised.
 ## Verification status
 
 - `git diff --check` clean.
+- C focused pure regressions pass with the Node toolchain and both validator
+  fixtures:
+  - `T04-C-validator-smoke.mjs`: 28 pass / 0 fail.
+  - `T04-B2-validator-smoke.mjs`: 20 pass / 0 fail.
+- Biome check reports zero errors on the two C source files.
 - Full TypeScript build, tests, migration runs and runtime DB checks are deferred
   to C/hosted CI as agreed for this milestone.

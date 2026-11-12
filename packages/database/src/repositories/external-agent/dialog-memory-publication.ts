@@ -99,7 +99,7 @@ export async function publishIfUnchanged(
   input: DialogMemoryPublishInput,
 ): Promise<DialogMemoryPublishResult> {
   const validation = validateDialogMemoryPublishInput(input)
-  if (validation.kind === "invalid") {
+  if (validation.kind !== "ok") {
     return validation
   }
 
@@ -163,9 +163,9 @@ export async function publishIfUnchanged(
             "promptVersion" = ${config.promptVersion},
             "model" = ${config.model},
             "provider" = ${config.provider},
-            "memoryVersion" = ("memoryVersion"::bigint + 1)::text,
-            "coveredSourceRevision" = ${source.sourceRevision},
-            "topologyEpoch" = ${global.topologyEpoch},
+            "memoryVersion" = ("memoryVersion"::bigint + 1),
+            "coveredSourceRevision" = ${source.sourceRevision}::bigint,
+            "topologyEpoch" = ${global.topologyEpoch}::bigint,
             "coverageMessageId" = ${coverageIdFragment},
             "coverageCreatedAt" = ${coverageCreatedAtFragment},
             "lastError" = NULL,
@@ -173,28 +173,34 @@ export async function publishIfUnchanged(
             "updatedAt" = clock_timestamp()
           WHERE "workspaceId" = ${scope.workspaceId}::bigint
             AND "conversationId" = ${scope.conversationId}::bigint
-            AND "memoryVersion" = ${expectedToken.memoryVersion}
+            AND "memoryVersion" = ${expectedToken.memoryVersion}::bigint
             AND EXISTS (
               SELECT 1
               FROM "${sql.raw(DIALOG_MEMORY_SOURCE_TABLE)}"
               WHERE "workspaceId" = ${scope.workspaceId}::bigint
                 AND "conversationId" = ${scope.conversationId}::bigint
-                AND "sourceRevision" = ${expectedToken.sourceRevision}
+                AND "sourceRevision" = ${expectedToken.sourceRevision}::bigint
             )
             AND EXISTS (
               SELECT 1
               FROM "${sql.raw(DIALOG_MEMORY_TOPOLOGY_TABLE)}"
               WHERE "id" = 'global'
-                AND "topologyEpoch" = ${expectedToken.topologyEpoch}
+                AND "topologyEpoch" = ${expectedToken.topologyEpoch}::bigint
             )
-          RETURNING "memoryVersion"
+          RETURNING "memoryVersion"::text
         `)
 
-        if (updateResult.rows.length !== 1) {
+        if (updateResult.rows.length === 0) {
           return {
             kind: "conflict",
             reason: DIALOG_MEMORY_REASONS.CONFLICT.TOKEN_STALE,
           }
+        }
+        if (updateResult.rows.length > 1) {
+          throw new DialogMemoryGuardError(
+            "inconsistent",
+            DIALOG_MEMORY_REASONS.INCONSISTENT.UPDATE_AFFECTED_ROWS_UNEXPECTED,
+          )
         }
 
         const reRead = await loadLockedSourceAndMemory(tx, scope)
@@ -276,34 +282,40 @@ export async function resetDerived(
             "coverageCreatedAt" = NULL,
             "lastError" = NULL,
             "lastAttemptAt" = NULL,
-            "coveredSourceRevision" = '0',
-            "topologyEpoch" = ${global.topologyEpoch},
-            "memoryVersion" = ("memoryVersion"::bigint + 1)::text,
+            "coveredSourceRevision" = '0'::bigint,
+            "topologyEpoch" = ${global.topologyEpoch}::bigint,
+            "memoryVersion" = ("memoryVersion"::bigint + 1),
             "updatedAt" = clock_timestamp()
           WHERE "workspaceId" = ${scope.workspaceId}::bigint
             AND "conversationId" = ${scope.conversationId}::bigint
-            AND "memoryVersion" = ${expectedToken.memoryVersion}
+            AND "memoryVersion" = ${expectedToken.memoryVersion}::bigint
             AND EXISTS (
               SELECT 1
               FROM "${sql.raw(DIALOG_MEMORY_SOURCE_TABLE)}"
               WHERE "workspaceId" = ${scope.workspaceId}::bigint
                 AND "conversationId" = ${scope.conversationId}::bigint
-                AND "sourceRevision" = ${expectedToken.sourceRevision}
+                AND "sourceRevision" = ${expectedToken.sourceRevision}::bigint
             )
             AND EXISTS (
               SELECT 1
               FROM "${sql.raw(DIALOG_MEMORY_TOPOLOGY_TABLE)}"
               WHERE "id" = 'global'
-                AND "topologyEpoch" = ${expectedToken.topologyEpoch}
+                AND "topologyEpoch" = ${expectedToken.topologyEpoch}::bigint
             )
-          RETURNING "memoryVersion"
+          RETURNING "memoryVersion"::text
         `)
 
-      if (updateResult.rows.length !== 1) {
+      if (updateResult.rows.length === 0) {
         return {
           kind: "conflict",
           reason: DIALOG_MEMORY_REASONS.CONFLICT.TOKEN_STALE,
         }
+      }
+      if (updateResult.rows.length > 1) {
+        throw new DialogMemoryGuardError(
+          "inconsistent",
+          DIALOG_MEMORY_REASONS.INCONSISTENT.UPDATE_AFFECTED_ROWS_UNEXPECTED,
+        )
       }
 
       const reRead = await loadLockedSourceAndMemory(tx, scope)
