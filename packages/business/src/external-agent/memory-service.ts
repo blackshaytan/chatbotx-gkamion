@@ -987,7 +987,11 @@ export const createDialogMemoryService = (deps: {
           }
 
           // Detach the candidate before handing it over so the validator
-          // never keeps a live reference into summarizer-owned state.
+          // never keeps a live reference into summarizer-owned state. The
+          // flat string/number scope and config DTOs are copied too, so an
+          // adversarial validator mutating (or retaining and later mutating)
+          // its input metadata can never rebind the server-private scope and
+          // config used for publish and for the delivered output.
           const validateOutcome = await awaitBounded(
             () =>
               validator.validate({
@@ -995,8 +999,8 @@ export const createDialogMemoryService = (deps: {
                 sourceEvidence: candidatePrefix.map((item) =>
                   structuredClone(item),
                 ),
-                scope,
-                config,
+                scope: { ...scope },
+                config: { ...config },
                 deadlineAtMs,
                 signal,
               }),

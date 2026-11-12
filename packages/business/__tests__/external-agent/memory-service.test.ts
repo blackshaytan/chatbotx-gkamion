@@ -128,6 +128,8 @@ type HarnessOptions = {
   llmUnavailable?: boolean
   validatorReject?: boolean
   mutatePriorAndFail?: boolean
+  mutateMetadata?: boolean
+  mutateHeldOnPublish?: boolean
   sharedAcceptedPayload?: { narrative: string; evidence: string[] }
   mutateAcceptedOnPublish?: boolean
   nowMsFn?: () => number
@@ -158,6 +160,12 @@ function harness(options: HarnessOptions = {}) {
 
   // Resolvers captured for the synthetic hang path and never invoked.
   const pendingSummaries: Array<(value: never) => void> = []
+
+  // Live scope/config references the validator received, kept so the
+  // adversarial metadata tests can mutate and then prove those mutations.
+  let heldMetadata:
+    | { scope: DialogMemoryScope; config: DialogMemoryConfig }
+    | undefined
 
   let now = 0
 
@@ -271,6 +279,10 @@ function harness(options: HarnessOptions = {}) {
     },
     publishIfUnchanged(input) {
       calls.publish.push(structuredClone(input))
+      if (options.mutateHeldOnPublish && heldMetadata !== undefined) {
+        heldMetadata.scope.expectedContactId = "999"
+        heldMetadata.config.provider = "synthetic-mutated-provider"
+      }
       if (options.mutateAcceptedOnPublish && options.sharedAcceptedPayload) {
         options.sharedAcceptedPayload.narrative =
           "SYNTHETIC_UNVALIDATED_AFTER_ACCEPT"
@@ -361,6 +373,14 @@ function harness(options: HarnessOptions = {}) {
   const validator: SemanticValidatorPort = {
     validate(input) {
       calls.validate.push(structuredClone(input))
+      heldMetadata = { scope: input.scope, config: input.config }
+      if (options.mutateMetadata) {
+        // Adversarial port: rewrites the metadata it was handed in place,
+        // before it returns, without any detached copy of its own.
+        input.scope.expectedContactId = "999"
+        input.config.model = "synthetic-mutated-model"
+        input.config.provider = "synthetic-mutated-provider"
+      }
       if (options.validatorReject) {
         return Promise.resolve({
           kind: "reject" as const,
@@ -407,6 +427,9 @@ function harness(options: HarnessOptions = {}) {
     },
     get token() {
       return token
+    },
+    get heldMetadata() {
+      return heldMetadata
     },
   }
 }
@@ -981,5 +1004,76 @@ describe("createDialogMemoryService", () => {
     expect(JSON.stringify(r)).not.toContain("SYNTHETIC_PRIOR_POISON")
     expect(h.memory.summary).toEqual(encodeStoredRecord(old))
     expect(h.calls.publish).toHaveLength(0)
+  })
+
+  test("validator input metadata mutation cannot rebind server metadata", async () => {
+    const h = harness({
+      items: [msg(1, "x".repeat(5000))],
+      mutateMetadata: true,
+      budgets: { maxOutputEncodedChars: 2000 },
+    })
+    const r = await h.service.getTrustedContext()
+    expect(r.kind).toBe("ok")
+    if (r.kind !== "ok") {
+      return
+    }
+    expect(h.calls.validate).toHaveLength(1)
+    expect(h.calls.publish).toHaveLength(1)
+    // The adversarial validator really rewrote the objects it received.
+    const held = h.heldMetadata
+    expect(held).toBeDefined()
+    if (held === undefined) {
+      return
+    }
+    expect(held.scope.expectedContactId).toBe("999")
+    expect(held.config.model).toBe("synthetic-mutated-model")
+    expect(held.config.provider).toBe("synthetic-mutated-provider")
+    // Publish payload and delivered output keep the original metadata.
+    expect(h.calls.publish[0].scope).toEqual(SCOPE)
+    expect(h.calls.publish[0].config).toEqual(CONFIG)
+    expect(r.scope).toEqual(SCOPE)
+    expect(r.config).toEqual(CONFIG)
+    const record = r.summaryRecord
+    expect(record).not.toBeNull()
+    if (record === null) {
+      return
+    }
+    expect(record.scope).toEqual(SCOPE)
+    expect(record.config).toEqual(CONFIG)
+  })
+
+  test("retained validator metadata mutated during publish is not delivered", async () => {
+    const h = harness({
+      items: [msg(1, "x".repeat(5000))],
+      mutateHeldOnPublish: true,
+      budgets: { maxOutputEncodedChars: 2000 },
+    })
+    const r = await h.service.getTrustedContext()
+    expect(r.kind).toBe("ok")
+    if (r.kind !== "ok") {
+      return
+    }
+    expect(h.calls.validate).toHaveLength(1)
+    expect(h.calls.publish).toHaveLength(1)
+    // The port kept both references and mutated them inside the publish
+    // callback, after the publish await had started.
+    const held = h.heldMetadata
+    expect(held).toBeDefined()
+    if (held === undefined) {
+      return
+    }
+    expect(held.scope.expectedContactId).toBe("999")
+    expect(held.config.provider).toBe("synthetic-mutated-provider")
+    expect(h.calls.publish[0].scope).toEqual(SCOPE)
+    expect(h.calls.publish[0].config).toEqual(CONFIG)
+    expect(r.scope).toEqual(SCOPE)
+    expect(r.config).toEqual(CONFIG)
+    const record = r.summaryRecord
+    expect(record).not.toBeNull()
+    if (record === null) {
+      return
+    }
+    expect(record.scope).toEqual(SCOPE)
+    expect(record.config).toEqual(CONFIG)
   })
 })
