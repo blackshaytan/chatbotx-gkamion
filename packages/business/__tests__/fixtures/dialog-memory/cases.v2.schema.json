@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Synthetic dialog memory candidate v2 (not human-approved gold)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "synthetic",
+    "notes",
+    "humanApproved",
+    "dataStatus",
+    "evaluationTarget",
+    "sourceSelectionPolicy",
+    "currentMessageIdsMeaning",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "synthetic": {
+      "const": true
+    },
+    "notes": {
+      "type": "string"
+    },
+    "humanApproved": {
+      "const": false
+    },
+    "dataStatus": {
+      "const": "machine_candidate"
+    },
+    "evaluationTarget": {
+      "const": "memory_on_full_source"
+    },
+    "sourceSelectionPolicy": {
+      "const": "all_after_state_messages_except_deleted"
+    },
+    "currentMessageIdsMeaning": {
+      "const": "request_window_only"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 30,
+      "maxItems": 30,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    }
+  },
+  "$defs": {
+    "message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "createdAt", "role", "channel", "text", "orderId"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "role": {
+          "enum": ["contact", "manager", "platform", "assistant"]
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string"
+        },
+        "orderId": {
+          "type": ["string", "null"]
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "deletedAt": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["messageId", "quote", "kind", "orderId"],
+      "properties": {
+        "messageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "quote": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "client_claim",
+            "manager_statement",
+            "platform_notice",
+            "assistant_statement"
+          ]
+        },
+        "orderId": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "split",
+        "scenario",
+        "messages",
+        "currentMessageIds",
+        "requiredEvidence",
+        "openQuestions",
+        "forbiddenClaims",
+        "expectedBehavior"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^t06-c[0-9]{2}$"
+        },
+        "split": {
+          "enum": ["development", "holdout"]
+        },
+        "scenario": {
+          "type": "string",
+          "minLength": 1
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/message"
+          }
+        },
+        "currentMessageIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "requiredEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        },
+        "openQuestions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "forbiddenClaims": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expectedBehavior": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mutation": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}
