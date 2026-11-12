@@ -630,6 +630,13 @@ export const evaluateDialogMemoryCase = async (
         phase: "witness",
       })
     }
+    // The ID-only index must stay injective: silently overwriting an
+    // earlier DTO row would make its ref impossible to match exactly.
+    if (sourceById.has(s.id)) {
+      return makeResult(caseId, "gate_pending", ["invalid_grading"], 0, 0, {
+        phase: "witness",
+      })
+    }
     sourceById.set(s.id, s)
   }
 
@@ -647,6 +654,13 @@ export const evaluateDialogMemoryCase = async (
       typeof dtoId !== "string" ||
       dtoId.length === 0
     ) {
+      return makeResult(caseId, "gate_pending", ["invalid_grading"], 0, 0, {
+        phase: "witness",
+      })
+    }
+    // A mapped dtoId absent from the prepared snapshot is a ghost key
+    // that is not part of the exact id bijection.
+    if (!sourceById.has(dtoId)) {
       return makeResult(caseId, "gate_pending", ["invalid_grading"], 0, 0, {
         phase: "witness",
       })

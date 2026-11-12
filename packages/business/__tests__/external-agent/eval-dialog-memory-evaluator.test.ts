@@ -1,5 +1,6 @@
 import type { DialogMemoryMessageDto } from "@chatbotx.io/database/repositories"
 import { describe, expect, test } from "vitest"
+
 import {
   type CaseDisposition,
   EVALUATOR_VERSION,
@@ -162,7 +163,10 @@ const run = async (
 }
 
 describe("eval-dialog-memory-evaluator", () => {
-  test("exact five runtime exports and constants", () => {
+  test("exact five runtime exports and constants", async () => {
+    const evaluatorModule = await import(
+      "../../../../scripts/lib/eval-dialog-memory-evaluator"
+    )
     expect(
       Object.keys({
         EVALUATOR_VERSION,
@@ -172,6 +176,15 @@ describe("eval-dialog-memory-evaluator", () => {
         MAX_WITNESSES_PER_CASE,
       }).sort(),
     ).toEqual(
+      [
+        "EVALUATOR_VERSION",
+        "MAX_RAW_CANDIDATE_UTF16_CHARS",
+        "MAX_RAW_CANDIDATE_UTF8_BYTES",
+        "MAX_WITNESSES_PER_CASE",
+        "evaluateDialogMemoryCase",
+      ].sort(),
+    )
+    expect(Object.keys(evaluatorModule).sort()).toEqual(
       [
         "EVALUATOR_VERSION",
         "MAX_RAW_CANDIDATE_UTF16_CHARS",
@@ -421,6 +434,62 @@ describe("eval-dialog-memory-evaluator", () => {
     const g = grade()
     g.dtoToFixtureId.set(baseDto().id, "wrong-fixture")
     const { result, calls } = await run({ grade: g })
+    expect(result.outcome).toBe("gate_pending")
+    expect(result.codes).toEqual(["invalid_grading"])
+    expect(calls.length).toBe(0)
+  })
+
+  test("duplicate canonical id, distinct timestamps and ghost map entry", async () => {
+    const a = baseDto({ id: "11", text: "A" })
+    const b = baseDto({
+      id: "11",
+      createdAtMicros: "2026-01-03T03:04:05.123456Z",
+      updatedAtMicros: "2026-01-03T03:04:05.123456Z",
+      text: "B",
+    })
+    const lastWitness = witness(b)
+    lastWitness.fixtureMessageId = "fixture-last"
+    const g = grade([a, b], [lastWitness])
+    g.fixtureToDtoId = new Map([
+      ["fixture-last", "11"],
+      ["fixture-ghost", "12"],
+    ])
+    g.dtoToFixtureId = new Map([
+      ["11", "fixture-last"],
+      ["12", "fixture-ghost"],
+    ])
+    const { result, calls } = await run({
+      source: sourceFrom([a, b]),
+      grade: g,
+      candidateRaw: JSON.stringify(basePayload(b)),
+    })
+    expect(result.outcome).toBe("gate_pending")
+    expect(result.codes).toEqual(["invalid_grading"])
+    expect(calls.length).toBe(0)
+  })
+
+  test("duplicate ids cannot fake map coverage with empty required evidence", async () => {
+    const a = baseDto({ id: "11", text: "A" })
+    const b = baseDto({
+      id: "11",
+      createdAtMicros: "2026-01-03T03:04:05.123456Z",
+      updatedAtMicros: "2026-01-03T03:04:05.123456Z",
+      text: "B",
+    })
+    const g = grade([a, b], [])
+    g.fixtureToDtoId = new Map([
+      ["fixture-last", "11"],
+      ["fixture-ghost", "12"],
+    ])
+    g.dtoToFixtureId = new Map([
+      ["11", "fixture-last"],
+      ["12", "fixture-ghost"],
+    ])
+    const { result, calls } = await run({
+      source: sourceFrom([a, b]),
+      grade: g,
+      candidateRaw: JSON.stringify(basePayload(b)),
+    })
     expect(result.outcome).toBe("gate_pending")
     expect(result.codes).toEqual(["invalid_grading"])
     expect(calls.length).toBe(0)
