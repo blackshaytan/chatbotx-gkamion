@@ -11,6 +11,11 @@ on:
         required: true
         default: "builder,worker,realtime,javascript-executor"
         type: string
+      tag_latest:
+        description: "Also move the :latest tag. Leave false until a rollout is approved."
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -43,6 +48,7 @@ jobs:
 
   build:
     name: Build ${{ matrix.service }}
+    needs: check-types
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
@@ -72,14 +78,25 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - if: steps.selected.outputs.build == 'true'
+        id: tags
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER}/chatbotx-gkamion-${{ matrix.service }}"
+          {
+            echo "list<<EOF"
+            echo "${image}:${GITHUB_SHA}"
+            if [ "${{ inputs.tag_latest }}" = "true" ]; then
+              echo "${image}:latest"
+            fi
+            echo "EOF"
+          } >>"$GITHUB_OUTPUT"
+
+      - if: steps.selected.outputs.build == 'true'
         uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/${{ matrix.service }}/docker/Dockerfile
           push: true
           platforms: linux/amd64
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/chatbotx-gkamion-${{ matrix.service }}:latest
-            ghcr.io/${{ github.repository_owner }}/chatbotx-gkamion-${{ matrix.service }}:${{ github.sha }}
+          tags: ${{ steps.tags.outputs.list }}
           cache-from: type=gha,scope=gkamion-${{ matrix.service }}
           cache-to: type=gha,scope=gkamion-${{ matrix.service }},mode=min
