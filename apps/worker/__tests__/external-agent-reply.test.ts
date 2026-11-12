@@ -364,17 +364,26 @@ describe("processExternalAgentReply", () => {
     expect(params.history).toHaveLength(10)
     expect(params.history[0]).toEqual({
       role: "contact",
+      id: "h-2",
+      createdAt: at(10).toISOString(),
       text: "text h-2",
+      contentAttributes: undefined,
       attachmentUrls: [],
     })
     expect(params.history[1]).toEqual({
       role: "bot",
+      id: "h-3",
+      createdAt: at(15).toISOString(),
       text: "reply h-3",
+      contentAttributes: undefined,
       attachmentUrls: [],
     })
     expect(params.history.at(-1)).toEqual({
       role: "contact",
+      id: "m-old",
+      createdAt: at(100).toISOString(),
       text: "text m-old",
+      contentAttributes: undefined,
       attachmentUrls: [],
     })
     expect(params).toMatchObject({
@@ -563,7 +572,10 @@ describe("processExternalAgentReply", () => {
     expect(mocks.buildRunInput.mock.calls[0]?.[0].messages).toEqual([
       {
         role: "contact",
+        id: "m-photo",
+        createdAt: at(130).toISOString(),
         text: null,
+        contentAttributes: undefined,
         attachmentUrls: ["https://app.test/media/attachment/att-1"],
       },
     ])

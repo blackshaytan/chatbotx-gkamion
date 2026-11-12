@@ -44,6 +44,14 @@ describe("resolveActiveContactInbox", () => {
     expect(resolveActiveContactInbox(rows)?.id).toBe("a")
   })
 
+  test("uses the first inbox when the row has no lastMessageAt", () => {
+    const rows = [
+      { id: "a", channel: "smtp", source: "widget" },
+      { id: "b", channel: "zzap", source: "widget" },
+    ]
+    expect(resolveActiveContactInbox(rows)?.channel).toBe("smtp")
+  })
+
   test("returns undefined for an empty or missing list", () => {
     expect(resolveActiveContactInbox([])).toBeUndefined()
     expect(resolveActiveContactInbox(null)).toBeUndefined()

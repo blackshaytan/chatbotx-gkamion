@@ -21,7 +21,13 @@ export const findContactInboxByChannel = <
  * email would otherwise be answered on the wrong channel.
  */
 export const resolveActiveContactInbox = <
-  TContactInbox extends { lastMessageAt?: Date | string | null },
+  TContactInbox extends {
+    // `channel` keeps this from being a weak type. Contact-table rows carry
+    // `channel` and no `lastMessageAt`; a constraint of only optional
+    // `lastMessageAt` is not assignable from that row.
+    channel?: string
+    lastMessageAt?: Date | string | null
+  },
 >(
   contactInboxes: readonly TContactInbox[] | null | undefined,
 ): TContactInbox | undefined => {
