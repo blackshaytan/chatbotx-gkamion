@@ -389,6 +389,34 @@ describe("encodeStoredRecord / decodeStoredRecord", () => {
     expect(decodeStoredRecord(mutated).kind).toBe("invalid")
   })
 
+  test("rejects missing payload field", () => {
+    const encoded = encodedRecord([])
+    const { payload: _p, ...mutated } = encoded
+    expect(decodeStoredRecord(mutated).kind).toBe("invalid")
+  })
+
+  test("accepts explicit null payload", () => {
+    const r = storedRecord([])
+    ;(r as { payload: unknown }).payload = null
+    const decoded = decodeStoredRecord(r)
+    expect(decoded.kind).toBe("ok")
+    if (decoded.kind !== "ok") {
+      return
+    }
+    expect(decoded.record.payload).toBeNull()
+  })
+
+  test.each([
+    ["empty", [] as number[]],
+    ["nonempty", [1] as number[]],
+  ])("rejects %s Array-subclass payload", (_, arr) => {
+    class TestArray extends Array<number> {}
+    Object.setPrototypeOf(arr, TestArray.prototype)
+    const r = storedRecord([])
+    ;(r as { payload: unknown }).payload = arr
+    expect(decodeStoredRecord(r).kind).toBe("invalid")
+  })
+
   test("rejects coverage mismatch", () => {
     const encoded = {
       ...encodedRecord([a, b]),

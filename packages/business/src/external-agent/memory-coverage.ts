@@ -187,6 +187,9 @@ const cloneJson = (value: unknown, seen: WeakSet<object>): JsonValue => {
         return null
       }
       if (Array.isArray(value)) {
+        if (Object.getPrototypeOf(value) !== Array.prototype) {
+          fail(R.NON_JSON_VALUE)
+        }
         if (seen.has(value)) {
           fail(R.CYCLE_DETECTED)
         }
@@ -704,6 +707,9 @@ export const decodeStoredRecord = (
       return { kind: "invalid", reason: R.MISSING_COVERAGE }
     }
     const coverage = validateCoverage(candidate.coverage, coveredManifest)
+    if (!Object.hasOwn(candidate, "payload")) {
+      return { kind: "invalid", reason: R.INVALID_PAYLOAD }
+    }
     return {
       kind: "ok",
       record: {
