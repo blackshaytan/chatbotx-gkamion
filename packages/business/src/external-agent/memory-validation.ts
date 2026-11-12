@@ -595,7 +595,11 @@ export const parseMemoryPayload = (
   return { kind: "ok", payload }
 }
 
-export const prepareMemorySources = (
+type PrepareMemorySourcesInternalResult =
+  | { kind: "ok"; sources: PreparedMemorySource[]; hasScopeMismatch: boolean }
+  | { kind: "reject"; reason: ValidationFailCode }
+
+const prepareMemorySourcesInternal = (
   input: {
     sourceEvidence: readonly DialogMemoryMessageDto[]
     scope: DialogMemoryScope
@@ -603,9 +607,7 @@ export const prepareMemorySources = (
     signal?: AbortSignal
   },
   options?: MemoryValidationOptions,
-):
-  | { kind: "ok"; sources: readonly PreparedMemorySource[] }
-  | { kind: "reject"; reason: ValidationFailCode } => {
+): PrepareMemorySourcesInternalResult => {
   const limits = resolveLimits(options?.limits)
   const nowMs = options?.nowMs ?? Date.now
   const { sourceEvidence, scope, deadlineAtMs, signal } = input
@@ -634,6 +636,7 @@ export const prepareMemorySources = (
   const seenRefs = new Set<string>()
   const sources: PreparedMemorySource[] = []
   let projectedBytes = 0
+  let hasScopeMismatch = false
 
   for (const dto of sourceEvidence) {
     const loopCheck = checkClock()
@@ -663,7 +666,7 @@ export const prepareMemorySources = (
       dto.workspaceId !== scope.workspaceId ||
       dto.conversationId !== scope.conversationId
     ) {
-      return { kind: "reject", reason: "scope_mismatch" }
+      hasScopeMismatch = true
     }
 
     const attribution = deriveAttribution(dto)
@@ -693,7 +696,7 @@ export const prepareMemorySources = (
         attachment.messageId !== dto.id ||
         attachment.messageCreatedAtMicros !== dto.createdAtMicros
       ) {
-        return { kind: "reject", reason: "scope_mismatch" }
+        hasScopeMismatch = true
       }
 
       attachments.push({
@@ -751,7 +754,28 @@ export const prepareMemorySources = (
     return { kind: "reject", reason: finalCheck }
   }
 
-  return { kind: "ok", sources }
+  return { kind: "ok", sources, hasScopeMismatch }
+}
+
+export const prepareMemorySources = (
+  input: {
+    sourceEvidence: readonly DialogMemoryMessageDto[]
+    scope: DialogMemoryScope
+    deadlineAtMs: number
+    signal?: AbortSignal
+  },
+  options?: MemoryValidationOptions,
+):
+  | { kind: "ok"; sources: readonly PreparedMemorySource[] }
+  | { kind: "reject"; reason: ValidationFailCode } => {
+  const internal = prepareMemorySourcesInternal(input, options)
+  if (internal.kind === "reject") {
+    return internal
+  }
+  if (internal.hasScopeMismatch) {
+    return { kind: "reject", reason: "scope_mismatch" }
+  }
+  return { kind: "ok", sources: internal.sources }
 }
 
 export const validateMemoryPayload = (
@@ -786,7 +810,7 @@ export const validateMemoryPayload = (
     return { kind: "reject", reason: afterParse }
   }
 
-  const prepared = prepareMemorySources(
+  const prepared = prepareMemorySourcesInternal(
     { sourceEvidence, scope, deadlineAtMs, signal },
     { limits, nowMs },
   )
@@ -804,6 +828,7 @@ export const validateMemoryPayload = (
     return { kind: "reject", reason: afterPrepare }
   }
 
+  // Stage 3: existence and eligibility for every quote.
   for (const fact of parsed.payload.facts) {
     for (const quote of fact.quotes) {
       const loopCheck = checkClock()
@@ -818,8 +843,59 @@ export const validateMemoryPayload = (
       if (!source.eligible) {
         return { kind: "reject", reason: "ref_ineligible" }
       }
+    }
+  }
+
+  const afterRefs = checkClock()
+  if (afterRefs) {
+    return { kind: "reject", reason: afterRefs }
+  }
+
+  // Stage 4: scope guard (covers unreferenced and referenced
+  // sources/attachments, including evidence rows not cited by the candidate).
+  if (prepared.hasScopeMismatch) {
+    return { kind: "reject", reason: "scope_mismatch" }
+  }
+
+  const afterScope = checkClock()
+  if (afterScope) {
+    return { kind: "reject", reason: afterScope }
+  }
+
+  // Stage 5: attribution role match for every quote.
+  for (const fact of parsed.payload.facts) {
+    for (const quote of fact.quotes) {
+      const loopCheck = checkClock()
+      if (loopCheck) {
+        return { kind: "reject", reason: loopCheck }
+      }
+
+      const source = sourceMap.get(refKey(quote.ref))
+      if (!source) {
+        return { kind: "reject", reason: "ref_not_found" }
+      }
       if (source.attribution !== fact.attribution) {
         return { kind: "reject", reason: "role_forged" }
+      }
+    }
+  }
+
+  const afterRole = checkClock()
+  if (afterRole) {
+    return { kind: "reject", reason: afterRole }
+  }
+
+  // Stage 6: literal quote text match.
+  for (const fact of parsed.payload.facts) {
+    for (const quote of fact.quotes) {
+      const loopCheck = checkClock()
+      if (loopCheck) {
+        return { kind: "reject", reason: loopCheck }
+      }
+
+      const source = sourceMap.get(refKey(quote.ref))
+      if (!source) {
+        return { kind: "reject", reason: "ref_not_found" }
       }
       if (source.text === null || !source.text.includes(quote.text)) {
         return { kind: "reject", reason: "quote_mismatch" }

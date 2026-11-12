@@ -1248,3 +1248,143 @@ describe("T07-A JSON-encoded candidate byte budget", () => {
     expect(result.kind).toBe("ok")
   })
 })
+
+describe("T07-A stage order precedence", () => {
+  const q = (m: DialogMemoryMessageDto) => ({
+    ref: { id: m.id, createdAtMicros: m.createdAtMicros },
+    text: m.text ?? "",
+  })
+
+  const quotesPayload = (
+    attribution: AttributionKind,
+    entries: Array<{
+      ref: { id: string; createdAtMicros: string }
+      text: string
+    }>,
+  ) => ({
+    version: 1 as const,
+    facts: [{ attribution, quotes: entries }],
+    narrative: { text: "", nonAuthoritative: true as const },
+    openQuestions: [],
+  })
+
+  const runStage = async (
+    payload: unknown,
+    sources: DialogMemoryMessageDto[],
+  ) =>
+    makeValidator().validate({
+      candidatePayload: payload,
+      sourceEvidence: sources,
+      scope: { ...scope },
+      config: {
+        schemaVersion: 1,
+        promptVersion: "synthetic",
+        provider: "synthetic",
+        model: "synthetic",
+      },
+      deadlineAtMs: 2000,
+    })
+
+  const foreignAttachment = (m: DialogMemoryMessageDto) => ({
+    id: "31",
+    createdAtMicros: stamp,
+    updatedAtMicros: stamp,
+    workspaceId: "9",
+    conversationId: m.conversationId,
+    messageId: m.id,
+    messageCreatedAtMicros: m.createdAtMicros,
+    fileType: "image",
+    sourceId: null,
+    mimeType: "image/png",
+    width: null,
+    height: null,
+    size: 1,
+    thumbnailPath: null,
+    originPath: "synthetic-local",
+    name: null,
+  })
+
+  test("missing later ref wins over earlier forged role", async () => {
+    const a = baseDto()
+    const b = baseDto()
+    b.id = "2"
+    expectReject(
+      await runStage(quotesPayload("staff", [q(a), q(b)]), [a]),
+      "ref_not_found",
+    )
+  })
+
+  test("missing later ref wins over earlier quote mismatch", async () => {
+    const a = baseDto()
+    const b = baseDto()
+    b.id = "2"
+    const bad = q(a)
+    bad.text = "Not in source"
+    expectReject(
+      await runStage(quotesPayload("contact", [bad, q(b)]), [a]),
+      "ref_not_found",
+    )
+  })
+
+  test("later role failure wins over earlier quote mismatch", async () => {
+    const a = baseDto()
+    const b = baseDto()
+    b.id = "2"
+    b.senderType = "user"
+    const bad = q(a)
+    bad.text = "Not in source"
+    expectReject(
+      await runStage(quotesPayload("contact", [bad, q(b)]), [a, b]),
+      "role_forged",
+    )
+  })
+
+  test("missing candidate ref wins over foreign source scope", async () => {
+    const a = baseDto()
+    const b = baseDto()
+    a.workspaceId = "9"
+    b.id = "2"
+    expectReject(
+      await runStage(quotesPayload("contact", [q(b)]), [a]),
+      "ref_not_found",
+    )
+  })
+
+  test("late evidence duplicate wins over early foreign scope", () => {
+    const a = baseDto()
+    const b = baseDto()
+    a.workspaceId = "9"
+    const result = prepareMemorySources(
+      { sourceEvidence: [a, b], scope: { ...scope }, deadlineAtMs: 2000 },
+      { nowMs: () => 1000 },
+    )
+    expectReject(result, "ref_ambiguous")
+  })
+
+  test("missing candidate ref wins over foreign attachment parent", async () => {
+    const a = baseDto()
+    const b = baseDto()
+    b.id = "2"
+    const attachment = foreignAttachment(
+      a,
+    ) as unknown as DialogMemoryMessageDto["attachments"][number]
+    a.attachments = [attachment]
+    expectReject(
+      await runStage(quotesPayload("contact", [q(b)]), [a]),
+      "ref_not_found",
+    )
+  })
+
+  test("all-scope guard still rejects unrelated foreign source", async () => {
+    const a = baseDto()
+    const b = baseDto()
+    b.id = "2"
+    b.workspaceId = "9"
+    expectReject(await runStage(basePayload(a), [a, b]), "scope_mismatch")
+  })
+
+  test("valid input control remains accepted", async () => {
+    const result = await runStage(basePayload(), [baseDto()])
+    expect(result.kind).toBe("accept")
+  })
+})
