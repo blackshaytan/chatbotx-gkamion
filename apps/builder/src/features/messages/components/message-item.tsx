@@ -55,6 +55,7 @@ import { useState } from "react"
 import type { AttachmentResource } from "@/features/attachments/schema/resource"
 import {
   attachmentClickTarget,
+  attachmentDownloadName,
   useAttachmentSource,
 } from "@/features/attachments/utils"
 import { ExternalAgentActivityDivider } from "@/features/external-agent/components/external-agent-activity"
@@ -551,8 +552,7 @@ const ImageAttachmentLink = (props: {
 const RenderImageGridItem = (props: { attachment: AttachmentResource }) => {
   const { attachment } = props
   const { url: attachmentUrl, onError } = useAttachmentSource(attachment)
-  const attachmentLabel =
-    attachment.name || attachment.originPath || "Attachment"
+  const attachmentLabel = attachmentDownloadName(attachment)
 
   if (!attachmentUrl) {
     // A chat bubble sizes to its own content, so with nothing else to size
@@ -647,8 +647,7 @@ const RenderAttachmentItem = (props: { attachment: AttachmentResource }) => {
     fallbackUrl,
     retryUrl,
   } = useAttachmentSource(attachment)
-  const attachmentLabel =
-    attachment.name || attachment.originPath || "Attachment"
+  const attachmentLabel = attachmentDownloadName(attachment)
 
   if (!attachmentUrl) {
     return (

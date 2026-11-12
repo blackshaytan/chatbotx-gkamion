@@ -3,6 +3,7 @@ import { isPrivateStorageUrl } from "@chatbotx.io/business"
 import { resolveFreshMediaUrl } from "@chatbotx.io/channel-registry/media-hydration"
 import { createMessageRepository } from "@chatbotx.io/database/repositories"
 import { uploader } from "@chatbotx.io/filesystem"
+import { filenameWithMimeExtension } from "@chatbotx.io/utils/file-name"
 import { type NextRequest, NextResponse } from "next/server"
 import { httpLogger } from "@/lib/log"
 import {
@@ -25,11 +26,13 @@ const DOWNLOAD_PARAM = "download"
 const downloadFilename = (lookup: {
   name?: string | null
   originPath: string
+  mimeType?: string | null
 }): string => {
   const fromName = lookup.name?.trim()
   const fromPath = lookup.originPath.split("/").pop()?.trim()
   const raw = fromName || fromPath || "file"
-  return raw.replace(/[\r\n\\"]/g, "").slice(0, 180) || "file"
+  const cleaned = raw.replace(/[\r\n\\"]/g, "").slice(0, 180) || "file"
+  return filenameWithMimeExtension(cleaned, lookup.mimeType ?? "")
 }
 
 const contentDisposition = (download: boolean, filename: string): string => {

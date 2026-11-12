@@ -475,6 +475,20 @@ describe("MessageItem attachment rendering — fallback on load failure", () => 
     expect(link?.getAttribute("target")).toBeNull()
   })
 
+  test("a photo stored without an extension downloads with one", () => {
+    const attachment = {
+      ...makeProxyAttachment("photo", "image", "image/webp"),
+      name: "1794487538263_default",
+    }
+    const el = renderComponent(
+      <MessageItem message={makeMessage({ attachments: [attachment] })} />,
+    )
+
+    expect(
+      el.querySelector("img")?.closest("a")?.getAttribute("download"),
+    ).toBe("1794487538263_default.webp")
+  })
+
   test("a public image still opens in a new tab", () => {
     const attachment = makeImageAttachment("img-1")
     const el = renderComponent(

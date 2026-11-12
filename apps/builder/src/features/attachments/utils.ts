@@ -1,6 +1,18 @@
+import { filenameWithMimeExtension } from "@chatbotx.io/utils/file-name"
 import { useState } from "react"
 import { useTenantSettings } from "@/features/tenant"
 import type { AttachmentResource } from "./schema/resource"
+
+/** Name used by the download attribute. Adds an extension the stored name lacks. */
+export const attachmentDownloadName = (attachment: {
+  name?: string | null
+  originPath?: string | null
+  mimeType?: string | null
+}): string =>
+  filenameWithMimeExtension(
+    attachment.name?.trim() || attachment.originPath?.trim() || "Attachment",
+    attachment.mimeType ?? "",
+  )
 
 export function useAttachmentUrl(
   attachment?: AttachmentResource | null,
