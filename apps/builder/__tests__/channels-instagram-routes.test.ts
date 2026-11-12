@@ -79,6 +79,9 @@ vi.mock("@chatbotx.io/business", () => ({
     findActiveByOwner: vi.fn(async () => undefined),
     create: mockWorkspaceCreate,
   },
+  workspaceMemberService: {
+    listByUserId: vi.fn(async () => []),
+  },
 }))
 
 vi.mock("@chatbotx.io/business/audit", () => ({}))
