@@ -239,14 +239,14 @@ const cloneJson = (value: unknown, seen: WeakSet<object>): JsonValue => {
       for (const key of Object.getOwnPropertyNames(value)) {
         const descriptor = Object.getOwnPropertyDescriptor(value, key)
         if (!descriptor) {
-          fail(R.NON_JSON_VALUE)
+          return fail(R.NON_JSON_VALUE)
         }
         if (
           !(descriptor.enumerable && "value" in descriptor) ||
           descriptor.get ||
           descriptor.set
         ) {
-          fail(R.NON_JSON_VALUE)
+          return fail(R.NON_JSON_VALUE)
         }
         Object.defineProperty(out, key, {
           value: cloneJson(descriptor.value, seen),
@@ -259,7 +259,7 @@ const cloneJson = (value: unknown, seen: WeakSet<object>): JsonValue => {
       return out
     }
     default:
-      fail(R.NON_JSON_VALUE)
+      return fail(R.NON_JSON_VALUE)
   }
 }
 
@@ -512,7 +512,7 @@ export const coverageRefOf = (
   }
   const last = manifest.at(-1)
   if (last === undefined) {
-    fail(R.MANIFEST_ORDER_VIOLATION)
+    return fail(R.MANIFEST_ORDER_VIOLATION)
   }
   return { id: last.id, createdAtMicros: last.createdAtMicros }
 }
@@ -560,13 +560,14 @@ const validateConfig = (value: unknown): DialogMemoryConfig => {
     model?: unknown
     provider?: unknown
   }
+  const schemaVersion = candidate.schemaVersion
   if (
-    typeof candidate.schemaVersion !== "number" ||
-    !Number.isSafeInteger(candidate.schemaVersion) ||
-    candidate.schemaVersion < 1 ||
-    candidate.schemaVersion > PG_INTEGER_MAX
+    typeof schemaVersion !== "number" ||
+    !Number.isSafeInteger(schemaVersion) ||
+    schemaVersion < 1 ||
+    schemaVersion > PG_INTEGER_MAX
   ) {
-    fail(R.INVALID_CONFIG)
+    return fail(R.INVALID_CONFIG)
   }
   if (
     !(
@@ -578,7 +579,7 @@ const validateConfig = (value: unknown): DialogMemoryConfig => {
     fail(R.INVALID_CONFIG)
   }
   return {
-    schemaVersion: candidate.schemaVersion,
+    schemaVersion,
     promptVersion: String(candidate.promptVersion),
     model: String(candidate.model),
     provider: String(candidate.provider),
@@ -642,7 +643,7 @@ const validateCoverage = (
   const candidate = value as { id?: unknown; createdAtMicros?: unknown }
   const last = manifest.at(-1)
   if (last === undefined) {
-    fail(R.MANIFEST_ORDER_VIOLATION)
+    return fail(R.MANIFEST_ORDER_VIOLATION)
   }
   if (
     candidate.id !== last.id ||
@@ -744,7 +745,7 @@ export const encodeStoredRecord = (
 ): unknown => {
   const decoded = decodeStoredRecord(record)
   if (decoded.kind !== "ok") {
-    fail(decoded.reason)
+    return fail(decoded.reason)
   }
   return decoded.record
 }
