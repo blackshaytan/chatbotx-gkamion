@@ -193,6 +193,46 @@ describe("messageFingerprint", () => {
     )
     expect(JSON.stringify(withAttachments)).toBe(before)
   })
+
+  test("singleton attachment with invalid id is rejected", () => {
+    const bad = {
+      ...a,
+      attachments: [{ ...baseAttachment("60", a), id: "01" }],
+    }
+    expect(() => messageFingerprint(bad)).toThrow()
+  })
+
+  test("singleton attachment with invalid calendar timestamp is rejected", () => {
+    const bad = {
+      ...a,
+      attachments: [
+        {
+          ...baseAttachment("60", a),
+          createdAtMicros: "2026-02-30T00:00:00.000001Z",
+        },
+      ],
+    }
+    expect(() => messageFingerprint(bad)).toThrow()
+  })
+
+  test("rejects direct message with invalid own id", () => {
+    expect(() => messageFingerprint({ ...a, id: "01" })).toThrow()
+  })
+
+  test("valid singleton attachment stays stable without input mutation", () => {
+    const withAttachment = {
+      ...a,
+      attachments: [baseAttachment("60", a)],
+    }
+    const before = JSON.stringify(withAttachment)
+    const first = messageFingerprint(withAttachment)
+    expect(first).toMatch(HEX64_RE)
+    expect(messageFingerprint(withAttachment)).toBe(first)
+    expect(JSON.stringify(withAttachment)).toBe(before)
+    expect(attachmentFingerprint(withAttachment.attachments[0])).toMatch(
+      HEX64_RE,
+    )
+  })
 })
 
 describe("attachmentFingerprint", () => {
@@ -201,6 +241,21 @@ describe("attachmentFingerprint", () => {
     const att = baseAttachment("60", a)
     const updated = { ...att, updatedAtMicros: "2026-11-12T00:00:00.000001Z" }
     expect(attachmentFingerprint(att)).toBe(attachmentFingerprint(updated))
+  })
+
+  test("rejects direct attachment with invalid id", () => {
+    const a = baseMessage()
+    const att = { ...baseAttachment("60", a), id: "01" }
+    expect(() => attachmentFingerprint(att)).toThrow()
+  })
+
+  test("rejects direct attachment with invalid calendar timestamp", () => {
+    const a = baseMessage()
+    const att = {
+      ...baseAttachment("60", a),
+      createdAtMicros: "2026-02-30T00:00:00.000001Z",
+    }
+    expect(() => attachmentFingerprint(att)).toThrow()
   })
 })
 
@@ -237,6 +292,11 @@ describe("buildManifest / buildFingerprintedRef / coverageRefOf", () => {
 
   test("rejects duplicate refs", () => {
     expect(() => buildManifest([a, a])).toThrow()
+  })
+
+  test("rejects message carrying invalid attachment ref", () => {
+    const bad = { ...a, attachments: [baseAttachment("01", a)] }
+    expect(() => buildManifest([bad])).toThrow()
   })
 })
 

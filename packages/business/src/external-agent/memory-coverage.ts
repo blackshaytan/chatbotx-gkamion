@@ -337,6 +337,7 @@ const fingerprintCanonical = (value: JsonValue): string => {
 
 const attachmentCanonical = (attachment: unknown): JsonValue => {
   const cloned = asJsonObject(cloneJson(attachment, new WeakSet()))
+  validateMessageRef({ id: cloned.id, createdAtMicros: cloned.createdAtMicros })
   return {
     id: cloned.id,
     createdAtMicros: cloned.createdAtMicros,
@@ -356,7 +357,10 @@ const attachmentCanonical = (attachment: unknown): JsonValue => {
   }
 }
 
-const validateMessageRef = (ref: MessageRef): void => {
+const validateMessageRef = (ref: {
+  id: unknown
+  createdAtMicros: unknown
+}): void => {
   if (
     !(
       isCanonicalPositiveBigint(ref.id) &&
@@ -387,6 +391,7 @@ export const attachmentFingerprint = (
 
 export const messageFingerprint = (message: DialogMemoryMessageDto): string => {
   const cloned = asJsonObject(cloneJson(message, new WeakSet()))
+  validateMessageRef({ id: cloned.id, createdAtMicros: cloned.createdAtMicros })
   const attachments = cloned.attachments
   if (!Array.isArray(attachments)) {
     fail(R.NON_JSON_VALUE)
@@ -703,7 +708,7 @@ export const decodeStoredRecord = (
     const scope = validateScope(candidate.scope)
     const config = validateConfig(candidate.config)
     const coveredManifest = validateCoveredManifest(candidate.coveredManifest)
-    if (!("coverage" in candidate)) {
+    if (!Object.hasOwn(candidate, "coverage")) {
       return { kind: "invalid", reason: R.MISSING_COVERAGE }
     }
     const coverage = validateCoverage(candidate.coverage, coveredManifest)
