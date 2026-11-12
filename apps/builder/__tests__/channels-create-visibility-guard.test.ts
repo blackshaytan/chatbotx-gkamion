@@ -22,6 +22,9 @@ vi.mock("@/lib/auth/require-workspace-permission", () => ({
 
 vi.mock("@/lib/auth/utils", () => ({
   getCurrentUserId: vi.fn(async () => "user-1"),
+  getCurrentUserAndAllLinkedWorkspaces: vi.fn(async () => ({
+    allWorkspaceMembers: [],
+  })),
 }))
 
 vi.mock("next/navigation", () => ({

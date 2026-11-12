@@ -392,6 +392,7 @@ describe("handleCreateWebchatMessage", () => {
       contactLastReadAt: messageInput.createdAt,
       lastActivityAt: messageInput.createdAt,
       contactRepliedAt: messageInput.createdAt,
+      inboxActivityAt: messageInput.createdAt,
     })
   })
 

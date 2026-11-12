@@ -44,6 +44,15 @@ vi.mock("@chatbotx.io/database/client", () => ({
 }))
 
 vi.mock("@chatbotx.io/database/schema", () => ({
+  taskModel: {
+    id: "task.id",
+    workspaceId: "task.workspaceId",
+    title: "task.title",
+    threadId: "task.threadId",
+    assigneeUserId: "task.assigneeUserId",
+    assigneeTeamId: "task.assigneeTeamId",
+    createdByUserId: "task.createdByUserId",
+  },
   contactInboxModel: { id: "ci.id", contactId: "ci.contactId" },
   contactModel: {
     id: "contact.id",

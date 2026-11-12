@@ -33,7 +33,7 @@ const receiveEnabledField = z
   .boolean()
   .optional()
   .describe(
-    "When true, new mail in this mailbox is delivered to the ChatbotX inbox. Defaults to true for Gmail, Outlook, Yahoo, Zoho, and a custom server. Ignored for send-only providers (SendGrid, Mailgun, Amazon SES, Postmark, Brevo). Mail already in the mailbox is not imported. Gmail and Outlook need an app password.",
+    "When true, new mail in this mailbox is delivered to the inbox. Defaults to true for Gmail, Outlook, Yahoo, Zoho, and a custom server. Ignored for send-only providers (SendGrid, Mailgun, Amazon SES, Postmark, Brevo). Mail already in the mailbox is not imported. Gmail and Outlook need an app password.",
   )
 
 const fromAddressRegex = /<([^>]+)>$/

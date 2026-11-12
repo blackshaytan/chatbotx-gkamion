@@ -1,8 +1,5 @@
 import { describe, expect, test } from "vitest"
-import {
-  isChatbotXOutgoing,
-  isSameZzapHistoryEcho,
-} from "../zzap-history-echo"
+import { isChatbotXOutgoing, isSameZzapHistoryEcho } from "../zzap-history-echo"
 
 describe("zzap history echo", () => {
   test("treats a ruble sign and dropped blank lines as the same send", () => {
@@ -28,9 +25,7 @@ describe("zzap history echo", () => {
   })
 
   test("recognises ChatbotX sends and ignores an imported echo", () => {
-    expect(isChatbotXOutgoing({ senderType: "bot", senderId: null })).toBe(
-      true,
-    )
+    expect(isChatbotXOutgoing({ senderType: "bot", senderId: null })).toBe(true)
     expect(
       isChatbotXOutgoing({ senderType: "user", senderId: "agent-1" }),
     ).toBe(true)

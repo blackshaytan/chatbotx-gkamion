@@ -3,9 +3,7 @@
  * with "?" and drops blank lines. The poll then hashes that altered text, so
  * the echo's sourceId never matches the row ChatbotX stored at send time.
  */
-export const zzapHistoryEchoText = (
-  text: string | null | undefined,
-): string =>
+export const zzapHistoryEchoText = (text: string | null | undefined): string =>
   (text ?? "")
     .replaceAll("\r\n", "\n")
     .replaceAll("₽", "?")
