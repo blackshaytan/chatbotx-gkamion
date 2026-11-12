@@ -163,7 +163,9 @@ export const createDromClient = (auth: DromAuthValue): DromClient => {
       const { response, bytes } = await send(url, {
         method: "get",
         headers: {
-          Accept: "image/avif,image/webp,image/*,*/*;q=0.8",
+          // JPEG/PNG first. Preferring WebP stored extensionless photos that
+          // download as an unknown format and that vision models often reject.
+          Accept: "image/jpeg,image/png,image/gif,image/*;q=0.8",
           Referer: `${DROM_BASE_URL}/personal/messaging-modal`,
         },
       })

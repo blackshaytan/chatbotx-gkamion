@@ -147,6 +147,28 @@ describe("media", () => {
     ).rejects.toThrow("not allowed")
   })
 
+  test("downloadDromImage names an extensionless WebP from its bytes", async () => {
+    const webp = new Uint8Array([
+      0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50,
+    ])
+    server.use(
+      http.get(
+        "https://baza.drom.ru/p-img/drom/1_default",
+        () =>
+          new HttpResponse(webp, {
+            headers: { "Content-Type": "application/octet-stream" },
+          }),
+      ),
+    )
+    await expect(
+      downloadDromImage(dromAuth, "https://baza.drom.ru/p-img/drom/1_default"),
+    ).resolves.toEqual({
+      bytes: webp,
+      mime: "image/webp",
+      filename: "1_default.webp",
+    })
+  })
+
   test("downloadDromImage names the file after the path", async () => {
     server.use(
       http.get(
@@ -165,7 +187,7 @@ describe("media", () => {
     ).resolves.toEqual({
       bytes: new Uint8Array([1, 2]),
       mime: "image/jpeg",
-      filename: "1_default",
+      filename: "1_default.jpg",
     })
   })
 })

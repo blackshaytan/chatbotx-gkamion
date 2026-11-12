@@ -9,6 +9,7 @@ import {
   type ReceivedMessageResult,
 } from "@chatbotx.io/sdk"
 import { createId } from "@chatbotx.io/utils"
+import { extensionForMimeType } from "@chatbotx.io/utils/file-name"
 import { downloadDromImage } from "../../apis/media"
 import { DromException, DromSessionExpiredException } from "../../exception"
 import { logger } from "../../lib/logger"
@@ -26,7 +27,8 @@ const storeImage = async (
     ctx.auth,
     image.origUrl,
   )
-  const originPath = `${getMediaStoragePrefix(ctx)}/${createId()}`
+  const extension = extensionForMimeType(mime)
+  const originPath = `${getMediaStoragePrefix(ctx)}/${createId()}${extension ? `.${extension}` : ""}`
   await ctx.uploader?.putObject(originPath, Buffer.from(bytes), {
     ACL: "public-read",
     ContentType: mime,

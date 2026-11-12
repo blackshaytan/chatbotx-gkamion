@@ -244,6 +244,33 @@ describe("attachment media proxy", () => {
     expect(await response.text()).toBe("jpeg-bytes")
   })
 
+  test("download=1 adds an extension when the stored photo name has none", async () => {
+    mocks.findAttachmentById.mockResolvedValue({
+      ...attachment("public/drom/photo"),
+      mimeType: "image/webp",
+      name: "1794487538263_default",
+    })
+    mocks.getPresignedDownload.mockResolvedValue(
+      "http://127.0.0.1:9010/chatbotx/public/drom/photo",
+    )
+    mocks.getObjectStream.mockResolvedValue({
+      stream: Readable.from(Buffer.from("webp-bytes")),
+      contentLength: 10,
+    })
+
+    const response = await getAttachment(
+      new Request(
+        "http://localhost/media/attachment/signed-token?download=1",
+      ) as never,
+      tokenContext(),
+    )
+
+    expect(response.headers.get("content-type")).toBe("image/webp")
+    expect(response.headers.get("content-disposition")).toContain(
+      "1794487538263_default.webp",
+    )
+  })
+
   test("download=1 saves the stored photo instead of showing it", async () => {
     mocks.findAttachmentById.mockResolvedValue({
       ...attachment("public/zzap/photo"),

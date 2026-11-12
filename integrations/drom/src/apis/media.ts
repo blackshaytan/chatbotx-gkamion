@@ -1,7 +1,40 @@
+import { filenameWithMimeExtension } from "@chatbotx.io/utils/file-name"
 import { DromAPIException, DromException } from "../exception"
 import { createDromClient } from "../lib/http-client"
 import { isDromImageUrl } from "../parse"
 import type { DromAuthValue } from "../schema"
+
+const JPEG_MAGIC = [0xff, 0xd8, 0xff] as const
+const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47] as const
+const GIF_MAGIC = [0x47, 0x49, 0x46] as const
+const WEBP_RIFF = [0x52, 0x49, 0x46, 0x46] as const
+const WEBP_TAG = [0x57, 0x45, 0x42, 0x50] as const
+
+const startsWith = (bytes: Uint8Array, magic: readonly number[]): boolean =>
+  bytes.length >= magic.length &&
+  magic.every((byte, index) => bytes[index] === byte)
+
+/** Magic bytes win over a missing or generic Content-Type. */
+const resolveImageMime = (bytes: Uint8Array, declared: string): string => {
+  if (startsWith(bytes, JPEG_MAGIC)) {
+    return "image/jpeg"
+  }
+  if (startsWith(bytes, PNG_MAGIC)) {
+    return "image/png"
+  }
+  if (startsWith(bytes, GIF_MAGIC)) {
+    return "image/gif"
+  }
+  if (
+    startsWith(bytes, WEBP_RIFF) &&
+    bytes.length >= 12 &&
+    WEBP_TAG.every((byte, index) => bytes[index + 8] === byte)
+  ) {
+    return "image/webp"
+  }
+  const mime = declared.split(";")[0]?.trim().toLowerCase()
+  return mime || "application/octet-stream"
+}
 
 type UploadItem = { id?: unknown }
 type UploadResponse = UploadItem & { items?: unknown; error?: unknown }
@@ -52,7 +85,11 @@ export const downloadDromImage = async (
       "urlNotAllowed",
     )
   }
-  const { bytes, mime } = await createDromClient(auth).getBinary(url)
-  const filename = new URL(url).pathname.split("/").pop() || "drom_photo"
-  return { bytes, mime, filename }
+  const downloaded = await createDromClient(auth).getBinary(url)
+  const mime = resolveImageMime(downloaded.bytes, downloaded.mime)
+  const filename = filenameWithMimeExtension(
+    new URL(url).pathname.split("/").pop() || "drom_photo",
+    mime,
+  )
+  return { bytes: downloaded.bytes, mime, filename }
 }
