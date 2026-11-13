@@ -1,10 +1,23 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
-const mocks = vi.hoisted(() => ({ find: vi.fn(), fields: vi.fn() }))
+const mocks = vi.hoisted(() => ({
+  find: vi.fn(),
+  fields: vi.fn(),
+  findLinkedCustomerId: vi.fn(),
+  findByKey: vi.fn(),
+  setValues: vi.fn(),
+}))
 vi.mock("@chatbotx.io/business", () => ({
   contactService: { findByIdOrFail: mocks.find },
-  contactCustomFieldService: { listWithDefinitions: mocks.fields },
+  contactCustomFieldService: {
+    listWithDefinitions: mocks.fields,
+    setValues: mocks.setValues,
+  },
+  customFieldService: { findByKey: mocks.findByKey },
+  externalCrmService: { findLinkedCustomerId: mocks.findLinkedCustomerId },
+  GKAMION_CUSTOMER_ID_FIELD: "gkamion_customer_id",
+  GKAMION_VERIFIED_FIELD: "gkamion_verified",
   readGkamionContactFields: (fields: { name: string; value: string }[]) => {
     const values = new Map(fields.map((field) => [field.name, field.value]))
     return {
@@ -35,6 +48,11 @@ describe("verified gKamion cabinet links", () => {
     vi.stubEnv("GKAMION_CABINET_URL", "https://admin.example.test")
     mocks.find.mockResolvedValue({ id: "2", email: null, phoneNumber: null })
     mocks.fields.mockResolvedValue([])
+    mocks.findLinkedCustomerId.mockResolvedValue(null)
+    mocks.setValues.mockResolvedValue(undefined)
+    mocks.findByKey.mockImplementation(async ({ key }: { key: string }) => ({
+      id: `field-${key}`,
+    }))
   })
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -137,6 +155,52 @@ describe("verified gKamion cabinet links", () => {
       reason: "missing_identifiers",
     })
     expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  test("opens the customer stored on the contact order and ignores a conflicting email", async () => {
+    mocks.find.mockResolvedValue({
+      id: "2",
+      email: "cont@tkforsage.ru",
+      phoneNumber: "+84169876366",
+    })
+    mocks.findLinkedCustomerId.mockResolvedValue("6945")
+    const fetcher = vi
+      .fn()
+      .mockResolvedValue(response({ customer: { id: 6945 } }))
+    vi.stubGlobal("fetch", fetcher)
+    expect(await resolveGkamionCabinetLinkForContact(input)).toEqual({
+      status: "ok",
+      customerId: "6945",
+      url: "https://admin.example.test/customers/6945",
+    })
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(String(fetcher.mock.calls[0]?.[0])).toBe(
+      "https://admin.example.test/api/v3/customers/6945",
+    )
+    expect(mocks.setValues).toHaveBeenCalledWith({
+      workspaceId: "1",
+      contactId: "2",
+      fields: [
+        { customFieldId: "field-gkamion_customer_id", value: "6945" },
+        { customFieldId: "field-gkamion_verified", value: "order_history" },
+      ],
+    })
+  })
+
+  test("a missing stored customer does not fall back to another email", async () => {
+    mocks.find.mockResolvedValue({
+      id: "2",
+      email: "cont@tkforsage.ru",
+      phoneNumber: "+84169876366",
+    })
+    mocks.findLinkedCustomerId.mockResolvedValue("6945")
+    const fetcher = vi.fn().mockResolvedValue({ ok: false, status: 404 })
+    vi.stubGlobal("fetch", fetcher)
+    expect(await resolveGkamionCabinetLinkForContact(input)).toEqual({
+      status: "not_found",
+    })
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(mocks.setValues).not.toHaveBeenCalled()
   })
 
   test("unbound email fallback remains exact", async () => {

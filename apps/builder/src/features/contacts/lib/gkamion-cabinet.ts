@@ -2,6 +2,10 @@ import {
   type ContactAccessScope,
   contactCustomFieldService,
   contactService,
+  customFieldService,
+  externalCrmService,
+  GKAMION_CUSTOMER_ID_FIELD,
+  GKAMION_VERIFIED_FIELD,
   readGkamionContactFields,
 } from "@chatbotx.io/business"
 import { getChildLogger } from "@chatbotx.io/logger"
@@ -170,8 +174,72 @@ export const gkamionAdminGet = async (
   return await response.json()
 }
 
+const ORDER_HISTORY_VERIFIED = "order_history"
+
 /**
- * Resolve a verified binding first; otherwise require a unique exact phone/email match.
+ * Store the customer id already proven by a gKamion order so the cabinet and
+ * the agent read the same link. Unchanged values are not rewritten.
+ */
+export const rememberGkamionOrderHistoryLink = async (input: {
+  workspaceId: string
+  contactId: string
+  customerId: string
+}): Promise<void> => {
+  try {
+    const [idField, verifiedField] = await Promise.all([
+      customFieldService.findByKey({
+        workspaceId: input.workspaceId,
+        key: GKAMION_CUSTOMER_ID_FIELD,
+      }),
+      customFieldService.findByKey({
+        workspaceId: input.workspaceId,
+        key: GKAMION_VERIFIED_FIELD,
+      }),
+    ])
+    if (!(idField && verifiedField)) {
+      return
+    }
+    await contactCustomFieldService.setValues({
+      workspaceId: input.workspaceId,
+      contactId: input.contactId,
+      fields: [
+        { customFieldId: idField.id, value: input.customerId },
+        { customFieldId: verifiedField.id, value: ORDER_HISTORY_VERIFIED },
+      ],
+    })
+  } catch (err) {
+    log.error(
+      { err, contactId: input.contactId, workspaceId: input.workspaceId },
+      "Failed to store gKamion cabinet link",
+    )
+  }
+}
+
+const openLinkedCustomer = async (
+  config: GkamionAdminConfig,
+  customerId: string,
+): Promise<GkamionCabinetLinkResult> => {
+  try {
+    const body = await gkamionAdminGet(`/customers/${customerId}`)
+    if (!matchesGkamionCustomerId(body, customerId)) {
+      return { status: "not_found" }
+    }
+    return {
+      status: "ok",
+      customerId,
+      url: buildCabinetUrl(config.cabinetBaseUrl, customerId),
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("HTTP 404")) {
+      return { status: "not_found" }
+    }
+    throw err
+  }
+}
+
+/**
+ * Resolve a verified binding first, then the customer already stored with the
+ * contact's orders, otherwise require a unique exact phone/email match.
  */
 export const resolveGkamionCabinetLinkForContact = async (input: {
   workspaceId: string
@@ -197,23 +265,27 @@ export const resolveGkamionCabinetLinkForContact = async (input: {
     if (!customerId) {
       return { status: "not_found" }
     }
-    try {
-      const body = await gkamionAdminGet(`/customers/${customerId}`)
-      if (!matchesGkamionCustomerId(body, customerId)) {
-        return { status: "not_found" }
-      }
-      return {
-        status: "ok",
-        customerId,
-        url: buildCabinetUrl(config.cabinetBaseUrl, customerId),
-      }
-    } catch (err) {
-      if (err instanceof Error && err.message.includes("HTTP 404")) {
-        return { status: "not_found" }
-      }
-      throw err
-    }
+    return await openLinkedCustomer(config, customerId)
   }
+
+  const linkedCustomerId = validGkamionCustomerId(
+    await externalCrmService.findLinkedCustomerId({
+      workspaceId: input.workspaceId,
+      contactId: input.contactId,
+    }),
+  )
+  if (linkedCustomerId) {
+    const linked = await openLinkedCustomer(config, linkedCustomerId)
+    if (linked.status === "ok") {
+      await rememberGkamionOrderHistoryLink({
+        workspaceId: input.workspaceId,
+        contactId: input.contactId,
+        customerId: linkedCustomerId,
+      })
+    }
+    return linked
+  }
+
   const email = contact.email?.trim() || null
   const phoneDigits = usableGkamionPhone(contact.phoneNumber)?.slice(1) ?? ""
 

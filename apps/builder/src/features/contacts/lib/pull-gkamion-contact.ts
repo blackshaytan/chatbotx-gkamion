@@ -12,6 +12,7 @@ import {
   gkamionAdminGet,
   isGkamionCabinetConfigured,
   pickBestCustomer,
+  rememberGkamionOrderHistoryLink,
   searchGkamionCustomers,
 } from "./gkamion-cabinet"
 import {
@@ -127,6 +128,8 @@ const customerByContact = async (contact: {
 }
 
 const resolveCustomer = async (input: {
+  workspaceId: string
+  contactId: string
   contact: { email: string | null; phoneNumber: string | null }
   gkamionCustomerId: string | null
   gkamionVerified: string | null
@@ -134,6 +137,24 @@ const resolveCustomer = async (input: {
   if (isVerifiedGkamionMethod(input.gkamionVerified)) {
     const customerId = validGkamionCustomerId(input.gkamionCustomerId)
     return customerId ? await customerById(customerId) : null
+  }
+  const linkedCustomerId = validGkamionCustomerId(
+    await externalCrmService.findLinkedCustomerId({
+      workspaceId: input.workspaceId,
+      contactId: input.contactId,
+    }),
+  )
+  if (linkedCustomerId) {
+    const customer = await customerById(linkedCustomerId)
+    if (!customer) {
+      return null
+    }
+    await rememberGkamionOrderHistoryLink({
+      workspaceId: input.workspaceId,
+      contactId: input.contactId,
+      customerId: linkedCustomerId,
+    })
+    return customer
   }
   return await customerByContact(input.contact)
 }
@@ -227,6 +248,8 @@ export const listContactOrdersWithGkamion = async (input: {
     })
     const link = readGkamionContactFields(fields)
     const customer = await resolveCustomer({
+      workspaceId: input.workspaceId,
+      contactId: input.contactId,
       contact,
       gkamionCustomerId: link.gkamionCustomerId,
       gkamionVerified: link.gkamionVerified,

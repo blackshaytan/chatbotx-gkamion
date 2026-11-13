@@ -9,11 +9,16 @@ const mocks = vi.hoisted(() => ({
   get: vi.fn(),
   search: vi.fn(),
   configured: vi.fn(),
+  findLinkedCustomerId: vi.fn(),
+  remember: vi.fn(),
 }))
 vi.mock("@chatbotx.io/business", () => ({
   contactService: { findByIdOrFail: mocks.find, update: mocks.update },
   contactCustomFieldService: { listWithDefinitions: mocks.fields },
-  externalCrmService: { listOrdersForContact: mocks.stored },
+  externalCrmService: {
+    listOrdersForContact: mocks.stored,
+    findLinkedCustomerId: mocks.findLinkedCustomerId,
+  },
   readGkamionContactFields: (fields: { name: string; value: string }[]) => {
     const values = new Map(fields.map((field) => [field.name, field.value]))
     return {
@@ -29,6 +34,7 @@ vi.mock("../src/features/contacts/lib/gkamion-cabinet", () => ({
   isGkamionCabinetConfigured: mocks.configured,
   gkamionAdminGet: mocks.get,
   searchGkamionCustomers: mocks.search,
+  rememberGkamionOrderHistoryLink: mocks.remember,
   pickBestCustomer: (rows: { id: number }[]) =>
     rows.length === 1 ? rows[0] : undefined,
 }))
@@ -56,6 +62,7 @@ describe("gKamion contact profile enrichment", () => {
   beforeEach(() => {
     vi.resetAllMocks()
     mocks.configured.mockReturnValue(true)
+    mocks.findLinkedCustomerId.mockResolvedValue(null)
     mocks.find.mockResolvedValue({ ...baseContact })
     mocks.fields.mockResolvedValue([
       { name: "gkamion_customer_id", value: "6733" },
@@ -162,6 +169,54 @@ describe("gKamion contact profile enrichment", () => {
     const result = await listContactOrdersWithGkamion(input)
     expect(result.profile?.phoneNumber).toBeNull()
     expect(mocks.update.mock.calls[0]?.[1]).not.toHaveProperty("phoneNumber")
+  })
+
+  test("reads the customer stored on the order when phone and email belong to someone else", async () => {
+    mocks.fields.mockResolvedValue([])
+    mocks.find.mockResolvedValue({
+      ...baseContact,
+      firstName: "Денис Сергеевич",
+      lastName: "Костевич",
+      email: "cont@tkforsage.ru",
+      phoneNumber: "+84169876366",
+    })
+    mocks.findLinkedCustomerId.mockResolvedValue("6945")
+    mocks.get.mockImplementation((path: string) => {
+      if (path === "/customers/6945") {
+        return { customer: { ...customer, id: 6945 } }
+      }
+      if (path.startsWith("/order_status")) {
+        return { order_status_types: [] }
+      }
+      return { orders: [] }
+    })
+    const result = await listContactOrdersWithGkamion(input)
+    expect(mocks.search).not.toHaveBeenCalled()
+    expect(mocks.remember).toHaveBeenCalledWith({
+      workspaceId: "1",
+      contactId: "2",
+      customerId: "6945",
+    })
+    expect(result.profile?.gkamionCustomerId).toBe("6945")
+  })
+
+  test("does not search by email when the stored order customer is missing", async () => {
+    mocks.fields.mockResolvedValue([])
+    mocks.find.mockResolvedValue({
+      ...baseContact,
+      email: "cont@tkforsage.ru",
+      phoneNumber: "+84169876366",
+    })
+    mocks.findLinkedCustomerId.mockResolvedValue("6945")
+    mocks.get.mockRejectedValue(
+      new Error("gKamion /customers/6945 failed: HTTP 404"),
+    )
+    expect(await listContactOrdersWithGkamion(input)).toEqual({
+      data: [stored],
+    })
+    expect(mocks.search).not.toHaveBeenCalled()
+    expect(mocks.remember).not.toHaveBeenCalled()
+    expect(mocks.update).not.toHaveBeenCalled()
   })
 
   test("does not search by a masked stored phone with ten visible digits", async () => {

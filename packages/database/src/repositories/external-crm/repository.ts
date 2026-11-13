@@ -11,6 +11,15 @@ export const findExternalCustomerIdentity = async (
     with: { contact: true },
   })
 
+export const listExternalCustomerIdentitiesForContact = async (
+  tx: DatabaseClient,
+  input: { workspaceId: string; contactId: string; provider: string },
+) =>
+  await tx.query.externalCustomerIdentityModel.findMany({
+    where: input,
+    columns: { externalCustomerId: true },
+  })
+
 export const findContactMatches = async (
   tx: DatabaseClient,
   input: { workspaceId: string; email?: string; phoneNumber?: string },

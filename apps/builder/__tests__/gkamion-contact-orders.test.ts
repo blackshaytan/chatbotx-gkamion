@@ -27,6 +27,7 @@ vi.mock("@chatbotx.io/business", () => ({
   },
   externalCrmService: {
     listOrdersForContact: mocks.listOrdersForContact,
+    findLinkedCustomerId: async () => null,
   },
   readGkamionContactFields: (fields: { name: string; value: string }[]) => {
     const byName = new Map(fields.map((field) => [field.name, field.value]))

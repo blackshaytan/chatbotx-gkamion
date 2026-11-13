@@ -15,7 +15,7 @@ export const contactsCabinetLinkPublicRouter = {
       path: "/v1/contacts/{identifier}/cabinet-link",
       summary: "Get gKamion customer cabinet link",
       description:
-        'Looks up the contact in gKamion Admin by phone or email and returns the cabinet URL (`https://admin.gkamion.ru/customers/{id}`). Requires the contact to have a phone number and/or email. Returns `{status:"unavailable"}` when the integration is not configured or identifiers are missing, and `{status:"not_found"}` when no customer matches. Resolve the contact with `contacts.get` first.',
+        'Returns the gKamion cabinet URL (`https://admin.gkamion.ru/customers/{id}`). Uses `gkamion_customer_id` when `gkamion_verified` is phone, email, or order_history; otherwise the gKamion customer already stored on the contact\'s orders, which is then saved as `gkamion_verified=order_history`; otherwise a unique phone or email match. Returns `{status:"unavailable"}` when the integration is not configured or no identifier remains, and `{status:"not_found"}` when that customer does not match. Resolve the contact with `contacts.get` first.',
       tags: ["Contacts"],
     })
     .input(

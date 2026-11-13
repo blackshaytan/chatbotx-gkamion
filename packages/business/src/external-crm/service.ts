@@ -6,6 +6,7 @@ import {
   findExternalOrderEvent,
   findLatestExternalSubjectEventAt,
   getExternalOrderHistory,
+  listExternalCustomerIdentitiesForContact,
   listExternalOrdersForContact,
 } from "@chatbotx.io/database/repositories"
 import {
@@ -440,6 +441,29 @@ class ExternalCrmService extends BaseService {
         }
       },
     })
+  }
+
+  /**
+   * The gKamion customer already stored for this contact. One id only:
+   * several identities are ambiguous and must not open a cabinet.
+   */
+  async findLinkedCustomerId(input: {
+    workspaceId: string
+    contactId: string
+  }): Promise<string | null> {
+    const rows = await listExternalCustomerIdentitiesForContact(db, {
+      workspaceId: input.workspaceId,
+      contactId: input.contactId,
+      provider: PROVIDER,
+    })
+    const ids = [
+      ...new Set(
+        rows
+          .map((row) => row.externalCustomerId.trim())
+          .filter((id) => id.length > 0),
+      ),
+    ]
+    return ids.length === 1 ? ids[0] : null
   }
 
   async listOrdersForContact(input: {
