@@ -4600,8 +4600,9 @@
       "unresolvedProduct": "Not found in your catalog"
     },
     "dromContext": {
-      "listingPrefix": "Customer writes from the listing",
-      "dealPrefix": "Customer placed an order",
+      "dealLine": "Buyer chose <product>{title}</product> for <amount>{price}</amount>",
+      "dealLineNoPrice": "Buyer chose <product>{title}</product>",
+      "listingLine": "<amount>{price}</amount> • <product>{title}</product>",
       "openListing": "Open listing",
       "openDeal": "Open order",
       "itemsCount": "Items: {count}"

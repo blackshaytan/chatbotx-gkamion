@@ -21,9 +21,7 @@ import { resolveActiveContactInbox } from "../conversations/utils/contact-inbox"
 import { changeMessageAttributesAction } from "./actions/change-message-attributes.action"
 import { deleteMessageAction } from "./actions/delete-message.action"
 import { editMessageAction } from "./actions/edit-message.action"
-import { DromListingCard } from "./components/drom-listing-card"
 import { MessageItem } from "./components/message-item"
-import { firstDromListingLink } from "./lib/drom-listing"
 import { dromCardsByMessageId } from "./lib/drom-context-card"
 import { canPrivateReplyToComment } from "./lib/private-reply"
 import type { MessageResourceWithRelations } from "./schema/resource"
@@ -367,13 +365,11 @@ export function MessageList() {
 }
 
 const MessageComponentHeader: GridComponents["Header"] = () => {
-  const { isLoadMoreMessage, messages } = useChatStore((state) => state)
-  const dromListing = firstDromListingLink(messages)
+  const { isLoadMoreMessage } = useChatStore((state) => state)
 
   return (
     <>
       <ConversationInfo />
-      {dromListing ? <DromListingCard listing={dromListing} /> : null}
       {isLoadMoreMessage && (
         <div className="flex items-center space-x-2 px-3 py-2">
           <Skeleton className="h-8 w-3/5 rounded-xl" />

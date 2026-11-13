@@ -3918,8 +3918,9 @@
       "unresolvedProduct": "Introuvable dans votre catalogue"
     },
     "dromContext": {
-      "listingPrefix": "Le client écrit depuis l'annonce",
-      "dealPrefix": "Le client a passé une commande",
+      "dealLine": "L'acheteur a choisi <product>{title}</product> pour <amount>{price}</amount>",
+      "dealLineNoPrice": "L'acheteur a choisi <product>{title}</product>",
+      "listingLine": "<amount>{price}</amount> • <product>{title}</product>",
       "openListing": "Ouvrir l'annonce",
       "openDeal": "Ouvrir la commande",
       "itemsCount": "Articles : {count}"

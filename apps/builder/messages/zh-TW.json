@@ -1846,8 +1846,9 @@
       "unresolvedProduct": "未在您的目錄中找到"
     },
     "dromContext": {
-      "listingPrefix": "客戶從商品刊登處寫信",
-      "dealPrefix": "客戶已下單",
+      "dealLine": "買家選擇了 <product>{title}</product>，價格 <amount>{price}</amount>",
+      "dealLineNoPrice": "買家選擇了 <product>{title}</product>",
+      "listingLine": "<amount>{price}</amount> • <product>{title}</product>",
       "openListing": "開啟刊登",
       "openDeal": "開啟訂單",
       "itemsCount": "商品數：{count}"

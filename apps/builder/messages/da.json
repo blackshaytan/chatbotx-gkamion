@@ -3918,8 +3918,9 @@
       "unresolvedProduct": "Ikke fundet i dit katalog"
     },
     "dromContext": {
-      "listingPrefix": "Kunden skriver fra annoncen",
-      "dealPrefix": "Kunden har afgivet en ordre",
+      "dealLine": "Køberen valgte <product>{title}</product> for <amount>{price}</amount>",
+      "dealLineNoPrice": "Køberen valgte <product>{title}</product>",
+      "listingLine": "<amount>{price}</amount> • <product>{title}</product>",
       "openListing": "Åbn annonce",
       "openDeal": "Åbn ordre",
       "itemsCount": "Varer: {count}"

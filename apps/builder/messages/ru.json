@@ -4600,8 +4600,9 @@
       "unresolvedProduct": "Не найден в вашем каталоге"
     },
     "dromContext": {
-      "listingPrefix": "Клиент пишет из карточки",
-      "dealPrefix": "Покупатель оформил заказ",
+      "dealLine": "Покупатель выбрал <product>{title}</product> за <amount>{price}</amount>",
+      "dealLineNoPrice": "Покупатель выбрал <product>{title}</product>",
+      "listingLine": "<amount>{price}</amount> • <product>{title}</product>",
       "openListing": "Открыть карточку",
       "openDeal": "Открыть заказ",
       "itemsCount": "Позиций: {count}"

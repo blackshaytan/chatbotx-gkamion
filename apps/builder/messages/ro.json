@@ -3918,8 +3918,9 @@
       "unresolvedProduct": "Nu a fost găsit în catalogul tău"
     },
     "dromContext": {
-      "listingPrefix": "Clientul scrie din anunț",
-      "dealPrefix": "Clientul a plasat o comandă",
+      "dealLine": "Cumpărătorul a ales <product>{title}</product> pentru <amount>{price}</amount>",
+      "dealLineNoPrice": "Cumpărătorul a ales <product>{title}</product>",
+      "listingLine": "<amount>{price}</amount> • <product>{title}</product>",
       "openListing": "Deschide anunțul",
       "openDeal": "Deschide comanda",
       "itemsCount": "Articole: {count}"

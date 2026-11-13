@@ -3897,8 +3897,9 @@
       "unresolvedProduct": "Não encontrado no seu catálogo"
     },
     "dromContext": {
-      "listingPrefix": "O cliente escreve a partir do anúncio",
-      "dealPrefix": "O cliente fez um pedido",
+      "dealLine": "O comprador escolheu <product>{title}</product> por <amount>{price}</amount>",
+      "dealLineNoPrice": "O comprador escolheu <product>{title}</product>",
+      "listingLine": "<amount>{price}</amount> • <product>{title}</product>",
       "openListing": "Abrir anúncio",
       "openDeal": "Abrir pedido",
       "itemsCount": "Itens: {count}"

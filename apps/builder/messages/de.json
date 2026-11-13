@@ -3918,8 +3918,9 @@
       "unresolvedProduct": "Nicht in Ihrem Katalog gefunden"
     },
     "dromContext": {
-      "listingPrefix": "Kunde schreibt aus dem Inserat",
-      "dealPrefix": "Kunde hat eine Bestellung aufgegeben",
+      "dealLine": "Der Käufer hat <product>{title}</product> für <amount>{price}</amount> gewählt",
+      "dealLineNoPrice": "Der Käufer hat <product>{title}</product> gewählt",
+      "listingLine": "<amount>{price}</amount> • <product>{title}</product>",
       "openListing": "Inserat öffnen",
       "openDeal": "Bestellung öffnen",
       "itemsCount": "Positionen: {count}"

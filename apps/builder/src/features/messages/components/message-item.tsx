@@ -194,13 +194,19 @@ export const MessageItem = (props: MessageItemProps) => {
   // An inbound cart renders as its own bubble; the stored text is only its
   // plain-text summary for keywords and previews.
   const inboundOrder = getInboundOrder(message.contentAttributes)
+  // DROM stores «Покупатель выбрал …» as the message text and again as
+  // `dromContext.deal`. The styled bubble replaces that line.
+  const isDromDealLine =
+    dromCard?.kind === "deal" &&
+    (message.text ?? "").toLowerCase().includes("выбрал")
   const suppressRawText = Boolean(
     inboundOrder ||
       whatsappCall ||
       callPermissionReply ||
       threadControlActivity ||
       threadControlContext ||
-      externalAgentActivity,
+      externalAgentActivity ||
+      isDromDealLine,
   )
 
   // A call card defaults to the centered `full` variant, but a call still has
@@ -226,9 +232,16 @@ export const MessageItem = (props: MessageItemProps) => {
     hasTextBubble &&
     !hasAttachments &&
     !message.contentAttributes
+  // The DROM bar carries the clock on its own row, the way the marketplace
+  // does, when nothing else in this message needs a time underneath.
+  const timeOnDromCard =
+    Boolean(dromCard) && !hasTextBubble && !hasAttachments && variant !== "full"
 
   return (
-    <MessageBubble className="group" variant={variant}>
+    <MessageBubble
+      className={cn("group", dromCard && "w-full")}
+      variant={variant}
+    >
       {variant === "left" && avatarUrl && !whatsappCall && (
         <Avatar className="mt-2 size-7 self-start">
           <AvatarImage alt="" src={avatarUrl} />
@@ -239,7 +252,8 @@ export const MessageItem = (props: MessageItemProps) => {
       )}
       <div
         className={cn(
-          "flex min-h-11 max-w-[70%] flex-col gap-1",
+          "flex min-h-11 flex-col gap-1",
+          dromCard ? "w-full min-w-0 flex-1" : "max-w-[70%]",
           variant === "full" && "mx-auto",
         )}
       >
@@ -250,7 +264,12 @@ export const MessageItem = (props: MessageItemProps) => {
             {tRouting("echo.partner")}
           </span>
         )}
-        {dromCard && <DromContextCard card={dromCard} />}
+        {dromCard && (
+          <DromContextCard
+            card={dromCard}
+            time={timeOnDromCard ? <MessageTime createdAt={createdAt} /> : null}
+          />
+        )}
         {isComment ? (
           <div
             className={cn(
@@ -296,6 +315,8 @@ export const MessageItem = (props: MessageItemProps) => {
                   className={cn(
                     "text-sm",
                     isTimeInTextBubble && "flex flex-col gap-1",
+                    dromCard && variant === "right" && "max-w-[70%] self-end",
+                    dromCard && variant === "left" && "max-w-[70%] self-start",
                     isPartnerEcho ? variants.left : variants[variant],
                     isDeleted && "opacity-50",
                   )}
@@ -318,7 +339,7 @@ export const MessageItem = (props: MessageItemProps) => {
           </>
         )}
         {RenderContentAttributes(props)}
-        {variant !== "full" && !isTimeInTextBubble && (
+        {variant !== "full" && !isTimeInTextBubble && !timeOnDromCard && (
           <MessageTime createdAt={createdAt} />
         )}
       </div>

@@ -4600,8 +4600,9 @@
       "unresolvedProduct": "Kataloqunuzda tapılmadı"
     },
     "dromContext": {
-      "listingPrefix": "Müştəri elandan yazır",
-      "dealPrefix": "Müştəri sifariş verdi",
+      "dealLine": "Alıcı <product>{title}</product> məhsulunu <amount>{price}</amount> qarşılığında seçdi",
+      "dealLineNoPrice": "Alıcı <product>{title}</product> məhsulunu seçdi",
+      "listingLine": "<amount>{price}</amount> • <product>{title}</product>",
       "openListing": "Elanı aç",
       "openDeal": "Sifarişi aç",
       "itemsCount": "Mövqe sayı: {count}"

@@ -3897,8 +3897,9 @@
       "unresolvedProduct": "カタログに見つかりません"
     },
     "dromContext": {
-      "listingPrefix": "顧客が出品から書き込みました",
-      "dealPrefix": "顧客が注文しました",
+      "dealLine": "購入者が <product>{title}</product> を <amount>{price}</amount> で選びました",
+      "dealLineNoPrice": "購入者が <product>{title}</product> を選びました",
+      "listingLine": "<amount>{price}</amount> • <product>{title}</product>",
       "openListing": "出品を開く",
       "openDeal": "注文を開く",
       "itemsCount": "商品数: {count}"
