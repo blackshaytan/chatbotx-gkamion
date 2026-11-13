@@ -933,6 +933,94 @@ describe("receiveMessage — message repository branch", () => {
     expect(mockEmit).not.toHaveBeenCalled()
   })
 
+  test("does not store a ZZAP echo that only adds the sender signature", async () => {
+    vi.mocked(
+      integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+    ).mockResolvedValue({
+      inbox: { ...fakeInbox, channel: "zzap" },
+      integrationRow: fakeIntegrationRow,
+    } as never)
+    mockFindLastByConversation.mockResolvedValueOnce([
+      {
+        ...fakeCreatedMessage,
+        id: "sent-by-bot",
+        senderType: "bot",
+        senderId: null,
+        messageType: "outgoing",
+        text: "Здравствуйте, Антон Алексеевич! Да, подбор идёт.",
+        attachments: [],
+      },
+    ])
+    mockRunChannelHandler.mockResolvedValue({
+      message: {
+        ...baseIncomingMessage,
+        sourceId: "zzap-out:signed-echo",
+        messageType: "outgoing",
+        text: "?? Гека: Здравствуйте, Антон Алексеевич! Да, подбор идёт.",
+        attachments: [],
+      },
+      contact: { sourceId: "buyer-key", firstName: "Buyer" },
+      postbackAction: null,
+      quickReplyAction: null,
+      ref: null,
+      historyOnly: true,
+      createdAt: new Date("2026-11-07T12:32:51.000Z"),
+    })
+
+    await receiveMessage(baseProps)
+
+    expect(mockCreateOrUpdate).not.toHaveBeenCalled()
+    expect(mockBroadcast).not.toHaveBeenCalled()
+  })
+
+  test("does not store a ZZAP echo whose emoji ZZAP replaced with question marks", async () => {
+    vi.mocked(
+      integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+    ).mockResolvedValue({
+      inbox: { ...fakeInbox, channel: "zzap" },
+      integrationRow: fakeIntegrationRow,
+    } as never)
+    mockFindLastByConversation.mockResolvedValueOnce([
+      {
+        ...fakeCreatedMessage,
+        id: "sent-by-bot",
+        senderType: "bot",
+        senderId: null,
+        messageType: "outgoing",
+        text: [
+          "✅ Ваш заказ отправлен на сборку.",
+          "‼️Остаток оплаты *НАЛИЧНЫМИ*. Оплаты по картам и переводы с карты на карту не принимаем!!!",
+          "⏰Ожидайте сообщение о готовности заказа к выдаче!",
+        ].join("\n"),
+        attachments: [],
+      },
+    ])
+    mockRunChannelHandler.mockResolvedValue({
+      message: {
+        ...baseIncomingMessage,
+        sourceId: "zzap-out:emoji-echo",
+        messageType: "outgoing",
+        text: [
+          "? Ваш заказ отправлен на сборку.",
+          "!?Остаток оплаты *НАЛИЧНЫМИ*. Оплаты по картам и переводы с карты на карту не принимаем!!!",
+          "?Ожидайте сообщение о готовности заказа к выдаче!",
+        ].join("\n"),
+        attachments: [],
+      },
+      contact: { sourceId: "buyer-key", firstName: "Buyer" },
+      postbackAction: null,
+      quickReplyAction: null,
+      ref: null,
+      historyOnly: true,
+      createdAt: new Date("2026-11-07T12:32:51.000Z"),
+    })
+
+    await receiveMessage(baseProps)
+
+    expect(mockCreateOrUpdate).not.toHaveBeenCalled()
+    expect(mockBroadcast).not.toHaveBeenCalled()
+  })
+
   test("calls repository.createOrUpdate() when message has no attachments", async () => {
     mockRunChannelHandler.mockResolvedValue({
       message: { ...baseIncomingMessage, attachments: [] },

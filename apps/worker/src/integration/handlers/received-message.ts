@@ -166,10 +166,7 @@ import {
 } from "./sync-ad-labels"
 import { recordInboundThreadControl } from "./thread-control-inbound"
 import { resolveTiktokCommenterIdentity } from "./tiktok-comment-identity"
-import {
-  isChatbotXOutgoing,
-  isSameZzapHistoryEcho,
-} from "./zzap-history-echo"
+import { isChatbotXOutgoing, isSameZzapHistoryEcho } from "./zzap-history-echo"
 
 type ContactInboxTracking = ContactInboxTrackingData
 
