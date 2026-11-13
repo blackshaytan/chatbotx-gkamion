@@ -12,6 +12,9 @@
  * "‼️" is two code points (‼ plus a variation selector). ZZAP keeps an
  * exclamation mark for the first and "?" for the selector, so the echo
  * reads "!?" where the inbox still has the emoji.
+ *
+ * Emoji outside the basic plane (😊, 📝) are one code point but two UTF-16
+ * units. ZZAP replaces each unit, so one emoji comes back as "??".
  */
 export const zzapHistoryEchoText = (text: string | null | undefined): string =>
   (text ?? "")
@@ -40,50 +43,69 @@ const PICTOGRAPH = /\p{Extended_Pictographic}/u
 
 const isPictograph = (char: string): boolean => PICTOGRAPH.test(char)
 
+const isSupplementary = (char: string): boolean =>
+  (char.codePointAt(0) ?? 0) > 0xff_ff
+
 /**
  * Walk both copies together. Letters stay exact. A pictograph in the stored
  * text may be the "?" ZZAP wrote instead, and "‼" may also come back as "!".
- * A following variation selector may be its own "?" or may be gone.
+ * A following variation selector may be its own "?" or may be gone. A
+ * supplementary pictograph may also take a second "?", one per UTF-16 unit.
  */
 const sameAfterZzapSymbolLoss = (stored: string, echoed: string): boolean => {
   const left = Array.from(stored)
   const right = Array.from(echoed)
-  let storedIndex = 0
-  let echoedIndex = 0
-  while (storedIndex < left.length && echoedIndex < right.length) {
-    const storedChar = left[storedIndex] ?? ""
-    const echoedChar = right[echoedIndex] ?? ""
-    if (storedChar === echoedChar) {
-      storedIndex += 1
-      echoedIndex += 1
-      continue
-    }
-    if (storedChar === "\u203C" && (echoedChar === "!" || echoedChar === "?")) {
-      storedIndex += 1
-      echoedIndex += 1
-      continue
-    }
-    if (isVariationSelector(storedChar)) {
-      if (echoedChar === "?") {
+  const matches = (fromStored: number, fromEchoed: number): boolean => {
+    let storedIndex = fromStored
+    let echoedIndex = fromEchoed
+    while (storedIndex < left.length && echoedIndex < right.length) {
+      const storedChar = left[storedIndex] ?? ""
+      const echoedChar = right[echoedIndex] ?? ""
+      if (storedChar === echoedChar) {
+        storedIndex += 1
         echoedIndex += 1
+        continue
       }
-      storedIndex += 1
-      continue
+      if (
+        storedChar === "\u203C" &&
+        (echoedChar === "!" || echoedChar === "?")
+      ) {
+        storedIndex += 1
+        echoedIndex += 1
+        continue
+      }
+      if (isVariationSelector(storedChar)) {
+        if (echoedChar === "?") {
+          echoedIndex += 1
+        }
+        storedIndex += 1
+        continue
+      }
+      if (isPictograph(storedChar) && echoedChar === "?") {
+        // The low surrogate is its own "?". A real "?" after the emoji still
+        // has to line up, so a second mark is optional.
+        if (
+          isSupplementary(storedChar) &&
+          right[echoedIndex + 1] === "?" &&
+          matches(storedIndex + 1, echoedIndex + 2)
+        ) {
+          return true
+        }
+        storedIndex += 1
+        echoedIndex += 1
+        continue
+      }
+      return false
     }
-    if (isPictograph(storedChar) && echoedChar === "?") {
+    while (
+      storedIndex < left.length &&
+      isVariationSelector(left[storedIndex] ?? "")
+    ) {
       storedIndex += 1
-      echoedIndex += 1
-      continue
     }
-    return false
+    return storedIndex === left.length && echoedIndex === right.length
   }
-  while (
-    storedIndex < left.length &&
-    isVariationSelector(left[storedIndex] ?? "")
-  ) {
-    storedIndex += 1
-  }
-  return storedIndex === left.length && echoedIndex === right.length
+  return matches(0, 0)
 }
 
 export const isSameZzapHistoryEcho = (

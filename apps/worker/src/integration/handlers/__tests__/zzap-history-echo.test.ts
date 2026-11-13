@@ -56,6 +56,31 @@ describe("zzap history echo", () => {
     expect(isSameZzapHistoryEcho(stored, `?? Гека: ${echoed}`)).toBe(true)
   })
 
+  test("treats a supplementary emoji ZZAP split into two question marks as the same send", () => {
+    const stored = [
+      "ℹ️ Вы совершили покупку в магазине gkamion.ru",
+      "😊 Будем благодарны, если Вы поделитесь своими впечатлениями о работе нашей компании.",
+      "📝 Свой отзыв можно оставить по ссылке:",
+      "https://ya.cc/t/xm1Z8jJI9h4zr2",
+      "‼️ Обмен / возврат деталей надлежащего качества возможен в течение 7 дней после даты поступления заказа в наш пункт выдачи заказов (ЗЗОПП Правила интернет ТОРГОВЛИ).",
+      "ℹ️ С договором офертой можете ознакомится на нашем сайте:",
+      "https://gkamion.ru/informatsionnaya/dogovor-oferty.html",
+    ].join("\n")
+    const echoed = [
+      "? Вы совершили покупку в магазине gkamion.ru",
+      "?? Будем благодарны, если Вы поделитесь своими впечатлениями о работе нашей компании.",
+      "?? Свой отзыв можно оставить по ссылке:",
+      "https://ya.cc/t/xm1Z8jJI9h4zr2",
+      "!? Обмен / возврат деталей надлежащего качества возможен в течение 7 дней после даты поступления заказа в наш пункт выдачи заказов (ЗЗОПП Правила интернет ТОРГОВЛИ).",
+      "?? С договором офертой можете ознакомится на нашем сайте:",
+      "https://gkamion.ru/informatsionnaya/dogovor-oferty.html",
+    ].join("\n")
+
+    expect(isSameZzapHistoryEcho(stored, echoed)).toBe(true)
+    expect(isSameZzapHistoryEcho("😊?", "???")).toBe(true)
+    expect(isSameZzapHistoryEcho("😊?", "??")).toBe(true)
+  })
+
   test("does not treat a different reply that starts with a name as the same send", () => {
     expect(
       isSameZzapHistoryEcho(
