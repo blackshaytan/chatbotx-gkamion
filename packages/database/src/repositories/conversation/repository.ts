@@ -1,11 +1,14 @@
 import {
   and,
+  asc,
   countWithRelationsFilter,
   type DatabaseClient,
   db,
   eq,
+  inArray,
   isNotNull,
   isNull,
+  lte,
 } from "../../client"
 import { conversationUnreadWhere } from "../../queries/conversation-unread"
 import { conversationModel } from "../../schema"
@@ -89,6 +92,63 @@ export async function countInboxUnread(
       OR: conversationUnreadWhere.OR,
     },
   })
+}
+
+/**
+ * Turns a paused bot back on once `botResumeAt` has passed. The `botEnabled`
+ * guard is the claim: only the caller that flips the row gets it back, so a
+ * cron sweep and `ensureActive` cannot both emit a transfer.
+ */
+export async function claimDueBotResumes(
+  params: {
+    now: Date
+    limit: number
+    conversationId?: string
+    workspaceId?: string
+  },
+  tx: DatabaseClient = db,
+): Promise<Pick<ConversationModel, "id" | "workspaceId" | "contactId">[]> {
+  const due = and(
+    eq(conversationModel.botEnabled, false),
+    isNotNull(conversationModel.botResumeAt),
+    lte(conversationModel.botResumeAt, params.now),
+    params.workspaceId
+      ? eq(conversationModel.workspaceId, params.workspaceId)
+      : undefined,
+    params.conversationId
+      ? eq(conversationModel.id, params.conversationId)
+      : undefined,
+  )
+  const dueIds = tx
+    .select({ id: conversationModel.id })
+    .from(conversationModel)
+    .where(due)
+    .orderBy(asc(conversationModel.botResumeAt), asc(conversationModel.id))
+    .limit(params.limit)
+    .for("update", { skipLocked: true })
+
+  return await tx
+    .update(conversationModel)
+    .set({
+      botEnabled: true,
+      botResumeAt: null,
+      handoverCategory: null,
+      handedOverAt: null,
+      managerJoinedAt: null,
+    })
+    .where(
+      and(
+        inArray(conversationModel.id, dueIds),
+        eq(conversationModel.botEnabled, false),
+        isNotNull(conversationModel.botResumeAt),
+        lte(conversationModel.botResumeAt, params.now),
+      ),
+    )
+    .returning({
+      id: conversationModel.id,
+      workspaceId: conversationModel.workspaceId,
+      contactId: conversationModel.contactId,
+    })
 }
 
 export async function assignTargetIfUnassigned(

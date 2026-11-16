@@ -57,6 +57,7 @@ export const ScheduleJobData = {
   dispatchChannelPolls: "dispatchChannelPolls",
   taskDueScan: "taskDueScan",
   purgeOldNotifications: "purgeOldNotifications",
+  resumeDueBots: "resumeDueBots",
 } as const
 
 /**
@@ -368,6 +369,12 @@ export type ScheduleJobPurgeOldNotifications = {
   data: Record<string, never>
 }
 
+/** Every minute: pauses whose `botResumeAt` has passed get `botEnabled = true`. */
+export type ScheduleJobResumeDueBots = {
+  type: typeof ScheduleJobData.resumeDueBots
+  data: Record<string, never>
+}
+
 export type ScheduleJobData =
   | ScheduleJobBroadcast
   | ScheduleJobEnqueueBroadcast
@@ -415,6 +422,7 @@ export type ScheduleJobData =
   | ScheduleJobSweepStaleWhatsappCalls
   | ScheduleJobTaskDueScan
   | ScheduleJobPurgeOldNotifications
+  | ScheduleJobResumeDueBots
 
 export const scheduleQueue = isNoRedisEnv()
   ? fakeQueue

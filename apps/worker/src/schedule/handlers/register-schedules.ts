@@ -620,6 +620,20 @@ export const registerSchedules = async () => {
   )
 
   await scheduleQueue.upsertJobScheduler(
+    ScheduleJobData.resumeDueBots,
+    {
+      pattern: "* * * * *",
+    },
+    {
+      name: ScheduleJobData.resumeDueBots,
+      data: {
+        type: ScheduleJobData.resumeDueBots,
+        data: {},
+      },
+    },
+  )
+
+  await scheduleQueue.upsertJobScheduler(
     ScheduleJobData.purgeOldNotifications,
     {
       pattern: "0 4 * * *",

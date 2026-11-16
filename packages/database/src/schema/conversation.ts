@@ -98,5 +98,12 @@ export const conversationModel = pgTable(
       table.inboxActivityAt.desc().nullsLast(),
       table.id.desc(),
     ),
+    // Rows whose pause has a deadline. The resume claim scans `botResumeAt`
+    // and flips `botEnabled` once that deadline has passed.
+    index("Conversation_botResumeDue_idx")
+      .on(table.botResumeAt)
+      .where(
+        sql`${table.botEnabled} = false AND ${table.botResumeAt} IS NOT NULL`,
+      ),
   ],
 )

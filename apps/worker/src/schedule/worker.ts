@@ -54,6 +54,7 @@ import { reconcileTenants } from "./handlers/reconcile-tenants"
 import { redispatchInboundWebhookRequests } from "./handlers/redispatch-inbound-webhook-requests"
 import { refreshChannelTokens } from "./handlers/refresh-channel-tokens"
 import { registerSchedules } from "./handlers/register-schedules"
+import { resumeDueBots } from "./handlers/resume-due-bots"
 import { scanAiHandoverBulkRuns } from "./handlers/scan-ai-handover-bulk-runs"
 import { scanAppointmentReminders } from "./handlers/scan-appointment-reminders"
 import { scanCoexistRuns } from "./handlers/scan-coexist-runs"
@@ -275,6 +276,10 @@ async function startScheduleWorker() {
 
             case ScheduleJobData.purgeOldNotifications:
               await purgeOldNotifications()
+              return
+
+            case ScheduleJobData.resumeDueBots:
+              await resumeDueBots()
               return
 
             default:

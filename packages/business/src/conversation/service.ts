@@ -19,6 +19,7 @@ import type {
 import {
   assignTargetIfUnassigned,
   assignUserIfUnassigned,
+  claimDueBotResumes,
   claimManagerJoinedAt,
   contactInboxOperationalColumns,
   countInboxUnread as countInboxUnreadConversations,
@@ -2067,24 +2068,102 @@ class ConversationService extends BaseService {
       botResumeAt: null,
       tx: props.tx,
     })
+    await this.finishBotResume(props)
+  }
+
+  /**
+   * Writes `botEnabled = true` for pauses whose `botResumeAt` has passed.
+   * Idle threads never hit `ensureActive`, so without this sweep they stay in
+   * the operator inbox after the bot has already resumed.
+   * Returns how many rows this call claimed. A short batch means the backlog
+   * for this moment is done.
+   */
+  async resumeDueBots(props: {
+    limit: number
+    now?: Date
+    tx?: DatabaseClient
+  }): Promise<number> {
+    const now = props.now ?? new Date()
+    const claimed = await claimDueBotResumes(
+      { now, limit: props.limit },
+      props.tx,
+    )
+    if (claimed.length === 0) {
+      return 0
+    }
+
+    const byWorkspace = new Map<string, { id: string; contactId: string }[]>()
+    for (const row of claimed) {
+      const group = byWorkspace.get(row.workspaceId)
+      if (group) {
+        group.push(row)
+      } else {
+        byWorkspace.set(row.workspaceId, [row])
+      }
+    }
+
+    const triggerContext: TriggerContext = {
+      triggerSource: "system",
+      triggerHandler: "resumeDueBots",
+      triggerType: "bot_auto_resume",
+    }
+    for (const [workspaceId, conversations] of byWorkspace) {
+      try {
+        await this.invalidate({
+          workspaceId,
+          ids: conversations.map((conversation) => conversation.id),
+        })
+        await this.finishBotResume({
+          workspaceId,
+          conversations,
+          triggerContext,
+          tx: props.tx,
+        })
+      } catch (err) {
+        logger.error(
+          {
+            err,
+            workspaceId,
+            conversationIds: conversations.map(
+              (conversation) => conversation.id,
+            ),
+          },
+          "bot auto-resume side effects failed after the flag was written",
+        )
+      }
+    }
+
+    return claimed.length
+  }
+
+  /** Events and external-agent reset after the bot flag is already on. */
+  private async finishBotResume(props: {
+    workspaceId: string
+    conversations: { id: string; contactId: string }[]
+    userId?: string
+    triggerContext: TriggerContext
+    tx?: DatabaseClient
+  }): Promise<void> {
     await this.resetExternalAgentStateOnResume({
       workspaceId: props.workspaceId,
-      conversationIds: props.conversations.map((c) => c.id),
+      conversationIds: props.conversations.map(
+        (conversation) => conversation.id,
+      ),
       tx: props.tx,
     })
 
-    for (const conv of props.conversations) {
+    for (const conversation of props.conversations) {
       await emitConversationTransferredToBot(
         props.workspaceId,
-        conv.contactId,
-        conv.id,
+        conversation.contactId,
+        conversation.id,
         props.userId,
       )
 
       emit("analytics:dashboard", {
         eventType: "conversation:transferred_to_bot",
         workspaceId: props.workspaceId,
-        conversationId: conv.id,
+        conversationId: conversation.id,
         occurredAt: new Date(),
         metadata: { triggerContext: props.triggerContext },
       })
@@ -2132,24 +2211,48 @@ class ConversationService extends BaseService {
       return true
     }
 
-    if (!conversation.botResumeAt || conversation.botResumeAt > new Date()) {
+    const now = new Date()
+    if (!conversation.botResumeAt || conversation.botResumeAt > now) {
       return false
     }
 
-    await this.enableBotState({
-      workspaceId: conversation.workspaceId,
-      conversations: [
-        { id: conversation.id, contactId: conversation.contactId },
-      ],
-      triggerContext: {
-        triggerSource: "system",
-        triggerHandler: "ensureActive",
-        triggerType: "bot_auto_resume",
+    const claimed = await claimDueBotResumes(
+      {
+        now,
+        limit: 1,
+        conversationId: conversation.id,
+        workspaceId: conversation.workspaceId,
       },
       tx,
-    })
+    )
+    if (claimed.length > 0) {
+      await this.invalidate({
+        workspaceId: conversation.workspaceId,
+        ids: [conversation.id],
+      })
+      await this.finishBotResume({
+        workspaceId: conversation.workspaceId,
+        conversations: claimed,
+        triggerContext: {
+          triggerSource: "system",
+          triggerHandler: "ensureActive",
+          triggerType: "bot_auto_resume",
+        },
+        tx,
+      })
+      return true
+    }
 
-    return true
+    const [fresh] = await this.findManyByIds({
+      workspaceId: conversation.workspaceId,
+      ids: [conversation.id],
+      tx,
+    })
+    if (!fresh || fresh.botEnabled) {
+      return Boolean(fresh?.botEnabled)
+    }
+    // Still due and locked by the sweep: that writer is setting the flag.
+    return Boolean(fresh.botResumeAt && fresh.botResumeAt <= new Date())
   }
 
   // ─── Cache ───────────────────────────────────────────────────────────────
