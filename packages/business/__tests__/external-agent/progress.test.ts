@@ -17,7 +17,7 @@ describe("constants", () => {
   test("match the documented intervals", () => {
     expect(EXTERNAL_AGENT_INTERIM_MIN_INTERVAL_MS).toBe(30_000)
     expect(EXTERNAL_AGENT_PROGRESS_FALLBACK_MS).toBe(90_000)
-    expect(EXTERNAL_AGENT_STALL_MS).toBe(300_000)
+    expect(EXTERNAL_AGENT_STALL_MS).toBe(600_000)
   })
 })
 

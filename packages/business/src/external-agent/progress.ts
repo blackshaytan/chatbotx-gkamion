@@ -1,6 +1,9 @@
 export const EXTERNAL_AGENT_INTERIM_MIN_INTERVAL_MS = 30_000
 export const EXTERNAL_AGENT_PROGRESS_FALLBACK_MS = 90_000
-export const EXTERNAL_AGENT_STALL_MS = 300_000
+// Сторож тишины моста: агент может молчать между SSE-событиями, пока идёт один тяжёлый
+// MCP-вызов (подбор/применимость по VIN занимает 3-6 минут). 5 минут убивали такой ход
+// и отдавали клиента менеджеру; 10 минут вмещают штатный разбор сложной детали.
+export const EXTERNAL_AGENT_STALL_MS = 600_000
 
 const MS_PER_MINUTE = 60_000
 const MS_PER_HOUR = 3_600_000
