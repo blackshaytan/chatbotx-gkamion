@@ -19,6 +19,10 @@
  * A diameter mark is folded to a plain letter, not to "?": Ø and ø, the
  * diameter sign ⌀, and the empty-set sign ∅ come back as "O" or "o".
  * "Ø38" in the inbox and "O38" in the echo are the same send.
+ *
+ * The multiplication sign comes back as "?": "593×478" and "593?478" are
+ * the same send. A repeated space is collapsed, so "ℹ  Вы" and "? Вы" are
+ * the same send too.
  */
 const foldZzapDiameter = (text: string): string =>
   text
@@ -27,12 +31,15 @@ const foldZzapDiameter = (text: string): string =>
     .replaceAll("\u2300", "O")
     .replaceAll("\u2205", "O")
 
+const REPEATED_SPACES = / {2,}/g
+
 export const zzapHistoryEchoText = (text: string | null | undefined): string =>
   foldZzapDiameter(text ?? "")
     .replaceAll("\r\n", "\n")
     .replaceAll("₽", "?")
+    .replaceAll("\u00D7", "?")
     .split("\n")
-    .map((line) => line.trim())
+    .map((line) => line.trim().replace(REPEATED_SPACES, " "))
     .filter((line) => line.length > 0)
     .join("\n")
 

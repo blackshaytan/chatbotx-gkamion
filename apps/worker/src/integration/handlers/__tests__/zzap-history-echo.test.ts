@@ -103,6 +103,37 @@ describe("zzap history echo", () => {
     expect(isSameZzapHistoryEcho("Ø38", "O39")).toBe(false)
   })
 
+  test("treats a repeated space ZZAP collapsed as the same send", () => {
+    const stored = [
+      "ℹ  Вы совершили покупку в магазине gkamion.ru",
+      "🤗 Будем благодарны, если Вы поделитесь своими впечатлениями.",
+      "Телефон:  +74951337533 доб 1",
+    ].join("\n")
+    const echoed = [
+      "? Вы совершили покупку в магазине gkamion.ru",
+      "?? Будем благодарны, если Вы поделитесь своими впечатлениями.",
+      "Телефон: +74951337533 доб 1",
+    ].join("\n")
+
+    expect(isSameZzapHistoryEcho(stored, echoed)).toBe(true)
+    expect(
+      isSameZzapHistoryEcho(
+        "заказ №23580 лежит уже 2 дня",
+        "заказ №24072 лежит уже 2 дня",
+      ),
+    ).toBe(false)
+  })
+
+  test("treats a multiplication sign ZZAP stored as a question mark as the same send", () => {
+    expect(
+      isSameZzapHistoryEcho(
+        "Ядро 593×478×32 мм, алюминий.",
+        "?? Гека: Ядро 593?478?32 мм, алюминий.",
+      ),
+    ).toBe(true)
+    expect(isSameZzapHistoryEcho("593×478", "593x478")).toBe(false)
+  })
+
   test("does not treat a different reply that starts with a name as the same send", () => {
     expect(
       isSameZzapHistoryEcho(
