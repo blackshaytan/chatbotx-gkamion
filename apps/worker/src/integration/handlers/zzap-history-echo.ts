@@ -15,9 +15,20 @@
  *
  * Emoji outside the basic plane (😊, 📝) are one code point but two UTF-16
  * units. ZZAP replaces each unit, so one emoji comes back as "??".
+ *
+ * A diameter mark is folded to a plain letter, not to "?": Ø and ø, the
+ * diameter sign ⌀, and the empty-set sign ∅ come back as "O" or "o".
+ * "Ø38" in the inbox and "O38" in the echo are the same send.
  */
+const foldZzapDiameter = (text: string): string =>
+  text
+    .replaceAll("\u00D8", "O")
+    .replaceAll("\u00F8", "o")
+    .replaceAll("\u2300", "O")
+    .replaceAll("\u2205", "O")
+
 export const zzapHistoryEchoText = (text: string | null | undefined): string =>
-  (text ?? "")
+  foldZzapDiameter(text ?? "")
     .replaceAll("\r\n", "\n")
     .replaceAll("₽", "?")
     .split("\n")

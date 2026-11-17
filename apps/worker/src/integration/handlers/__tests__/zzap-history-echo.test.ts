@@ -81,6 +81,28 @@ describe("zzap history echo", () => {
     expect(isSameZzapHistoryEcho("😊?", "??")).toBe(true)
   })
 
+  test("treats a diameter mark ZZAP stored as a plain O as the same send", () => {
+    const stored = [
+      "Поняла, менеджеру не передаю.",
+      "",
+      "У 60772 четыре выхода: два больших (Ø38 и Ø38,4) и два малых Ø18,3 мм внизу. Версия на три выхода, другая модификация с другим артикулом, так что дело может быть как раз в ней.",
+      "",
+      "Как разберётесь, напишите: восстановим заказ или подберём другой вариант.",
+    ].join("\n")
+    const echoed = [
+      "?? Geka: Поняла, менеджеру не передаю.",
+      "У 60772 четыре выхода: два больших (O38 и O38,4) и два малых O18,3 мм внизу. Версия на три выхода, другая модификация с другим артикулом, так что дело может быть как раз в ней.",
+      "Как разберётесь, напишите: восстановим заказ или подберём другой вариант.",
+    ].join("\n")
+
+    expect(isSameZzapHistoryEcho(stored, echoed)).toBe(true)
+    expect(isSameZzapHistoryEcho("Ø38", "O38")).toBe(true)
+    expect(isSameZzapHistoryEcho("ø18", "o18")).toBe(true)
+    expect(isSameZzapHistoryEcho("\u230038", "O38")).toBe(true)
+    expect(isSameZzapHistoryEcho("\u220538", "O38")).toBe(true)
+    expect(isSameZzapHistoryEcho("Ø38", "O39")).toBe(false)
+  })
+
   test("does not treat a different reply that starts with a name as the same send", () => {
     expect(
       isSameZzapHistoryEcho(
