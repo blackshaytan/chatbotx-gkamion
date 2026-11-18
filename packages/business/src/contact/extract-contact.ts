@@ -68,6 +68,7 @@ const getCommonPhoneNumber = (text: string): string | null => {
 const tryRegions = (
   text: string,
   regions: CountryCode[],
+  allowLocalRetry = false,
 ): ParsedPhone | null => {
   if (!text || text.length < MIN_DIGITS) {
     return null
@@ -88,27 +89,49 @@ const tryRegions = (
         phone = vn?.[1] ?? cleaned
       }
 
-      let parsed: PhoneNumber | undefined
-      try {
-        parsed = parsePhoneNumberFromString(phone, region)
-      } catch {
+      const accept = (candidate: string): ParsedPhone | null => {
+        let parsed: PhoneNumber | undefined
+        try {
+          parsed = parsePhoneNumberFromString(candidate, region)
+        } catch {
+          return null
+        }
+        if (!parsed) {
+          return null
+        }
+        // PHP skips FIXED_LINE for any non-VN region to suppress
+        // overlapping landline false positives.
+        if (parsed.getType() === "FIXED_LINE" && region !== "VN") {
+          return null
+        }
+        if (!parsed.isPossible()) {
+          return null
+        }
+        if (!parsed.isValid()) {
+          return null
+        }
+        return { number: parsed, phoneFromString: candidate }
+      }
+
+      let hit = accept(phone)
+      // A leading "+" without a country code ("+903 728-95-80") is a mistyped
+      // local number: libphonenumber reads "+903" as Turkey (calling code 90)
+      // and only later rejects it as impossible, so the contact card keeps an
+      // older value. Retry the bare digits as a local number — but only when
+      // the caller supplied a region: with FALLBACK_REGIONS a bare 10-digit
+      // string can be a valid foreign number and guessing would corrupt cards.
+      if (!hit && allowLocalRetry && phone.startsWith("+")) {
+        const bare = phone.slice(1)
+        const local = accept(bare)
+        if (local) {
+          // Keep the "+" so hasPhoneNumber() still normalises to E.164.
+          hit = { ...local, phoneFromString: `+${bare}` }
+        }
+      }
+      if (!hit) {
         continue
       }
-      if (!parsed) {
-        continue
-      }
-      // PHP skips FIXED_LINE for any non-VN region to suppress
-      // overlapping landline false positives.
-      if (parsed.getType() === "FIXED_LINE" && region !== "VN") {
-        continue
-      }
-      if (!parsed.isPossible()) {
-        continue
-      }
-      if (!parsed.isValid()) {
-        continue
-      }
-      return { number: parsed, phoneFromString: phone }
+      return hit
     }
   }
   return null
@@ -136,11 +159,17 @@ export const parsePhoneNumber = (
     regions = FALLBACK_REGIONS
   }
 
-  let result = tryRegions(text, regions)
+  // Only an explicitly supplied region may reinterpret a "+"-prefixed string
+  // as a local number; the built-in fallback list is guesswork, not config.
+  const allowLocalRetry = Array.isArray(region)
+    ? region.length > 0
+    : Boolean(region)
+
+  let result = tryRegions(text, regions, allowLocalRetry)
   if (!result) {
     const common = getCommonPhoneNumber(text)
     if (common) {
-      result = tryRegions(common, regions)
+      result = tryRegions(common, regions, allowLocalRetry)
     }
   }
   return result

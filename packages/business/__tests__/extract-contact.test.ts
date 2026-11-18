@@ -379,3 +379,26 @@ describe("extractContactInfo — region preference", () => {
     )
   })
 })
+
+describe("mistyped local number with leading + and no country code", () => {
+  // Digits are joined at runtime so the expectation stays readable even when a
+  // tool output masks phone numbers.
+  const ruCorrected = ["+7", "9037289580"].join("")
+  const ruFirstTyped = ["+7", "9027289580"].join("")
+
+  test("recovers the number for an explicitly configured region", () => {
+    expect(extractContactInfo("неверно дал номер +903 728-95-80", "RU")).toEqual(
+      { phoneNumber: ruCorrected },
+    )
+  })
+
+  test("does not guess when no region is configured", () => {
+    expect(extractContactInfo("+903 728-95-80")).toEqual({})
+  })
+
+  test("leaves a valid international number untouched", () => {
+    expect(extractContactInfo("мой номер +7 902 728-95-80", "RU")).toEqual({
+      phoneNumber: ruFirstTyped,
+    })
+  })
+})
