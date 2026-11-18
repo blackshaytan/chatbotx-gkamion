@@ -70,6 +70,25 @@ async function presignAttachments<T extends { id: string; originPath: string }>(
   )
 }
 
+/**
+ * First page of a dialog starts at the end of this hour. `lastMessageAt` is
+ * the usual bookmark, but a channel history import can move it backward to
+ * an older message's own clock. `lastActivityAt` only moves forward, so the
+ * later of the two still includes the message the inbox list is showing.
+ */
+const messageWindowAnchor = (
+  lastMessageAt: Date | string | null | undefined,
+  lastActivityAt: Date | string | null | undefined,
+): Date => {
+  const times = [lastMessageAt, lastActivityAt]
+    .map((value) => (value == null ? Number.NaN : new Date(value).getTime()))
+    .filter((time) => !Number.isNaN(time))
+  if (times.length === 0) {
+    return new Date()
+  }
+  return new Date(Math.max(...times))
+}
+
 const loadContactInboxChannels = async (
   messages: readonly Pick<MessageWithAttachments, "contactInboxId">[],
   workspaceId: string,
@@ -151,7 +170,12 @@ export async function listForConversation(
     pagination: {
       limit: input.limit,
       cursor: input.cursor ?? {
-        createdAt: endOfHour(contactInbox?.lastMessageAt ?? new Date()),
+        createdAt: endOfHour(
+          messageWindowAnchor(
+            contactInbox?.lastMessageAt,
+            conversation?.lastActivityAt,
+          ),
+        ),
         id: "",
       },
     },

@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { endOfHour } from "date-fns"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
 const mocks = vi.hoisted(() => {
@@ -188,8 +189,31 @@ describe("message list-for-conversation", () => {
 
       const call = mocks.repo.listByConversation.mock.calls[0]?.[0]
       expect(call.pagination.cursor.id).toBe("")
-      // endOfHour: minutes/seconds pinned to the hour boundary (:59:59.999).
-      expect(call.pagination.cursor.createdAt.getMinutes()).toBe(59)
+      expect(call.pagination.cursor.createdAt).toEqual(endOfHour(lastMessageAt))
+    })
+
+    test("a rewound contact-inbox bookmark does not hide a newer conversation message", async () => {
+      mocks.conversationService.findBy.mockResolvedValue({
+        id: "conv-1",
+        workspaceId: "ws-1",
+        contactId: "contact-1",
+        createdAt: new Date("2026-01-01T00:00:00Z"),
+        lastActivityAt: new Date("2026-11-18T17:41:43.689Z"),
+      })
+      mocks.contactInboxService.findRecentByContactId.mockResolvedValue({
+        lastMessageAt: new Date("2026-11-18T07:03:11.000Z"),
+      })
+
+      await listForConversation({
+        workspaceId: "ws-1",
+        conversationId: "conv-1",
+        limit: 20,
+      })
+
+      const call = mocks.repo.listByConversation.mock.calls[0]?.[0]
+      expect(call.pagination.cursor.createdAt).toEqual(
+        endOfHour(new Date("2026-11-18T17:41:43.689Z")),
+      )
     })
 
     test("a contactInboxId narrows the repository query and is looked up within the conversation's contact", async () => {

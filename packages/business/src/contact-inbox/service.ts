@@ -1215,6 +1215,7 @@ class ContactInboxService extends BaseService {
     const {
       firstInteractionAt: explicitFirstInteractionAt,
       lastIncomingMessageAt: explicitLastIncomingMessageAt,
+      lastMessageAt: explicitLastMessageAt,
       lastUserInput,
       lastUserInputType,
       referral,
@@ -1222,6 +1223,13 @@ class ContactInboxService extends BaseService {
     } = data
 
     const updateData = { ...nextData }
+    if (explicitLastMessageAt) {
+      // A delayed channel echo carries the original send time. Assigning it
+      // directly would rewind the bookmark and hide every newer message.
+      Object.assign(updateData, {
+        lastMessageAt: sql`GREATEST(${contactInboxModel.lastMessageAt}, ${explicitLastMessageAt})`,
+      })
+    }
     if (explicitFirstInteractionAt) {
       Object.assign(updateData, {
         firstInteractionAt: sql`CASE WHEN ${contactInboxModel.firstInteractionAt} IS NULL OR ${contactInboxModel.firstInteractionAt} > ${explicitFirstInteractionAt} THEN ${explicitFirstInteractionAt} ELSE ${contactInboxModel.firstInteractionAt} END`,
