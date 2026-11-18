@@ -5,7 +5,7 @@
  * the email has already been sent.
  */
 
-const VOICE_EMAIL_STATUSES = new Set([13, 22])
+const VOICE_EMAIL_STATUSES = new Set([13, 16, 22])
 const CALLBACK_TIMEOUT_MS = 10000
 
 export type VoiceEmailCallbackRequest = {

@@ -13,7 +13,7 @@ const ready = {
 }
 
 describe("voiceEmailCallbackRequest", () => {
-  test("posts only after smtp for status 13 or 22", () => {
+  test("posts only after smtp for status 13, 16, or 22", () => {
     const request = voiceEmailCallbackRequest(ready)
     expect(request?.url).toBe(ready.url)
     expect(JSON.parse(request?.body ?? "{}")).toEqual({
@@ -21,12 +21,13 @@ describe("voiceEmailCallbackRequest", () => {
       status_id: 13,
       email_delivered: true,
     })
+    expect(voiceEmailCallbackRequest({ ...ready, statusId: 16 })).not.toBeNull()
     expect(voiceEmailCallbackRequest({ ...ready, statusId: 22 })).not.toBeNull()
   })
 
   test("skips messenger, other statuses, and missing configuration", () => {
     expect(voiceEmailCallbackRequest({ ...ready, acceptedChannel: "telegram" })).toBeNull()
-    expect(voiceEmailCallbackRequest({ ...ready, statusId: 16 })).toBeNull()
+    expect(voiceEmailCallbackRequest({ ...ready, statusId: 7 })).toBeNull()
     expect(voiceEmailCallbackRequest({ ...ready, url: "" })).toBeNull()
     expect(voiceEmailCallbackRequest({ ...ready, secret: "  " })).toBeNull()
     expect(voiceEmailCallbackRequest({ ...ready, orderId: "" })).toBeNull()
