@@ -15,6 +15,10 @@ import { ChannelError } from "@chatbotx.io/sdk"
 import type { IntegrationJobDeliverClientNotification } from "@chatbotx.io/worker-config"
 import { sendMessageToChannel } from "../../chat/handlers/send-message"
 import { logger } from "../../lib/logger"
+import {
+  postVoiceEmailCallback,
+  voiceEmailCallbackRequest,
+} from "./voice-email-callback"
 
 const TIMEOUT_PATTERN = /timeout|timed out|socket hang up/i
 
@@ -103,11 +107,18 @@ export const handleDeliverClientNotification = async (
     email: data.email,
     smtpInboxCount: smtpInboxIds.length,
   })
+  let acceptedChannel: string | null = null
   const result = await runNotificationCascade({
     candidates,
     attempts: [],
     messengerText: data.messengerText,
     emailText: data.emailText,
+    record: (attempt) => {
+      if (attempt.outcome === "accepted" && attempt.channel) {
+        acceptedChannel = attempt.channel
+      }
+      return Promise.resolve()
+    },
     send: async (candidate) => {
       const contactInbox = await resolveInbox({
         candidateId: candidate.contactInboxId,
@@ -179,7 +190,6 @@ export const handleDeliverClientNotification = async (
         }
       }
     },
-    record: () => Promise.resolve(),
   })
 
   if (result.status === "error") {
@@ -193,5 +203,21 @@ export const handleDeliverClientNotification = async (
       },
       "Client notification finished without an accepted channel",
     )
+  }
+
+  const callback = voiceEmailCallbackRequest({
+    acceptedChannel,
+    statusId: data.statusId,
+    orderId: data.externalOrderId,
+    url: process.env.VOICE_EMAIL_CALLBACK_URL,
+    secret: process.env.VOICE_EMAIL_CALLBACK_SECRET,
+  })
+  if (callback) {
+    await postVoiceEmailCallback(callback, fetch, (error) => {
+      logger.error(
+        { err: error, eventId: data.eventId, statusId: data.statusId },
+        "Voice email callback failed",
+      )
+    })
   }
 }
