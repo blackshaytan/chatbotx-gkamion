@@ -18,12 +18,16 @@ import {
 import type { WorkspaceModel } from "@chatbotx.io/database/types"
 import { withCache } from "@chatbotx.io/redis"
 import { formatInTimeZone } from "date-fns-tz"
-import { dispatchAuditRecord } from "../audit/dispatcher"
+import {
+  dispatchAuditRecord,
+  dispatchAuditRecordSafely,
+} from "../audit/dispatcher"
 import { BaseService } from "../base.service"
 import { connectionStateService } from "../connection/state-service"
 import { contactInboxPostService } from "../contact-inbox-post/service"
 import { tenantService } from "../enterprise/tenant/service"
 import {
+  ChatbotXException,
   notFoundException,
   WorkspacePurgeIncompleteError,
   workspaceDeletionStartedException,
@@ -72,6 +76,35 @@ const WORKSPACE_SETTINGS_KEYS = [
   "brandColor",
   "developmentMode",
 ] as const
+
+/** The membership a workspace owner holds: the creator's on `create`, the new owner's on `transferOwnership`. */
+const OWNER_MEMBER_DEFAULTS = {
+  role: workspaceMemberRoles.enum.owner,
+  permissions: {
+    superAdmin: true,
+    analytics: true,
+    flows: true,
+    contacts: true,
+    onlyAssignedContacts: true,
+    emailAndPhone: true,
+    broadcast: true,
+    ecommerce: true,
+  },
+  notificationTypes: {
+    notifyAdmin: true,
+    newMessageToHuman: true,
+    newOrder: true,
+  },
+  notificationChannels: {
+    messenger: true,
+    email: true,
+    telegram: true,
+    browser: true,
+  },
+} satisfies Pick<
+  typeof workspaceMemberModel.$inferInsert,
+  "role" | "permissions" | "notificationTypes" | "notificationChannels"
+>
 
 class WorkspaceService extends BaseService {
   async findOrFail(props: {
@@ -369,6 +402,162 @@ class WorkspaceService extends BaseService {
       await this.audit("cancel_deletion", "canceled the workspace deletion")
     }
     return workspace
+  }
+
+  /**
+   * Hands the workspace to another user in one transaction: the workspace's
+   * `ownerId` moves, the previous owner is demoted to an agent (their row is
+   * kept, `superAdmin` revoked), and the new owner gets the owner membership.
+   * Cache, quota and audit side effects run only after the commit.
+   */
+  async transferOwnership(props: {
+    workspaceId: string
+    newOwnerId: string
+  }): Promise<{ workspace: WorkspaceModel; previousOwnerId: string }> {
+    const { workspaceId, newOwnerId } = props
+
+    const outcome = await db.transaction(async (tx) => {
+      const workspace = await tx.query.workspaceModel.findFirst({
+        where: { id: workspaceId },
+      })
+      if (!workspace) {
+        throw notFoundException("Workspace not found")
+      }
+      if (workspace.scheduledDeletionAt) {
+        throw workspaceDeletionStartedException()
+      }
+
+      const newOwner = await tx.query.userModel.findFirst({
+        where: { id: newOwnerId },
+        columns: { id: true, tenantId: true },
+      })
+      if (!newOwner) {
+        throw notFoundException("User not found")
+      }
+      if (newOwner.tenantId !== workspace.tenantId) {
+        throw new ChatbotXException(
+          "New owner belongs to another tenant",
+          "tenantMismatch",
+          409,
+        )
+      }
+
+      const previousOwnerId = workspace.ownerId
+      if (previousOwnerId === newOwnerId) {
+        return { workspace, previousOwnerId, transferred: false }
+      }
+
+      const [updatedWorkspace] = await tx
+        .update(workspaceModel)
+        .set({ ownerId: newOwnerId })
+        .where(
+          and(
+            eq(workspaceModel.id, workspaceId),
+            eq(workspaceModel.ownerId, previousOwnerId),
+          ),
+        )
+        .returning()
+      if (!updatedWorkspace) {
+        throw new ChatbotXException(
+          "Workspace owner changed concurrently",
+          "ownerConflict",
+          409,
+        )
+      }
+
+      const previousOwnerMember =
+        await workspaceMemberService.findByWorkspaceIdAndUserId({
+          tx,
+          workspaceId,
+          userId: previousOwnerId,
+        })
+      if (previousOwnerMember) {
+        await workspaceMemberService.update({
+          tx,
+          id: previousOwnerMember.id,
+          workspaceId,
+          data: {
+            role: workspaceMemberRoles.enum.agent,
+            permissions: {
+              ...previousOwnerMember.permissions,
+              superAdmin: false,
+            },
+          },
+        })
+      }
+
+      const newOwnerMember =
+        await workspaceMemberService.findByWorkspaceIdAndUserId({
+          tx,
+          workspaceId,
+          userId: newOwnerId,
+        })
+      if (newOwnerMember) {
+        await workspaceMemberService.update({
+          tx,
+          id: newOwnerMember.id,
+          workspaceId,
+          data: {
+            role: OWNER_MEMBER_DEFAULTS.role,
+            permissions: OWNER_MEMBER_DEFAULTS.permissions,
+          },
+        })
+      } else {
+        await workspaceMemberService.create({
+          tx,
+          data: {
+            userId: newOwnerId,
+            workspaceId,
+            ...OWNER_MEMBER_DEFAULTS,
+          },
+        })
+      }
+
+      return {
+        workspace: updatedWorkspace,
+        previousOwnerId,
+        transferred: true,
+      }
+    })
+
+    const { workspace, previousOwnerId, transferred } = outcome
+    if (!transferred) {
+      return { workspace, previousOwnerId }
+    }
+
+    const memberUserIds = await workspaceMemberService.listUserIdsByWorkspaceId(
+      { workspaceId },
+    )
+    await this.invalidateCacheTags([
+      `workspaces:${workspaceId}`,
+      ...memberUserIds.map((userId) => workspaceMemberCacheTag(userId)),
+    ])
+
+    // Quota reads come from the owner's own usage, so both sides are
+    // re-derived. A failure is logged, never surfaced: the transfer is done.
+    for (const userId of [previousOwnerId, newOwnerId]) {
+      try {
+        await userQuotaService.reconcileUserSelfUsage(userId)
+        await userQuotaService.invalidate(userId)
+      } catch (err) {
+        logger.warn(
+          { err, userId },
+          "workspace owner transfer quota reconcile failed",
+        )
+      }
+    }
+
+    await dispatchAuditRecordSafely(
+      {
+        userId: newOwnerId,
+        workspaceId,
+        action: "update",
+        detail: "transferred workspace ownership",
+      },
+      "workspace owner transfer audit failed",
+    )
+
+    return { workspace, previousOwnerId }
   }
 
   /**
@@ -781,28 +970,7 @@ class WorkspaceService extends BaseService {
       data: {
         userId: props.createdBy,
         workspaceId: newWorkspace.id,
-        role: workspaceMemberRoles.enum.owner,
-        permissions: {
-          superAdmin: true,
-          analytics: true,
-          flows: true,
-          contacts: true,
-          onlyAssignedContacts: true,
-          emailAndPhone: true,
-          broadcast: true,
-          ecommerce: true,
-        },
-        notificationTypes: {
-          notifyAdmin: true,
-          newMessageToHuman: true,
-          newOrder: true,
-        },
-        notificationChannels: {
-          messenger: true,
-          email: true,
-          telegram: true,
-          browser: true,
-        },
+        ...OWNER_MEMBER_DEFAULTS,
       },
     })
 
