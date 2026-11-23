@@ -8,6 +8,7 @@
     "build": "tsdown",
     "check-types": "tsc --noEmit",
     "geka:import": "dotenv -e ../../.env -- tsx scripts/import-geka-channels.ts",
+    "workspace:transfer-owner": "dotenv -e ../../.env -- tsx scripts/transfer-workspace-owner.ts",
     "dev": "concurrently pnpm:worker:* | pino-pretty",
     "https": "pnpm dev",
     "test": "vitest run --passWithNoTests",

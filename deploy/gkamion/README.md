@@ -37,3 +37,15 @@ push the branch to `gkamion` → run the workflow → apply migrations explicitl
 The production builder takes port 3123, so stop it
 (`docker compose -f deploy/gkamion/docker-compose.prod.yml stop builder`)
 before running `pnpm --filter builder dev`.
+
+## Workspace limit
+
+This fork does not cap how many workspaces one owner may create. Upstream Community edition allows one. The check lived in `workspaceService.create` and is removed here; creation still stops when `UserQuota.workspacesLimit` is set and reached.
+
+Hand a workspace to another user (dry run, then add `--apply`):
+
+```bash
+pnpm --filter worker workspace:transfer-owner -- --workspace <id> --owner <userId> --name "<name>"
+```
+
+This is an operator script, not a public API: a workspace token must not transfer ownership (AGENTS.md invariant 23 exemption).
