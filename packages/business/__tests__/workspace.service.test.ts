@@ -69,8 +69,6 @@ vi.mock("@chatbotx.io/redis", () => ({
   distributedLock: { runExclusive },
   createRedisConnection: vi.fn(() => ({ on: vi.fn() })),
 }))
-const isCommunity = vi.fn(() => false)
-vi.mock("../src/keys", () => ({ isCommunity }))
 vi.mock("@chatbotx.io/utils", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@chatbotx.io/utils")>()
   return {
@@ -162,7 +160,6 @@ beforeEach(() => {
   setUpdate.mockClear()
   update.mockClear()
   invalidateCacheByTags.mockClear()
-  isCommunity.mockReset().mockReturnValue(false)
   countWorkspaces.mockReset().mockResolvedValue(0)
   runExclusive
     .mockReset()
@@ -504,51 +501,17 @@ describe("WorkspaceService.create — workspace seat compensation", () => {
   })
 })
 
-describe("WorkspaceService.create — community workspace limit", () => {
-  test("creates the first workspace under the distributed lock", async () => {
-    isCommunity.mockReturnValue(true)
-    countWorkspaces.mockResolvedValue(0)
+describe("WorkspaceService.create — no one-workspace cap", () => {
+  test("lets an owner create a second workspace through the quota gate alone", async () => {
+    const first = await workspaceService.create(createInput())
+    const second = await workspaceService.create(createInput())
 
-    const result = await workspaceService.create(createInput())
-
-    expect(result).toEqual({ id: "ws-1", organizationId: "org-1" })
-    expect(runExclusive).toHaveBeenCalledTimes(1)
-    expect(runExclusive.mock.calls[0][0].key).toBe("workspace-limit:user-1")
-    expect(countWorkspaces).toHaveBeenCalledTimes(1)
-  })
-
-  test("throws workspaceLimitReached for the second workspace", async () => {
-    isCommunity.mockReturnValue(true)
-    countWorkspaces.mockResolvedValue(1)
-
-    await expect(workspaceService.create(createInput())).rejects.toMatchObject({
-      code: "workspaceLimitReached",
-    })
-    expect(insert).not.toHaveBeenCalled()
-    expect(quotaEnforcementService.tryConsume).not.toHaveBeenCalled()
-  })
-
-  test("keys the lock on data.ownerId when it differs from createdBy", async () => {
-    isCommunity.mockReturnValue(true)
-    countWorkspaces.mockResolvedValue(0)
-
-    await workspaceService.create({
-      data: { name: "WS", ownerId: "owner-9" } as never,
-      createdBy: "user-1",
-    })
-
-    expect(runExclusive.mock.calls[0][0].key).toBe("workspace-limit:owner-9")
-  })
-
-  test("skips the limit entirely off community", async () => {
-    isCommunity.mockReturnValue(false)
-
-    await workspaceService.create(createInput())
-    await workspaceService.create(createInput())
-
+    expect(first).toEqual({ id: "ws-1", organizationId: "org-1" })
+    expect(second).toEqual({ id: "ws-1", organizationId: "org-1" })
+    expect(insert).toHaveBeenCalledTimes(2)
+    expect(quotaEnforcementService.tryConsume).toHaveBeenCalledTimes(2)
     expect(runExclusive).not.toHaveBeenCalled()
     expect(countWorkspaces).not.toHaveBeenCalled()
-    expect(quotaEnforcementService.tryConsume).toHaveBeenCalledTimes(2)
   })
 })
 

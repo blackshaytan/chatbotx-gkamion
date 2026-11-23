@@ -8,13 +8,8 @@ vi.mock("next-intl/server", () => ({
   getTranslations: async () => (key: string) => key,
 }))
 
-const { mockIsCommunity } = vi.hoisted(() => ({
-  mockIsCommunity: vi.fn(() => true),
-}))
-
 vi.mock("@/env", () => ({
   isCloud: () => false,
-  isCommunity: mockIsCommunity,
 }))
 
 // The component only reads isWorkspaceScheduledForDeletion (both the bare
@@ -75,7 +70,6 @@ afterEach(() => {
   container?.remove()
   container = null
   root = null
-  mockIsCommunity.mockReturnValue(true)
 })
 
 describe("WorkspacesList — community edition, zero workspaces", () => {
@@ -89,7 +83,6 @@ describe("WorkspacesList — community edition, zero workspaces", () => {
   })
 
   test("hides the card from an invited member who already belongs to a workspace", async () => {
-    mockIsCommunity.mockReturnValue(false)
     const el = await renderWorkspacesList([
       {
         id: "1",
@@ -106,23 +99,26 @@ describe("WorkspacesList — community edition, zero workspaces", () => {
     expect(el.querySelector('a[href="/channels/create"]')).toBeNull()
   })
 
-  test("still hides the card once the workspace already exists", async () => {
-    const el = await renderWorkspacesList([
-      {
-        id: "1",
-        name: "My workspace",
-        logo: null,
-        status: "active",
-        endTime: null,
-        scheduledDeletionAt: null,
-        // Minimal fixture: only the fields WorkspacesList actually reads matter here.
-      } as unknown as Parameters<
-        typeof WorkspacesList
-      >[0]["workspaces"][number],
-    ])
+  test("shows the create card to an owner who already has a workspace", async () => {
+    const el = await renderWorkspacesList(
+      [
+        {
+          id: "1",
+          name: "My workspace",
+          logo: null,
+          status: "active",
+          endTime: null,
+          scheduledDeletionAt: null,
+          // Minimal fixture: only the fields WorkspacesList actually reads matter here.
+        } as unknown as Parameters<
+          typeof WorkspacesList
+        >[0]["workspaces"][number],
+      ],
+      ["1"],
+    )
 
     const createLink = el.querySelector('a[href="/channels/create"]')
-    expect(createLink).toBeNull()
+    expect(createLink).not.toBeNull()
   })
 
   test("distinguishes a scheduled deletion from a purge in progress", async () => {

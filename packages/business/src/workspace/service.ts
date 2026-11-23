@@ -16,7 +16,7 @@ import {
   workspaceModel,
 } from "@chatbotx.io/database/schema"
 import type { WorkspaceModel } from "@chatbotx.io/database/types"
-import { distributedLock, withCache } from "@chatbotx.io/redis"
+import { withCache } from "@chatbotx.io/redis"
 import { formatInTimeZone } from "date-fns-tz"
 import { dispatchAuditRecord } from "../audit/dispatcher"
 import { BaseService } from "../base.service"
@@ -29,7 +29,6 @@ import {
   workspaceDeletionStartedException,
   workspaceLimitReachedException,
 } from "../errors"
-import { isCommunity } from "../keys"
 import { logger } from "../logger"
 import { quotaEnforcementService } from "../quota-enforcement/service"
 import { userQuotaService } from "../user-quota/service"
@@ -60,8 +59,6 @@ const stableKey = (where: WorkspaceWhere) =>
   JSON.stringify(Object.fromEntries(Object.entries(where).sort()))
 
 const PURGE_WORKSPACE_TEARDOWN_CONCURRENCY = 5
-const COMMUNITY_MAX_WORKSPACES = 1
-const WORKSPACE_LIMIT_LOCK_TIMEOUT_SECONDS = 30
 
 const WORKSPACE_SETTINGS_KEYS = [
   "defaultReply",
@@ -670,27 +667,6 @@ class WorkspaceService extends BaseService {
     tx?: DatabaseClient
     quotaConsumption?: WorkspaceQuotaConsumption
   }): Promise<WorkspaceModel> {
-    if (isCommunity()) {
-      // Community edition allows exactly one workspace per owner. Serialize
-      // the count-then-insert so concurrent create requests cannot both pass.
-      const ownerId = props.data.ownerId ?? props.createdBy
-      return await distributedLock.runExclusive({
-        key: `workspace-limit:${ownerId}`,
-        timeoutInSeconds: WORKSPACE_LIMIT_LOCK_TIMEOUT_SECONDS,
-        fn: async (): Promise<WorkspaceModel> => {
-          // Workspaces awaiting purge still count — conservative on purpose.
-          const owned = await db.$count(
-            workspaceModel,
-            eq(workspaceModel.ownerId, ownerId),
-          )
-          if (owned >= COMMUNITY_MAX_WORKSPACES) {
-            throw workspaceLimitReachedException()
-          }
-          return this.insertWorkspace(props)
-        },
-      })
-    }
-
     return await this.insertWorkspace(props)
   }
 
