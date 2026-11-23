@@ -420,7 +420,12 @@ export class WorkspaceMemberService extends BaseService {
 
     // The member's permissions/nav are served from the cached
     // `listByUserId` result; bust it so the change takes effect immediately.
-    await this.invalidateCacheTags(workspaceMemberCacheTag(row.userId))
+    // With a caller-owned `tx` the bust waits for that caller's commit: a Redis
+    // failure here must not abort the transaction, and the caller invalidates
+    // after commit (see `workspaceService.transferOwnership`).
+    if (!input.tx) {
+      await this.invalidateCacheTags(workspaceMemberCacheTag(row.userId))
+    }
 
     return { id: row.id }
   }

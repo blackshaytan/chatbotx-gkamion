@@ -429,12 +429,15 @@ class WorkspaceService extends BaseService {
 
       const newOwner = await tx.query.userModel.findFirst({
         where: { id: newOwnerId },
-        columns: { id: true, tenantId: true },
+        columns: { id: true },
       })
       if (!newOwner) {
         throw notFoundException("User not found")
       }
-      if (newOwner.tenantId !== workspace.tenantId) {
+      // Owner-derived tenant (a reseller's own tenant, not the raw
+      // `User.tenantId`), matching how `Workspace.tenantId` is assigned.
+      const newOwnerTenantId = await this.resolveTenantForOwner(newOwnerId)
+      if (newOwnerTenantId !== workspace.tenantId) {
         throw new ChatbotXException(
           "New owner belongs to another tenant",
           "tenantMismatch",

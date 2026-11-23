@@ -897,12 +897,33 @@ describe("WorkspaceService.transferOwnership", () => {
     expect(dispatchAuditRecordSafely).not.toHaveBeenCalled()
   })
 
+  // `findFirstUser` is read twice (the transaction's existence check and
+  // `resolveTenantForOwner`), so this uses a persistent mock.
   test("rejects a new owner from another tenant and writes nothing", async () => {
-    findFirstUser.mockResolvedValueOnce({ id: "user-2", tenantId: "9" })
+    findFirstUser.mockResolvedValue({ id: "user-2", tenantId: "9" })
 
     await expect(transfer()).rejects.toMatchObject({ code: "tenantMismatch" })
     expect(update).not.toHaveBeenCalled()
     expect(workspaceMemberService.create).not.toHaveBeenCalled()
+  })
+
+  test("accepts a root-tenant user who owns the workspace's reseller tenant", async () => {
+    findFirstWorkspace.mockResolvedValueOnce(workspaceRow({ tenantId: "9" }))
+    findFirstUser.mockResolvedValue({ id: "user-2", tenantId: "1" })
+    tenantService.findByOwner.mockResolvedValueOnce({ id: "9" })
+
+    await expect(transfer()).resolves.toMatchObject({
+      previousOwnerId: "user-1",
+    })
+    expect(setUpdate).toHaveBeenCalledWith({ ownerId: "user-2" })
+  })
+
+  test("refuses to gift a root-tenant workspace to a user who owns a reseller tenant", async () => {
+    findFirstUser.mockResolvedValue({ id: "user-2", tenantId: "1" })
+    tenantService.findByOwner.mockResolvedValueOnce({ id: "9" })
+
+    await expect(transfer()).rejects.toMatchObject({ code: "tenantMismatch" })
+    expect(update).not.toHaveBeenCalled()
   })
 
   test("rejects a workspace that is scheduled for deletion and writes nothing", async () => {
