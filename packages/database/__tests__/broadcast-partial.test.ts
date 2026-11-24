@@ -93,7 +93,7 @@ describe("broadcastChannelCapabilities", () => {
     }
   })
 
-  test("finds Instagram, Telegram, and TikTok capabilities and excludes non-broadcast channels", () => {
+  test("finds Instagram, Telegram, TikTok, and Email capabilities and excludes non-broadcast channels", () => {
     expect(findBroadcastChannelCapability("instagram")).toMatchObject({
       channel: "instagram",
       defaultSubaction: broadcastSubactions.enum.instagramActiveContacts,
@@ -105,6 +105,11 @@ describe("broadcastChannelCapabilities", () => {
     expect(findBroadcastChannelCapability("tiktok")).toMatchObject({
       channel: "tiktok",
       defaultSubaction: broadcastSubactions.enum.tiktokActiveContacts,
+    })
+    expect(findBroadcastChannelCapability("smtp")).toMatchObject({
+      channel: "smtp",
+      defaultSubaction: broadcastSubactions.enum.allContacts,
+      supportsTemplateBroadcast: false,
     })
     expect(findBroadcastChannelCapability("webchat")).toBeUndefined()
   })

@@ -181,6 +181,12 @@ export const broadcastChannelCapabilities: readonly BroadcastChannelCapability[]
       defaultSubaction: "tiktokActiveContacts",
       supportsTemplateBroadcast: false,
     },
+    {
+      channel: "smtp",
+      subactions: ["allContacts"],
+      defaultSubaction: "allContacts",
+      supportsTemplateBroadcast: false,
+    },
   ]
 
 export const findBroadcastChannelCapability = (

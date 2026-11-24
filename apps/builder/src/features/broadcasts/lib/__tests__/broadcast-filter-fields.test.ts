@@ -97,6 +97,15 @@ describe("getBroadcastExcludedFilterFields", () => {
     ).toEqual([contactFilterFields.enum.currentChannel])
   })
 
+  test("excludes current channel for Email (smtp) all-contacts broadcasts", () => {
+    expect(
+      getBroadcastExcludedFilterFields({
+        channel: channelTypes.enum.smtp,
+        subaction: broadcastSubactions.enum.allContacts,
+      }),
+    ).toEqual(["currentChannel"])
+  })
+
   test("keeps current channel and inbox for omnichannel broadcasts", () => {
     expect(
       getBroadcastExcludedFilterFields({
