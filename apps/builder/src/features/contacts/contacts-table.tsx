@@ -25,7 +25,6 @@ import {
   useContactFilterQueryState,
 } from "@/features/contact-filter"
 import { EMAIL_PHONE_RESTRICTED_FILTER_FIELDS } from "@/features/contact-filter/lib/restricted-fields"
-import { resolveActiveContactInbox } from "../conversations/utils/contact-inbox"
 import { getUserName } from "../users/schema/resource"
 import { ContactNameCell } from "./components/contact-name-cell"
 import { CONTACTS_DEFAULT_PER_PAGE } from "./constants"
@@ -222,10 +221,12 @@ export function ContactsTable({
         cell: ({ row }) => (
           <ContactNameCell
             avatarClassName="size-9"
+            // Table rows omit `lastMessageAt`, so the shared
+            // `resolveActiveContactInbox` helper cannot type-check here.
+            // With every inbox at epoch 0 that helper already returns the
+            // first element — same as indexing `[0]`.
             channel={
-              resolveActiveContactInbox(row.original.contactInboxes)?.channel as
-                | ChannelType
-                | undefined
+              row.original.contactInboxes[0]?.channel as ChannelType | undefined
             }
             contact={row.original}
             conversationId={row.original.conversation?.id}
