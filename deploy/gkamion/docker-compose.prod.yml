@@ -24,7 +24,7 @@ x-app: &app
 services:
   builder:
     <<: *app
-    image: ghcr.io/blackshaytan/chatbotx-gkamion-builder:438fdbca623e013e47c6ed41e83cc0a66c303895
+    image: ghcr.io/blackshaytan/chatbotx-gkamion-builder:1ac5668ccc306c20f3f1033ff4fc83dc79e8c5ec
     build:
       context: ../..
       dockerfile: apps/builder/docker/Dockerfile
