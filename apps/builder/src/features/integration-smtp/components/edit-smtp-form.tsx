@@ -155,7 +155,8 @@ export const EditSmtpForm = ({
           name="fromAddress"
           placeholder={t("fields.fromAddress.placeholder")}
           required
-          type="email"
+          // Mailbox may be "Display Name <email>". type="email" rejects the name.
+          type="text"
         />
 
         <SmtpReceiveFields provider={selectedProvider} />
