@@ -129,13 +129,16 @@ describe("contactService.list", () => {
     expect(relationsSpy).not.toHaveBeenCalled()
   })
 
-  test("projection:'table' for a restricted member passes includeEmailAndPhone:false + restrictToAssignedUserId to buildListWhere and returns rows as-is", async () => {
+  test("projection:'table' for a restricted member passes includeEmailAndPhone:false + restrictToAssignedUserId to buildListWhere and masks email/phone", async () => {
     const rows = [
       {
         id: "contact-1",
         fullName: "Ada Lovelace",
         avatar: null,
         createdAt: new Date("2024-01-01"),
+        email: "ada@example.com",
+        phoneNumber: "+15551234567",
+        tags: [{ id: "tag-1", name: "VIP" }],
         contactInboxes: [],
         conversation: null,
       },
@@ -153,7 +156,13 @@ describe("contactService.list", () => {
       projection: "table",
     })
 
-    expect(result.data).toEqual(rows)
+    expect(result.data).toEqual([
+      {
+        ...rows[0],
+        email: null,
+        phoneNumber: null,
+      },
+    ])
     expect(contactRepository.buildListWhere).toHaveBeenCalledWith(
       expect.objectContaining({
         includeEmailAndPhone: false,
