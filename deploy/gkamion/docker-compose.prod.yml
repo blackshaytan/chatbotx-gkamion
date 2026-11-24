@@ -24,7 +24,7 @@ x-app: &app
 services:
   builder:
     <<: *app
-    image: ghcr.io/blackshaytan/chatbotx-gkamion-builder:86a2ad034fdbf0839025384b2e5b63a8f0a7c191
+    image: ghcr.io/blackshaytan/chatbotx-gkamion-builder:dff683f2c667a70b12e447c95df71566816c79ab
     build:
       context: ../..
       dockerfile: apps/builder/docker/Dockerfile
@@ -35,7 +35,7 @@ services:
 
   worker:
     <<: *app
-    image: ghcr.io/blackshaytan/chatbotx-gkamion-worker:5a1030e36a383e31c79b07f97cf506b9360fe003
+    image: ghcr.io/blackshaytan/chatbotx-gkamion-worker:dff683f2c667a70b12e447c95df71566816c79ab
     build:
       context: ../..
       dockerfile: apps/worker/docker/Dockerfile
