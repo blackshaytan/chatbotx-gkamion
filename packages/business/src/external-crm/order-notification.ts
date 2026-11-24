@@ -142,6 +142,34 @@ export const decideOrderEvent = (input: {
   return { kind: "accept" }
 }
 
+/**
+ * Snapshot `lastEventAt` for an accepted order-level event.
+ *
+ * Producers (e.g. n8n `GKamion -> Заказы`) may send a frozen `occurredAt`
+ * taken from `orders.updated_at` while the real status change lives on the
+ * line item. Equal timestamps still `accept`, so without this the contact
+ * card stays on the first frozen day even though status text keeps moving.
+ * When `occurredAt` does not advance past the latest accepted event, use the
+ * reception time so the snapshot moves with each new status delivery.
+ */
+export const resolveSnapshotLastEventAt = (input: {
+  decision: EventDecision["kind"]
+  occurredAt: Date
+  latestAcceptedAt: Date | null
+  receivedAt?: Date
+}): Date => {
+  if (input.decision !== "accept") {
+    return input.occurredAt
+  }
+  if (
+    input.latestAcceptedAt &&
+    input.occurredAt.getTime() <= input.latestAcceptedAt.getTime()
+  ) {
+    return input.receivedAt ?? new Date()
+  }
+  return input.occurredAt
+}
+
 export const notificationRunsCreated = (data: unknown): boolean =>
   typeof data === "object" &&
   data !== null &&

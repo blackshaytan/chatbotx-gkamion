@@ -126,6 +126,147 @@ describe("mapGkamionOrders", () => {
     expect(orders[0]?.itemSummary).toBe("Крышка; Болт")
   })
 
+  test("uses open-line updated_at so status changes are not lagged by order header", () => {
+    const orders = mapGkamionOrders(
+      [
+        {
+          id: 25_188,
+          customer_id: 1017,
+          created_at: "2026-11-19T17:54:32.865+03:00",
+          updated_at: "2026-11-24T10:48:00.000+03:00",
+          order_items: [
+            {
+              status_id: 16,
+              detail_name: "Регулятор давления",
+              make_name: "LADA",
+              cost: 1511,
+              qnt: 1,
+              updated_at: "2026-11-24T09:43:28.030+03:00",
+            },
+          ],
+        },
+      ],
+      "1017",
+      labels,
+    )
+
+    expect(orders).toHaveLength(1)
+    expect(orders[0]?.status).toBe("Поступил в пункт выдачи")
+    expect(orders[0]?.lastEventAt).toEqual(
+      new Date("2026-11-24T09:43:28.030+03:00"),
+    )
+  })
+
+  test("falls back to order updated_at when open lines have no timestamp", () => {
+    const orders = mapGkamionOrders(
+      [
+        {
+          id: 2,
+          updated_at: "2026-11-06T21:27:20.397+03:00",
+          order_items: [{ status_id: 16, cost: 10, qnt: 1 }],
+        },
+      ],
+      "27",
+      labels,
+    )
+
+    expect(orders[0]?.lastEventAt).toEqual(
+      new Date("2026-11-06T21:27:20.397+03:00"),
+    )
+  })
+
+  test("picks the newest open-line updated_at across mixed lines", () => {
+    const orders = mapGkamionOrders(
+      [
+        {
+          id: 3,
+          updated_at: "2026-11-01T00:00:00.000+03:00",
+          order_items: [
+            {
+              status_id: 16,
+              cost: 10,
+              qnt: 1,
+              updated_at: "2026-11-24T09:00:00.000+03:00",
+            },
+            {
+              status_id: 13,
+              cost: 5,
+              qnt: 1,
+              updated_at: "2026-11-24T09:50:00.000+03:00",
+            },
+            {
+              status_id: 8,
+              cost: 99,
+              qnt: 1,
+              updated_at: "2026-11-24T12:00:00.000+03:00",
+            },
+          ],
+        },
+      ],
+      "27",
+      labels,
+    )
+
+    expect(orders[0]?.lastEventAt).toEqual(
+      new Date("2026-11-24T09:50:00.000+03:00"),
+    )
+  })
+
+  test("ignores invalid open-line timestamps and null status lines", () => {
+    const orders = mapGkamionOrders(
+      [
+        {
+          id: 4,
+          updated_at: "2026-11-06T21:27:20.397+03:00",
+          order_items: [
+            {
+              status_id: 16,
+              cost: 10,
+              qnt: 1,
+              updated_at: "not-a-date",
+            },
+            {
+              status_id: null,
+              cost: 1,
+              qnt: 1,
+              updated_at: "2026-11-24T12:00:00.000+03:00",
+            },
+            {
+              status_id: 16,
+              cost: 5,
+              qnt: 1,
+              updated_at: "2026-11-24T09:43:28.030+03:00",
+            },
+          ],
+        },
+      ],
+      "27",
+      labels,
+    )
+
+    expect(orders[0]?.lastEventAt).toEqual(
+      new Date("2026-11-24T09:43:28.030+03:00"),
+    )
+  })
+
+  test("falls back to order created_at when no updated_at is present", () => {
+    const orders = mapGkamionOrders(
+      [
+        {
+          id: 5,
+          created_at: "2026-11-19T17:54:32.865+03:00",
+          order_items: [{ status_id: 16, cost: 10, qnt: 1 }],
+        },
+      ],
+      "27",
+      labels,
+    )
+
+    expect(orders[0]?.lastEventAt).toEqual(
+      new Date("2026-11-19T17:54:32.865+03:00"),
+    )
+  })
+
   test("drops placeholder names and broken emails", () => {
     expect(usablePersonName("Клиент")).toBeNull()
     expect(usablePersonName("####")).toBeNull()
