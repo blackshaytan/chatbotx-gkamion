@@ -9,6 +9,7 @@ type GkamionOrderItem = {
   make_name?: string | null
   cost?: number | string | null
   qnt?: number | string | null
+  updated_at?: string | null
 }
 
 export type GkamionOrderRow = {
@@ -71,6 +72,9 @@ export const GKAMION_ORDER_STATUS_LABELS: Record<number, string> = {
 const ITEM_SUMMARY_MAX = 240
 
 const statusIdOf = (item: GkamionOrderItem): number | null => {
+  if (item.status_id == null || item.status_id === "") {
+    return null
+  }
   const value = Number(item.status_id)
   return Number.isInteger(value) ? value : null
 }
@@ -107,10 +111,38 @@ const deliveryName = (order: GkamionOrderRow): string | undefined =>
     ? order.delivery_type.trim()
     : undefined
 
-const eventTime = (order: GkamionOrderRow): Date => {
-  const raw = order.updated_at || order.created_at
-  const parsed = raw ? new Date(raw) : new Date()
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed
+const parseEventTime = (raw: string | null | undefined): Date | null => {
+  if (!raw) {
+    return null
+  }
+  const parsed = new Date(raw)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+/**
+ * Status lives on order lines. gKamion bumps `order_items.updated_at` on a
+ * status change while `orders.updated_at` can stay on an older day for an hour
+ * or longer (and may move later for unrelated header writes). Prefer the newest
+ * open-line timestamp so "Обновлён" tracks the status the card shows; fall back
+ * to the order header only when lines have no usable time.
+ */
+const eventTime = (
+  order: GkamionOrderRow,
+  liveItems: GkamionOrderItem[],
+): Date => {
+  const itemTimes = liveItems
+    .map((item) => parseEventTime(item.updated_at))
+    .filter((value): value is Date => value != null)
+  if (itemTimes.length > 0) {
+    return itemTimes.reduce((latest, value) =>
+      value.getTime() > latest.getTime() ? value : latest,
+    )
+  }
+  return (
+    parseEventTime(order.updated_at) ??
+    parseEventTime(order.created_at) ??
+    new Date()
+  )
 }
 
 /**
@@ -158,7 +190,7 @@ export const toContactOrder = (
     externalOrderId: String(orderId),
     externalCustomerId: String(order.customer_id ?? customerId),
     status,
-    lastEventAt: eventTime(order),
+    lastEventAt: eventTime(order, liveItems),
     itemSummary: summary ? summary.slice(0, ITEM_SUMMARY_MAX) : undefined,
     amount,
     currency: amount === undefined ? undefined : "RUB",

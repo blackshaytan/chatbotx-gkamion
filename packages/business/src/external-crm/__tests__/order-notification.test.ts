@@ -9,6 +9,7 @@ import {
   orderConditionGroupMatches,
   planCascadeCandidates,
   renderOrderNotificationText,
+  resolveSnapshotLastEventAt,
   runNotificationCascade,
 } from "../order-notification"
 
@@ -73,6 +74,53 @@ describe("decideOrderEvent", () => {
         occurredAt: at("2026-11-05T10:00:00.000Z"),
       }),
     ).toEqual({ kind: "accept" })
+  })
+
+  test("accepts a frozen occurredAt equal to the latest accepted event", () => {
+    expect(
+      decideOrderEvent({
+        linked: true,
+        hasPhoneOrEmail: true,
+        existing: null,
+        latestAcceptedAt: at("2026-11-19T16:02:35.415Z"),
+        occurredAt: at("2026-11-19T16:02:35.415Z"),
+      }),
+    ).toEqual({ kind: "accept" })
+  })
+})
+
+describe("resolveSnapshotLastEventAt", () => {
+  test("keeps a newer occurredAt for an accepted event", () => {
+    expect(
+      resolveSnapshotLastEventAt({
+        decision: "accept",
+        occurredAt: at("2026-11-24T06:43:28.000Z"),
+        latestAcceptedAt: at("2026-11-19T16:02:35.415Z"),
+        receivedAt: at("2026-11-24T06:44:23.000Z"),
+      }),
+    ).toEqual(at("2026-11-24T06:43:28.000Z"))
+  })
+
+  test("uses reception time when the producer re-sends a frozen occurredAt", () => {
+    expect(
+      resolveSnapshotLastEventAt({
+        decision: "accept",
+        occurredAt: at("2026-11-19T16:02:35.415Z"),
+        latestAcceptedAt: at("2026-11-19T16:02:35.415Z"),
+        receivedAt: at("2026-11-24T06:44:23.898Z"),
+      }),
+    ).toEqual(at("2026-11-24T06:44:23.898Z"))
+  })
+
+  test("does not invent a reception time for history events", () => {
+    expect(
+      resolveSnapshotLastEventAt({
+        decision: "history",
+        occurredAt: at("2026-11-19T10:00:00.000Z"),
+        latestAcceptedAt: at("2026-11-19T16:02:35.415Z"),
+        receivedAt: at("2026-11-24T06:44:23.898Z"),
+      }),
+    ).toEqual(at("2026-11-19T10:00:00.000Z"))
   })
 })
 

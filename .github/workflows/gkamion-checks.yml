@@ -48,6 +48,7 @@ jobs:
           __tests__/public-spec-mcp.test.ts
           __tests__/external-agent-api.test.ts
           __tests__/voice-agent-api.test.ts
+          __tests__/gkamion-contact-orders.test.ts
           __tests__/contact-filter-config.test.ts
           __tests__/contact-inbox-panel.test.tsx
           src/features/contacts/components/__tests__/contact-ai-calls-section.test.tsx
@@ -116,7 +117,7 @@ jobs:
           __tests__/chat-message-pagination.test.ts
 
       - working-directory: apps/worker
-        run: pnpm exec vitest run __tests__/notification __tests__/incoming-push-policy.test.ts __tests__/received-message.test.ts
+        run: pnpm exec vitest run __tests__/notification __tests__/incoming-push-policy.test.ts __tests__/received-message.test.ts __tests__/voice-email-callback.test.ts
 
       - working-directory: packages/business
         run: >-
@@ -130,6 +131,7 @@ jobs:
           __tests__/task
           __tests__/chat
           __tests__/notification
+          src/external-crm/__tests__/order-notification.test.ts
           __tests__/workspace-member.service.test.ts
           __tests__/inbox-team-service-members.test.ts
 

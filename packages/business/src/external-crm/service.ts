@@ -29,6 +29,7 @@ import {
   decideOrderEvent,
   notificationRunsCreated,
   readOrderNotificationPackage,
+  resolveSnapshotLastEventAt,
 } from "./order-notification"
 import { toContactOrderSnapshot } from "./order-snapshot"
 import {
@@ -353,6 +354,13 @@ class ExternalCrmService extends BaseService {
           event.statusId !== undefined
         if (!existing) {
           const snapshot = shortOrderSnapshot(event.orderData)
+          const receivedAt = new Date()
+          const snapshotLastEventAt = resolveSnapshotLastEventAt({
+            decision: decision.kind,
+            occurredAt: event.occurredAt,
+            latestAcceptedAt,
+            receivedAt,
+          })
           await db.transaction(async (tx) => {
             await tx.insert(externalOrderEventModel).values({
               workspaceId,
@@ -367,6 +375,8 @@ class ExternalCrmService extends BaseService {
             if (subject === "item") {
               return
             }
+            // History (strictly older occurredAt) is stored above but must not
+            // advance the contact-card snapshot; setWhere below is the guard.
             await tx
               .insert(externalOrderModel)
               .values({
@@ -377,7 +387,7 @@ class ExternalCrmService extends BaseService {
                 contactId: identity.contactId,
                 status: event.status,
                 data: snapshot,
-                lastEventAt: event.occurredAt,
+                lastEventAt: snapshotLastEventAt,
               })
               .onConflictDoUpdate({
                 target: [
@@ -390,10 +400,13 @@ class ExternalCrmService extends BaseService {
                   contactId: identity.contactId,
                   status: event.status,
                   data: snapshot,
-                  lastEventAt: event.occurredAt,
-                  updatedAt: new Date(),
+                  lastEventAt: snapshotLastEventAt,
+                  updatedAt: receivedAt,
                 },
-                setWhere: lte(externalOrderModel.lastEventAt, event.occurredAt),
+                setWhere: lte(
+                  externalOrderModel.lastEventAt,
+                  snapshotLastEventAt,
+                ),
               })
           })
         }
