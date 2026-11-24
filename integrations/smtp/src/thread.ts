@@ -149,3 +149,48 @@ export const fallbackSubjectFromText = (text: string): string => {
   }
   return line.length > 120 ? `${line.slice(0, 117)}…` : line
 }
+
+export type ParsedSmtpAtSubject = {
+  /** When set, send as a new mail topic (no Re:, no In-Reply-To). */
+  subject?: string
+  body: string
+}
+
+/**
+ * Inbox shorthand for a new SMTP subject in the same ChatbotX dialog:
+ * - `@Тема письма` then a newline, then the body
+ * - `@Тема: тело` on one line (colon)
+ * - `@Тема тело` on one line (first word = subject)
+ *
+ * Leading/trailing whitespace around `@` is ignored. Messages that do not
+ * start with `@` are returned unchanged.
+ */
+export const parseSmtpAtSubject = (text: string): ParsedSmtpAtSubject => {
+  const start = text.match(/^\s*@/)
+  if (!start) {
+    return { body: text }
+  }
+  const withoutAt = text.slice(start[0].length)
+  const newline = withoutAt.indexOf("\n")
+  if (newline >= 0) {
+    const subject = withoutAt.slice(0, newline).replace(/\s+$/u, "").trim()
+    const body = withoutAt.slice(newline + 1)
+    if (!subject) {
+      return { body: text }
+    }
+    return { subject, body }
+  }
+  const colon = withoutAt.match(/^([^:\n]+):\s*([\s\S]+)$/u)
+  if (colon?.[1]?.trim() && colon[2] !== undefined) {
+    return { subject: colon[1].trim(), body: colon[2] }
+  }
+  const spaced = withoutAt.match(/^(\S+)\s+([\s\S]+)$/u)
+  if (spaced?.[1] && spaced[2] !== undefined) {
+    return { subject: spaced[1], body: spaced[2] }
+  }
+  const only = withoutAt.trim()
+  if (!only) {
+    return { body: text }
+  }
+  return { subject: only, body: "" }
+}

@@ -69,4 +69,37 @@ describe("smtp sendMessage", () => {
       }),
     )
   })
+
+  test("starts a new mailbox topic from an @subject prefix", async () => {
+    await sendMessage({
+      ctx: ctx as never,
+      data: {
+        contact: { sourceId: "jane@example.com", id: "c1" },
+        message: {
+          id: "m2",
+          workspaceId: "w1",
+          contentType: "text",
+          text: "@Новая тема\nЗдравствуйте",
+          messageType: "outgoing",
+          contentAttributes: {
+            emailReply: {
+              subject: "Need help",
+              inReplyTo: "<m1@example.com>",
+              references: "<m1@example.com>",
+            },
+          },
+        },
+      },
+    })
+
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subject: "Новая тема",
+        text: "Здравствуйте",
+      }),
+    )
+    const mailed = sendMailMock.mock.calls[0]?.[0] as Record<string, unknown>
+    expect(mailed).not.toHaveProperty("inReplyTo")
+    expect(mailed).not.toHaveProperty("references")
+  })
 })
