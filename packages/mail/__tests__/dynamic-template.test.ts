@@ -10,6 +10,30 @@ describe("elementToMjml", () => {
     expect(mjml).toContain("Добрый день!<br /><br />- Склад<br />- Доставка")
   })
 
+  test("text joins a lone TipTap bullet dash with the next line", () => {
+    const mjml = elementToMjml({
+      type: "text",
+      text: "Коротко по условиям:\n-\nСклад и скорость: оптовый склад\n-\nДоставка: бесплатно",
+    })
+    expect(mjml).toContain(
+      "Коротко по условиям:<br />- Склад и скорость: оптовый склад<br />- Доставка: бесплатно",
+    )
+    expect(mjml).not.toContain("-<br />Склад")
+  })
+
+  test("buildMjmlTemplate uses a full-width left-aligned body", async () => {
+    const { buildMjmlTemplate } = await import("../src/emails/dynamic-template")
+    const mjml = buildMjmlTemplate({
+      brandName: "G-Kamion",
+      subject: "Test",
+      preheader: "preview",
+      elements: [{ type: "text", text: "Hello" }],
+    })
+    expect(mjml).toContain('width="100%"')
+    expect(mjml).toContain("margin: 0 !important")
+    expect(mjml).not.toContain("Built with chatbotx.io")
+  })
+
   test("heading converts newlines to <br />", () => {
     const mjml = elementToMjml({
       type: "heading",
