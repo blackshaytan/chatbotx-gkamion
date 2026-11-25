@@ -126,8 +126,9 @@ export function buildMjmlTemplate(props: DynamicEmailProps): string {
   const { elements: els } = props
   const bodyElements = els.map(elementToMjml).join("\n")
 
-  // width=100% + left-aligned CSS keeps the body flush with Gmail's chrome
-  // instead of the default centered 600px marketing column.
+  // mj-body only accepts px widths (not %). Use a wide px body, then CSS
+  // forces left alignment and stretches to the client pane so Gmail does not
+  // park a centered 600px marketing column in the middle of a wide window.
   return `
     <mjml>
       <mj-head>
@@ -146,7 +147,7 @@ export function buildMjmlTemplate(props: DynamicEmailProps): string {
           div[style*="margin:0px auto"] { margin: 0 !important; max-width: 100% !important; width: 100% !important; }
         </mj-style>
       </mj-head>
-      <mj-body width="100%" background-color="#ffffff">
+      <mj-body width="960px" background-color="#ffffff">
         ${bodyElements}
       </mj-body>
     </mjml>
