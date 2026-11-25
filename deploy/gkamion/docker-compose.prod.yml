@@ -35,7 +35,7 @@ services:
 
   worker:
     <<: *app
-    image: ghcr.io/blackshaytan/chatbotx-gkamion-worker:1975a0e6f32a62f67316625e90f775126c29fac6
+    image: ghcr.io/blackshaytan/chatbotx-gkamion-worker:eb6d5195d57b91eb707b579d0b82b2d28687ea6d
     build:
       context: ../..
       dockerfile: apps/worker/docker/Dockerfile
