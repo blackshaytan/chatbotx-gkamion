@@ -509,10 +509,15 @@ export const receiveMessage = async (
         contactId: contactInbox.contactId,
         workspaceId: inbox.workspaceId,
         text: incomingMessage.text,
+        channel: inbox.channel,
       })
     } catch (error) {
       logger.warn(
-        { error, contactId: contactInbox.contactId, channel: inbox.channel },
+        {
+          err: error,
+          contactId: contactInbox.contactId,
+          channel: inbox.channel,
+        },
         "Contact update from message text failed",
       )
     }

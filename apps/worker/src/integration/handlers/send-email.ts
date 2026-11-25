@@ -1,4 +1,7 @@
-import { emailTopicAnalyticsService } from "@chatbotx.io/analytics"
+import {
+  broadcastAnalyticsService,
+  emailTopicAnalyticsService,
+} from "@chatbotx.io/analytics"
 import {
   buildContext,
   buildUnsubscribeUrl,
@@ -9,12 +12,19 @@ import {
   signEmailClickUrl,
   workspaceService,
 } from "@chatbotx.io/business"
-import type { InboxWithIntegrations } from "@chatbotx.io/database/types"
+import { channelTypes } from "@chatbotx.io/database/partials"
+import type {
+  ContactInboxModel,
+  InboxWithIntegrations,
+} from "@chatbotx.io/database/types"
 import type {
   EmailStepSchema,
   PageElementSchema,
 } from "@chatbotx.io/flow-config"
-import { UNSUBSCRIBE_PLACEHOLDER } from "@chatbotx.io/flow-config"
+import {
+  BROADCAST_PAYLOAD_TYPE,
+  UNSUBSCRIBE_PLACEHOLDER,
+} from "@chatbotx.io/flow-config"
 import {
   integration as integrationSmtp,
   smtpAuthSchema,
@@ -114,13 +124,151 @@ async function resolveElements({
   return resolved
 }
 
+type BroadcastSettleProps = Pick<
+  ExecuteStepProps<EmailStepSchema>,
+  "conversation" | "contactInbox" | "flowVersion" | "metadata"
+>
+
+const buildBroadcastEventContext = ({
+  conversation,
+  contactInbox,
+}: Pick<BroadcastSettleProps, "conversation" | "contactInbox">) => ({
+  workspaceId: conversation.workspaceId,
+  contactId: conversation.contactId,
+  conversationId: conversation.id,
+  contactInboxId: contactInbox.id,
+  channel: contactInbox.channel,
+})
+
+/**
+ * Email broadcasts have no provider status webhook, so the send result is the
+ * only signal. Settling it here stamps `ContactOnBroadcast.deliveredAt` /
+ * `failedAt` immediately, instead of leaving `finalizeBroadcasts` to wait out
+ * the grace window and report `delivered = 0`.
+ */
+const settleBroadcastDelivered = async (props: BroadcastSettleProps) => {
+  const { metadata } = props
+  if (metadata?.type !== BROADCAST_PAYLOAD_TYPE) {
+    return
+  }
+  await broadcastAnalyticsService.onDelivered([
+    {
+      context: buildBroadcastEventContext(props),
+      action: { messageId: "", sourceId: "" },
+      metadata,
+      occurredAt: new Date(),
+    },
+  ])
+}
+
+const settleBroadcastFailed = async (
+  props: BroadcastSettleProps,
+  errorMessage: string,
+) => {
+  const { metadata, flowVersion } = props
+  if (metadata?.type !== BROADCAST_PAYLOAD_TYPE) {
+    return
+  }
+  await broadcastAnalyticsService.onFailed([
+    {
+      context: buildBroadcastEventContext(props),
+      action: { messageId: "", flowId: flowVersion.flowId },
+      errorData: { message: errorMessage },
+      metadata,
+      occurredAt: new Date(),
+      willRetry: false,
+    },
+  ])
+}
+
+/**
+ * Runs one post-send bookkeeping write. A failure is logged and never rethrown:
+ * the email has already been sent (or already known to have failed), so the
+ * step must not retry and send it again.
+ */
+const runRecordSafely = async (
+  recordName: string,
+  logContext: Record<string, unknown>,
+  record: () => Promise<unknown>,
+): Promise<void> => {
+  try {
+    await record()
+  } catch (settleErr) {
+    logger.error(
+      { err: settleErr, ...logContext },
+      `handleSendEmail: failed to record ${recordName}`,
+    )
+  }
+}
+
+const recordEmailDelivered = async (
+  props: BroadcastSettleProps,
+  token?: string,
+): Promise<void> => {
+  const logContext = {
+    workspaceId: props.conversation.workspaceId,
+    contactInboxId: props.contactInbox.id,
+  }
+  if (token) {
+    await runRecordSafely("email topic delivery", logContext, () =>
+      emailTopicAnalyticsService.markDelivered(token),
+    )
+  }
+  await runRecordSafely("broadcast delivery", logContext, () =>
+    settleBroadcastDelivered(props),
+  )
+}
+
+const recordEmailFailed = async (
+  props: BroadcastSettleProps,
+  errorMessage: string,
+  token?: string,
+): Promise<void> => {
+  const logContext = {
+    workspaceId: props.conversation.workspaceId,
+    contactInboxId: props.contactInbox.id,
+  }
+  if (token) {
+    await runRecordSafely("email topic failure", logContext, () =>
+      emailTopicAnalyticsService.markFailed(token),
+    )
+  }
+  await runRecordSafely("broadcast failure", logContext, () =>
+    settleBroadcastFailed(props, errorMessage),
+  )
+}
+
+/**
+ * Email step recipient. Falls back to the inbox `sourceId` for SMTP contacts,
+ * whose `sourceId` is their address, when the step's `to` resolves empty.
+ */
+const resolveRecipientEmail = (
+  resolvedTo: string,
+  contactInbox: ContactInboxModel,
+): string => {
+  const trimmedTo = resolvedTo.trim()
+  if (trimmedTo) {
+    return trimmedTo
+  }
+  const sourceId = contactInbox.sourceId?.trim() ?? ""
+  const isSmtpInbox = contactInbox.channel === channelTypes.enum.smtp
+  return isSmtpInbox && sourceId.includes("@") ? sourceId : ""
+}
+
 export async function sendEmail({
   conversation,
   flowVersion,
   step,
   contactInbox,
-  metadata: _metadata,
+  metadata,
 }: ExecuteStepProps<EmailStepSchema>) {
+  const broadcastSettleProps: BroadcastSettleProps = {
+    conversation,
+    contactInbox,
+    flowVersion,
+    metadata,
+  }
+
   const contact = await contactService.findBy({
     where: { id: conversation.contactId },
   })
@@ -129,6 +277,7 @@ export async function sendEmail({
       { contactId: conversation.contactId },
       "handleSendEmail: contact has opted out of email, skipping",
     )
+    await recordEmailFailed(broadcastSettleProps, "Contact opted out of email")
     return
   }
 
@@ -142,6 +291,7 @@ export async function sendEmail({
     logger.warn(
       `handleSendEmail: smtp integration ${step.integrationSmtpId} not found`,
     )
+    await recordEmailFailed(broadcastSettleProps, "SMTP integration not found")
     return
   }
 
@@ -171,11 +321,24 @@ export async function sendEmail({
     workspaceId: conversation.workspaceId,
   })
 
-  const [to, subject, preheader] = await Promise.all([
+  const [resolvedTo, subject, preheader] = await Promise.all([
     contactVariableService.replaceAll({ text: step.to, variables }),
     contactVariableService.replaceAll({ text: step.subject, variables }),
     contactVariableService.replaceAll({ text: step.preheader, variables }),
   ])
+
+  const to = resolveRecipientEmail(resolvedTo, contactInbox)
+  if (!to.includes("@")) {
+    logger.warn(
+      { contactId: conversation.contactId, contactInboxId: contactInbox.id },
+      "handleSendEmail: recipient email address is invalid or empty, skipping",
+    )
+    await recordEmailFailed(
+      broadcastSettleProps,
+      "Recipient email address is invalid or empty",
+    )
+    return
+  }
 
   const unsubscribeUrl = await buildUnsubscribeUrl(
     appUrl,
@@ -221,29 +384,46 @@ export async function sendEmail({
     integration: { ...smtpIntegration, auth },
   })
 
+  let html: string
+  try {
+    html = await renderDynamicEmailHtml(props)
+  } catch (err) {
+    logger.error(
+      {
+        err,
+        integrationSmtpId: smtpIntegration.id,
+        workspaceId: conversation.workspaceId,
+      },
+      "handleSendEmail: email render failed",
+    )
+    await recordEmailFailed(broadcastSettleProps, "Email render failed", token)
+    return
+  }
+
   try {
     await integrationSmtp.runAction("sendMail", {
       ctx: botContext,
       from: step.from || smtpIntegration.fromAddress,
       to,
       subject,
-      html: await renderDynamicEmailHtml(props),
+      html,
     })
-
-    if (token) {
-      await emailTopicAnalyticsService.markDelivered(token)
-    }
-  } catch {
+  } catch (err) {
     logger.error(
       {
+        err,
         integrationSmtpId: smtpIntegration.id,
         workspaceId: conversation.workspaceId,
       },
       "handleSendEmail: SMTP send failed",
     )
-    if (token) {
-      await emailTopicAnalyticsService.markFailed(token)
-    }
+    await recordEmailFailed(
+      broadcastSettleProps,
+      err instanceof Error ? err.message : "SMTP send failed",
+      token,
+    )
     return
   }
+
+  await recordEmailDelivered(broadcastSettleProps, token)
 }

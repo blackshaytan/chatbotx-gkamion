@@ -892,6 +892,35 @@ describe("receiveMessage — message repository branch", () => {
     expect(mockAutomatedResponseEnqueueFlowAction).not.toHaveBeenCalled()
   })
 
+  test("forwards channel and text to updateContactFromMessage on inbound text message", async () => {
+    vi.mocked(
+      integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+    ).mockResolvedValue({
+      inbox: { ...fakeInbox, channel: "smtp" },
+      integrationRow: fakeIntegrationRow,
+    } as never)
+    mockRunChannelHandler.mockResolvedValue({
+      message: {
+        ...baseIncomingMessage,
+        messageType: "incoming",
+        text: "hello from email",
+      },
+      contact: { sourceId: "client@example.com" },
+      postbackAction: null,
+      quickReplyAction: null,
+      ref: null,
+    })
+
+    await receiveMessage(baseProps)
+
+    expect(mockUpdateContactFromMessage).toHaveBeenCalledWith({
+      contactId: fakeContactInbox.contactId,
+      workspaceId: fakeInbox.workspaceId,
+      text: "hello from email",
+      channel: "smtp",
+    })
+  })
+
   test("does not store a ZZAP echo of a message ChatbotX already sent", async () => {
     vi.mocked(
       integrationService.identifyInboxAndIntegrationAuthFromIdentifier,

@@ -1,7 +1,13 @@
 import { and, db, eq } from "@chatbotx.io/database/client"
+import { channelTypes } from "@chatbotx.io/database/partials"
 import { contactModel } from "@chatbotx.io/database/schema"
+import { logger } from "../logger"
 import { emitContactInfoChangeEvents } from "./contact-info-changes"
-import { extractContactInfo } from "./extract-contact"
+import {
+  extractContactInfo,
+  extractEmailAddresses,
+  stripQuotedEmailReply,
+} from "./extract-contact"
 
 export type UpdateContactFromMessageProps = {
   contactId: string
@@ -15,6 +21,12 @@ export type UpdateContactFromMessageProps = {
    * extra DB round trip per inbound message.
    */
   defaultCountry?: string | null
+  /**
+   * Channel the message arrived on. SMTP bodies are scanned only from the
+   * sender's new text (quoted thread history is dropped) and the email is not
+   * taken from the body, because the sender's own address is quoted there.
+   */
+  channel?: string
 }
 
 export type UpdateContactFromMessageResult = {
@@ -26,6 +38,56 @@ export type UpdateContactFromMessageResult = {
  *  internal guard in `extractContactInfo`; short-circuit here too so we skip
  *  the workspace lookup entirely on every "ok", "hi", emoji-only ping. */
 const MIN_EXTRACT_LENGTH = 5
+
+/** Collects every email address that appears in the given string-valued columns. */
+const collectEmailAddresses = (values: unknown[]): Set<string> => {
+  const emails = new Set<string>()
+  for (const value of values) {
+    if (typeof value !== "string") {
+      continue
+    }
+    for (const email of extractEmailAddresses(value)) {
+      emails.add(email)
+    }
+  }
+  return emails
+}
+
+/**
+ * Addresses owned by the workspace itself (its SMTP mailboxes). Quoted replies
+ * carry these back to us, so they must never become the contact's email.
+ */
+const loadWorkspaceOwnEmails = async (
+  workspaceId: string,
+): Promise<Set<string>> => {
+  if (!db.query.integrationSmtpModel) {
+    return new Set()
+  }
+
+  try {
+    const smtpIntegrations = await db.query.integrationSmtpModel.findMany({
+      where: { workspaceId },
+      columns: { fromAddress: true, name: true, auth: true },
+    })
+
+    const ownEmailSources = smtpIntegrations.flatMap((row) => {
+      const auth = row.auth as {
+        username?: unknown
+        fromAddress?: unknown
+      } | null
+      return [row.fromAddress, row.name, auth?.username, auth?.fromAddress]
+    })
+    return collectEmailAddresses(ownEmailSources)
+  } catch (err) {
+    // Degrade to "no exclusions": phone extraction must not fail because the
+    // mailbox lookup hit a transient DB error.
+    logger.warn(
+      { err, workspaceId },
+      "Workspace SMTP address lookup failed; contact email exclusions skipped",
+    )
+    return new Set()
+  }
+}
 
 /**
  * Scan inbound message text for phone/email and overwrite the Contact row
@@ -41,8 +103,14 @@ const MIN_EXTRACT_LENGTH = 5
 export const updateContactFromMessage = async (
   props: UpdateContactFromMessageProps,
 ): Promise<UpdateContactFromMessageResult> => {
-  const { contactId, workspaceId, text, defaultCountry } = props
-  if (!text || text.length < MIN_EXTRACT_LENGTH) {
+  const { contactId, workspaceId, text, defaultCountry, channel } = props
+  if (!text) {
+    return {}
+  }
+
+  const isSmtp = channel === channelTypes.enum.smtp
+  const scanText = isSmtp ? stripQuotedEmailReply(text) : text
+  if (scanText.length < MIN_EXTRACT_LENGTH) {
     return {}
   }
 
@@ -55,7 +123,15 @@ export const updateContactFromMessage = async (
     country = workspace?.targetCountry ?? null
   }
 
-  const extracted = extractContactInfo(text, country)
+  const excludeEmails =
+    !isSmtp && scanText.includes("@")
+      ? await loadWorkspaceOwnEmails(workspaceId)
+      : undefined
+
+  const extracted = extractContactInfo(scanText, country, {
+    skipEmail: isSmtp,
+    excludeEmails,
+  })
 
   const updates: { phoneNumber?: string; email?: string } = {}
   if (extracted.phoneNumber) {
