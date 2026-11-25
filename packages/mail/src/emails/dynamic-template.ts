@@ -45,18 +45,22 @@ export type DynamicEmailProps = {
   elements: MailElementSchema[]
 }
 
+/** Escape text and keep Enter/newlines as hard breaks for email clients. */
+const textWithBreaks = (text: string): string =>
+  esc(text).replace(/\n/g, "<br />")
+
 export function elementToMjml(element: MailElementSchema): string {
   switch (element.type) {
-    // mj-raw passes content through as raw HTML — intentionally unescaped so that
-    // HTML anchors (e.g. the unsubscribe link placeholder) render correctly.
-    // Email clients strip dangerous tags (<script>, on* handlers) natively.
+    // TipTap stores Enter as `\n` (getText blockSeparator). HTML collapses
+    // those newlines, so every text-like block must emit `<br />` — otherwise
+    // a multi-paragraph email body renders as one continuous run in Gmail/etc.
     case "heading":
       return `
         <mj-section>
           <mj-column>
             <mj-raw>
               <div style="font-size:20px;font-weight:700;color:#1d1c1d;line-height:28px;padding:0;">
-                ${element.text}
+                ${textWithBreaks(element.text)}
               </div>
             </mj-raw>
           </mj-column>
@@ -68,7 +72,7 @@ export function elementToMjml(element: MailElementSchema): string {
           <mj-column>
             <mj-raw>
               <div style="font-size:16px;color:#3c3f44;line-height:24px;padding:0;">
-                ${element.text}
+                ${textWithBreaks(element.text)}
               </div>
             </mj-raw>
           </mj-column>
@@ -80,7 +84,7 @@ export function elementToMjml(element: MailElementSchema): string {
           <mj-column>
             <mj-raw>
               <div style="font-family:monospace,'Courier New';font-size:14px;color:#3c3f44;line-height:22px;background-color:#f4f4f5;padding:12px;">
-                ${esc(element.text).replace(/\n/g, "<br />")}
+                ${textWithBreaks(element.text)}
               </div>
             </mj-raw>
           </mj-column>
