@@ -160,14 +160,20 @@ const loadInitialState = async ({
   urlConversation,
   contactPermissionScope,
   canFilterBotCategory,
+  hiddenInboxIds,
 }: {
   workspaceId: string
   urlConversation: UrlConversation
   contactPermissionScope: ContactPermissionScope
   canFilterBotCategory: boolean
+  hiddenInboxIds?: string[]
 }): Promise<ChatStoreInitialState | null> => {
   const conversationId =
     urlConversation.kind === "valid" ? urlConversation.id : undefined
+  const conversationAccess = {
+    includeEmailAndPhone: contactPermissionScope.canViewEmailAndPhone,
+    hiddenInboxIds,
+  }
   const conversationsPromise = listConversations(
     resolveInboxListBotCategory(
       {
@@ -177,12 +183,10 @@ const loadInitialState = async ({
       },
       canFilterBotCategory,
     ),
-    {
-      includeEmailAndPhone: contactPermissionScope.canViewEmailAndPhone,
-    },
+    conversationAccess,
   )
   const findConversationPromise = conversationId
-    ? findConversation({ workspaceId, id: conversationId })
+    ? findConversation({ workspaceId, id: conversationId }, { hiddenInboxIds })
     : null
 
   const activeConversationPromise: Promise<ListConversationItemResource | null> =
@@ -293,11 +297,14 @@ export const getInboxInitialState = async ({
   conversationId,
   contactPermissionScope,
   canFilterBotCategory = true,
+  hiddenInboxIds,
 }: {
   workspaceId: string
   conversationId?: string
   contactPermissionScope: ContactPermissionScope
   canFilterBotCategory?: boolean
+  /** Personal SMTP inbox ids the viewer must not see (see resolveMemberHiddenInboxIds). */
+  hiddenInboxIds?: string[]
 }): Promise<ChatStoreInitialState | null> => {
   try {
     const signal = AbortSignal.timeout(INBOX_SEED_TIMEOUT_MS)
@@ -307,6 +314,7 @@ export const getInboxInitialState = async ({
         urlConversation: parseUrlConversation(conversationId),
         contactPermissionScope,
         canFilterBotCategory,
+        hiddenInboxIds,
       }),
       signal,
       "Inbox initial state seed timed out",

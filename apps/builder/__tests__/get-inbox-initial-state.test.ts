@@ -250,6 +250,25 @@ describe("getInboxInitialState", () => {
     )
   })
 
+  test("passes hidden inbox ids to the conversation list and the deep-linked lookup", async () => {
+    mockDeepLinkSeedRequests()
+
+    await getInitialState({
+      workspaceId: "workspace-1",
+      conversationId: DEEP_LINK_ID,
+      hiddenInboxIds: ["inbox-hidden"],
+    })
+
+    expect(mockListConversations).toHaveBeenCalledWith(
+      expect.objectContaining({ workspaceId: "workspace-1" }),
+      { includeEmailAndPhone: true, hiddenInboxIds: ["inbox-hidden"] },
+    )
+    expect(mockFindConversation).toHaveBeenCalledWith(
+      { workspaceId: "workspace-1", id: DEEP_LINK_ID },
+      { hiddenInboxIds: ["inbox-hidden"] },
+    )
+  })
+
   test("passes the contact permission scope to the contact seed", async () => {
     mockDeepLinkSeedRequests()
 

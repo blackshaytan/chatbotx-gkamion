@@ -12,6 +12,7 @@ import {
   buildContactPermissionScope,
   type ContactPermissionScope,
 } from "@/features/contacts/permissions"
+import { resolveMemberHiddenInboxIds } from "@/features/conversations/lib/member-inbox-access"
 import { requireContactsAccess } from "@/lib/auth/require-workspace-permission"
 import { getCurrentUserAndTargetWorkspace } from "@/lib/auth/utils"
 
@@ -47,6 +48,11 @@ export default async function InboxPage({
     return notFound()
   }
 
+  const hiddenInboxIds = await resolveMemberHiddenInboxIds({
+    workspaceId,
+    userId: user.id,
+    permissions: targetWorkspaceMember.permissions,
+  })
   const conversationId = (await searchParams)?.conversationId
 
   return (
@@ -63,6 +69,7 @@ export default async function InboxPage({
           canViewEmailAndPhone={contactPermissionScope.canViewEmailAndPhone}
           contactPermissionScope={contactPermissionScope}
           conversationId={conversationId}
+          hiddenInboxIds={hiddenInboxIds}
           layout={savedLayout}
           workspaceId={workspaceId}
         />
@@ -76,6 +83,7 @@ async function InboxContent({
   canViewEmailAndPhone,
   contactPermissionScope,
   conversationId,
+  hiddenInboxIds,
   layout,
   workspaceId,
 }: {
@@ -83,6 +91,7 @@ async function InboxContent({
   canViewEmailAndPhone: boolean
   contactPermissionScope: ContactPermissionScope
   conversationId?: string
+  hiddenInboxIds: string[]
   layout: [number, number, number]
   workspaceId: string
 }) {
@@ -91,6 +100,7 @@ async function InboxContent({
     conversationId,
     contactPermissionScope,
     canFilterBotCategory,
+    hiddenInboxIds,
   })
 
   return (

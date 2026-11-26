@@ -19,6 +19,8 @@ export type ConversationCursor = {
 
 type BuildConversationWhereOptions = {
   includeEmailAndPhone?: boolean
+  /** Inbox ids whose conversations the viewer must not see (personal SMTP ACL). */
+  hiddenInboxIds?: string[]
 }
 
 type QueryWhere = Record<string, unknown>
@@ -175,6 +177,19 @@ export function buildConversationWhere(
   // it is never a real value stored on contactInboxes.channel.
   if (input.channel && input.channel !== channelTypes.enum.omnichannel) {
     where.contactInboxes = { channel: input.channel }
+  }
+
+  // ── hidden inboxes (personal SMTP ACL) ───────────────────────────────────
+  // Merged after the channel block so both predicates apply to the same
+  // contactInboxes row.
+  if (options.hiddenInboxIds?.length) {
+    const current = isQueryWhere(where.contactInboxes)
+      ? where.contactInboxes
+      : {}
+    where.contactInboxes = {
+      ...current,
+      inboxId: { notIn: options.hiddenInboxIds },
+    }
   }
 
   // ── keyword (smart contact search, including sourceId) ───────────────────

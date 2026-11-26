@@ -1,6 +1,9 @@
 import { conversationService } from "@chatbotx.io/business"
 import { isWorkspaceAdminMember } from "@chatbotx.io/business/workspace-member/predicates"
-import { channelTypes } from "@chatbotx.io/database/partials"
+import {
+  channelTypes,
+  type WorkspaceMemberPermissions,
+} from "@chatbotx.io/database/partials"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import z from "zod"
 import { bulkUpdateIdsRequest, successResponse } from "@/features/common/schema"
@@ -10,8 +13,10 @@ import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"
 import { authorizedAPI } from "@/orpc"
 import { CONVERSATIONS_LIST_POST_PATH } from "../lib/api-paths"
 import { resolveInboxListBotCategory } from "../lib/inbox-bot-category"
+import { resolveMemberHiddenInboxIds } from "../lib/member-inbox-access"
 import { getPostDetailsQuery } from "../queries/get-post-details.query"
 import {
+  type ConversationAccess,
   findConversation,
   listConversations,
 } from "../queries/list-conversations.query"
@@ -26,6 +31,25 @@ import {
 const workspaceIdAndIdRequest = z.object({
   workspaceId: zodBigintAsString(),
   id: zodBigintAsString(),
+})
+
+// Member-scoped read access: email/phone visibility plus the personal SMTP
+// mailboxes this member may not see. Workspace tokens never reach this path.
+const resolveMemberConversationAccess = async ({
+  workspaceId,
+  userId,
+  permissions,
+}: {
+  workspaceId: string
+  userId: string
+  permissions: WorkspaceMemberPermissions
+}): Promise<ConversationAccess> => ({
+  includeEmailAndPhone: canViewContactEmailAndPhone(permissions),
+  hiddenInboxIds: await resolveMemberHiddenInboxIds({
+    workspaceId,
+    userId,
+    permissions,
+  }),
 })
 
 const postDetailsSchema = z.object({
@@ -56,11 +80,11 @@ export const conversationsAuthenticatedAPI = {
             input,
             isWorkspaceAdminMember(context.workspaceMember),
           ),
-          {
-            includeEmailAndPhone: canViewContactEmailAndPhone(
-              context.workspaceMember.permissions,
-            ),
-          },
+          await resolveMemberConversationAccess({
+            workspaceId: input.workspaceId,
+            userId: context.user.id,
+            permissions: context.workspaceMember.permissions,
+          }),
         ),
     ),
 
@@ -81,11 +105,11 @@ export const conversationsAuthenticatedAPI = {
             input,
             isWorkspaceAdminMember(context.workspaceMember),
           ),
-          {
-            includeEmailAndPhone: canViewContactEmailAndPhone(
-              context.workspaceMember.permissions,
-            ),
-          },
+          await resolveMemberConversationAccess({
+            workspaceId: input.workspaceId,
+            userId: context.user.id,
+            permissions: context.workspaceMember.permissions,
+          }),
         ),
     ),
 
@@ -99,7 +123,17 @@ export const conversationsAuthenticatedAPI = {
     .input(findConversationRequest)
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(findConversationResponse)
-    .handler(async ({ input }) => await findConversation(input)),
+    .handler(
+      async ({ input, context }) =>
+        await findConversation(
+          input,
+          await resolveMemberConversationAccess({
+            workspaceId: input.workspaceId,
+            userId: context.user.id,
+            permissions: context.workspaceMember.permissions,
+          }),
+        ),
+    ),
 
   getPostDetailsAuthenticatedAPI: authorizedAPI
     .route({
