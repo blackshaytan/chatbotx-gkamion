@@ -155,7 +155,14 @@ export class WorkspaceMemberService extends BaseService {
         )
       })
 
+    // Bust the roster cache after commit. resolveAudienceUserIds (personal SMTP
+    // push/realtime) reads listByWorkspaceId; without this a removed member or
+    // demoted admin can stay in that audience for the cache TTL.
     if (!props.tx && member) {
+      await this.invalidateCacheTags([
+        `workspaces:${workspaceId}:workspace-members`,
+        workspaceMemberCacheTag(member.userId),
+      ])
       await this.audit(
         "delete",
         `removed ${member.user.name ?? member.user.email} from workspace`,

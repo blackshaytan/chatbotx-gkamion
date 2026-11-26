@@ -83,6 +83,7 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
 
 vi.mock("@chatbotx.io/redis", () => ({
   withCache: vi.fn(),
+  invalidateCacheByTags: vi.fn(async () => undefined),
 }))
 
 const { workspaceMemberService } = await import(
