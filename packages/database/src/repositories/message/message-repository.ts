@@ -66,6 +66,8 @@ export interface PaginatedMessages {
 export interface ListMessagesQuery {
   contactInboxId?: string
   conversationId?: string
+  /** ContactInbox ids the viewer must not see (personal SMTP ACL). */
+  excludeContactInboxIds?: string[]
   pagination: Pagination
   sinceTime?: Date
   workspaceId: string
@@ -73,6 +75,8 @@ export interface ListMessagesQuery {
 
 export interface FindLastByConversationOptions {
   attachmentCountOnly?: boolean
+  /** ContactInbox ids the viewer must not see (personal SMTP ACL). */
+  excludeContactInboxIds?: string[]
   limit?: number
   messageTypes?: ("incoming" | "outgoing" | "activity")[]
   requireCompleteResults?: boolean
@@ -102,6 +106,8 @@ export interface FindAIContextMessagesOptions {
 
 export interface FindTriggerMessageOptions {
   conversationId: string
+  /** ContactInbox ids the viewer must not see (personal SMTP ACL). */
+  excludeContactInboxIds?: string[]
   id: string
   requireCompleteResults?: boolean
   sinceTime: Date
@@ -154,6 +160,11 @@ export interface ListIncomingTextsByContactInboxParams {
 export interface CountUnreadIncomingByConversationsParams {
   /** `agentLastReadAt` null counts every incoming message of that conversation. */
   conversations: { id: string; agentLastReadAt: Date | null }[]
+  /**
+   * ContactInbox ids to skip across the batch (union of hidden CIs for the
+   * page). Empty/undefined → no extra predicate.
+   */
+  excludeContactInboxIds?: string[]
   /** Per-conversation cap; a conversation with more unread rows reports `limit`. */
   limit: number
   workspaceId: string
