@@ -5,6 +5,7 @@ import { ChatbotXException } from "@chatbotx.io/business/errors"
 import { smtpReceiveEnabled } from "@chatbotx.io/integration-smtp/schema"
 import { workspaceIdrequestParams } from "@/features/common/schema"
 import { workspaceActionClient } from "@/lib/safe-action"
+import { assertSmtpOwnerChangeAllowed } from "../lib/assert-smtp-owner-change"
 import { prepareSmtpAuth } from "../lib/prepare-smtp-auth"
 import { createSmtpRequest } from "../schema/mutation"
 
@@ -15,8 +16,14 @@ export const createSmtpAction = workspaceActionClient
     const {
       bindArgsParsedInputs: [workspaceId],
       parsedInput,
+      ctx,
     } = props
-    const { fromAddress, username, password, provider } = parsedInput
+    const { fromAddress, username, password, provider, ownerUserId } =
+      parsedInput
+
+    if (ownerUserId !== undefined) {
+      assertSmtpOwnerChangeAllowed(ctx.workspaceMemberPermissions)
+    }
 
     const { host, port } = await prepareSmtpAuth(parsedInput)
 
@@ -32,6 +39,7 @@ export const createSmtpAction = workspaceActionClient
       ownerId: workspace.ownerId,
       name: username,
       fromAddress,
+      ownerUserId,
       auth: {
         authType: "custom",
         provider,

@@ -5716,6 +5716,11 @@
     "openaiCompatible": "OpenAI Compatible"
   },
   "smtp": {
+    "owner": {
+      "label": "Mailbox owner",
+      "description": "Personal mailbox: only the owner and admins see its emails. Shared: everyone with inbox access.",
+      "shared": "Shared mailbox"
+    },
     "setting": {
       "description": "Gửi email bằng máy chủ SMTP của bạn.",
       "label": "(Email) SMTP"

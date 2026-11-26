@@ -5635,6 +5635,11 @@
     "openaiCompatible": "OpenAI-compatibel"
   },
   "smtp": {
+    "owner": {
+      "label": "Mailbox owner",
+      "description": "Personal mailbox: only the owner and admins see its emails. Shared: everyone with inbox access.",
+      "shared": "Shared mailbox"
+    },
     "setting": {
       "description": "Verzend e-mails via je SMTP-server.",
       "label": "(E-mail) SMTP"

@@ -6360,6 +6360,11 @@
     "openaiCompatible": "OpenAI Compatible"
   },
   "smtp": {
+    "owner": {
+      "label": "Mailbox owner",
+      "description": "Personal mailbox: only the owner and admins see its emails. Shared: everyone with inbox access.",
+      "shared": "Shared mailbox"
+    },
     "setting": {
       "description": "Send mail through your SMTP server, and receive new customer emails in the inbox.",
       "label": "(Email) SMTP"

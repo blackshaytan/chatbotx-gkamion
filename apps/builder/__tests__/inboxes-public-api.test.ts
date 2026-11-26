@@ -70,6 +70,7 @@ describe("PATCH /v1/inboxes/{id}", () => {
       status: "connected",
       sourceId: "page-1",
       markReadOnOutbound: true,
+      ownerUserId: null,
     })
 
     const result = await procedure?.handler?.({
@@ -97,6 +98,7 @@ describe("PATCH /v1/inboxes/{id}", () => {
       status: "connected",
       sourceId: "page-1",
       markReadOnOutbound: false,
+      ownerUserId: null,
     })
 
     const result = await procedure?.handler?.({

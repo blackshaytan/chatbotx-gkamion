@@ -5668,6 +5668,11 @@
     "openaiCompatible": "OpenAI相容"
   },
   "smtp": {
+    "owner": {
+      "label": "Mailbox owner",
+      "description": "Personal mailbox: only the owner and admins see its emails. Shared: everyone with inbox access.",
+      "shared": "Shared mailbox"
+    },
     "setting": {
       "description": "使用您的SMTP 伺服器傳送電子郵件。",
       "label": "（電子郵件）SMTP"

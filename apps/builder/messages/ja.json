@@ -5614,6 +5614,11 @@
     "openaiCompatible": "OpenAI互換"
   },
   "smtp": {
+    "owner": {
+      "label": "Mailbox owner",
+      "description": "Personal mailbox: only the owner and admins see its emails. Shared: everyone with inbox access.",
+      "shared": "Shared mailbox"
+    },
     "setting": {
       "description": "SMTPサーバーを使用してメールを送信します。",
       "label": "（メール）SMTP"

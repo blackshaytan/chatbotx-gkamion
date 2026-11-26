@@ -21,16 +21,20 @@ import { useInvalidateInboxes } from "@/features/inboxes/provider/inbox-hook"
 import { createSmtpAction } from "../actions/create-smtp.action"
 import { createSmtpRequest } from "../schema/mutation"
 import { smtpProviderLabels } from "../schema/resource"
+import { SmtpOwnerField } from "./smtp-owner-field"
 import { SmtpReceiveFields } from "./smtp-receive-fields"
 
 type CreateSmtpFormProps = {
   readonly workspaceId: string
+  /** Only super admins can pick a personal owner; others leave it unset. */
+  readonly canManageOwner: boolean
   readonly onSuccess?: () => void
   readonly onCancel?: () => void
 }
 
 export const CreateSmtpForm = ({
   workspaceId,
+  canManageOwner,
   onSuccess,
   onCancel,
 }: CreateSmtpFormProps) => {
@@ -76,6 +80,7 @@ export const CreateSmtpForm = ({
           receiveEnabled: true,
           imapHost: "",
           imapPort: "",
+          ownerUserId: canManageOwner ? null : undefined,
         },
       },
     },
@@ -153,6 +158,8 @@ export const CreateSmtpForm = ({
           // Mailbox may be "Display Name <email>". type="email" rejects the name.
           type="text"
         />
+
+        {canManageOwner && <SmtpOwnerField workspaceId={workspaceId} />}
 
         <SmtpReceiveFields provider={selectedProvider} />
 

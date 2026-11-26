@@ -5635,6 +5635,11 @@
     "openaiCompatible": "متوافق مع OpenAI"
   },
   "smtp": {
+    "owner": {
+      "label": "Mailbox owner",
+      "description": "Personal mailbox: only the owner and admins see its emails. Shared: everyone with inbox access.",
+      "shared": "Shared mailbox"
+    },
     "setting": {
       "description": "إرسال رسائل البريد الإلكتروني باستخدام خادم SMTP الخاص بك.",
       "label": "(البريد الإلكتروني) SMTP"

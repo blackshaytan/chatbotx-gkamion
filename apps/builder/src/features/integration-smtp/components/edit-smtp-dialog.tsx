@@ -17,12 +17,14 @@ import { EditSmtpForm } from "./edit-smtp-form"
 type EditSmtpDialogProps = {
   readonly workspaceId: string
   readonly integrationSmtp: IntegrationSmtpEditable
+  readonly canManageOwner: boolean
   readonly children: ReactElement
 }
 
 export const EditSmtpDialog = ({
   workspaceId,
   integrationSmtp,
+  canManageOwner,
   children,
 }: EditSmtpDialogProps) => {
   const t = useTranslations()
@@ -40,6 +42,7 @@ export const EditSmtpDialog = ({
           <DialogDescription />
         </DialogHeader>
         <EditSmtpForm
+          canManageOwner={canManageOwner}
           integrationSmtp={integrationSmtp}
           onCancel={() => onOpenChange(false)}
           onSuccess={() => onOpenChange(false)}

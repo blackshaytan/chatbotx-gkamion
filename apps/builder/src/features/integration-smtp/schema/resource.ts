@@ -29,11 +29,20 @@ export const integrationSmtpResource = createSelectSchema(
     name: z.string(),
     fromAddress: fromAddressSchema,
   },
-).pick({
-  id: true,
-  name: true,
-  fromAddress: true,
-})
+)
+  .pick({
+    id: true,
+    name: true,
+    fromAddress: true,
+  })
+  .extend({
+    ownerUserId: z
+      .string()
+      .nullable()
+      .describe(
+        "Personal mailbox owner's user id, or null for a shared mailbox.",
+      ),
+  })
 export type IntegrationSmtpResource = z.infer<typeof integrationSmtpResource>
 
 /** Saved connection shown in the edit form. The password is never included. */

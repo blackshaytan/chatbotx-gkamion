@@ -3,6 +3,7 @@
 import { integrationSmtpService } from "@chatbotx.io/business"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import { workspaceActionClient } from "@/lib/safe-action"
+import { assertSmtpOwnerChangeAllowed } from "../lib/assert-smtp-owner-change"
 import { prepareSmtpAuth } from "../lib/prepare-smtp-auth"
 import { updateSmtpRequest } from "../schema/mutation"
 
@@ -13,7 +14,12 @@ export const updateSmtpAction = workspaceActionClient
     const {
       bindArgsParsedInputs: [workspaceId, id],
       parsedInput,
+      ctx,
     } = props
+
+    if (parsedInput.ownerUserId !== undefined) {
+      assertSmtpOwnerChangeAllowed(ctx.workspaceMemberPermissions)
+    }
 
     // Merging against the stored auth, the change diff, and the audit record
     // all live in the service.

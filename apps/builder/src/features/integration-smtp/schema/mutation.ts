@@ -1,4 +1,5 @@
 import { smtpProviders } from "@chatbotx.io/integration-smtp/schema"
+import { zodBigintAsString } from "@chatbotx.io/utils"
 import { z } from "zod"
 
 const emptyToUndefined = (value: unknown) =>
@@ -78,6 +79,12 @@ export const createSmtpRequest = z
     receiveEnabled: receiveEnabledField,
     imapHost: optionalImapHost,
     imapPort: optionalImapPort,
+    ownerUserId: zodBigintAsString()
+      .nullable()
+      .optional()
+      .describe(
+        "Personal mailbox owner: a workspace member user id from `workspaceMembers.list`, or null for a shared mailbox. Omit to keep the current owner. Only personal mailboxes are hidden from other members.",
+      ),
   })
   .superRefine((data, ctx) => {
     if (data.provider === "other") {
@@ -125,6 +132,12 @@ export const updateSmtpRequest = z
     receiveEnabled: receiveEnabledField,
     imapHost: optionalImapHost,
     imapPort: optionalImapPort,
+    ownerUserId: zodBigintAsString()
+      .nullable()
+      .optional()
+      .describe(
+        "Personal mailbox owner: a workspace member user id from `workspaceMembers.list`, or null for a shared mailbox. Omit to keep the current owner. Only personal mailboxes are hidden from other members.",
+      ),
   })
   .superRefine((data, ctx) => {
     if (data.provider === "other") {

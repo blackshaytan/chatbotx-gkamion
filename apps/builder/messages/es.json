@@ -5635,6 +5635,11 @@
     "openaiCompatible": "AbrirAI Compatible"
   },
   "smtp": {
+    "owner": {
+      "label": "Mailbox owner",
+      "description": "Personal mailbox: only the owner and admins see its emails. Shared: everyone with inbox access.",
+      "shared": "Shared mailbox"
+    },
     "setting": {
       "description": "Enviar correos using tu SMTP server.",
       "label": "(Correo) SMTP"

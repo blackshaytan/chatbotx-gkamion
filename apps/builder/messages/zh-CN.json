@@ -6075,6 +6075,11 @@
     "title": "设置"
   },
   "smtp": {
+    "owner": {
+      "label": "Mailbox owner",
+      "description": "Personal mailbox: only the owner and admins see its emails. Shared: everyone with inbox access.",
+      "shared": "Shared mailbox"
+    },
     "errors": {
       "connectionFailed": "无法连接到SMTP 服务器。请检查您的凭证并重试。",
       "imapFailed": "Cannot read this mailbox. Check the password, and for Gmail or Outlook use an app password with IMAP enabled."

@@ -148,7 +148,7 @@ describe("POST /v1/smtp-integrations", () => {
     )
   })
 
-  test("returns only { id, name, fromAddress } even though the row carries the password", async () => {
+  test("returns only { id, name, fromAddress, ownerUserId } even though the row carries the password", async () => {
     integrationSmtpService.connect.mockResolvedValueOnce({ smtpId: "smtp-1" })
     integrationSmtpService.findByIdForWorkspace.mockResolvedValueOnce({
       id: "smtp-1",
@@ -156,6 +156,7 @@ describe("POST /v1/smtp-integrations", () => {
       fromAddress: "from@example.com",
       inboxId: "inbox-1",
       workspaceId: "workspace-1",
+      ownerUserId: null,
       auth: { authType: "custom", password: "super-secret" },
     })
 
@@ -163,7 +164,29 @@ describe("POST /v1/smtp-integrations", () => {
       id: "smtp-1",
       name: "user1",
       fromAddress: "from@example.com",
+      ownerUserId: null,
     })
+  })
+
+  test("forwards ownerUserId to connect and returns it on the created resource", async () => {
+    integrationSmtpService.connect.mockResolvedValueOnce({ smtpId: "smtp-1" })
+    integrationSmtpService.findByIdForWorkspace.mockResolvedValueOnce({
+      id: "smtp-1",
+      name: "user1",
+      fromAddress: "from@example.com",
+      ownerUserId: "u-owner",
+      auth: {},
+    })
+
+    const result = await procedure.handler?.({
+      context,
+      input: { ...input, ownerUserId: "u-owner" },
+    })
+
+    expect(integrationSmtpService.connect).toHaveBeenCalledWith(
+      expect.objectContaining({ ownerUserId: "u-owner" }),
+    )
+    expect(result).toMatchObject({ ownerUserId: "u-owner" })
   })
 })
 
@@ -173,12 +196,14 @@ describe("PUT /v1/smtp-integrations/{id}", () => {
   test("calls verifySmtpConnection before integrationSmtpService.update", async () => {
     integrationSmtpService.update.mockImplementationOnce(() => {
       callOrder.push("update")
-      return Promise.resolve({
-        id: "smtp-1",
-        name: "user1",
-        fromAddress: "from@example.com",
-        auth: {},
-      })
+      return Promise.resolve({ id: "smtp-1" })
+    })
+    integrationSmtpService.findByIdForWorkspace.mockResolvedValueOnce({
+      id: "smtp-1",
+      name: "user1",
+      fromAddress: "from@example.com",
+      ownerUserId: null,
+      auth: {},
     })
 
     await procedure.handler?.({
@@ -195,6 +220,62 @@ describe("PUT /v1/smtp-integrations/{id}", () => {
     })
 
     expect(callOrder).toEqual(["verify", "update"])
+  })
+
+  test("forwards ownerUserId to update and returns the owner on the response", async () => {
+    integrationSmtpService.update.mockResolvedValueOnce({ id: "smtp-1" })
+    integrationSmtpService.findByIdForWorkspace.mockResolvedValueOnce({
+      id: "smtp-1",
+      name: "user1",
+      fromAddress: "from@example.com",
+      ownerUserId: "u-owner",
+      auth: {},
+    })
+
+    const result = await procedure.handler?.({
+      context,
+      input: {
+        id: "smtp-1",
+        provider: "google",
+        host: "ignored.example.com",
+        port: 25,
+        username: "user1",
+        password: "super-secret",
+        fromAddress: "from@example.com",
+        ownerUserId: "u-owner",
+      },
+    })
+
+    expect(integrationSmtpService.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ ownerUserId: "u-owner" }),
+      }),
+    )
+    expect(result).toMatchObject({ id: "smtp-1", ownerUserId: "u-owner" })
+  })
+})
+
+describe("GET /v1/smtp-integrations", () => {
+  const procedure = findProcedure("GET", "/v1/smtp-integrations")
+
+  test("lists ownerUserId for each SMTP integration", async () => {
+    integrationSmtpService.listByWorkspace.mockResolvedValueOnce([
+      {
+        id: "smtp-1",
+        name: "user1",
+        fromAddress: "from@example.com",
+        ownerUserId: "u-owner",
+      },
+    ])
+
+    const result = await procedure.handler?.({
+      context,
+      input: { page: 1, perPage: 10 },
+    })
+
+    expect(result).toMatchObject({
+      data: [{ id: "smtp-1", ownerUserId: "u-owner" }],
+    })
   })
 })
 

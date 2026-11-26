@@ -5635,6 +5635,11 @@
     "openaiCompatible": "Compatibil cu OpenAI"
   },
   "smtp": {
+    "owner": {
+      "label": "Mailbox owner",
+      "description": "Personal mailbox: only the owner and admins see its emails. Shared: everyone with inbox access.",
+      "shared": "Shared mailbox"
+    },
     "setting": {
       "description": "Trimite e-mailuri folosind propriul tău server SMTP.",
       "label": "(E-mail) SMTP"

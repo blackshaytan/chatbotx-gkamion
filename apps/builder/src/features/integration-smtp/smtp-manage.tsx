@@ -19,17 +19,26 @@ import type { listIntegrationSmtps } from "./queries"
 
 type SmtpManageProps = {
   readonly workspaceId: string
+  /** Only super admins can set a personal mailbox owner. */
+  readonly canManageOwner: boolean
   readonly promises: Promise<Awaited<ReturnType<typeof listIntegrationSmtps>>>
 }
 
-export const SmtpManage = ({ workspaceId, promises }: SmtpManageProps) => {
+export const SmtpManage = ({
+  workspaceId,
+  canManageOwner,
+  promises,
+}: SmtpManageProps) => {
   const { data: integrationSmtps } = use(promises)
   const t = useTranslations()
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-end gap-2">
-        <CreateSmtpDialog workspaceId={workspaceId}>
+        <CreateSmtpDialog
+          canManageOwner={canManageOwner}
+          workspaceId={workspaceId}
+        >
           <Button size="sm" variant="secondary">
             <PlusCircleIcon className="h-4 w-4" />
             {t("actions.addFeature", { feature: "SMTP" })}
@@ -51,6 +60,7 @@ export const SmtpManage = ({ workspaceId, promises }: SmtpManageProps) => {
                 <TableCell>{integrationSmtp.name}</TableCell>
                 <TableCell className="flex w-50 justify-end gap-2">
                   <EditSmtpDialog
+                    canManageOwner={canManageOwner}
                     integrationSmtp={integrationSmtp}
                     workspaceId={workspaceId}
                   >

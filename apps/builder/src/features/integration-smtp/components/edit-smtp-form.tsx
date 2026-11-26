@@ -22,11 +22,14 @@ import { updateSmtpAction } from "../actions/update-smtp.action"
 import { updateSmtpRequest } from "../schema/mutation"
 import type { IntegrationSmtpEditable } from "../schema/resource"
 import { smtpProviderLabels } from "../schema/resource"
+import { SmtpOwnerField } from "./smtp-owner-field"
 import { SmtpReceiveFields } from "./smtp-receive-fields"
 
 type EditSmtpFormProps = {
   readonly workspaceId: string
   readonly integrationSmtp: IntegrationSmtpEditable
+  /** Only super admins can change the personal owner; others leave it unset. */
+  readonly canManageOwner: boolean
   readonly onSuccess?: () => void
   readonly onCancel?: () => void
 }
@@ -34,6 +37,7 @@ type EditSmtpFormProps = {
 export const EditSmtpForm = ({
   workspaceId,
   integrationSmtp,
+  canManageOwner,
   onSuccess,
   onCancel,
 }: EditSmtpFormProps) => {
@@ -81,6 +85,7 @@ export const EditSmtpForm = ({
           receiveEnabled: integrationSmtp.receiveEnabled,
           imapHost: integrationSmtp.imapHost,
           imapPort: integrationSmtp.imapPort ?? "",
+          ownerUserId: canManageOwner ? integrationSmtp.ownerUserId : undefined,
         },
       },
     },
@@ -158,6 +163,8 @@ export const EditSmtpForm = ({
           // Mailbox may be "Display Name <email>". type="email" rejects the name.
           type="text"
         />
+
+        {canManageOwner && <SmtpOwnerField workspaceId={workspaceId} />}
 
         <SmtpReceiveFields provider={selectedProvider} />
 
