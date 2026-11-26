@@ -7,6 +7,7 @@ import {
 } from "@chatbotx.io/database/client"
 import { workspaceMemberRoles } from "@chatbotx.io/database/partials"
 import {
+  inboxRepository,
   notificationRepository,
   type WorkspaceMemberPermissionsRow,
   workspaceMemberRepository,
@@ -126,6 +127,13 @@ export class WorkspaceMemberService extends BaseService {
 
       if (found) {
         await taskService.reassignFromMember({
+          workspaceId,
+          userId: found.userId,
+          tx,
+        })
+        // Direct repository call: going through smtpOwnershipService would
+        // import this module back (smtp-ownership → workspace-member/service).
+        await inboxRepository.clearOwnerForUser({
           workspaceId,
           userId: found.userId,
           tx,

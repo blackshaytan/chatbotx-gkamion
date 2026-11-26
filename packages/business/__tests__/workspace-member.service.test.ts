@@ -69,6 +69,9 @@ vi.mock("@chatbotx.io/database/schema", () => ({
 }))
 
 vi.mock("@chatbotx.io/database/repositories", () => ({
+  inboxRepository: {
+    clearOwnerForUser: vi.fn(),
+  },
   notificationRepository: {
     deleteForUser: mocks.deleteNotificationsForUser,
   },
