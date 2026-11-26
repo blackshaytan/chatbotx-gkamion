@@ -62,5 +62,10 @@ export const inboxRelations = defineRelationsPart(schema, (r) => ({
       to: r.connectionModel.inboxId,
       optional: true,
     }),
+    ownerUser: r.one.userModel({
+      from: r.inboxModel.ownerUserId,
+      to: r.userModel.id,
+      optional: true,
+    }),
   },
 }))
