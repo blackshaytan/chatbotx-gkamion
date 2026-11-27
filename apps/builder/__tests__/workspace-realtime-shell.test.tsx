@@ -57,6 +57,15 @@ vi.mock("@/features/chats/components/chats-realtime-sync", () => ({
   ChatsRealtimeSync: () => null,
 }))
 
+vi.mock("@/features/conversations/components/inbox-unread-realtime-sync", () => ({
+  InboxUnreadRealtimeSync: () => null,
+}))
+
+vi.mock("@/features/notifications/components/notifications-realtime-sync", () => ({
+  NotificationsRealtimeSync: () => null,
+}))
+
+
 const { WorkspaceRealtimeShell } = await import(
   "@/components/workspace-realtime-shell"
 )

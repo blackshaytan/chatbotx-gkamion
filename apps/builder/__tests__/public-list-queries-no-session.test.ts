@@ -81,12 +81,15 @@ vi.mock("@chatbotx.io/database/client", () => ({
   relationsFilterToSQL: vi.fn(),
 }))
 
-vi.mock("@chatbotx.io/database/schema", () => ({
-  contactInboxModel: { id: "contactInboxModelId" },
-  contactsToTagsModel: { id: "contactsToTagsModelId" },
-  errorLogModel: { id: "errorLogModelId" },
-  workspaceMemberModel: { id: "workspaceMemberModelId" },
-}))
+vi.mock("@chatbotx.io/database/schema", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@chatbotx.io/database/schema")>()
+  return {
+    ...actual,
+    errorLogModel: { id: "errorLogModelId" },
+    workspaceMemberModel: { id: "workspaceMemberModelId" },
+  }
+})
 
 vi.mock("@chatbotx.io/database/utils", () => ({
   getPaginationWithDefaults: (input: { page?: number; perPage?: number }) => ({

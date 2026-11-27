@@ -17,6 +17,15 @@ vi.mock("@chatbotx.io/filesystem", () => ({
   getImageDimensions: vi.fn(),
 }))
 
+vi.mock("@chatbotx.io/mail", () => ({
+  sendEmail: vi.fn(),
+  createSmtpTransporter: vi.fn(),
+}))
+
+vi.mock("@chatbotx.io/auth/server", () => ({
+  auth: { api: { getSession: vi.fn() } },
+}))
+
 vi.mock("next-intl", () => ({
   useFormatter: () => ({
     dateTime: () => "mocked date",
