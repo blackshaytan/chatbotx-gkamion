@@ -26,6 +26,9 @@ const mocks = vi.hoisted(() => ({
     values,
   })),
   cancelQuickReplyFollowUps: vi.fn(),
+  contactInboxFindBy: vi.fn(),
+  contactInboxFindRecentByContactId: vi.fn(),
+  contactInboxListByContactId: vi.fn(),
 }))
 
 vi.mock("@chatbotx.io/database/client", () => ({
@@ -150,7 +153,11 @@ vi.mock("../../thread-control/service", () => ({
 }))
 
 vi.mock("../../contact-inbox/service", () => ({
-  contactInboxService: {},
+  contactInboxService: {
+    findBy: mocks.contactInboxFindBy,
+    findRecentByContactId: mocks.contactInboxFindRecentByContactId,
+    listByContactId: mocks.contactInboxListByContactId,
+  },
 }))
 
 vi.mock("../../workspace-member/service", () => ({
@@ -1274,5 +1281,64 @@ describe("ConversationService.updateBotEnabled quick-reply follow-up cancel", ()
       expect.objectContaining({ tx: savepoint }),
     )
     expect(invalidateCacheByTags).toHaveBeenCalled()
+  })
+})
+
+describe("ConversationService.resolveContactInboxForConversation personal SMTP ACL", () => {
+  beforeEach(() => {
+    mocks.contactInboxFindBy.mockReset()
+    mocks.contactInboxFindRecentByContactId.mockReset()
+    mocks.contactInboxListByContactId.mockReset()
+  })
+
+  test("rejects an explicit inboxId that is hidden", async () => {
+    await expect(
+      conversationService.resolveContactInboxForConversation({
+        conversation: { contactId: "c1" },
+        workspaceId: WORKSPACE_ID,
+        inboxId: "i1",
+        hiddenInboxIds: ["i1"],
+      }),
+    ).rejects.toThrow(/not found/i)
+    expect(mocks.contactInboxFindBy).not.toHaveBeenCalled()
+  })
+
+  test("falls back to the newest visible contact inbox when recent is hidden", async () => {
+    mocks.contactInboxListByContactId.mockResolvedValue([
+      {
+        id: "ci1",
+        inboxId: "i1",
+        lastMessageAt: new Date("2026-06-02T00:00:00Z"),
+      },
+      {
+        id: "ci2",
+        inboxId: "i2",
+        lastMessageAt: new Date("2026-06-01T00:00:00Z"),
+      },
+    ])
+
+    const contactInbox =
+      await conversationService.resolveContactInboxForConversation({
+        conversation: { contactId: "c1" },
+        workspaceId: WORKSPACE_ID,
+        hiddenInboxIds: ["i1"],
+      })
+
+    expect(contactInbox.id).toBe("ci2")
+    expect(mocks.contactInboxFindRecentByContactId).not.toHaveBeenCalled()
+  })
+
+  test("throws not found when every contact inbox is hidden", async () => {
+    mocks.contactInboxListByContactId.mockResolvedValue([
+      { id: "ci1", inboxId: "i1", lastMessageAt: null },
+    ])
+
+    await expect(
+      conversationService.resolveContactInboxForConversation({
+        conversation: { contactId: "c1" },
+        workspaceId: WORKSPACE_ID,
+        hiddenInboxIds: ["i1"],
+      }),
+    ).rejects.toThrow(/not found/i)
   })
 })

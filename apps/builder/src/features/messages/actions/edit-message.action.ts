@@ -18,8 +18,9 @@ export const editMessage = async (props: {
   workspaceId: string
   conversationId: string
   parsedInput: EditMessageRequest
+  hiddenInboxIds?: string[]
 }) => {
-  const { workspaceId, conversationId, parsedInput } = props
+  const { workspaceId, conversationId, parsedInput, hiddenInboxIds } = props
   const {
     messageId,
     createdAt,
@@ -57,6 +58,9 @@ export const editMessage = async (props: {
   })
   if (!contactInbox) {
     throw new ChatbotXException("Inbox not found")
+  }
+  if (hiddenInboxIds?.length && hiddenInboxIds.includes(contactInbox.inboxId)) {
+    throw new ChatbotXException("Comment not found")
   }
   await repository.updateMessageText(
     messageId,
@@ -165,7 +169,18 @@ export const editMessageAction = workspaceActionClient
     const {
       bindArgsParsedInputs: [workspaceId, conversationId],
       parsedInput,
+      ctx,
     } = props
 
-    return await editMessage({ workspaceId, conversationId, parsedInput })
+    const hiddenInboxIds = await resolveMemberHiddenInboxIds({
+      workspaceId,
+      userId: ctx.user.id,
+      permissions: ctx.workspaceMemberPermissions,
+    })
+    return await editMessage({
+      workspaceId,
+      conversationId,
+      parsedInput,
+      hiddenInboxIds,
+    })
   })

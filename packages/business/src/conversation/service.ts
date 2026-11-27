@@ -570,16 +570,44 @@ class ConversationService extends BaseService {
     conversation: Pick<ConversationModel, "contactId">
     workspaceId: string
     inboxId?: string
+    /** Personal SMTP inboxes the member must not send through. */
+    hiddenInboxIds?: string[]
   }): Promise<ContactInboxModel> {
-    const { conversation, workspaceId, inboxId } = props
+    const { conversation, workspaceId, inboxId, hiddenInboxIds } = props
+    const hidden = new Set(hiddenInboxIds ?? [])
+    if (inboxId && hidden.has(inboxId)) {
+      throw notFoundException("Inbox not found")
+    }
+    if (!hiddenInboxIds?.length) {
+      const contactInbox = inboxId
+        ? await contactInboxService.findBy({
+            where: { contactId: conversation.contactId, inboxId },
+          })
+        : await contactInboxService.findRecentByContactId({
+            workspaceId,
+            contactId: conversation.contactId,
+          })
+      if (!contactInbox) {
+        throw notFoundException("Inbox not found")
+      }
+      return contactInbox
+    }
     const contactInbox = inboxId
       ? await contactInboxService.findBy({
           where: { contactId: conversation.contactId, inboxId },
         })
-      : await contactInboxService.findRecentByContactId({
-          workspaceId,
-          contactId: conversation.contactId,
-        })
+      : (
+          await contactInboxService.listByContactId({
+            workspaceId,
+            contactId: conversation.contactId,
+          })
+        )
+          .filter((row) => !hidden.has(row.inboxId))
+          .sort(
+            (a, b) =>
+              new Date(b.lastMessageAt ?? 0).getTime() -
+              new Date(a.lastMessageAt ?? 0).getTime(),
+          )[0]
     if (!contactInbox) {
       throw notFoundException("Inbox not found")
     }

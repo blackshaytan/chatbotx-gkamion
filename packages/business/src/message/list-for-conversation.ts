@@ -9,6 +9,7 @@ import { endOfHour } from "date-fns"
 import { contactInboxService } from "../contact-inbox/service"
 import { conversationService } from "../conversation/service"
 import { notFoundException } from "../errors"
+import { hiddenContactInboxIds } from "../inbox/smtp-ownership"
 import { logger } from "../logger"
 import { resolveAttachmentFallbackUrl, resolveMediaUrl } from "../media"
 import { HTTP_URL_RE } from "../utils"
@@ -115,6 +116,8 @@ export type ListForConversationInput = {
   workspaceId: string
   conversationId?: string
   contactInboxId?: string
+  /** Personal SMTP inboxes the member must not see (empty/undefined = no filter). */
+  hiddenInboxIds?: string[]
   cursor?: PaginationCursor
   limit: number
 }
@@ -148,24 +151,58 @@ export async function listForConversation(
   let contactInbox: Awaited<
     ReturnType<typeof contactInboxService.findByUncached>
   > | null = null
+  let excludeContactInboxIds: string[] | undefined
   if (conversation) {
-    contactInbox = input.contactInboxId
-      ? await contactInboxService.findByUncached({
-          where: {
+    if (input.hiddenInboxIds?.length) {
+      const contactInboxes = await contactInboxService.listByContactId({
+        workspaceId: input.workspaceId,
+        contactId: conversation.contactId,
+      })
+      excludeContactInboxIds = hiddenContactInboxIds(
+        contactInboxes,
+        input.hiddenInboxIds,
+      )
+      if (
+        input.contactInboxId &&
+        excludeContactInboxIds.includes(input.contactInboxId)
+      ) {
+        throw notFoundException("Conversation not found")
+      }
+      const visibleContactInboxes = contactInboxes
+        .filter((row) => !(excludeContactInboxIds ?? []).includes(row.id))
+        .sort(
+          (a, b) =>
+            new Date(b.lastMessageAt ?? 0).getTime() -
+            new Date(a.lastMessageAt ?? 0).getTime(),
+        )
+      contactInbox = input.contactInboxId
+        ? ((await contactInboxService.findByUncached({
+            where: {
+              contactId: conversation.contactId,
+              id: input.contactInboxId,
+            },
+          })) ?? null)
+        : (visibleContactInboxes[0] ?? null)
+    } else {
+      contactInbox = input.contactInboxId
+        ? await contactInboxService.findByUncached({
+            where: {
+              contactId: conversation.contactId,
+              id: input.contactInboxId,
+            },
+          })
+        : await contactInboxService.findRecentByContactId({
+            workspaceId: input.workspaceId,
             contactId: conversation.contactId,
-            id: input.contactInboxId,
-          },
-        })
-      : await contactInboxService.findRecentByContactId({
-          workspaceId: input.workspaceId,
-          contactId: conversation.contactId,
-        })
+          })
+    }
   }
 
   const result = await repository.listByConversation({
     workspaceId: input.workspaceId,
     contactInboxId: input.contactInboxId,
     conversationId: input.conversationId,
+    excludeContactInboxIds,
     sinceTime: getSafeSinceTime(conversation?.createdAt),
     pagination: {
       limit: input.limit,
@@ -247,6 +284,8 @@ export async function findByIdWithUrls(input: {
   workspaceId: string
   id: string
   createdAt: Date
+  /** Personal SMTP inboxes the member must not see (empty/undefined = no filter). */
+  hiddenInboxIds?: string[]
 }): Promise<MessageWithPresignedAttachments> {
   const repository = await createMessageRepository()
   const message = await repository.findById({
@@ -257,6 +296,14 @@ export async function findByIdWithUrls(input: {
 
   if (!message) {
     throw notFoundException("Message not found")
+  }
+  if (input.hiddenInboxIds?.length) {
+    const contactInbox = await contactInboxService.findBy({
+      where: { id: message.contactInboxId },
+    })
+    if (!contactInbox || input.hiddenInboxIds.includes(contactInbox.inboxId)) {
+      throw notFoundException("Message not found")
+    }
   }
   const channelByContactInboxId = await loadContactInboxChannels(
     [message],

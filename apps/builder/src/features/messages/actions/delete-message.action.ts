@@ -20,8 +20,9 @@ export const deleteMessage = async (props: {
   workspaceId: string
   conversationId: string
   parsedInput: DeleteMessageRequest
+  hiddenInboxIds?: string[]
 }) => {
-  const { workspaceId, conversationId, parsedInput } = props
+  const { workspaceId, conversationId, parsedInput, hiddenInboxIds } = props
   const { id, createdAt } = parsedInput
 
   const conversation = await conversationService.findByOrFail({
@@ -38,6 +39,17 @@ export const deleteMessage = async (props: {
   })
   if (!message || message.conversationId !== conversationId) {
     throw new ChatbotXException("Comment not found")
+  }
+  if (hiddenInboxIds?.length) {
+    const ownedContactInbox = await contactInboxService.findBy({
+      where: { id: message.contactInboxId },
+    })
+    if (
+      !ownedContactInbox ||
+      hiddenInboxIds.includes(ownedContactInbox.inboxId)
+    ) {
+      throw new ChatbotXException("Comment not found")
+    }
   }
 
   // Soft-delete immediately in the DB and notify other tabs in realtime.
@@ -89,7 +101,18 @@ export const deleteMessageAction = workspaceActionClient
     const {
       bindArgsParsedInputs: [workspaceId, conversationId],
       parsedInput,
+      ctx,
     } = props
 
-    return await deleteMessage({ workspaceId, conversationId, parsedInput })
+    const hiddenInboxIds = await resolveMemberHiddenInboxIds({
+      workspaceId,
+      userId: ctx.user.id,
+      permissions: ctx.workspaceMemberPermissions,
+    })
+    return await deleteMessage({
+      workspaceId,
+      conversationId,
+      parsedInput,
+      hiddenInboxIds,
+    })
   })

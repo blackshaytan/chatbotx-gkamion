@@ -1,6 +1,7 @@
 "use server"
 import { conversationService, messageService } from "@chatbotx.io/business"
 import { zodBigintAsString } from "@chatbotx.io/utils"
+import { resolveMemberHiddenInboxIds } from "@/features/conversations/lib/member-inbox-access"
 import { workspaceActionClient } from "@/lib/safe-action"
 import { createMessageWithRoutingBypassRequest } from "../schema/mutation"
 export const createMessageAction = workspaceActionClient
@@ -20,11 +21,17 @@ export const createMessageAction = workspaceActionClient
       },
     })
 
+    const hiddenInboxIds = await resolveMemberHiddenInboxIds({
+      workspaceId,
+      userId: ctx.user.id,
+      permissions: ctx.workspaceMemberPermissions,
+    })
     const contactInbox =
       await conversationService.resolveContactInboxForConversation({
         conversation,
         workspaceId,
         inboxId: parsedInput.inboxId,
+        hiddenInboxIds,
       })
 
     return messageService.createOutgoing({

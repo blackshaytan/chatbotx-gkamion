@@ -99,11 +99,13 @@ export async function getWhatsappFlowResponseView(props: {
   conversationId: string
   messageId: string
   createdAt: Date
+  hiddenInboxIds?: string[]
 }): Promise<WhatsappFlowResponse> {
   const message = await messageService.findByIdWithUrls({
     workspaceId: props.workspaceId,
     id: props.messageId,
     createdAt: props.createdAt,
+    hiddenInboxIds: props.hiddenInboxIds,
   })
   // `findByIdWithUrls` scopes by workspace only: a message of another
   // conversation must read as missing under this conversation's path.
