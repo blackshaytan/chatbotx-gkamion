@@ -361,7 +361,7 @@ export const createOutgoing = async (props: {
     })),
   }
 
-  void publishMessageEvent({
+  await publishMessageEvent({
     workspaceId: messageWithAttachments.workspaceId,
     inboxId: contactInbox.inboxId,
     event: {

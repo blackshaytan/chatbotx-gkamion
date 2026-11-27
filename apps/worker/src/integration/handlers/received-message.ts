@@ -16,6 +16,7 @@ import {
   hasRealAvatar,
   isUnpromotedStandbyCopy,
   messageCleanupService,
+  publishMessageEvent,
   publishToWorkspaceParty,
   quotaEnforcementService,
   recordProfileRefreshFailure,
@@ -1395,7 +1396,7 @@ const persistMessage = async (
   }
 
   if (isNew && !isOwnSendEcho) {
-    void publishMessageEvent({
+    await publishMessageEvent({
       workspaceId: inbox.workspaceId,
       inboxId: inbox.id,
       event: {

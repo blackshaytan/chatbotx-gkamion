@@ -1,6 +1,10 @@
 "use server"
 
-import { contactInboxService, conversationService } from "@chatbotx.io/business"
+import {
+  contactInboxService,
+  conversationService,
+  publishMessageEvent,
+} from "@chatbotx.io/business"
 import { ChatbotXException } from "@chatbotx.io/business/errors"
 import { createMessageRepository } from "@chatbotx.io/database/repositories"
 import { getImageDimensions, uploader } from "@chatbotx.io/filesystem"
@@ -119,7 +123,7 @@ export const editMessage = async (props: {
     ])
   }
 
-  void publishMessageEvent({
+  await publishMessageEvent({
     workspaceId,
     inboxId: contactInbox.inboxId,
     event: {

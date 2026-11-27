@@ -389,8 +389,9 @@ vi.mock("@chatbotx.io/business", () => ({
   smartDelayService: { findById: vi.fn(async () => null) },
   publishToWorkspaceParty: mockPublishToWorkspaceParty,
   publishMessageEvent: vi.fn(
-    async ({ workspaceId, event }: { workspaceId: string; event: unknown }) => {
+    ({ workspaceId, event }: { workspaceId: string; event: unknown }) => {
       mockPublishToWorkspaceParty(workspaceId, event)
+      return Promise.resolve()
     },
   ),
   buildContext: mockBuildContext,

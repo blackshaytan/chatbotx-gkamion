@@ -995,7 +995,7 @@ export async function sendFlowStep({
         })
 
     if (!isBulkOutbound) {
-      void publishMessageEvent({
+      await publishMessageEvent({
         workspaceId: conversation.workspaceId,
         inboxId: targetContactInbox.inboxId,
         event: {
@@ -1284,7 +1284,7 @@ export const sendChatMessage = async (
       ),
     ]
     if (!isBulkOutbound) {
-      void publishMessageEvent({
+      await publishMessageEvent({
         workspaceId: conversation.workspaceId,
         inboxId: contactInbox.inboxId,
         event: {

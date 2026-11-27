@@ -80,8 +80,9 @@ vi.mock("../src/platform/realtime-broadcast", () => ({
 
 vi.mock("../src/platform/publish-message-event", () => ({
   publishMessageEvent: vi.fn(
-    async ({ workspaceId, event }: { workspaceId: string; event: unknown }) => {
+    ({ workspaceId, event }: { workspaceId: string; event: unknown }) => {
       mockBroadcastToWorkspaceParty(workspaceId, event)
+      return Promise.resolve()
     },
   ),
 }))

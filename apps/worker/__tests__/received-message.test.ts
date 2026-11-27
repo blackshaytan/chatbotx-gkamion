@@ -10,9 +10,9 @@ const mockLockContentionPolicy = vi.hoisted(() => ({
   maxDelayMs: 30_000,
 }))
 
-const mockClaimAssignmentIfUnassigned = vi
-  .hoisted(() => vi.fn())
-  .mockResolvedValue("claimed")
+const mockClaimAssignmentIfUnassigned = vi.hoisted(() =>
+  vi.fn().mockResolvedValue("claimed"),
+)
 
 // ---------------------------------------------------------------------------
 // Hoist mock references
@@ -310,8 +310,9 @@ vi.mock("@chatbotx.io/business", () => ({
   broadcastToWorkspaceParty: mockBroadcast,
   publishToWorkspaceParty: mockBroadcast,
   publishMessageEvent: vi.fn(
-    async ({ workspaceId, event }: { workspaceId: string; event: unknown }) => {
+    ({ workspaceId, event }: { workspaceId: string; event: unknown }) => {
       mockBroadcast(workspaceId, event)
+      return Promise.resolve()
     },
   ),
   buildContext: mockBuildContext,
