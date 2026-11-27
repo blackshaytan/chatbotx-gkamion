@@ -1,5 +1,6 @@
 import {
   index,
+  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -114,6 +115,36 @@ export const externalOrderEventModel = pgTable(
       table.workspaceId,
       table.externalOrderId,
       table.occurredAt,
+    ),
+  ],
+)
+
+export const externalClientNotificationModel = pgTable(
+  "ExternalClientNotification",
+  {
+    ...sharedColumns,
+    workspaceId: bigintAsString()
+      .notNull()
+      .references(() => workspaceModel.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    provider: text().notNull(),
+    eventId: text().notNull(),
+    contactId: bigintAsString()
+      .notNull()
+      .references(() => contactModel.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    externalOrderId: text(),
+    statusId: integer(),
+  },
+  (table) => [
+    uniqueIndex("ExternalClientNotification_workspace_provider_event_key").on(
+      table.workspaceId,
+      table.provider,
+      table.eventId,
     ),
   ],
 )

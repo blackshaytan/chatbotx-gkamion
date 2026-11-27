@@ -1,6 +1,10 @@
 import type { DatabaseClient } from "../../client"
 import { and, db, eq, inArray, ne, or, sql } from "../../client"
-import { contactModel, externalOrderEventModel } from "../../schema"
+import {
+  contactModel,
+  externalClientNotificationModel,
+  externalOrderEventModel,
+} from "../../schema"
 
 export const findExternalCustomerIdentity = async (
   tx: DatabaseClient,
@@ -65,6 +69,26 @@ export const findExternalOrderEvent = async (
   tx: DatabaseClient,
   input: { workspaceId: string; provider: string; eventId: string },
 ) => await tx.query.externalOrderEventModel.findFirst({ where: input })
+
+export const findExternalClientNotification = async (
+  tx: DatabaseClient,
+  input: { workspaceId: string; provider: string; eventId: string },
+) => await tx.query.externalClientNotificationModel.findFirst({ where: input })
+
+export const insertExternalClientNotification = async (
+  tx: DatabaseClient,
+  values: typeof externalClientNotificationModel.$inferInsert,
+) =>
+  await tx
+    .insert(externalClientNotificationModel)
+    .values(values)
+    .onConflictDoNothing({
+      target: [
+        externalClientNotificationModel.workspaceId,
+        externalClientNotificationModel.provider,
+        externalClientNotificationModel.eventId,
+      ],
+    })
 
 export const findLatestExternalSubjectEventAt = async (
   tx: DatabaseClient,

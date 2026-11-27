@@ -1,5 +1,11 @@
 import { db } from "@chatbotx.io/database/client"
-import { findExternalCustomerIdentity } from "@chatbotx.io/database/repositories"
+import {
+  findExternalClientNotification,
+  findExternalCustomerIdentity,
+  insertExternalClientNotification,
+} from "@chatbotx.io/database/repositories"
+import { distributedLock } from "@chatbotx.io/redis"
+import { createId } from "@chatbotx.io/utils"
 import {
   IntegrationJobAction,
   integrationQueue,
@@ -13,12 +19,16 @@ import { listSmtpInboxIds } from "./start-order-notifications"
 
 const PROVIDER = "gkamion"
 const RETENTION_SECONDS = 30 * 24 * 60 * 60
+const LOCK_TIMEOUT_SECONDS = 30
 const ALREADY_QUEUED_PATTERN = /already exists/i
 const JOB_ID_COLON = /:/g
 
 // BullMQ rejects a custom job id that contains ":".
 const clientNotificationJobId = (workspaceId: string, eventId: string) =>
   `client-notify_${workspaceId}_${eventId.replace(JOB_ID_COLON, "_")}`
+
+const clientNotificationLockKey = (workspaceId: string, eventId: string) =>
+  `external-crm:${workspaceId}:gkamion:client-notify:${eventId}`
 
 const alreadyQueued = (error: unknown): boolean =>
   error instanceof Error && ALREADY_QUEUED_PATTERN.test(error.message)
@@ -45,7 +55,8 @@ export type DeliverClientNotificationResult = {
 
 /**
  * Queues a rendered client notification onto the linked contact.
- * Does not start a flow. The same event id is one job for 30 days.
+ * Does not start a flow. A duplicate means this event id has already been
+ * accepted for delivery.
  */
 export const queueClientNotification = async (
   input: DeliverClientNotificationInput,
@@ -100,57 +111,106 @@ export const queueClientNotification = async (
     contactId,
     sourceId: null,
   })
-  const jobId = clientNotificationJobId(input.workspaceId, input.eventId)
-  const existing = await integrationQueue.getJob(jobId)
-  if (existing) {
-    return {
-      contactId,
-      conversationId: conversation.id,
-      queued: false,
-      duplicate: true,
-    }
-  }
 
-  try {
-    await integrationQueue.add(
-      IntegrationJobAction.deliverClientNotification,
-      {
-        type: IntegrationJobAction.deliverClientNotification,
-        data: {
-          workspaceId: input.workspaceId,
+  return await distributedLock.runExclusive({
+    key: clientNotificationLockKey(input.workspaceId, input.eventId),
+    timeoutInSeconds: LOCK_TIMEOUT_SECONDS,
+    fn: async () => {
+      const existingRow = await findExternalClientNotification(db, {
+        workspaceId: input.workspaceId,
+        provider: PROVIDER,
+        eventId: input.eventId,
+      })
+      if (existingRow) {
+        return {
           contactId,
           conversationId: conversation.id,
+          queued: false,
+          duplicate: true,
+        }
+      }
+
+      const jobId = clientNotificationJobId(input.workspaceId, input.eventId)
+      const existingJob = await integrationQueue.getJob(jobId)
+      if (existingJob) {
+        await insertExternalClientNotification(db, {
+          id: createId(),
+          workspaceId: input.workspaceId,
+          provider: PROVIDER,
           eventId: input.eventId,
-          messengerText,
-          emailText,
-          emailSubject: input.emailSubject ?? "",
-          email: input.email,
+          contactId,
           externalOrderId: input.externalOrderId,
           statusId: input.statusId,
-        },
-      },
-      {
-        jobId,
-        removeOnComplete: { age: RETENTION_SECONDS },
-        removeOnFail: { age: RETENTION_SECONDS },
-      },
-    )
-  } catch (error) {
-    if (alreadyQueued(error)) {
+        })
+        return {
+          contactId,
+          conversationId: conversation.id,
+          queued: false,
+          duplicate: true,
+        }
+      }
+
+      try {
+        await integrationQueue.add(
+          IntegrationJobAction.deliverClientNotification,
+          {
+            type: IntegrationJobAction.deliverClientNotification,
+            data: {
+              workspaceId: input.workspaceId,
+              contactId,
+              conversationId: conversation.id,
+              eventId: input.eventId,
+              messengerText,
+              emailText,
+              emailSubject: input.emailSubject ?? "",
+              email: input.email,
+              externalOrderId: input.externalOrderId,
+              statusId: input.statusId,
+            },
+          },
+          {
+            jobId,
+            removeOnComplete: { age: RETENTION_SECONDS },
+            removeOnFail: { age: RETENTION_SECONDS },
+          },
+        )
+      } catch (error) {
+        if (alreadyQueued(error)) {
+          await insertExternalClientNotification(db, {
+            id: createId(),
+            workspaceId: input.workspaceId,
+            provider: PROVIDER,
+            eventId: input.eventId,
+            contactId,
+            externalOrderId: input.externalOrderId,
+            statusId: input.statusId,
+          })
+          return {
+            contactId,
+            conversationId: conversation.id,
+            queued: false,
+            duplicate: true,
+          }
+        }
+        throw error
+      }
+
+      await insertExternalClientNotification(db, {
+        id: createId(),
+        workspaceId: input.workspaceId,
+        provider: PROVIDER,
+        eventId: input.eventId,
+        contactId,
+        externalOrderId: input.externalOrderId,
+        statusId: input.statusId,
+      })
+
       return {
         contactId,
         conversationId: conversation.id,
-        queued: false,
-        duplicate: true,
+        queued: true,
+        duplicate: false,
       }
-    }
-    throw error
-  }
-
-  return {
-    contactId,
-    conversationId: conversation.id,
-    queued: true,
-    duplicate: false,
-  }
+    },
+  })
 }
