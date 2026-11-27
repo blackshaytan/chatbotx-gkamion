@@ -84,6 +84,7 @@ describe("inboxWithIntegrationsResource", () => {
     disconnectedAt: null,
     disconnectReason: null,
     threadControlSeenAt: null,
+    ownerUserId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

@@ -61,6 +61,7 @@ vi.mock("@chatbotx.io/database/schema", () => ({
   contactsOnBroadcastsModel: {},
   conversationModel: {},
   inboxModel: {},
+  taskModel: {},
   integrationMessengerModel: {
     id: "IntegrationMessenger.id",
     name: "IntegrationMessenger.name",

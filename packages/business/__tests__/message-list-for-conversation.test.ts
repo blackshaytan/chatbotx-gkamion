@@ -2,6 +2,8 @@
 import { endOfHour } from "date-fns"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
+const NOT_FOUND_RE = /not found/i
+
 const mocks = vi.hoisted(() => {
   const repo = {
     findById: vi.fn(),
@@ -124,7 +126,7 @@ describe("message list-for-conversation", () => {
           createdAt,
           hiddenInboxIds: ["i1"],
         }),
-      ).rejects.toThrow(/not found/i)
+      ).rejects.toThrow(NOT_FOUND_RE)
     })
 
     test("throws when no message is found", async () => {
@@ -572,7 +574,7 @@ describe("message list-for-conversation", () => {
           hiddenInboxIds: ["i1"],
           limit: 20,
         }),
-      ).rejects.toThrow(/not found/i)
+      ).rejects.toThrow(NOT_FOUND_RE)
       expect(mocks.repo.listByConversation).not.toHaveBeenCalled()
     })
   })

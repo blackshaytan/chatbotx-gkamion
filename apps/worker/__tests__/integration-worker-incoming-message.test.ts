@@ -388,6 +388,11 @@ vi.mock("@chatbotx.io/business", () => ({
   settleBlockedOrderNotification: vi.fn(async () => undefined),
   smartDelayService: { findById: vi.fn(async () => null) },
   publishToWorkspaceParty: mockPublishToWorkspaceParty,
+  publishMessageEvent: vi.fn(
+    async ({ workspaceId, event }: { workspaceId: string; event: unknown }) => {
+      mockPublishToWorkspaceParty(workspaceId, event)
+    },
+  ),
   buildContext: mockBuildContext,
   resolveTenantSettings: mockresolveTenantSettings,
   updateContactFromMessage: mockUpdateContactFromMessage,

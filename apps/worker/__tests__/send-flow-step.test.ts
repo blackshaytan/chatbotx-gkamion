@@ -191,6 +191,11 @@ vi.mock("@chatbotx.io/business", () => ({
   },
   broadcastToWorkspaceParty: mockBroadcast,
   publishToWorkspaceParty: mockBroadcast,
+  publishMessageEvent: vi.fn(
+    async ({ workspaceId, event }: { workspaceId: string; event: unknown }) => {
+      mockBroadcast(workspaceId, event)
+    },
+  ),
   broadcastToGuestParty: vi.fn().mockResolvedValue(undefined),
   contactInboxService: {
     findByUncached: mockFindContactInbox,

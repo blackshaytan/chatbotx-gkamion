@@ -1,6 +1,8 @@
 import { sql } from "@chatbotx.io/database/client"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
+const NOT_FOUND_RE = /not found/i
+
 const mocks = vi.hoisted(() => ({
   conversationFindMany: vi.fn(),
   conversationFindFirst: vi.fn(),
@@ -1299,7 +1301,7 @@ describe("ConversationService.resolveContactInboxForConversation personal SMTP A
         inboxId: "i1",
         hiddenInboxIds: ["i1"],
       }),
-    ).rejects.toThrow(/not found/i)
+    ).rejects.toThrow(NOT_FOUND_RE)
     expect(mocks.contactInboxFindBy).not.toHaveBeenCalled()
   })
 
@@ -1339,6 +1341,6 @@ describe("ConversationService.resolveContactInboxForConversation personal SMTP A
         workspaceId: WORKSPACE_ID,
         hiddenInboxIds: ["i1"],
       }),
-    ).rejects.toThrow(/not found/i)
+    ).rejects.toThrow(NOT_FOUND_RE)
   })
 })

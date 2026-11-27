@@ -1395,9 +1395,13 @@ const persistMessage = async (
   }
 
   if (isNew && !isOwnSendEcho) {
-    publishToWorkspaceParty(inbox.workspaceId, {
-      eventType: RealtimeEventType.messageCreated,
-      data: message,
+    void publishMessageEvent({
+      workspaceId: inbox.workspaceId,
+      inboxId: inbox.id,
+      event: {
+        eventType: RealtimeEventType.messageCreated,
+        data: message,
+      },
     })
   }
 

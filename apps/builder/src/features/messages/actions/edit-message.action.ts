@@ -1,16 +1,13 @@
 "use server"
 
-import {
-  broadcastToWorkspaceParty,
-  contactInboxService,
-  conversationService,
-} from "@chatbotx.io/business"
+import { contactInboxService, conversationService } from "@chatbotx.io/business"
 import { ChatbotXException } from "@chatbotx.io/business/errors"
 import { createMessageRepository } from "@chatbotx.io/database/repositories"
 import { getImageDimensions, uploader } from "@chatbotx.io/filesystem"
 import { RealtimeEventType } from "@chatbotx.io/partysocket-config"
 import { createId, zodBigintAsString } from "@chatbotx.io/utils"
 import { ChatJobAction, chatQueue } from "@chatbotx.io/worker-config"
+import { resolveMemberHiddenInboxIds } from "@/features/conversations/lib/member-inbox-access"
 import { workspaceActionClient } from "@/lib/safe-action"
 import { type EditMessageRequest, editMessageRequest } from "../schema/mutation"
 
@@ -122,17 +119,21 @@ export const editMessage = async (props: {
     ])
   }
 
-  await broadcastToWorkspaceParty(workspaceId, {
-    eventType: RealtimeEventType.messageUpdated,
-    data: {
-      messageId,
-      newText,
-      newAttachmentPath: newAttachmentPath ?? null,
-      newAttachmentPublicUrl: newAttachmentPublicUrl ?? null,
-      newAttachmentMimeType: newAttachmentMimeType ?? null,
-      newAttachmentWidth: resolvedWidth,
-      newAttachmentHeight: resolvedHeight,
-      removedAttachment: removeAttachment ?? false,
+  void publishMessageEvent({
+    workspaceId,
+    inboxId: contactInbox.inboxId,
+    event: {
+      eventType: RealtimeEventType.messageUpdated,
+      data: {
+        messageId,
+        newText,
+        newAttachmentPath: newAttachmentPath ?? null,
+        newAttachmentPublicUrl: newAttachmentPublicUrl ?? null,
+        newAttachmentMimeType: newAttachmentMimeType ?? null,
+        newAttachmentWidth: resolvedWidth,
+        newAttachmentHeight: resolvedHeight,
+        removedAttachment: removeAttachment ?? false,
+      },
     },
   })
 

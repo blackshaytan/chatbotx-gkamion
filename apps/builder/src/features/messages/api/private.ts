@@ -5,6 +5,7 @@ import {
 } from "@chatbotx.io/business"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import z from "zod"
+import { resolveMemberHiddenInboxIds } from "@/features/conversations/lib/member-inbox-access"
 import { assertWorkspaceNotBlocked } from "@/lib/workspace-quota"
 import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"
 import { authorizedAPI } from "@/orpc"

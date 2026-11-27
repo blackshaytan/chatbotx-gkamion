@@ -32,7 +32,7 @@ import {
   validationException,
 } from "../errors"
 import { logger } from "../logger"
-import { publishToWorkspaceParty } from "../platform/realtime-broadcast"
+import { publishMessageEvent } from "../platform/publish-message-event"
 import { resolveTenantSettings } from "../platform/settings"
 import { productMessageService } from "../product-message/service"
 import { getPublicFileUrl } from "../utils"
@@ -361,11 +361,15 @@ export const createOutgoing = async (props: {
     })),
   }
 
-  publishToWorkspaceParty(messageWithAttachments.workspaceId, {
-    eventType: RealtimeEventType.messageCreated,
-    data: {
-      ...messageWithAttachments,
-      clientId: parsedInput.clientId,
+  void publishMessageEvent({
+    workspaceId: messageWithAttachments.workspaceId,
+    inboxId: contactInbox.inboxId,
+    event: {
+      eventType: RealtimeEventType.messageCreated,
+      data: {
+        ...messageWithAttachments,
+        clientId: parsedInput.clientId,
+      },
     },
   })
 

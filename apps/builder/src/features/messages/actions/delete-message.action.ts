@@ -10,6 +10,7 @@ import { createMessageRepository } from "@chatbotx.io/database/repositories"
 import { RealtimeEventType } from "@chatbotx.io/partysocket-config"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import { ChatJobAction, chatQueue } from "@chatbotx.io/worker-config"
+import { resolveMemberHiddenInboxIds } from "@/features/conversations/lib/member-inbox-access"
 import { workspaceActionClient } from "@/lib/safe-action"
 import {
   type DeleteMessageRequest,

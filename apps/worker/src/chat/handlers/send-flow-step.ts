@@ -11,7 +11,7 @@ import {
   conversationService,
   type PreparedProductMessage,
   productMessageService,
-  publishToWorkspaceParty,
+  publishMessageEvent,
   resolveMediaUrl,
   resolveTenantSettings,
 } from "@chatbotx.io/business"
@@ -995,9 +995,13 @@ export async function sendFlowStep({
         })
 
     if (!isBulkOutbound) {
-      publishToWorkspaceParty(conversation.workspaceId, {
-        eventType: RealtimeEventType.messageCreated,
-        data: message,
+      void publishMessageEvent({
+        workspaceId: conversation.workspaceId,
+        inboxId: targetContactInbox.inboxId,
+        event: {
+          eventType: RealtimeEventType.messageCreated,
+          data: message,
+        },
       })
     }
 
@@ -1280,9 +1284,13 @@ export const sendChatMessage = async (
       ),
     ]
     if (!isBulkOutbound) {
-      publishToWorkspaceParty(conversation.workspaceId, {
-        eventType: RealtimeEventType.messageCreated,
-        data: message,
+      void publishMessageEvent({
+        workspaceId: conversation.workspaceId,
+        inboxId: contactInbox.inboxId,
+        event: {
+          eventType: RealtimeEventType.messageCreated,
+          data: message,
+        },
       })
     }
 
