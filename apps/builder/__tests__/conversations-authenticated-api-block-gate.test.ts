@@ -91,6 +91,10 @@ const {
 }))
 
 vi.mock("@chatbotx.io/business", () => ({
+  smtpOwnershipService: {
+    listHiddenInboxIdsForMember: vi.fn(async () => []),
+  },
+
   conversationService: {
     updateReadStatus: vi.fn(),
     archiveByIds,

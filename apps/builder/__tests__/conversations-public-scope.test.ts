@@ -49,6 +49,14 @@ const conversationService = {
 }
 
 vi.mock("@chatbotx.io/business", () => ({
+  hiddenContactInboxIds: (
+    contactInboxes: { id: string; inboxId: string }[],
+    hiddenInboxIds?: string[],
+  ) =>
+    contactInboxes
+      .filter((contactInbox) => hiddenInboxIds?.includes(contactInbox.inboxId))
+      .map((contactInbox) => contactInbox.id),
+
   AVATAR_HYDRATION_CHANNELS: new Set(["messenger", "instagram"]),
   workspaceApiTokenService: { findWorkspaceByTokenHash },
   isWorkspaceScheduledForDeletion,

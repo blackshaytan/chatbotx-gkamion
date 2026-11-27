@@ -391,6 +391,7 @@ describe("handleCreateWebchatMessage", () => {
     expect(updateBuilder.set).toHaveBeenNthCalledWith(1, {
       contactLastReadAt: messageInput.createdAt,
       lastActivityAt: messageInput.createdAt,
+      inboxActivityAt: messageInput.createdAt,
       contactRepliedAt: messageInput.createdAt,
     })
   })

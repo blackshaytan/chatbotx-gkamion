@@ -6,6 +6,10 @@ const mockResolveContactInboxForConversation = vi.fn()
 const mockCreateOutgoing = vi.fn()
 
 vi.mock("@chatbotx.io/business", () => ({
+  smtpOwnershipService: {
+    listHiddenInboxIdsForMember: vi.fn(async () => []),
+  },
+
   conversationService: {
     findByOrFail: (...args: unknown[]) => mockFindByOrFail(...args),
     resolveContactInboxForConversation: (...args: unknown[]) =>

@@ -21,6 +21,8 @@ const {
 }))
 
 vi.mock("@chatbotx.io/business", () => ({
+  publishMessageEvent: vi.fn(async () => undefined),
+
   broadcastToWorkspaceParty: mockBroadcastToWorkspaceParty,
   contactInboxService: { findBy: mockContactInboxFindBy },
   conversationService: { findByOrFail: mockConversationFindByOrFail },

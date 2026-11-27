@@ -20,6 +20,14 @@ const mocks = vi.hoisted(() => {
 })
 
 vi.mock("@chatbotx.io/business", () => ({
+  hiddenContactInboxIds: (
+    contactInboxes: { id: string; inboxId: string }[],
+    hiddenInboxIds?: string[],
+  ) =>
+    contactInboxes
+      .filter((contactInbox) => hiddenInboxIds?.includes(contactInbox.inboxId))
+      .map((contactInbox) => contactInbox.id),
+
   conversationService: {
     findManyQuery: mocks.findManyQuery,
     findWithFullRelations: mocks.findWithFullRelations,

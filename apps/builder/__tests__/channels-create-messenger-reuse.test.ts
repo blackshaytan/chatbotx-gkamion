@@ -65,6 +65,8 @@ vi.mock("@chatbotx.io/utils", async (importOriginal) => {
 })
 
 vi.mock("@chatbotx.io/business", () => ({
+  workspaceMemberService: { listByWorkspaceId: vi.fn(async () => []) },
+
   workspaceService: {
     findById: mockFindWorkspaceById,
     findActiveByOwner: vi.fn(async () => undefined),
@@ -102,6 +104,10 @@ vi.mock("@/lib/auth/require-workspace-permission", () => ({
 }))
 
 vi.mock("@/lib/auth/utils", () => ({
+  getCurrentUserAndAllLinkedWorkspaces: vi.fn(async () => ({
+    allWorkspaceMembers: [],
+  })),
+
   getCurrentUserId: mockGetCurrentUserId,
 }))
 
