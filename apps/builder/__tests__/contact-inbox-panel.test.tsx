@@ -151,6 +151,18 @@ vi.mock("@/features/contacts/hooks/use-auto-refresh-contact-profile", () => ({
   },
 }))
 
+vi.mock("@/features/contacts/components/contact-orders-section", () => ({
+  ContactOrdersSection: () => null,
+}))
+
+vi.mock("@/features/contacts/components/contact-ai-calls-section", () => ({
+  ContactAiCallsSection: () => null,
+}))
+
+vi.mock("@/features/tasks/components/contact-tasks-section", () => ({
+  ContactTasksSection: () => null,
+}))
+
 vi.mock("@/features/contacts/contact-detail", () => ({
   ContactDetail: ({
     contact,
