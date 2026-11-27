@@ -70,8 +70,6 @@ vi.mock(
     NotificationsRealtimeSync: () => null,
   }),
 )
-
-
 const { WorkspaceRealtimeShell } = await import(
   "@/components/workspace-realtime-shell"
 )

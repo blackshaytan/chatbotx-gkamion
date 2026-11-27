@@ -62,6 +62,16 @@ vi.mock("@/lib/orpc/query", () => ({
           initialData,
         }),
       },
+      listContactOrdersAuthenticatedAPI: {
+        queryOptions: ({
+          input,
+        }: {
+          input: { workspaceId: string; contactId: string }
+        }) => ({
+          queryKey: ["contact-orders", input.workspaceId, input.contactId],
+          queryFn: async () => ({ data: [] }),
+        }),
+      },
     },
     contactNotesAPI: {
       listContactNotesAuthenticatedAPI: {
