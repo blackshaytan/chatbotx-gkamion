@@ -32,6 +32,7 @@ export const createMessageAction = workspaceActionClient
         workspaceId,
         inboxId: parsedInput.inboxId,
         hiddenInboxIds,
+        viewerUserId: ctx.user.id,
       })
 
     return messageService.createOutgoing({

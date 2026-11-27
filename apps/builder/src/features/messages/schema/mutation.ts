@@ -136,7 +136,7 @@ export const createMessageRequest = z
       inboxId: zodBigintAsString()
         .optional()
         .describe(
-          "Optional numeric channel inbox ID. Omit this field to use the existing inbox resolution fallback.",
+          "Channel inbox id to send through. Get ids from `conversations.replyChannels`. Omit to use the most recently active visible ContactInbox.",
         ),
       clientId: zodBigintAsString()
         .optional()

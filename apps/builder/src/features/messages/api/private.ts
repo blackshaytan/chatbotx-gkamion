@@ -132,6 +132,7 @@ export const messagesAuthenticatedAPI = {
           workspaceId: input.workspaceId,
           inboxId,
           hiddenInboxIds,
+          viewerUserId: context.user.id,
         })
 
       // createMessage expects a full UserModel (needs tenantId); the oRPC

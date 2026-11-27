@@ -80,12 +80,17 @@ type SelectedMediaFile = Pick<
 export const MessageInput = () => {
   const t = useTranslations()
   const session = authClient.useSession()
+  const queryClient = useQueryClient()
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileUploadRef = useRef<HTMLInputElement>(null)
+  // Captured at send time so onSuccess still sees the bootstrap flag even if
+  // the operator switches channel before the action resolves.
+  const bootstrapOnSendRef = useRef(false)
   const [selectedMediaFiles, setSelectedMediaFiles] = useState<
     SelectedMediaFile[]
   >([])
+  const [manualInboxId, setManualInboxId] = useState<string | null>(null)
 
   const {
     appendMessage,
@@ -120,8 +125,38 @@ export const MessageInput = () => {
     [conversations, activeConversationId],
   )
 
-  const contactInbox = resolveActiveContactInbox(conversation?.contactInboxes)
-  const channel = contactInbox?.channel
+  const isCommentThread = conversation?.sourceId != null
+  const { data: replyChannels } = useReplyChannelsQuery({
+    workspaceId: conversation?.workspaceId ?? "",
+    conversationId: conversation?.id ?? "",
+    enabled: Boolean(
+      conversation?.workspaceId && conversation?.id && !isCommentThread,
+    ),
+  })
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset only on conversation switch
+  useEffect(() => {
+    setManualInboxId(null)
+  }, [activeConversationId])
+
+  const activeContactInbox = resolveActiveContactInbox(
+    conversation?.contactInboxes,
+  )
+  const selectedInboxId =
+    manualInboxId ??
+    replyChannels?.defaultInboxId ??
+    activeContactInbox?.inboxId ??
+    null
+  const selectedReplyOption = replyChannels?.options.find(
+    (option) => option.inboxId === selectedInboxId,
+  )
+  const contactInbox =
+    conversation?.contactInboxes?.find(
+      (row) => row.inboxId === selectedInboxId,
+    ) ?? activeContactInbox
+  const channel = (selectedReplyOption?.channel ?? contactInbox?.channel) as
+    | ChannelType
+    | undefined
   const threadControl = useThreadControl(conversation, channel)
 
   // The agent dismissed the standby lock (stored routing state may be stale):
@@ -220,6 +255,32 @@ export const MessageInput = () => {
             resetFormAndAction()
             setSelectedMediaFiles([])
             form.setValue("clientId", createId())
+            if (conversation && bootstrapOnSendRef.current) {
+              bootstrapOnSendRef.current = false
+              void queryClient.invalidateQueries({
+                queryKey: orpc.conversationsAPI.replyChannels.key({
+                  input: {
+                    workspaceId: conversation.workspaceId,
+                    id: conversation.id,
+                  },
+                }),
+              })
+              void client.conversationsAPI
+                .findConversationAuthenticatedAPI({
+                  workspaceId: conversation.workspaceId,
+                  id: conversation.id,
+                })
+                .then((fresh) => {
+                  if (fresh?.contactInboxes) {
+                    updateConversation(conversation.id, {
+                      contactInboxes: fresh.contactInboxes,
+                    })
+                  }
+                })
+                .catch(() => {
+                  // Store refresh is best-effort; the send already succeeded.
+                })
+            }
           },
         },
         formProps: {
@@ -228,6 +289,7 @@ export const MessageInput = () => {
             files: [],
             mediaFileIds: undefined,
             clientId: createId(),
+            inboxId: undefined,
             replyToMessageId: undefined,
             replyToMessageCreatedAt: undefined,
             isPrivateReply: undefined,
@@ -302,6 +364,8 @@ export const MessageInput = () => {
       )
     }
     form.setValue("bypassThreadControlLock", bypassThreadControlLock)
+    form.setValue("inboxId", selectedInboxId ?? undefined)
+    bootstrapOnSendRef.current = Boolean(selectedReplyOption?.needsBootstrap)
     handleSubmitWithAction()
   }, [
     replyToMessage,
@@ -309,6 +373,8 @@ export const MessageInput = () => {
     form,
     handleSubmitWithAction,
     bypassThreadControlLock,
+    selectedInboxId,
+    selectedReplyOption?.needsBootstrap,
   ])
 
   // Memoize keyboard handler
@@ -338,15 +404,13 @@ export const MessageInput = () => {
   // as a memo dependency is more stable than the whole contactInboxes array.
   // Returns null if the field is absent or not a valid date (NaN guard).
   const lastIncomingTs = useMemo(() => {
-    const raw = resolveActiveContactInbox(
-      conversation?.contactInboxes,
-    )?.lastIncomingMessageAt
+    const raw = contactInbox?.lastIncomingMessageAt
     if (!raw) {
       return null
     }
     const ts = new Date(raw).getTime()
     return Number.isFinite(ts) ? ts : null
-  }, [conversation?.contactInboxes])
+  }, [contactInbox?.lastIncomingMessageAt])
 
   // clockTick is a counter that exists solely to invalidate the window-expiry
   // memos below. Because Date.now() is called inside useMemo and captured at
@@ -568,9 +632,26 @@ export const MessageInput = () => {
           )}
           <div className="scrollbar-hide flex w-full items-center gap-2 overflow-x-auto ps-2.5">
             <div className="min-w-0 flex-1">
-              <InboxIcon
-                channel={(contactInbox?.channel ?? "webchat") as ChannelType}
-              />
+              {!isCommentThread &&
+              selectedInboxId &&
+              (replyChannels?.options.length ?? 0) > 0 ? (
+                <ReplyChannelSelect
+                  onSelect={setManualInboxId}
+                  options={
+                    (replyChannels?.options ?? []) as {
+                      inboxId: string
+                      channel: ChannelType
+                      name: string
+                      needsBootstrap: boolean
+                    }[]
+                  }
+                  selectedInboxId={selectedInboxId}
+                />
+              ) : (
+                <InboxIcon
+                  channel={(contactInbox?.channel ?? "webchat") as ChannelType}
+                />
+              )}
             </div>
 
             <div className="message-toolbar flex shrink-0 items-center gap-2">

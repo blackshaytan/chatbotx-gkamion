@@ -1228,6 +1228,11 @@ exports[`public API spec — operation naming guard > operation list (operationI
     "path": "/v1/conversations/{id}/read",
   },
   {
+    "method": "GET",
+    "operationId": "conversations.replyChannels",
+    "path": "/v1/conversations/{id}/reply-channels",
+  },
+  {
     "method": "POST",
     "operationId": "conversations.threadControl",
     "path": "/v1/conversations/{id}/thread-control",

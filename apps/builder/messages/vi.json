@@ -3977,7 +3977,9 @@
     "input": {
       "form": "Message input form",
       "clearReply": "Clear reply",
-      "attachFile": "Attach file"
+      "attachFile": "Attach file",
+      "replyChannel": "Reply channel",
+      "replyChannelEmail": "Email"
     },
     "headerPreview": "Header preview"
   },

@@ -31,6 +31,7 @@ exports[`default tool set > operation ids match the curated snapshot 1`] = `
   "conversations.assign",
   "conversations.get",
   "conversations.list",
+  "conversations.replyChannels",
   "errorLogs.list",
   "externalAgent.handover",
   "externalCrm.getCustomer",

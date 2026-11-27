@@ -11,6 +11,8 @@ import { workspaceMemberService } from "../workspace-member/service"
 
 export type SmtpViewer = { userId: string; permissions: PermissionsInput }
 
+export type SmtpReplyInbox = { id: string; name: string }
+
 /**
  * ContactInbox ids whose inbox is hidden from the viewer. Pure: the caller
  * supplies the contact's ContactInbox rows and the precomputed hidden inbox ids.
@@ -26,6 +28,36 @@ export const hiddenContactInboxIds = (
   return contactInboxes
     .filter((contactInbox) => hidden.has(contactInbox.inboxId))
     .map((contactInbox) => contactInbox.id)
+}
+
+/**
+ * The single SMTP mailbox an operator (or workspace token) may use to start an
+ * email reply: the viewer's personal inbox when they have one, otherwise the
+ * oldest shared inbox by `createdAt`. Other members' personal mailboxes are
+ * never chosen. Without a viewer (workspace token) only shared mailboxes are
+ * candidates. Returns null when nothing visible qualifies.
+ */
+export const resolveSmtpReplyInbox = async (props: {
+  workspaceId: string
+  viewerUserId?: string
+  hiddenInboxIds?: readonly string[]
+}): Promise<SmtpReplyInbox | null> => {
+  const { workspaceId, viewerUserId, hiddenInboxIds } = props
+  const hidden = new Set(hiddenInboxIds ?? [])
+  const smtpInboxes = await inboxRepository.listSmtpInboxesByWorkspace({
+    workspaceId,
+  })
+  const visible = smtpInboxes.filter((inbox) => !hidden.has(inbox.id))
+
+  if (viewerUserId) {
+    const personal = visible.find((inbox) => inbox.ownerUserId === viewerUserId)
+    if (personal) {
+      return { id: personal.id, name: personal.name }
+    }
+  }
+
+  const shared = visible.find((inbox) => inbox.ownerUserId === null)
+  return shared ? { id: shared.id, name: shared.name } : null
 }
 
 export const smtpOwnershipService = {

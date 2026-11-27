@@ -106,6 +106,7 @@ Tool names are derived from the OpenAPI `operationId` converted to `snake_case` 
 |---|---|
 | `conversations_list` | List conversations |
 | `conversations_get` | Get conversation |
+| `conversations_reply_channels` | List reply channels for a conversation |
 | `conversations_assign` | Assign or unassign conversation to user or inbox team |
 
 ### Error Logs

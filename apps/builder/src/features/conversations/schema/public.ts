@@ -24,6 +24,32 @@ export const conversationIdPathParam = z.object({
   ),
 })
 
+export const replyChannelOptionResource = z.object({
+  inboxId: zodBigintAsString().describe(
+    "Inbox id to pass as `inboxId` on `messages.create` / `conversations.message send`.",
+  ),
+  channel: channelTypes.describe("Channel of this reply option."),
+  name: z.string().describe("Display name of the inbox."),
+  needsBootstrap: z
+    .boolean()
+    .describe(
+      "True when the contact has an email but no SMTP ContactInbox yet; the first send with this `inboxId` creates it.",
+    ),
+})
+
+export const replyChannelsPublicResponse = z.object({
+  options: z
+    .array(replyChannelOptionResource)
+    .describe(
+      "Channels the caller may reply on for this contact. Non-SMTP channels appear only when a ContactInbox already exists; Email appears when the contact has an email and a usable SMTP mailbox.",
+    ),
+  defaultInboxId: zodBigintAsString()
+    .nullable()
+    .describe(
+      "Suggested `inboxId` (usually the most recently active visible ContactInbox). Null when `options` is empty.",
+    ),
+})
+
 export const assignConversationPublicRequest = z.object({
   // Must be `u_<userId>` or `t_<inboxTeamId>` — anything else falls through
   // both branches in `assignConversation` and silently unassigns instead of

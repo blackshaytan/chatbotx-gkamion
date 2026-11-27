@@ -60,6 +60,26 @@ export const inboxRepository = {
   },
 
   /**
+   * Every SMTP inbox of a workspace (personal and shared), oldest first.
+   * Used to pick the operator's reply mailbox: personal for the viewer, else
+   * the oldest shared inbox.
+   */
+  async listSmtpInboxesByWorkspace(input: {
+    workspaceId: string
+    tx?: DatabaseClient
+  }): Promise<Pick<InboxModel, "id" | "name" | "ownerUserId" | "createdAt">[]> {
+    const { tx = db } = input
+    return await tx.query.inboxModel.findMany({
+      columns: { id: true, name: true, ownerUserId: true, createdAt: true },
+      where: {
+        workspaceId: input.workspaceId,
+        channel: "smtp",
+      },
+      orderBy: { createdAt: "asc" },
+    })
+  },
+
+  /**
    * Sets or clears the personal-mailbox owner of one inbox. Scoped by
    * `workspaceId` so a caller can never retarget another workspace's row.
    */

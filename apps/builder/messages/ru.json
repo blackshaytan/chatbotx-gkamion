@@ -4617,7 +4617,9 @@
     "input": {
       "form": "Форма ввода сообщения",
       "clearReply": "Отменить ответ",
-      "attachFile": "Прикрепить файл"
+      "attachFile": "Прикрепить файл",
+      "replyChannel": "Канал ответа",
+      "replyChannelEmail": "Email"
     },
     "headerPreview": "Превью заголовка"
   },

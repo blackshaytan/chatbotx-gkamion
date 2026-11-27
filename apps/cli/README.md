@@ -253,6 +253,7 @@ chatbotx conversations list                          # [--botCategory --assigned
                                                      #  --botEnabled --tags --handoverCategory --contactFilter --cursor --perPage --sort]
                                                      # --handoverCategory: JSON array, e.g. '["urgent","payment"]'
 chatbotx conversations get <id>                      # Includes unreadCount, inboxActivityAt, handoverCategory, handedOverAt, managerJoinedAt
+chatbotx conversations reply-channels get <id>       # Reply channel options + defaultInboxId for messages.create inboxId
 chatbotx conversations assign add <id> --assignedId <assignedId>  # null clears the assignee
 chatbotx conversations archive add <id>
 chatbotx conversations unarchive add <id>

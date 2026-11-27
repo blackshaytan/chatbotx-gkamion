@@ -21,6 +21,7 @@ import {
   listConversations,
 } from "../queries/list-conversations.query"
 import { assignConversationSchema } from "../schema/action"
+import { replyChannelsPublicResponse } from "../schema/public"
 import { listConversationsRequest } from "../schema/query"
 import {
   findConversationRequest,
@@ -393,6 +394,30 @@ export const conversationsAuthenticatedAPI = {
         workspaceId: input.workspaceId,
       }),
     ),
+
+  replyChannels: authorizedAPI
+    .route({
+      method: "GET",
+      path: "/workspaces/{workspaceId}/conversations/{id}/reply-channels",
+      summary: "List reply channels for a conversation",
+      tags: ["Conversations"],
+    })
+    .input(workspaceIdAndIdRequest)
+    .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
+    .output(replyChannelsPublicResponse)
+    .handler(async ({ input, context }) => {
+      const hiddenInboxIds = await resolveMemberHiddenInboxIds({
+        workspaceId: input.workspaceId,
+        userId: context.user.id,
+        permissions: context.workspaceMember.permissions,
+      })
+      return conversationService.listReplyChannels({
+        workspaceId: input.workspaceId,
+        conversationId: input.id,
+        viewerUserId: context.user.id,
+        hiddenInboxIds,
+      })
+    }),
 
   unfollowConversationAuthenticatedAPI: authorizedAPI
     .route({

@@ -174,6 +174,26 @@ export const conversationsPublicRouter = {
         }),
     ),
 
+  replyChannels: workspaceTokenAuthAPI
+    .route({
+      method: "GET",
+      path: "/v1/conversations/{id}/reply-channels",
+      summary: "List reply channels for a conversation",
+      description:
+        "Returns the channels the caller may reply on for this contact, plus a suggested `defaultInboxId`. Non-SMTP channels appear only when a ContactInbox already exists. Email appears when the contact has an email and a usable SMTP mailbox (personal for a member viewer, otherwise the oldest shared); the first send with that `inboxId` creates the ContactInbox. Pass a chosen `inboxId` to `messages.create`. Get the conversation id from `conversations.list`.",
+      tags: ["Conversations"],
+      spec: mcpSpec({ visibility: "default" }),
+    })
+    .input(conversationIdPathParam)
+    .output(replyChannelsPublicResponse)
+    .errors(possibleErrorsOnFindingResource)
+    .handler(async ({ context, input }) =>
+      conversationService.listReplyChannels({
+        workspaceId: context.workspace.id,
+        conversationId: input.id,
+      }),
+    ),
+
   // Single-conversation, path-addressed — not the private bulk
   // `POST /conversations/assign` shape, which takes contact ids directly.
   // `assignedBy`/`userId` are omitted throughout this router: a workspace

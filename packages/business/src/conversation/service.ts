@@ -12,6 +12,7 @@ import {
   sql,
 } from "@chatbotx.io/database/client"
 import type {
+  ChannelType,
   ConversationAttributes,
   ConversationHandoverCategory,
   ConversationQuickReplyChallenge,
@@ -68,15 +69,21 @@ import type { PgUpdateSetSource } from "drizzle-orm/pg-core"
 import { aiAgentService } from "../ai-agent/service"
 import { BaseService } from "../base.service"
 import { contactService } from "../contact"
+import { normalizeContactInboxSourceId } from "../contact/contact-inbox-identity"
 import type {
   ContactInboxTrackingData,
   ContactInboxTrackingInvalidation,
 } from "../contact-inbox/service"
 import { contactInboxService } from "../contact-inbox/service"
 import { inboxTeamService } from "../enterprise/inbox-team/service"
-import { ChatbotXException, notFoundException } from "../errors"
+import {
+  ChatbotXException,
+  notFoundException,
+  validationException,
+} from "../errors"
 import { buildManagerJoinClientText } from "../external-agent/client-messages"
 import { resolveExternalAgentResumeAt } from "../external-agent/progress"
+import { resolveSmtpReplyInbox } from "../inbox/smtp-ownership"
 import { logger } from "../logger"
 import { publishToWorkspaceParty } from "../platform/realtime-broadcast"
 import { smartDelayService } from "../smart-delay/service"
@@ -89,6 +96,13 @@ export const BOT_DISABLE_DURATION_MS = 24 * 60 * 60 * 1000
 // Short on purpose: a newly connected bot must reach new conversations within
 // a minute, while a burst of new contacts still skips repeating the lookups.
 const INITIAL_BOT_ENABLED_TTL_SECONDS = 60
+
+export type ReplyChannelOption = {
+  inboxId: string
+  channel: ChannelType
+  name: string
+  needsBootstrap: boolean
+}
 
 export type TriggerContext = {
   triggerSource: string
@@ -572,6 +586,11 @@ class ConversationService extends BaseService {
    * than `contactId` (see `resolveContactInboxForSend` for the public-API
    * variant, which starts from `contactId` and resolves the conversation too).
    * Both settle on the same `ContactInbox` for a given contact.
+   *
+   * When `inboxId` has no ContactInbox yet but matches the server-computed
+   * SMTP reply target (`resolveSmtpReplyInbox`) and the contact has an email,
+   * a ContactInbox is created on first send. The client-supplied `inboxId` is
+   * never trusted as the bootstrap target on its own.
    */
   async resolveContactInboxForConversation(props: {
     conversation: Pick<ConversationModel, "contactId">
@@ -579,46 +598,237 @@ class ConversationService extends BaseService {
     inboxId?: string
     /** Personal SMTP inboxes the member must not send through. */
     hiddenInboxIds?: string[]
+    /** Viewer used to pick the personal SMTP mailbox for bootstrap (2b). */
+    viewerUserId?: string
   }): Promise<ContactInboxModel> {
-    const { conversation, workspaceId, inboxId, hiddenInboxIds } = props
+    const { conversation, workspaceId, inboxId, hiddenInboxIds, viewerUserId } =
+      props
     const hidden = new Set(hiddenInboxIds ?? [])
     if (inboxId && hidden.has(inboxId)) {
       throw notFoundException("Inbox not found")
     }
+
+    const existing = await this.findExistingContactInboxForConversation({
+      contactId: conversation.contactId,
+      workspaceId,
+      inboxId,
+      hidden,
+      hiddenInboxIds,
+    })
+    if (existing) {
+      return existing
+    }
+
+    if (inboxId) {
+      const bootstrapped = await this.bootstrapSmtpContactInboxIfAllowed({
+        workspaceId,
+        contactId: conversation.contactId,
+        inboxId,
+        viewerUserId,
+        hiddenInboxIds,
+      })
+      if (bootstrapped) {
+        return bootstrapped
+      }
+    }
+
+    throw notFoundException("Inbox not found")
+  }
+
+  private async findExistingContactInboxForConversation(props: {
+    contactId: string
+    workspaceId: string
+    inboxId?: string
+    hidden: Set<string>
+    hiddenInboxIds?: string[]
+  }): Promise<ContactInboxModel | undefined> {
+    const { contactId, workspaceId, inboxId, hidden, hiddenInboxIds } = props
     if (!hiddenInboxIds?.length) {
-      const contactInbox = inboxId
+      return inboxId
         ? await contactInboxService.findBy({
-            where: { contactId: conversation.contactId, inboxId },
+            where: { contactId, inboxId },
           })
         : await contactInboxService.findRecentByContactId({
             workspaceId,
-            contactId: conversation.contactId,
+            contactId,
           })
-      if (!contactInbox) {
-        throw notFoundException("Inbox not found")
+    }
+    if (inboxId) {
+      return await contactInboxService.findBy({
+        where: { contactId, inboxId },
+      })
+    }
+    return (
+      await contactInboxService.listByContactId({
+        workspaceId,
+        contactId,
+      })
+    )
+      .filter((row) => !hidden.has(row.inboxId))
+      .sort(
+        (a, b) =>
+          new Date(b.lastMessageAt ?? 0).getTime() -
+          new Date(a.lastMessageAt ?? 0).getTime(),
+      )[0]
+  }
+
+  /**
+   * Creates an SMTP ContactInbox for `contact.email` only when `inboxId` is
+   * exactly the server-resolved SMTP reply target. Returns null when bootstrap
+   * does not apply; throws validation when the email already belongs to another
+   * contact on that inbox.
+   */
+  private async bootstrapSmtpContactInboxIfAllowed(props: {
+    workspaceId: string
+    contactId: string
+    inboxId: string
+    viewerUserId?: string
+    hiddenInboxIds?: string[]
+  }): Promise<ContactInboxModel | null> {
+    const { workspaceId, contactId, inboxId, viewerUserId, hiddenInboxIds } =
+      props
+    const smtpTarget = await resolveSmtpReplyInbox({
+      workspaceId,
+      viewerUserId,
+      hiddenInboxIds,
+    })
+    if (!smtpTarget || smtpTarget.id !== inboxId) {
+      return null
+    }
+
+    const contact = await contactService.findBy({ where: { id: contactId } })
+    const email = contact?.email?.trim()
+    if (!email) {
+      return null
+    }
+
+    const sourceId = normalizeContactInboxSourceId("smtp", email)
+    if (!sourceId) {
+      return null
+    }
+
+    const connected = await contactInboxService.connectExistingContact({
+      workspaceId,
+      contactId,
+      inboxId,
+      channel: "smtp",
+      sourceId,
+    })
+    if (!connected) {
+      throw validationException(
+        "inboxId",
+        "This email address is already linked to another contact",
+      )
+    }
+    return connected
+  }
+
+  /**
+   * Channels the viewer may reply on for a conversation: every visible
+   * ContactInbox of the contact, plus a bootstrap Email option when the contact
+   * has an email, no visible SMTP ContactInbox yet, and a SMTP reply mailbox
+   * exists for the viewer.
+   */
+  async listReplyChannels(props: {
+    workspaceId: string
+    conversationId: string
+    viewerUserId?: string
+    hiddenInboxIds?: string[]
+  }): Promise<{
+    options: ReplyChannelOption[]
+    defaultInboxId: string | null
+  }> {
+    const { workspaceId, conversationId, viewerUserId, hiddenInboxIds } = props
+    const conversation = await this.findByOrFail({
+      where: { id: conversationId, workspaceId },
+    })
+    const hidden = new Set(hiddenInboxIds ?? [])
+    const contactInboxes = (
+      await contactInboxService.listByContactId({
+        workspaceId,
+        contactId: conversation.contactId,
+      })
+    ).filter((row) => !hidden.has(row.inboxId))
+
+    const inboxIds = contactInboxes.map((row) => row.inboxId)
+    const inboxNames = new Map<string, string>()
+    if (inboxIds.length > 0) {
+      const inboxes = await db.query.inboxModel.findMany({
+        columns: { id: true, name: true },
+        where: {
+          workspaceId,
+          id: { in: inboxIds },
+        },
+      })
+      for (const inbox of inboxes) {
+        inboxNames.set(inbox.id, inbox.name)
       }
-      return contactInbox
     }
-    const contactInbox = inboxId
-      ? await contactInboxService.findBy({
-          where: { contactId: conversation.contactId, inboxId },
+
+    const options: ReplyChannelOption[] = contactInboxes.map((row) => ({
+      inboxId: row.inboxId,
+      channel: row.channel as ChannelType,
+      name: inboxNames.get(row.inboxId) ?? row.channel,
+      needsBootstrap: false,
+    }))
+
+    const hasVisibleSmtp = contactInboxes.some((row) => row.channel === "smtp")
+    if (!hasVisibleSmtp) {
+      const contact = await contactService.findBy({
+        where: { id: conversation.contactId },
+      })
+      const email = contact?.email?.trim()
+      if (email) {
+        const smtpTarget = await resolveSmtpReplyInbox({
+          workspaceId,
+          viewerUserId,
+          hiddenInboxIds,
         })
-      : (
-          await contactInboxService.listByContactId({
-            workspaceId,
-            contactId: conversation.contactId,
+        if (smtpTarget) {
+          options.push({
+            inboxId: smtpTarget.id,
+            channel: "smtp",
+            name: smtpTarget.name,
+            needsBootstrap: true,
           })
-        )
-          .filter((row) => !hidden.has(row.inboxId))
-          .sort(
-            (a, b) =>
-              new Date(b.lastMessageAt ?? 0).getTime() -
-              new Date(a.lastMessageAt ?? 0).getTime(),
-          )[0]
-    if (!contactInbox) {
-      throw notFoundException("Inbox not found")
+        }
+      }
     }
-    return contactInbox
+
+    const defaultInboxId = await this.resolveDefaultReplyInboxId({
+      workspaceId,
+      contactId: conversation.contactId,
+      options,
+      hidden,
+    })
+
+    return { options, defaultInboxId }
+  }
+
+  private async resolveDefaultReplyInboxId(props: {
+    workspaceId: string
+    contactId: string
+    options: ReplyChannelOption[]
+    hidden: Set<string>
+  }): Promise<string | null> {
+    const { workspaceId, contactId, options, hidden } = props
+    if (options.length === 0) {
+      return null
+    }
+    const recent = await contactInboxService.findRecentByContactId({
+      workspaceId,
+      contactId,
+    })
+    if (recent && !hidden.has(recent.inboxId)) {
+      const match = options.find((option) => option.inboxId === recent.inboxId)
+      if (match) {
+        return match.inboxId
+      }
+    }
+    const activeVisible = options
+      .filter((option) => !option.needsBootstrap)
+      .at(0)
+    return activeVisible?.inboxId ?? options[0]?.inboxId ?? null
   }
 
   async findLatestByContact(props: {
