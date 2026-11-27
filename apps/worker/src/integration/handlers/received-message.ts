@@ -37,6 +37,7 @@ import {
   type ChannelType,
   type CommentAutomationType,
   type ContactSource,
+  channelTypes,
   contactSources,
   type IntegrationType,
   supportsPostTracking,
@@ -1219,10 +1220,12 @@ const enqueueIncomingNotification = async ({
   workspaceId,
   conversationId,
   message,
+  inboxId,
 }: {
   workspaceId: string
   conversationId: string
   message: SavedMessage
+  inboxId?: string
 }): Promise<void> => {
   try {
     await notificationQueue.add(
@@ -1236,6 +1239,7 @@ const enqueueIncomingNotification = async ({
           messageText: message.text?.slice(0, 140),
           contentType: message.contentType,
           attachmentCount: message.attachments.length,
+          inboxId,
         },
       },
       { jobId: `notify-incoming-${message.id}` },
@@ -1398,6 +1402,26 @@ const persistMessage = async (
   }
 
   if (isNew && inbound) {
+    if (inbox.channel === channelTypes.enum.smtp && inbox.ownerUserId) {
+      try {
+        await conversationService.claimAssignmentIfUnassigned({
+          assignedId: `u_${inbox.ownerUserId}`,
+          conversation: { id: conversation.id },
+          triggerContext: {
+            triggerHandler: "personalSmtpOwner",
+            triggerSource: "worker",
+            triggerType: "personal_smtp_owner",
+          },
+          workspaceId: inbox.workspaceId,
+        })
+      } catch (err) {
+        logger.warn(
+          { err, inboxId: inbox.id },
+          "personal smtp auto-assign failed",
+        )
+      }
+    }
+
     // The agent lookup only matters while the bot is active, so skip the query
     // otherwise: the push is sent either way in that case.
     const isAgentInbox =
@@ -1417,6 +1441,7 @@ const persistMessage = async (
         workspaceId: inbox.workspaceId,
         conversationId: conversation.id,
         message,
+        inboxId: inbox.id,
       })
     }
   }

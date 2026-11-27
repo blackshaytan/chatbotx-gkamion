@@ -2,6 +2,7 @@ import {
   contactService,
   conversationService,
   deviceTokenService,
+  smtpOwnershipService,
   workspaceMemberService,
   workspaceService,
 } from "@chatbotx.io/business"
@@ -16,6 +17,7 @@ import { getExpoClient } from "../lib/expo"
  * Recipients = the assigned user, else every workspace member (unassigned
  * conversations fan out — noisy for large workspaces but acceptable for v1;
  * presence-aware suppression is a post-MVP concern).
+ * Personal SMTP overrides that with owner + admins when `inboxId` is set.
  */
 const resolveRecipientUserIds = async (
   job: NotificationJobData,
@@ -29,6 +31,19 @@ const resolveRecipientUserIds = async (
   // push goes to the same recipients as any other message.
   const excludeUserId =
     job.type === "notifyIncomingMessage" ? job.data.excludeUserId : undefined
+
+  if (job.type === "notifyIncomingMessage" && job.data.inboxId) {
+    const audience = await smtpOwnershipService.resolveAudienceUserIds({
+      workspaceId: job.data.workspaceId,
+      inboxId: job.data.inboxId,
+    })
+    if (audience) {
+      return excludeUserId
+        ? audience.filter((userId) => userId !== excludeUserId)
+        : audience
+    }
+  }
+
   const recipientUserIds = conversation.assignedUserId
     ? [conversation.assignedUserId]
     : await workspaceMemberService.listUserIdsByWorkspaceId({

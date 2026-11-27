@@ -10,6 +10,10 @@ const mockLockContentionPolicy = vi.hoisted(() => ({
   maxDelayMs: 30_000,
 }))
 
+const mockClaimAssignmentIfUnassigned = vi
+  .hoisted(() => vi.fn())
+  .mockResolvedValue("claimed")
+
 // ---------------------------------------------------------------------------
 // Hoist mock references
 // ---------------------------------------------------------------------------
@@ -353,6 +357,7 @@ vi.mock("@chatbotx.io/business", () => ({
     findOrCreate: mockConversationFindOrCreate,
     markReadByOutbound: mockMarkReadByOutbound,
     recordInboundActivity: mockRecordInboundActivity,
+    claimAssignmentIfUnassigned: mockClaimAssignmentIfUnassigned,
   },
   workspaceService: {
     find: mockWorkspaceFind,
@@ -1169,6 +1174,89 @@ describe("receiveMessage — message repository branch", () => {
       await receiveMessage(baseProps)
 
       expect(incomingPushJobs()).toHaveLength(1)
+    })
+
+    test("includes inboxId on the incoming push job payload", async () => {
+      await receiveMessage(baseProps)
+
+      expect(incomingPushJobs()[0]?.[1]).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({ inboxId: fakeInbox.id }),
+        }),
+      )
+    })
+  })
+
+  describe("personal SMTP auto-assign", () => {
+    beforeEach(() => {
+      mockClaimAssignmentIfUnassigned.mockResolvedValue("claimed")
+      mockRunChannelHandler.mockResolvedValue({
+        message: { ...baseIncomingMessage, attachments: [] },
+        contact: { sourceId: "client@example.com" },
+        postbackAction: null,
+        quickReplyAction: null,
+        ref: null,
+      })
+    })
+
+    test("claims the owner when a personal SMTP inbox receives inbound mail", async () => {
+      vi.mocked(
+        integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+      ).mockResolvedValue({
+        inbox: {
+          ...fakeInbox,
+          channel: "smtp",
+          ownerUserId: "u1",
+        },
+        integrationRow: fakeIntegrationRow,
+      } as never)
+
+      await receiveMessage(baseProps)
+
+      expect(mockClaimAssignmentIfUnassigned).toHaveBeenCalledWith(
+        expect.objectContaining({
+          assignedId: "u_u1",
+          conversation: { id: "conv-1" },
+          workspaceId: "ws-1",
+          triggerContext: expect.objectContaining({
+            triggerType: "personal_smtp_owner",
+          }),
+        }),
+      )
+    })
+
+    test("does not throw when the conversation is already assigned", async () => {
+      mockClaimAssignmentIfUnassigned.mockResolvedValue("alreadyAssigned")
+      vi.mocked(
+        integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+      ).mockResolvedValue({
+        inbox: {
+          ...fakeInbox,
+          channel: "smtp",
+          ownerUserId: "u1",
+        },
+        integrationRow: fakeIntegrationRow,
+      } as never)
+
+      await expect(receiveMessage(baseProps)).resolves.toBeUndefined()
+      expect(mockClaimAssignmentIfUnassigned).toHaveBeenCalled()
+    })
+
+    test("skips auto-assign for a shared SMTP inbox", async () => {
+      vi.mocked(
+        integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+      ).mockResolvedValue({
+        inbox: {
+          ...fakeInbox,
+          channel: "smtp",
+          ownerUserId: null,
+        },
+        integrationRow: fakeIntegrationRow,
+      } as never)
+
+      await receiveMessage(baseProps)
+
+      expect(mockClaimAssignmentIfUnassigned).not.toHaveBeenCalled()
     })
   })
 
