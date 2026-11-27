@@ -31,6 +31,7 @@ import {
   assignConversationPublicRequest,
   conversationIdPathParam,
   getConversationPublicResponse,
+  replyChannelsPublicResponse,
   threadControlPublicRequest,
   threadControlPublicResponse,
 } from "../schema/public"

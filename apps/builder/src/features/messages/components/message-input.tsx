@@ -277,11 +277,10 @@ export const MessageInput = () => {
                   workspaceId: conversation.workspaceId,
                   id: conversation.id,
                 })
-                .then((fresh) => {
-                  if (fresh?.contactInboxes) {
-                    updateConversation(conversation.id, {
-                      contactInboxes: fresh.contactInboxes,
-                    })
+                .then((response) => {
+                  const contactInboxes = response.data.contactInboxes
+                  if (contactInboxes) {
+                    updateConversation(conversation.id, { contactInboxes })
                   }
                 })
                 .catch(() => {
