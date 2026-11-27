@@ -228,6 +228,7 @@ See **`.agents/rules/git.md`** for the full canonical rules (commit format, bran
 - External AI agent (Hermes answers client chats: run flow, cursor and history, progress messages, handover, failures, settings, Hermes setup): `docs/external-agent.md`
 - Staff tasks (assign tasks to members/teams, task feed, owner hand-over, public `tasks.*` API): `docs/tasks.md`
 - Staff chat (private staff conversations, API scope, task creation from messages): `docs/staff-chat.md`
+- SMTP mailbox ownership (personal vs shared, who sees what, tokens, broadcasts): `docs/smtp-mailbox-ownership.md`
 
 When unsure, search the codebase for an existing feature that resembles the request and mirror its structure, imports, and error-handling style.
 
