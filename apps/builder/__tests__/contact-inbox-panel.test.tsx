@@ -27,6 +27,11 @@ vi.mock("@chatbotx.io/auth/server", () => ({
   createAuth: vi.fn(),
 }))
 
+vi.mock("@/features/contacts/contact-panel-visibility", () => ({
+  SHOW_CONTACT_CUSTOM_FIELD_ACTIONS: true,
+  SHOW_CONTACT_SIDE_PANEL_MODULES: true,
+}))
+
 vi.mock("next-intl", () => ({
   useFormatter: () => ({
     dateTime: () => "mocked date",
