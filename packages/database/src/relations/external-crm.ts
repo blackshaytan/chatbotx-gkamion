@@ -34,4 +34,16 @@ export const externalCrmRelations = defineRelationsPart(schema, (r) => ({
       optional: false,
     }),
   },
+  externalClientNotificationModel: {
+    workspace: r.one.workspaceModel({
+      from: r.externalClientNotificationModel.workspaceId,
+      to: r.workspaceModel.id,
+      optional: false,
+    }),
+    contact: r.one.contactModel({
+      from: r.externalClientNotificationModel.contactId,
+      to: r.contactModel.id,
+      optional: false,
+    }),
+  },
 }))

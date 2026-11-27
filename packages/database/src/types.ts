@@ -154,6 +154,8 @@ export type ExternalCustomerIdentityModel =
 export type ExternalOrderModel = typeof schema.externalOrderModel.$inferSelect
 export type ExternalOrderEventModel =
   typeof schema.externalOrderEventModel.$inferSelect
+export type ExternalClientNotificationModel =
+  typeof schema.externalClientNotificationModel.$inferSelect
 export type InboxTeamModel = typeof schema.inboxTeamModel.$inferSelect
 export type InboxTeamMemberModel =
   typeof schema.inboxTeamMemberModel.$inferSelect
