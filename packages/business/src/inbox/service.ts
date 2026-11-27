@@ -369,6 +369,7 @@ class InboxService extends BaseService {
       where: {
         workspaceId: input.workspaceId,
         id: { in: inboxIds },
+        ownerUserId: { isNull: true },
         ...this.buildBroadcastChannelWhere(input.channels),
       },
       columns: { id: true },
@@ -408,6 +409,7 @@ class InboxService extends BaseService {
     const inboxes = await db.query.inboxModel.findMany({
       where: {
         workspaceId: input.workspaceId,
+        ownerUserId: { isNull: true },
         ...this.buildBroadcastChannelWhere(input.channels),
       },
       columns: { id: true },

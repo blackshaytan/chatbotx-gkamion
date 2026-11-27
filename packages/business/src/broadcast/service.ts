@@ -2356,15 +2356,24 @@ class BroadcastService extends BaseService {
     if (!everyTargetOwned) {
       throw new BroadcastValidationException("Inbox not found", "targets")
     }
+    if (inboxes.some((inbox) => inbox.ownerUserId)) {
+      throw new BroadcastValidationException(
+        "Personal mailbox cannot be used for broadcasts",
+        "targets",
+      )
+    }
 
-    return { inboxes, flows }
+    return {
+      inboxes: inboxes.map(({ id, name }) => ({ id, name })),
+      flows,
+    }
   }
 
   private async listOwnedTargetInboxes(input: {
     workspaceId: string
     channel: ChannelType
     inboxIds: string[]
-  }): Promise<Pick<InboxModel, "id" | "name">[]> {
+  }): Promise<Pick<InboxModel, "id" | "name" | "ownerUserId">[]> {
     const inboxIds = Array.from(new Set(input.inboxIds))
     if (inboxIds.length === 0) {
       return []
@@ -2375,7 +2384,7 @@ class BroadcastService extends BaseService {
         workspaceId: input.workspaceId,
         channel: input.channel,
       },
-      columns: { id: true, name: true },
+      columns: { id: true, name: true, ownerUserId: true },
     })
   }
 
