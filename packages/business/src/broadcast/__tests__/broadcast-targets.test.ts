@@ -390,7 +390,6 @@ describe("broadcastService.assertBroadcastTargetsOwned", () => {
       field: "targets",
     })
   })
-
 })
 
 describe("broadcastService.create", () => {

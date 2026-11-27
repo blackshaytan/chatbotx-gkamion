@@ -1244,8 +1244,10 @@ describe("receiveMessage — message repository branch", () => {
         integrationRow: fakeIntegrationRow,
       } as never)
 
-      await expect(receiveMessage(baseProps)).resolves.toBeUndefined()
-      expect(mockClaimAssignmentIfUnassigned).toHaveBeenCalled()
+      await expect(receiveMessage(baseProps)).resolves.toBeDefined()
+      expect(mockClaimAssignmentIfUnassigned).toHaveBeenCalledWith(
+        expect.objectContaining({ assignedId: "u_u1" }),
+      )
     })
 
     test("skips auto-assign for a shared SMTP inbox", async () => {

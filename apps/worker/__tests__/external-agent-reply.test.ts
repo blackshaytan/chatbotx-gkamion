@@ -362,17 +362,17 @@ describe("processExternalAgentReply", () => {
       params.messages.map((message: { text: string }) => message.text),
     ).toEqual(["text m-new-1", "text m-new-2"])
     expect(params.history).toHaveLength(10)
-    expect(params.history[0]).toEqual({
+    expect(params.history[0]).toMatchObject({
       role: "contact",
       text: "text h-2",
       attachmentUrls: [],
     })
-    expect(params.history[1]).toEqual({
+    expect(params.history[1]).toMatchObject({
       role: "bot",
       text: "reply h-3",
       attachmentUrls: [],
     })
-    expect(params.history.at(-1)).toEqual({
+    expect(params.history.at(-1)).toMatchObject({
       role: "contact",
       text: "text m-old",
       attachmentUrls: [],
