@@ -4,9 +4,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
-import { ContactInboxPanel } from "@/features/contacts/contact-inbox-panel"
 import type { UseAutoRefreshContactProfileProps } from "@/features/contacts/hooks/use-auto-refresh-contact-profile"
 import type { ThreadControlView } from "@/features/conversations/utils/thread-control"
+
+vi.mock("@chatbotx.io/database/client", () => ({
+  db: {},
+  sql: vi.fn(),
+}))
 
 vi.mock("next-intl", () => ({
   useFormatter: () => ({
@@ -14,6 +18,10 @@ vi.mock("next-intl", () => ({
   }),
   useTranslations: () => (key: string) => key,
 }))
+
+const { ContactInboxPanel } = await import(
+  "@/features/contacts/contact-inbox-panel"
+)
 
 const getContactMock = vi.fn()
 const notesMock = vi.fn().mockResolvedValue({ data: [] })

@@ -77,7 +77,7 @@ describe("QuestionnaireApplicantNameCell", () => {
       root.render(
         <QuestionnaireApplicantNameCell
           contact={{
-            avatar: "https://images.example.com/avatar.png",
+            avatar: "https://builder.example.com/media/avatar/signed-token",
             fullName: "Jane Doe",
           }}
           unknownContactLabel="Unknown contact"
@@ -89,6 +89,6 @@ describe("QuestionnaireApplicantNameCell", () => {
     expect(
       container.querySelector<HTMLElement>("[data-testid='avatar-image']")
         ?.dataset.src,
-    ).toBe("https://images.example.com/avatar.png")
+    ).toBe("https://builder.example.com/media/avatar/signed-token")
   })
 })

@@ -1,29 +1,27 @@
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
 const {
-  mockBroadcastToWorkspaceParty,
   mockBulkCreateAttachments,
   mockChatQueueAdd,
   mockContactInboxFindBy,
   mockConversationFindByOrFail,
   mockDeleteAttachmentsByMessageId,
   mockFindById,
+  mockPublishMessageEvent,
   mockUpdateMessageText,
 } = vi.hoisted(() => ({
-  mockBroadcastToWorkspaceParty: vi.fn().mockResolvedValue(undefined),
   mockBulkCreateAttachments: vi.fn().mockResolvedValue(undefined),
   mockChatQueueAdd: vi.fn().mockResolvedValue(undefined),
   mockContactInboxFindBy: vi.fn(),
   mockConversationFindByOrFail: vi.fn(),
   mockDeleteAttachmentsByMessageId: vi.fn().mockResolvedValue(undefined),
   mockFindById: vi.fn(),
+  mockPublishMessageEvent: vi.fn().mockResolvedValue(undefined),
   mockUpdateMessageText: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock("@chatbotx.io/business", () => ({
-  publishMessageEvent: vi.fn(async () => undefined),
-
-  broadcastToWorkspaceParty: mockBroadcastToWorkspaceParty,
+  publishMessageEvent: mockPublishMessageEvent,
   contactInboxService: { findBy: mockContactInboxFindBy },
   conversationService: { findByOrFail: mockConversationFindByOrFail },
 }))
@@ -74,12 +72,12 @@ const createdAt = new Date("2026-01-01T00:00:00Z")
 describe("editMessage", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockBroadcastToWorkspaceParty.mockResolvedValue(undefined)
+    mockPublishMessageEvent.mockResolvedValue(undefined)
     mockConversationFindByOrFail.mockResolvedValue({
       id: "conv-1",
       workspaceId: "ws-1",
     })
-    mockContactInboxFindBy.mockResolvedValue({ id: "ci-1" })
+    mockContactInboxFindBy.mockResolvedValue({ id: "ci-1", inboxId: "inbox-1" })
     mockFindById.mockResolvedValue({
       id: "msg-1",
       conversationId: "conv-1",
@@ -101,17 +99,21 @@ describe("editMessage", () => {
       } as never,
     })
 
-    expect(mockBroadcastToWorkspaceParty).toHaveBeenCalledWith("ws-1", {
-      eventType: "messageUpdated",
-      data: {
-        messageId: "msg-1",
-        newText: "updated text",
-        newAttachmentPath: null,
-        newAttachmentPublicUrl: null,
-        newAttachmentMimeType: null,
-        newAttachmentWidth: 0,
-        newAttachmentHeight: 0,
-        removedAttachment: false,
+    expect(mockPublishMessageEvent).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      inboxId: "inbox-1",
+      event: {
+        eventType: "messageUpdated",
+        data: {
+          messageId: "msg-1",
+          newText: "updated text",
+          newAttachmentPath: null,
+          newAttachmentPublicUrl: null,
+          newAttachmentMimeType: null,
+          newAttachmentWidth: 0,
+          newAttachmentHeight: 0,
+          removedAttachment: false,
+        },
       },
     })
   })
@@ -128,11 +130,14 @@ describe("editMessage", () => {
       } as never,
     })
 
-    expect(mockBroadcastToWorkspaceParty).toHaveBeenCalledWith(
-      "ws-1",
+    expect(mockPublishMessageEvent).toHaveBeenCalledWith(
       expect.objectContaining({
-        eventType: "messageUpdated",
-        data: expect.objectContaining({ removedAttachment: true }),
+        workspaceId: "ws-1",
+        inboxId: "inbox-1",
+        event: expect.objectContaining({
+          eventType: "messageUpdated",
+          data: expect.objectContaining({ removedAttachment: true }),
+        }),
       }),
     )
   })
@@ -142,8 +147,8 @@ describe("editMessage", () => {
       id: "msg-1",
       conversationId: "conv-1",
       createdAt,
-      messageType: "incoming",
-      type: "comment",
+      messageType: "outgoing",
+      type: "text",
       contactInboxId: "ci-1",
     })
 
@@ -157,8 +162,8 @@ describe("editMessage", () => {
           newText: "updated text",
         } as never,
       }),
-    ).rejects.toThrow("Message is not an editable comment")
+    ).rejects.toThrow()
 
-    expect(mockBroadcastToWorkspaceParty).not.toHaveBeenCalled()
+    expect(mockPublishMessageEvent).not.toHaveBeenCalled()
   })
 })

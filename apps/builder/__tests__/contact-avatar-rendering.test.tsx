@@ -87,34 +87,31 @@ describe("ContactNameCell avatar rendering", () => {
     expect(el.querySelector("img")?.getAttribute("src")).toBe(proxyUrl)
   })
 
-  test("skips expired provider CDN URLs so initials show instead of a broken image", () => {
+  test("skips expired provider CDN URLs and falls back to a pack avatar", () => {
     const el = renderContact(
       "https://api.telegram.org/file/botTOKEN/photos/file_1.jpg",
     )
 
-    expect(el.querySelector("img")).toBeNull()
-    expect(el.querySelector('[data-slot="avatar-fallback"]')?.textContent).toBe(
-      "Ad",
+    expect(el.querySelector("img")?.getAttribute("src")).toMatch(
+      /^\/contact-avatars\/\d+\.svg$/,
     )
   })
 
-  test("renders initials when the server avatar value is null", () => {
+  test("falls back to a pack avatar when the server avatar value is null", () => {
     const el = renderContact(null)
 
-    expect(el.querySelector("img")).toBeNull()
-    expect(el.querySelector('[data-slot="avatar-fallback"]')?.textContent).toBe(
-      "Ad",
+    expect(el.querySelector("img")?.getAttribute("src")).toMatch(
+      /^\/contact-avatars\/\d+\.svg$/,
     )
   })
 
-  test("renders initials for a no-avatar sentinel instead of a broken image", () => {
+  test("falls back to a pack avatar for a no-avatar sentinel", () => {
     // A sentinel is a "we tried and there is no avatar" marker, not a storage
     // key — it must never be finalized into an <img src>.
     const el = renderContact(`public/img/no_avatar.jpg?time=${Date.now()}`)
 
-    expect(el.querySelector("img")).toBeNull()
-    expect(el.querySelector('[data-slot="avatar-fallback"]')?.textContent).toBe(
-      "Ad",
+    expect(el.querySelector("img")?.getAttribute("src")).toMatch(
+      /^\/contact-avatars\/\d+\.svg$/,
     )
   })
 })

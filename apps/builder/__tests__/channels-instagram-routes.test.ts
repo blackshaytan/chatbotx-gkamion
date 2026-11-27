@@ -74,7 +74,10 @@ vi.mock("@chatbotx.io/utils", async (importOriginal) => {
 })
 
 vi.mock("@chatbotx.io/business", () => ({
-  workspaceMemberService: { listByWorkspaceId: vi.fn(async () => []) },
+  workspaceMemberService: {
+    listByWorkspaceId: vi.fn(async () => []),
+    listByUserId: vi.fn(async () => []),
+  },
 
   workspaceService: {
     findById: mockFindWorkspaceById,

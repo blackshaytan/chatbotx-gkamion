@@ -222,7 +222,7 @@ describe("conversationsAuthenticatedAPI — PII permission gate", () => {
 
     expect(listConversations).toHaveBeenCalledWith(
       { workspaceId: "workspace-1", ids: [] },
-      { includeEmailAndPhone: true },
+      { includeEmailAndPhone: true, hiddenInboxIds: [] },
     )
   })
 
@@ -245,7 +245,7 @@ describe("conversationsAuthenticatedAPI — PII permission gate", () => {
 
     expect(listConversations).toHaveBeenCalledWith(
       { workspaceId: "workspace-1", ids: [] },
-      { includeEmailAndPhone: false },
+      { includeEmailAndPhone: false, hiddenInboxIds: [] },
     )
   })
 })
@@ -277,7 +277,7 @@ describe("conversationsAuthenticatedAPI — inbox bot category", () => {
 
       expect(listConversations).toHaveBeenCalledWith(
         { workspaceId: "workspace-1", botCategory: "human" },
-        { includeEmailAndPhone: false },
+        { includeEmailAndPhone: false, hiddenInboxIds: [] },
       )
     }
   })
@@ -300,7 +300,7 @@ describe("conversationsAuthenticatedAPI — inbox bot category", () => {
 
     expect(listConversations).toHaveBeenCalledWith(
       { workspaceId: "workspace-1", botCategory: "bot" },
-      { includeEmailAndPhone: true },
+      { includeEmailAndPhone: true, hiddenInboxIds: [] },
     )
   })
 })

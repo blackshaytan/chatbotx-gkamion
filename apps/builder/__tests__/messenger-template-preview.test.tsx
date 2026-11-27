@@ -6,6 +6,10 @@ vi.mock("next/image", () => ({
   default: ({ src }: { src: string }) => <span data-image-src={src} />,
 }))
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}))
+
 const { MessengerTemplatePreview } = await import(
   "@/features/integration-messenger/message-templates/components/template-preview"
 )

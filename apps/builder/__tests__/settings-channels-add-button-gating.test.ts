@@ -66,6 +66,18 @@ vi.mock("next/navigation", () => ({
   }),
 }))
 
+vi.mock("@/lib/auth/utils", () => ({
+  getCurrentUserAndTargetWorkspace: vi.fn(async () => ({
+    targetWorkspaceMember: {
+      permissions: { superAdmin: true },
+    },
+  })),
+}))
+
+vi.mock("@/lib/workspace/require-visible-channel", () => ({
+  requireVisibleChannel: vi.fn(async () => undefined),
+}))
+
 vi.mock("@chatbotx.io/utils", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@chatbotx.io/utils")>()
   return {

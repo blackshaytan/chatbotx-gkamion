@@ -49,6 +49,10 @@ vi.mock("@/features/messages/components/whatsapp-call-info-sheet", () => ({
   WhatsappCallInfoSheet: () => <div data-testid="call-info-sheet" />,
 }))
 
+vi.mock("@/features/tasks/components/tasks-realtime-sync", () => ({
+  TasksRealtimeSync: () => null,
+}))
+
 const { WorkspaceRealtimeShell } = await import(
   "@/components/workspace-realtime-shell"
 )

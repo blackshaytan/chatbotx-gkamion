@@ -275,6 +275,7 @@ describe("unreadCount", () => {
         { id: "1", agentLastReadAt: readAt },
         { id: "2", agentLastReadAt: null },
       ],
+      excludeContactInboxIds: [],
       limit: UNREAD_COUNT_CAP,
     })
     expect(result.data.map((item) => item.unreadCount)).toEqual([3, 0])
@@ -339,6 +340,7 @@ describe("unreadCount", () => {
     expect(mocks.repo.countUnreadIncomingByConversations).toHaveBeenCalledWith({
       workspaceId: "ws-1",
       conversations: [{ id: "7", agentLastReadAt: null }],
+      excludeContactInboxIds: [],
       limit: UNREAD_COUNT_CAP,
     })
     expect(result.data).toMatchObject({
