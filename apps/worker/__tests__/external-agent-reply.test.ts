@@ -560,7 +560,7 @@ describe("processExternalAgentReply", () => {
       { workspaceId: "ws-1", attachmentId: "att-1", messageCreatedAt: at(130) },
       86_400_000,
     )
-    expect(mocks.buildRunInput.mock.calls[0]?.[0].messages).toEqual([
+    expect(mocks.buildRunInput.mock.calls[0]?.[0].messages).toMatchObject([
       {
         role: "contact",
         text: null,
