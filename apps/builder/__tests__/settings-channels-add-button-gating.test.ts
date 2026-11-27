@@ -75,7 +75,10 @@ vi.mock("@/lib/auth/utils", () => ({
 }))
 
 vi.mock("@/lib/workspace/require-visible-channel", () => ({
-  requireVisibleChannel: vi.fn(async () => undefined),
+  requireVisibleChannel: vi.fn(async () => ({
+    ownerId: "owner-1",
+    visibleChannels: ["zalo", "smtp", "telegram", "webchat", "whatsapp"],
+  })),
 }))
 
 vi.mock("@chatbotx.io/utils", async (importOriginal) => {

@@ -37,6 +37,8 @@ vi.mock("@/features/inboxes/components/inbox-icon", () => ({
   InboxIcon: () => null,
 }))
 
+const PACK_AVATAR_SRC_RE = /^\/contact-avatars\/\d+\.svg$/
+
 const tenantSettings = {
   storageUrl: "https://filesystem.example.com/chatbotx/",
 } as unknown as TenantSettings
@@ -93,7 +95,7 @@ describe("ContactNameCell avatar rendering", () => {
     )
 
     expect(el.querySelector("img")?.getAttribute("src")).toMatch(
-      /^\/contact-avatars\/\d+\.svg$/,
+      PACK_AVATAR_SRC_RE,
     )
   })
 
@@ -101,7 +103,7 @@ describe("ContactNameCell avatar rendering", () => {
     const el = renderContact(null)
 
     expect(el.querySelector("img")?.getAttribute("src")).toMatch(
-      /^\/contact-avatars\/\d+\.svg$/,
+      PACK_AVATAR_SRC_RE,
     )
   })
 
@@ -111,7 +113,7 @@ describe("ContactNameCell avatar rendering", () => {
     const el = renderContact(`public/img/no_avatar.jpg?time=${Date.now()}`)
 
     expect(el.querySelector("img")?.getAttribute("src")).toMatch(
-      /^\/contact-avatars\/\d+\.svg$/,
+      PACK_AVATAR_SRC_RE,
     )
   })
 })

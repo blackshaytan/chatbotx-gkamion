@@ -83,6 +83,7 @@ vi.mock("@chatbotx.io/database/client", () => ({
 
 vi.mock("@chatbotx.io/database/schema", () => ({
   contactInboxModel: { id: "contactInboxModelId" },
+  contactsToTagsModel: { id: "contactsToTagsModelId" },
   errorLogModel: { id: "errorLogModelId" },
   workspaceMemberModel: { id: "workspaceMemberModelId" },
 }))

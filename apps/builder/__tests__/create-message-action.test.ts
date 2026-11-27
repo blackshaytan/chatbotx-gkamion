@@ -65,7 +65,10 @@ describe("createMessageAction", () => {
     await createMessageAction({
       bindArgsParsedInputs: ["ws-1", "conv-1"],
       parsedInput: { text: "hello" },
-      ctx: { user: { id: "user-1" }, workspaceMemberPermissions: { superAdmin: true } },
+      ctx: {
+        user: { id: "user-1" },
+        workspaceMemberPermissions: { superAdmin: true },
+      },
     } as never)
 
     expect(mockFindByOrFail).toHaveBeenCalledWith({
@@ -77,7 +80,10 @@ describe("createMessageAction", () => {
     await createMessageAction({
       bindArgsParsedInputs: ["ws-1", "conv-1"],
       parsedInput: { text: "hello", inboxId: "inbox-2" },
-      ctx: { user: { id: "user-1" }, workspaceMemberPermissions: { superAdmin: true } },
+      ctx: {
+        user: { id: "user-1" },
+        workspaceMemberPermissions: { superAdmin: true },
+      },
     } as never)
 
     expect(mockResolveContactInboxForConversation).toHaveBeenCalledWith({
@@ -97,7 +103,10 @@ describe("createMessageAction", () => {
       createMessageAction({
         bindArgsParsedInputs: ["ws-1", "conv-1"],
         parsedInput: { text: "hello" },
-        ctx: { user: { id: "user-1" }, workspaceMemberPermissions: { superAdmin: true } },
+        ctx: {
+          user: { id: "user-1" },
+          workspaceMemberPermissions: { superAdmin: true },
+        },
       } as never),
     ).rejects.toThrow("Inbox not found")
 
@@ -108,7 +117,10 @@ describe("createMessageAction", () => {
     const result = await createMessageAction({
       bindArgsParsedInputs: ["ws-1", "conv-1"],
       parsedInput: { text: "hello", clientId: "client-1" },
-      ctx: { user: { id: "user-1" }, workspaceMemberPermissions: { superAdmin: true } },
+      ctx: {
+        user: { id: "user-1" },
+        workspaceMemberPermissions: { superAdmin: true },
+      },
     } as never)
 
     expect(mockCreateOutgoing).toHaveBeenCalledWith({
@@ -134,7 +146,10 @@ describe("createMessageAction", () => {
     await createMessageAction({
       bindArgsParsedInputs: ["ws-1", "conv-1"],
       parsedInput,
-      ctx: { user: { id: "user-1" }, workspaceMemberPermissions: { superAdmin: true } },
+      ctx: {
+        user: { id: "user-1" },
+        workspaceMemberPermissions: { superAdmin: true },
+      },
     } as never)
 
     expect(mockResolveContactInboxForConversation).toHaveBeenCalledWith(

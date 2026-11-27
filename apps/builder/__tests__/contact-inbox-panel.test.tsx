@@ -12,6 +12,11 @@ vi.mock("@chatbotx.io/database/client", () => ({
   sql: vi.fn(),
 }))
 
+vi.mock("@chatbotx.io/filesystem", () => ({
+  uploader: { getObject: vi.fn(), getSignedUrl: vi.fn() },
+  getImageDimensions: vi.fn(),
+}))
+
 vi.mock("next-intl", () => ({
   useFormatter: () => ({
     dateTime: () => "mocked date",

@@ -60,6 +60,7 @@ export function ResetContactCustomFieldsDialog({
         render={
           <Button
             className="flex cursor-pointer justify-start px-0! text-destructive hover:text-destructive/80"
+            data-testid="reset-custom-fields"
             disabled={disabled}
             type="button"
             variant="link"
