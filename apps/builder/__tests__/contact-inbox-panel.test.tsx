@@ -24,6 +24,7 @@ vi.mock("@chatbotx.io/mail", () => ({
 
 vi.mock("@chatbotx.io/auth/server", () => ({
   auth: { api: { getSession: vi.fn() } },
+  createAuth: vi.fn(),
 }))
 
 vi.mock("next-intl", () => ({
