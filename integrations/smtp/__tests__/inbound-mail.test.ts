@@ -33,6 +33,24 @@ describe("parseRawMail", () => {
     expect(payload?.text).toContain("Hello team")
   })
 
+  test("skips delivery reports from mailer-daemon", async () => {
+    const bounce = rawMail
+      .replace(
+        "Jane Doe <Jane@Example.com>",
+        "Mail Delivery System <mailer-daemon@mail.gkamion.ru>",
+      )
+      .replace(
+        "Subject: Need help",
+        "Subject: Mail delivery failed: returning message to sender",
+      )
+    const payload = await parseRawMail(
+      Buffer.from(bounce),
+      new Set(["support@example.com"]),
+      "<fallback@chatbotx>",
+    )
+    expect(payload).toBeNull()
+  })
+
   test("skips mail sent from the connected mailbox", async () => {
     const payload = await parseRawMail(
       Buffer.from(rawMail),

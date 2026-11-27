@@ -49,6 +49,7 @@ vi.mock("@chatbotx.io/worker-config", () => ({
     googleAdsHousekeeping: "googleAdsHousekeeping",
     googleAdsSyncSetups: "googleAdsSyncSetups",
     dispatchChannelPolls: "dispatchChannelPolls",
+    resumeDueBots: "resumeDueBots",
   },
   scheduleQueue: new FakeQueue(),
 }))
@@ -124,6 +125,8 @@ describe("registerSchedules — edition gating", () => {
     expect(names).toContain("purgeExpiredConnectSessions")
     expect(names).toContain("googleAdsHousekeeping")
     expect(names).toContain("googleAdsSyncSetups")
+    expect(names).toContain("resumeDueBots")
+    expect(upsertedRepeatOptionsFor("resumeDueBots")?.pattern).toBe("* * * * *")
   })
 
   test("google ads crons run every 10 minutes and daily at 03:30", async () => {

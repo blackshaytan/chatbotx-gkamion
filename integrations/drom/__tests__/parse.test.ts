@@ -4,6 +4,7 @@ import {
   isDromImageUrl,
   normalizeOrderUrl,
   parseBriefs,
+  parseBulletinFacts,
   parseDeal,
   parseMessageImages,
   parsePriceFromTitle,
@@ -154,6 +155,18 @@ describe("parseView", () => {
     expect(view.orderUrl).toBeNull()
   })
 
+  test("keeps a price that sits beside the product link", () => {
+    const header = `
+<h3 class="bzr-dialog-header__sub-title">
+  3 018 р. • <a href="https://baza.drom.ru/ni/g18430354449.html">Диск тормозной Tatsumi TCC1147</a>
+</h3>`
+    expect(parseView({ dialog: "", header }).listing).toEqual({
+      title: "3 018 р. • Диск тормозной Tatsumi TCC1147",
+      url: "https://baza.drom.ru/ni/g18430354449.html",
+      price: 3018,
+    })
+  })
+
   test("reads the order link and the item from the sub-title", () => {
     const view = parseView({ dialog: "", header: ORDER_HEADER })
     expect(view.orderUrl).toBe("https://baza.drom.ru/deal/10000001")
@@ -267,6 +280,8 @@ describe("parseDeal", () => {
           qty: 1,
           url: "https://baza.drom.ru/dealview/10000001/good/20000001",
           annotation: "Под заказ, Доставка в течение 1 дня, TESTBRAND",
+          article: "",
+          brand: "",
         },
       ],
     })
@@ -286,6 +301,34 @@ describe("parseDeal", () => {
     expect(deal.items).toEqual([
       expect.objectContaining({ price: 1473, qty: 2 }),
     ])
+  })
+})
+
+describe("parseBulletinFacts", () => {
+  test("reads «Номер запчасти» and «Производитель» from data-field markup", () => {
+    const html = `
+<div class="bull-item__params">
+  <div class="row" data-field="manufacturer"><div class="label">Производитель</div><div class="value">BMW</div></div>
+  <div class="row" data-field="autoPartsOemNumber"><div class="label">Номер запчасти</div><div class="value"><a href="/x">51477326465</a></div></div>
+</div>`
+    expect(parseBulletinFacts(html)).toEqual({
+      article: "51477326465",
+      brand: "BMW",
+    })
+  })
+
+  test("falls back to plain label/value markup and an empty card", () => {
+    const html = `
+<div class="label">Номер запчасти</div><div class="value"><span>9109-903</span></div>
+<div class="label">Производитель</div><div class="value">LEDO</div>`
+    expect(parseBulletinFacts(html)).toEqual({
+      article: "9109-903",
+      brand: "LEDO",
+    })
+    expect(parseBulletinFacts("<html></html>")).toEqual({
+      article: "",
+      brand: "",
+    })
   })
 })
 

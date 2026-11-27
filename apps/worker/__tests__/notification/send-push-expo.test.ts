@@ -37,6 +37,7 @@ const findByUserIds = vi.fn()
 const deleteByTokens = vi.fn().mockResolvedValue(undefined)
 const contactFindById = vi.fn().mockResolvedValue({ fullName: "Jane Doe" })
 const workspaceFind = vi.fn().mockResolvedValue({ language: "en" })
+const resolveAudienceUserIds = vi.fn().mockResolvedValue(null)
 
 vi.mock("@chatbotx.io/business", () => ({
   conversationService: { findByOrFail },
@@ -44,6 +45,7 @@ vi.mock("@chatbotx.io/business", () => ({
   deviceTokenService: { findByUserIds, deleteByTokens },
   contactService: { findById: contactFindById },
   workspaceService: { find: workspaceFind },
+  smtpOwnershipService: { resolveAudienceUserIds },
 }))
 
 vi.mock("../../src/lib/logger", () => ({
@@ -87,6 +89,7 @@ beforeEach(() => {
   contactFindById.mockResolvedValue({ fullName: "Jane Doe" })
   workspaceFind.mockResolvedValue({ language: "en" })
   deleteByTokens.mockResolvedValue(undefined)
+  resolveAudienceUserIds.mockResolvedValue(null)
 })
 
 describe("sendPushForNotificationJob", () => {
@@ -231,5 +234,57 @@ describe("sendPushForNotificationJob", () => {
     } as never)
 
     expect(findByUserIds).toHaveBeenCalledWith({ userIds: ["user-2"] })
+  })
+
+  test("uses personal SMTP audience when inboxId resolves to an audience", async () => {
+    findByOrFail.mockResolvedValue({
+      id: "conv-1",
+      assignedUserId: "u5",
+      contactId: "contact-1",
+    })
+    resolveAudienceUserIds.mockResolvedValue(["u1", "u3"])
+    findByUserIds.mockResolvedValue([{ token: "Expo[token-1]" }])
+    sendPushNotificationsAsync.mockResolvedValue([{ status: "ok", id: "r1" }])
+
+    await sendPushForNotificationJob({
+      type: "notifyIncomingMessage",
+      data: {
+        workspaceId: "ws-1",
+        conversationId: "conv-1",
+        messageId: "msg-1",
+        messageText: "Hello",
+        inboxId: "i1",
+      },
+    } as never)
+
+    expect(resolveAudienceUserIds).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      inboxId: "i1",
+    })
+    expect(findByUserIds).toHaveBeenCalledWith({ userIds: ["u1", "u3"] })
+  })
+
+  test("falls back to assignee when personal SMTP audience is null", async () => {
+    findByOrFail.mockResolvedValue({
+      id: "conv-1",
+      assignedUserId: "u5",
+      contactId: "contact-1",
+    })
+    resolveAudienceUserIds.mockResolvedValue(null)
+    findByUserIds.mockResolvedValue([{ token: "Expo[token-1]" }])
+    sendPushNotificationsAsync.mockResolvedValue([{ status: "ok", id: "r1" }])
+
+    await sendPushForNotificationJob({
+      type: "notifyIncomingMessage",
+      data: {
+        workspaceId: "ws-1",
+        conversationId: "conv-1",
+        messageId: "msg-1",
+        messageText: "Hello",
+        inboxId: "i1",
+      },
+    } as never)
+
+    expect(findByUserIds).toHaveBeenCalledWith({ userIds: ["u5"] })
   })
 })

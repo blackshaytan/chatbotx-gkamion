@@ -1,0 +1,2 @@
+# Preserve raw review/test evidence byte-for-byte.
+evidence/** -whitespace

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 import { ZzapAPIException, ZzapRateLimitException } from "../src/exception"
 import type { ZzapInboundEvent } from "../src/handlers/event"
 import { pollZzap } from "../src/handlers/poll"
-import { makeZzapMessageId } from "../src/lib/ids"
+import { makeZzapMessageId, makeZzapOutgoingId } from "../src/lib/ids"
 import type { ZzapMessage, ZzapThread } from "../src/schema"
 import { zzapAuth } from "./fixtures"
 
@@ -46,18 +46,12 @@ const buyerMessage = (
   message_date: `${DAY}T${time}`,
 })
 
-const shopMessage = (time: string): ZzapMessage => ({
-  user_key: "shop",
-  message: "ответ магазина",
-  message_date: `${DAY}T${time}`,
-})
-
 const payloads = (result: Awaited<ReturnType<typeof pollZzap>>) =>
   result.events.map((event) => event.payload as ZzapInboundEvent)
 
 beforeEach(() => {
   vi.clearAllMocks()
-  mocks.getBuyer.mockResolvedValue({ name: "Иван", phone: "+79990000000" })
+  mocks.getBuyer.mockResolvedValue({ name: "Иван", phone: "+799****0000" })
   mocks.getOrderBuyer.mockResolvedValue({})
 })
 
@@ -73,6 +67,9 @@ describe("pollZzap", () => {
 
     expect(payloads(result).map((event) => event.messageDate)).toEqual([
       `${DAY}T11:58:00`,
+    ])
+    expect(payloads(result).map((event) => event.messageType)).toEqual([
+      "incoming",
     ])
     expect(result.cursor).toMatchObject({
       since: `${DAY}T11:55:00`,
@@ -102,20 +99,99 @@ describe("pollZzap", () => {
       userName: "Buyer A",
       messageDate: `${DAY}T11:58:00`,
       text: "Есть фильтр?",
-      buyer: { name: "Иван", phone: "+79990000000" },
+      messageType: "incoming",
+      buyer: { name: "Иван", phone: "+799****0000" },
     })
   })
 
-  test("never turns shop messages into events", async () => {
+  test("imports seller messages from outside ChatbotX as outgoing", async () => {
     mocks.listThreads.mockResolvedValue([thread("A")])
-    mocks.listMessages.mockResolvedValue([shopMessage("11:59:00")])
+    mocks.listMessages.mockResolvedValue([
+      {
+        user_key: "shop",
+        user_name: "Seller",
+        message: "Есть в наличии",
+        message_date: `${DAY}T11:59:00`,
+      },
+    ])
+
+    const [event] = payloads(
+      await pollZzap({ auth: zzapAuth, cursor: null, now }),
+    )
+
+    expect(event).toEqual({
+      kind: "message",
+      sourceId: makeZzapOutgoingId({
+        userKey: "A",
+        messageDate: `${DAY}T11:59:00`,
+        message: "Есть в наличии",
+      }),
+      userKey: "A",
+      userName: "Buyer A",
+      messageDate: `${DAY}T11:59:00`,
+      text: "Есть в наличии",
+      messageType: "outgoing",
+      buyer: { name: "Иван", phone: "+799****0000" },
+    })
+  })
+
+  test("keeps buyer and seller messages in chronological order", async () => {
+    mocks.listThreads.mockResolvedValue([thread("A")])
+    mocks.listMessages.mockResolvedValue([
+      {
+        user_key: "shop",
+        user_name: "Seller",
+        message: "ответ магазина 11:57",
+        message_date: `${DAY}T11:57:00`,
+      },
+      buyerMessage("A", "11:56:00", "вопрос"),
+      {
+        user_key: "shop",
+        user_name: "Seller",
+        message: "ответ магазина 11:58",
+        message_date: `${DAY}T11:58:00`,
+      },
+      buyerMessage("A", "11:59:00", "спасибо"),
+    ])
 
     const result = await pollZzap({ auth: zzapAuth, cursor: null, now })
 
-    expect(result.events).toEqual([])
-    expect(result.cursor).toMatchObject({
-      threads: { A: { lastDate: `${DAY}T11:59:00` } },
-    })
+    expect(
+      payloads(result).map((event) => ({
+        messageDate: event.messageDate,
+        messageType: event.messageType,
+      })),
+    ).toEqual([
+      { messageDate: `${DAY}T11:56:00`, messageType: "incoming" },
+      { messageDate: `${DAY}T11:57:00`, messageType: "outgoing" },
+      { messageDate: `${DAY}T11:58:00`, messageType: "outgoing" },
+      { messageDate: `${DAY}T11:59:00`, messageType: "incoming" },
+    ])
+  })
+
+  test("uses the same zzap-out sourceId as native ChatbotX sends", async () => {
+    mocks.listThreads.mockResolvedValue([thread("A")])
+    mocks.listMessages.mockResolvedValue([
+      {
+        user_key: "shop",
+        user_name: "Seller",
+        message: "отправлено из чата",
+        message_date: `${DAY}T11:57:30`,
+      },
+    ])
+
+    const [event] = payloads(
+      await pollZzap({ auth: zzapAuth, cursor: null, now }),
+    )
+
+    expect(event.messageType).toBe("outgoing")
+    expect(event.sourceId).toBe(
+      makeZzapOutgoingId({
+        userKey: "A",
+        messageDate: `${DAY}T11:57:30`,
+        message: "отправлено из чата",
+      }),
+    )
   })
 
   test("skips unchanged threads and records a baseline for new quiet ones", async () => {

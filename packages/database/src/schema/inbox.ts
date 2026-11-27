@@ -12,6 +12,7 @@ import {
   sharedColumns,
   timestampConfig,
 } from "../partials/shared"
+import { userModel } from "./auth-user"
 import { workspaceModel } from "./workspace"
 
 export const inboxModel = pgTable(
@@ -35,11 +36,20 @@ export const inboxModel = pgTable(
     // rejected send) was seen on this inbox. The inbox counts as multi-responder
     // while this is within THREAD_CONTROL_INBOX_ACTIVE_MS; it decays on its own.
     threadControlSeenAt: timestamp(timestampConfig),
+    ownerUserId: bigintAsString().references(() => userModel.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
   },
   (table) => [
     index("Inbox_workspaceId_idx").using(
       "btree",
       table.workspaceId.asc().nullsLast(),
+    ),
+    index("Inbox_workspaceId_ownerUserId_idx").using(
+      "btree",
+      table.workspaceId.asc().nullsLast(),
+      table.ownerUserId.asc().nullsLast(),
     ),
     uniqueIndex("Inbox_workspaceId_channel_sourceId_key").using(
       "btree",

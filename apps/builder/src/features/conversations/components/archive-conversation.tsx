@@ -18,6 +18,7 @@ import { type ReactElement, useState } from "react"
 import { toast } from "sonner"
 import { useWorkspaceId } from "@/hooks/routing"
 import { archiveConversationAction } from "../actions/archive-conversation.action"
+import { useInvalidateInboxUnread } from "../hooks/use-invalidate-inbox-unread"
 
 type ArchiveConversationDialogProps = {
   trigger: ReactElement
@@ -33,6 +34,7 @@ export default function ArchiveConversationDialog({
   const t = useTranslations()
   const [open, setOpen] = useState(false)
   const workspaceId = useWorkspaceId()
+  const invalidateInboxUnread = useInvalidateInboxUnread()
 
   const { execute, isPending } = useAction(
     archiveConversationAction.bind(null, workspaceId),
@@ -44,6 +46,7 @@ export default function ArchiveConversationDialog({
           }),
         )
         setOpen(false)
+        invalidateInboxUnread()
         onSuccess?.()
       },
       onError: ({ error }) => {

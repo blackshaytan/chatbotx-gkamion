@@ -1,4 +1,20 @@
-import { sql } from "drizzle-orm"
+import { type SQL, type SQLWrapper, sql } from "drizzle-orm"
+
+export type ConversationUnreadRankColumns = {
+  inboxActivityAt: SQLWrapper
+  agentLastReadAt: SQLWrapper
+  handedOverAt: SQLWrapper
+}
+
+/**
+ * Boolean rank of `conversationUnreadWhere`: true when the conversation is
+ * unread. The inbox orders by this first so unread rows stay above read ones.
+ * Keep the expression identical to that predicate.
+ */
+export const conversationUnreadRankSql = (
+  table: ConversationUnreadRankColumns,
+): SQL =>
+  sql`((${table.inboxActivityAt} IS NOT NULL AND (${table.agentLastReadAt} IS NULL OR ${table.inboxActivityAt} > ${table.agentLastReadAt})) OR (${table.handedOverAt} IS NOT NULL AND (${table.agentLastReadAt} IS NULL OR ${table.handedOverAt} > ${table.agentLastReadAt})))`
 
 /**
  * Relational-query form of the canonical raw-SQL unread predicate in

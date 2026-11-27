@@ -6,7 +6,7 @@ import { cn } from "@chatbotx.io/ui/lib/utils"
 import { ArrowDownIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useAction } from "next-safe-action/hooks"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   type GridComponents,
   Virtuoso,
@@ -17,10 +17,12 @@ import { useWorkspaceId } from "@/hooks/routing"
 import { INBOX_MESSAGES_PER_PAGE } from "../chat/store/chat-store"
 import { useChatStore } from "../chat/store/chat-store-provider"
 import { ConversationInfo } from "../conversations/components/conversation-info"
+import { resolveActiveContactInbox } from "../conversations/utils/contact-inbox"
 import { changeMessageAttributesAction } from "./actions/change-message-attributes.action"
 import { deleteMessageAction } from "./actions/delete-message.action"
 import { editMessageAction } from "./actions/edit-message.action"
 import { MessageItem } from "./components/message-item"
+import { dromCardsByMessageId } from "./lib/drom-context-card"
 import { canPrivateReplyToComment } from "./lib/private-reply"
 import type { MessageResourceWithRelations } from "./schema/resource"
 
@@ -46,10 +48,17 @@ export function MessageList() {
   } = useChatStore((state) => state)
 
   // Which channel this conversation belongs to, for the private-reply gate
-  // below. The same `contactInboxes[0].channel` the store reads elsewhere.
-  const activeChannel = conversations.find(
-    (conversation) => conversation.id === activeConversationId,
-  )?.contactInboxes?.[0]?.channel
+  // below. A merged dialog carries one inbox per channel, so this is the inbox
+  // with the latest message, not the array's first element.
+  const activeChannel = resolveActiveContactInbox(
+    conversations.find(
+      (conversation) => conversation.id === activeConversationId,
+    )?.contactInboxes,
+  )?.channel
+
+  // One plate per DROM ad/order, anchored to the message that introduced
+  // it — the channel repeats its context on every incoming message.
+  const dromCards = useMemo(() => dromCardsByMessageId(messages), [messages])
 
   const { execute: deleteMessage } = useAction(
     deleteMessageAction.bind(null, workspaceId, activeConversationId ?? ""),
@@ -310,6 +319,7 @@ export function MessageList() {
                 message: comment,
               })
             }
+            dromCard={dromCards.get(message.id) ?? null}
             key={message.id}
             message={message}
             onChangeHide={() => handleChangeHideState(message)}

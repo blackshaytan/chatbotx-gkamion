@@ -1,4 +1,8 @@
 import { getPublicFileUrl } from "@chatbotx.io/utils"
+import {
+  isContactAvatarPackKey,
+  pickContactAvatarPackKey,
+} from "@chatbotx.io/utils/contact-avatar-pack"
 import { hasRealAvatar } from "@chatbotx.io/utils/no-avatar-sentinel"
 import { useTenantSettings } from "@/features/tenant"
 
@@ -18,6 +22,7 @@ export function getLatestContactLastReadAt(
 }
 
 const ABSOLUTE_URL_RE = /^https?:\/\//i
+const LEADING_SLASHES_RE = /^\/+/
 const AVATAR_PROXY_PATH_RE = /\/media\/avatar\//i
 
 /**
@@ -27,14 +32,41 @@ const AVATAR_PROXY_PATH_RE = /\/media\/avatar\//i
  * safe as an image `src`.
  */
 const isBrowserSafeAvatarSrc = (avatar: string): boolean => {
+  if (isContactAvatarPackKey(avatar) || avatar.includes("/contact-avatars/")) {
+    return true
+  }
   if (!ABSOLUTE_URL_RE.test(avatar)) {
     return true
   }
   return AVATAR_PROXY_PATH_RE.test(avatar)
 }
 
+const packAvatarSrc = (avatar: string): string => {
+  if (ABSOLUTE_URL_RE.test(avatar)) {
+    return avatar
+  }
+  return `/${avatar.replace(LEADING_SLASHES_RE, "")}`
+}
+
+const fallbackPackSrc = (contact: {
+  id?: string | null
+  firstName?: string | null
+  lastName?: string | null
+}): string => {
+  const seed =
+    contact.id ||
+    `${contact.firstName ?? ""} ${contact.lastName ?? ""}`.trim() ||
+    "contact"
+  return `/${pickContactAvatarPackKey(seed)}`
+}
+
 export function useAvatarUrl(
-  contact?: { avatar?: string | null } | null,
+  contact?: {
+    id?: string | null
+    avatar?: string | null
+    firstName?: string | null
+    lastName?: string | null
+  } | null,
 ): string | undefined {
   const { storageUrl } = useTenantSettings()
   if (!contact) {
@@ -42,12 +74,18 @@ export function useAvatarUrl(
   }
 
   // A no-avatar sentinel (`no_avatar.jpg?time=…`) is a "we tried and there is no
-  // avatar" marker, not a real key — finalizing it would render a broken image,
-  // so fall back to the initials avatar instead.
+  // avatar" marker, not a real key — finalizing it would render a broken image.
+  // A contact with no photo of their own gets a stable picture from the pack.
   if (
     !(hasRealAvatar(contact.avatar) && isBrowserSafeAvatarSrc(contact.avatar))
   ) {
-    return
+    return fallbackPackSrc(contact)
+  }
+  if (
+    isContactAvatarPackKey(contact.avatar) ||
+    contact.avatar.includes("/contact-avatars/")
+  ) {
+    return packAvatarSrc(contact.avatar)
   }
   return getPublicFileUrl(contact.avatar, storageUrl)
 }

@@ -81,10 +81,15 @@ vi.mock("@chatbotx.io/database/client", () => ({
   relationsFilterToSQL: vi.fn(),
 }))
 
-vi.mock("@chatbotx.io/database/schema", () => ({
-  errorLogModel: { id: "errorLogModelId" },
-  workspaceMemberModel: { id: "workspaceMemberModelId" },
-}))
+vi.mock("@chatbotx.io/database/schema", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@chatbotx.io/database/schema")>()
+  return {
+    ...actual,
+    errorLogModel: { id: "errorLogModelId" },
+    workspaceMemberModel: { id: "workspaceMemberModelId" },
+  }
+})
 
 vi.mock("@chatbotx.io/database/utils", () => ({
   getPaginationWithDefaults: (input: { page?: number; perPage?: number }) => ({
@@ -98,10 +103,15 @@ vi.mock("@chatbotx.io/database/utils", () => ({
   parseOrderByAsObject: () => ({}),
 }))
 
-vi.mock("@chatbotx.io/database/partials", () => ({
-  rootFolderId: "0",
-  withBroadcastTargets: { targets: true },
-}))
+vi.mock("@chatbotx.io/database/partials", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@chatbotx.io/database/partials")>()
+  return {
+    ...actual,
+    rootFolderId: "0",
+    withBroadcastTargets: { targets: true },
+  }
+})
 
 vi.mock("@chatbotx.io/utils/error-log", () => ({
   errorLogProviders: { safeParse: () => ({ success: false }) },
@@ -109,6 +119,14 @@ vi.mock("@chatbotx.io/utils/error-log", () => ({
 }))
 
 vi.mock("@chatbotx.io/business", () => ({
+  hiddenContactInboxIds: (
+    contactInboxes: { id: string; inboxId: string }[],
+    hiddenInboxIds?: string[],
+  ) =>
+    contactInboxes
+      .filter((ci) => hiddenInboxIds?.includes(ci.inboxId))
+      .map((ci) => ci.id),
+
   AVATAR_HYDRATION_CHANNELS: new Set(["messenger", "instagram"]),
   inboxTeamService: { listByWorkspace: mocks.listByWorkspace },
   conversationService: {

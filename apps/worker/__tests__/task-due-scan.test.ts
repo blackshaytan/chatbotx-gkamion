@@ -20,6 +20,7 @@ vi.mock("@chatbotx.io/business", () => ({
     processDueTaskNotifications: mocks.processDueTaskNotifications,
     purgeOlderThan: mocks.purgeOlderThan,
   },
+  purgeOrderNotificationLogs: vi.fn(async () => 0),
   withBlockedOwnerGuard: mocks.withBlockedOwnerGuard,
 }))
 

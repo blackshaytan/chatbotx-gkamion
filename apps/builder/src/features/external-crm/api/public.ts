@@ -1,4 +1,7 @@
-import { externalCrmService } from "@chatbotx.io/business"
+import {
+  externalCrmService,
+  queueClientNotification,
+} from "@chatbotx.io/business"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import { z } from "zod"
 import { mcpSpec } from "@/lib/orpc/mcp-annotations"
@@ -8,6 +11,7 @@ import {
 } from "@/lib/orpc/orpc-error-helper"
 import { workspaceTokenAuthAPIForScope } from "@/orpc"
 import {
+  deliverClientNotificationPublicRequest,
   getExternalCustomerPublicRequest,
   getExternalCustomerPublicResponse,
   getExternalOrderHistoryPublicResponse,
@@ -45,7 +49,7 @@ export const externalCrmPublicRouter = {
       path: "/v1/external-crm/orders/events",
       summary: "Record external order event",
       description:
-        "Records an idempotent gkamion order event and updates the current order snapshot only when the event is at least as recent as the stored state. `externalCustomerId` is the customer's gkamion id; `externalOrderId` comes from the gkamion order. `eventId` must be stable across retries. Sync the customer first with `externalCrm.syncCustomer`, or include `customer` to create/link it when needed. Returns `duplicate: true` when this event was already stored.",
+        "Records an idempotent gkamion order event and updates the current order snapshot only when the event is at least as recent as the stored state. `externalCustomerId` is the customer's gkamion id; `externalOrderId` comes from the gkamion order. `eventId` must be stable across retries. Sync the customer first with `externalCrm.syncCustomer`, or include `customer` or `orderData.phone` / `orderData.email` to create/link it when needed. When `statusId` is set, every published flow subscribed to that status sends the client notification. `itemStatusChanged` also requires `externalOrderItemId`. Returns `duplicate: true` when this event was already stored and its flows were already started.",
       tags: ["External CRM"],
     })
     .input(recordExternalOrderEventPublicRequest)
@@ -62,6 +66,41 @@ export const externalCrmPublicRouter = {
         await externalCrmService.recordOrderEvent({
           workspaceId: context.workspace.id,
           event: input,
+        }),
+    ),
+
+  deliverClientNotification: workspaceTokenAuthAPI
+    .route({
+      method: "POST",
+      path: "/v1/external-crm/notifications",
+      summary: "Deliver rendered client notification",
+      description:
+        "Sends one already rendered notification to the contact linked to the gkamion customer. `externalCustomerId` comes from `externalCrm.syncCustomer`. `eventId` is the n8n idempotency key and must stay the same on every retry. Delivery tries MAX, Telegram, ZZAP, DROM, then email, and stops on the first accepted dialog. This call does not start a flow. A customer that is not linked returns not found. `queued: false` with `reason: noChannel` means the contact has no usable dialog. `duplicate: true` means this event id was already queued.",
+      tags: ["External CRM"],
+    })
+    .input(deliverClientNotificationPublicRequest)
+    .output(
+      z.object({
+        contactId: zodBigintAsString(),
+        conversationId: zodBigintAsString().optional(),
+        queued: z.boolean(),
+        duplicate: z.boolean(),
+        reason: z.string().optional(),
+      }),
+    )
+    .errors(possibleErrorsOnMutatingResource)
+    .handler(
+      async ({ context, input }) =>
+        await queueClientNotification({
+          workspaceId: context.workspace.id,
+          externalCustomerId: input.externalCustomerId,
+          eventId: input.eventId,
+          text: input.text,
+          messengerText: input.messengerText,
+          email: input.email,
+          emailSubject: input.emailSubject,
+          externalOrderId: input.externalOrderId,
+          statusId: input.statusId,
         }),
     ),
 

@@ -92,8 +92,10 @@ vi.mock("@chatbotx.io/worker-config", () => ({
     syncRetargetAudience: "syncRetargetAudience",
     whatsappCallEvent: "whatsappCallEvent",
     whatsappIdentityChange: "whatsappIdentityChange",
+    deliverClientNotification: "deliverClientNotification",
   },
   integrationQueue: { add: vi.fn() },
+  PURGE_WORKSPACES_INTERVAL_MINUTES: 30,
   queueNames: {
     enum: {
       integration: "integration",
@@ -113,8 +115,15 @@ vi.mock("@chatbotx.io/automated-response", () => ({
 vi.mock("@chatbotx.io/business", () => ({
   buildContext: vi.fn(),
   conversationService: { ensureActive: vi.fn() },
+  detectOptOutRequest: () => ({ matched: false }),
+  flushAllPendingWorkspaceBroadcasts: vi.fn(),
   onNotificationsCreated: vi.fn(),
+  resolveWorkspaceFreezeReasonById: vi.fn(async () => ({
+    freezeReason: null,
+  })),
   sendToWorkspaceMember: vi.fn(),
+  settleBlockedOrderNotification: vi.fn(async () => undefined),
+  smartDelayService: { findById: vi.fn(async () => null) },
   withBlockedOwnerGuard: vi.fn(
     async (_workspaceId: unknown, fn: () => Promise<unknown>) => await fn(),
   ),
@@ -162,6 +171,12 @@ vi.mock("../src/services/integrations", () => ({
   integrationService: { identifyInboxAndIntegrationAuthFromIdentifier },
 }))
 
+vi.mock(
+  "../src/integration/handlers/deliver-client-notification-handler",
+  () => ({
+    handleDeliverClientNotification: vi.fn(),
+  }),
+)
 vi.mock("../src/integration/handlers/ads-automatic-event", () => ({
   handleAdsAutomaticEvent: vi.fn(),
 }))

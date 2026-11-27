@@ -16,6 +16,10 @@ vi.mock("next-intl", () => ({
   useTranslations: () => translate,
 }))
 
+vi.mock("@/features/contacts/contact-panel-visibility", () => ({
+  SHOW_CONTACT_CUSTOM_FIELD_ACTIONS: true,
+}))
+
 vi.mock("sonner", () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }))

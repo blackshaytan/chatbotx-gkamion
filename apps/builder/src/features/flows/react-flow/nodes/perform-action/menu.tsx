@@ -679,5 +679,10 @@ export const performActionMenus = (t: TranslationFn): MenuItem[] => [
       },
     ],
   },
+  {
+    label: t("flows.actions.sendOrderNotification"),
+    icon: MessagesSquareIcon,
+    stepType: stepTypes.enum.sendOrderNotification,
+  },
   ...buildProviderMenus(t),
 ]

@@ -108,6 +108,27 @@ describe("getInboxInitialState", () => {
     expect(state).not.toHaveProperty("activeConversationAutoSelected")
     expect(state?.messagesSeed).toBeUndefined()
     expect(state?.seededContact).toBeUndefined()
+    expect(mockListConversations.mock.calls[0]?.[0]).not.toHaveProperty(
+      "botCategory",
+    )
+  })
+
+  test("seeds only human conversations when the member cannot choose a bot category", async () => {
+    mockSeedRequests()
+
+    await getInboxInitialState({
+      workspaceId: "workspace-1",
+      contactPermissionScope,
+      canFilterBotCategory: false,
+    })
+
+    expect(mockListConversations).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workspaceId: "workspace-1",
+        botCategory: "human",
+      }),
+      { includeEmailAndPhone: true },
+    )
   })
 
   test("selects a deep-linked conversation, reverses its messages, and seeds its contact", async () => {
@@ -226,6 +247,25 @@ describe("getInboxInitialState", () => {
     expect(loggerWarnMock).toHaveBeenCalledWith(
       { err: error, workspaceId: "workspace-1", conversationId: undefined },
       "getInboxInitialState: failed to list conversations",
+    )
+  })
+
+  test("passes hidden inbox ids to the conversation list and the deep-linked lookup", async () => {
+    mockDeepLinkSeedRequests()
+
+    await getInitialState({
+      workspaceId: "workspace-1",
+      conversationId: DEEP_LINK_ID,
+      hiddenInboxIds: ["inbox-hidden"],
+    })
+
+    expect(mockListConversations).toHaveBeenCalledWith(
+      expect.objectContaining({ workspaceId: "workspace-1" }),
+      { includeEmailAndPhone: true, hiddenInboxIds: ["inbox-hidden"] },
+    )
+    expect(mockFindConversation).toHaveBeenCalledWith(
+      { workspaceId: "workspace-1", id: DEEP_LINK_ID },
+      { hiddenInboxIds: ["inbox-hidden"] },
     )
   })
 

@@ -40,6 +40,9 @@ type ExternalAgentUpdateInput = z.input<typeof updateExternalAgentInputSchema>
 
 const DEFAULT_RESUME_AFTER_HOURS = 24
 const resumeModes = ["never", "afterHours"] as const
+// The shared inbox picker hides email (smtp). This agent answers mail through
+// the same send path as a manager reply, so email inboxes stay selectable.
+const EXTERNAL_AGENT_EXCLUDED_INBOX_CHANNELS: string[] = []
 
 const externalAgentFormSchema = z
   .object({
@@ -155,7 +158,10 @@ const ExternalAgentSettingsEditor = ({
   const workspaceId = useWorkspaceId()
   const t = useTranslations()
   const queryClient = useQueryClient()
-  const inboxOptions = useInboxOptionsByChannel()
+  const inboxOptions = useInboxOptionsByChannel(
+    undefined,
+    EXTERNAL_AGENT_EXCLUDED_INBOX_CHANNELS,
+  )
   const form = useForm<ExternalAgentFormValues>({
     defaultValues: toFormValues(settings),
     resolver: zodResolver(externalAgentFormSchema),

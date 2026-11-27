@@ -122,6 +122,56 @@ describe("chat store inbox attention", () => {
     expect(second?.agentLastReadAt).toBe(READ_AT)
   })
 
+  test("load keeps a badge above a newer conversation that is already read", async () => {
+    const store = createChatStore()
+    const readNewer = {
+      ...makeConversation("conv-read", NEW_AT),
+      agentLastReadAt: NEW_AT,
+      unreadCount: 0,
+    }
+    const unreadOlder = {
+      ...makeConversation("conv-unread", OLDER),
+      agentLastReadAt: OLDER,
+      unreadCount: 2,
+    }
+    const { client } = await import("@/lib/orpc/orpc")
+    vi.mocked(
+      client.conversationsAPI.listConversationsByPOSTAuthenticatedAPI,
+    ).mockResolvedValue({
+      data: [readNewer, unreadOlder],
+      nextCursor: null,
+    } as never)
+
+    await store.getState().loadMoreConversations("ws-1")
+
+    expect(store.getState().conversations.map((item) => item.id)).toEqual([
+      "conv-unread",
+      "conv-read",
+    ])
+  })
+
+  test("opening a read conversation does not climb above one that still has a badge", () => {
+    const store = createChatStore()
+    const unreadOlder = {
+      ...makeConversation("conv-unread", OLDER),
+      agentLastReadAt: OLDER,
+      unreadCount: 1,
+    }
+    const readNewer = {
+      ...makeConversation("conv-read", NEW_AT),
+      agentLastReadAt: NEW_AT,
+      unreadCount: 0,
+    }
+    store.setState({ conversations: [unreadOlder] as never })
+
+    store.getState().prependConversation(readNewer as never)
+
+    expect(store.getState().conversations.map((item) => item.id)).toEqual([
+      "conv-unread",
+      "conv-read",
+    ])
+  })
+
   test("a client message lifts the conversation, advances attention and counts one unread", () => {
     const store = createChatStore()
     const top = makeConversation("conv-top", OLDER)
@@ -220,6 +270,34 @@ describe("chat store inbox attention", () => {
     expect(updated?.unreadCount).toBe(0)
   })
 
+  test("a handover raises a read conversation above other read ones", () => {
+    const store = createChatStore()
+    const readNewer = {
+      ...makeConversation("conv-read", NEW_AT),
+      agentLastReadAt: NEW_AT,
+      botEnabled: true,
+    }
+    const target = {
+      ...makeConversation("conv-target", OTHER_OLDER),
+      agentLastReadAt: OTHER_OLDER,
+      botEnabled: true,
+      handoverCategory: null,
+      handedOverAt: null,
+    }
+    store.setState({ conversations: [readNewer, target] as never })
+
+    store.getState().handleNewMessages([
+      makeHandoverNote("conv-target", NEW_AT, {
+        category: "payment",
+      }) as never,
+    ])
+
+    expect(store.getState().conversations.map((item) => item.id)).toEqual([
+      "conv-target",
+      "conv-read",
+    ])
+  })
+
   test("a handover note turns the bot off and awaits a manager without marking the conversation read", () => {
     const store = createChatStore()
     const target = {
@@ -313,14 +391,14 @@ describe("chat store inbox attention", () => {
     expect(updated?.handedOverAt).toBeUndefined()
   })
 
-  test("an optimistic manager reply lifts the conversation and advances attention", () => {
+  test("an optimistic manager reply clears unread and sinks below conversations that are still unread", () => {
     const store = createChatStore()
-    const top = makeConversation("conv-top", OLDER)
+    const stillUnread = makeConversation("conv-unread", OLDER)
     const target = {
       ...makeConversation("conv-target", OTHER_OLDER),
       unreadCount: 2,
     }
-    store.setState({ conversations: [top, target] as never })
+    store.setState({ conversations: [stillUnread, target] as never })
 
     const reply = makeMessage("conv-target", NEW_AT, {
       messageType: "outgoing",
@@ -329,9 +407,51 @@ describe("chat store inbox attention", () => {
     })
     store.getState().updateConversationViaMessage(reply as never)
 
-    const [first] = store.getState().conversations
-    expect(first?.id).toBe("conv-target")
-    expect(first?.inboxActivityAt).toEqual(NEW_AT)
-    expect(first?.unreadCount).toBe(0)
+    const [first, second] = store.getState().conversations
+    expect(first?.id).toBe("conv-unread")
+    expect(second?.id).toBe("conv-target")
+    expect(second?.inboxActivityAt).toEqual(NEW_AT)
+    expect(second?.unreadCount).toBe(0)
+  })
+
+  test("reading a conversation drops it below ones that are still unread", () => {
+    const store = createChatStore()
+    const newer = {
+      ...makeConversation("conv-new", NEW_AT),
+      unreadCount: 2,
+    }
+    const older = makeConversation("conv-old", OLDER)
+    store.setState({ conversations: [newer, older] as never })
+
+    store.getState().applyAgentLastReadAt(["conv-new"], NEW_AT)
+
+    expect(store.getState().conversations.map((item) => item.id)).toEqual([
+      "conv-old",
+      "conv-new",
+    ])
+    expect(store.getState().conversations[1]?.unreadCount).toBe(0)
+  })
+
+  test("marking a conversation unread raises it above read ones", () => {
+    const store = createChatStore()
+    const readNewer = {
+      ...makeConversation("conv-read", NEW_AT),
+      agentLastReadAt: NEW_AT,
+    }
+    const target = {
+      ...makeConversation("conv-old", OLDER),
+      agentLastReadAt: OLDER,
+    }
+    store.setState({
+      conversations: [readNewer, target] as never,
+      manuallyUnreadConversationIds: new Set(["conv-old"]),
+    })
+
+    store.getState().applyUnreadResult("conv-old", READ_AT)
+
+    expect(store.getState().conversations.map((item) => item.id)).toEqual([
+      "conv-old",
+      "conv-read",
+    ])
   })
 })

@@ -26,18 +26,19 @@ const workspaceTokenAuthAPI = workspaceTokenAuthAPIForScope("channels")
 
 const tags = ["Channels"]
 
-// `integrationSmtpService.findByIdForWorkspace`/`.update` return the full
-// row, including the `auth` blob (which carries the SMTP password) — never
-// spread it into the public response, always pick the three public fields
-// by hand.
+// `integrationSmtpService.findByIdForWorkspace` returns the full row, including
+// the `auth` blob (which carries the SMTP password) — never spread it into the
+// public response, always pick the public fields by hand.
 const toPublicResource = (row: {
   id: string
   name: string
   fromAddress: string
+  ownerUserId?: string | null
 }): IntegrationSmtpResource => ({
   id: row.id,
   name: row.name,
   fromAddress: row.fromAddress,
+  ownerUserId: row.ownerUserId ?? null,
 })
 
 export const smtpIntegrationsPublicRouter = {
@@ -93,7 +94,7 @@ export const smtpIntegrationsPublicRouter = {
       path: "/v1/smtp-integrations",
       summary: "Create SMTP integration",
       description:
-        "Connects a mailbox. Outbound email uses SMTP. When receiving is enabled (the default for Gmail, Outlook, Yahoo, Zoho, and a custom server), new customer emails appear in the inbox and agent replies are sent back on the same thread. Mail already in the mailbox is not imported. Send-only providers (SendGrid, Mailgun, Amazon SES, Postmark, Brevo) cannot receive. Use `smtpIntegrations.list` first to avoid duplicating an existing one.",
+        "Connects a mailbox. Outbound email uses SMTP. When receiving is enabled (the default for Gmail, Outlook, Yahoo, Zoho, and a custom server), new customer emails appear in the inbox and agent replies are sent back on the same thread. Mail already in the mailbox is not imported. Send-only providers (SendGrid, Mailgun, Amazon SES, Postmark, Brevo) cannot receive. Set `ownerUserId` to a member user id (from `workspaceMembers.list`) to make it a personal mailbox, or null for shared. Use `smtpIntegrations.list` first to avoid duplicating an existing one.",
       successStatus: 201,
       tags,
     })
@@ -108,6 +109,7 @@ export const smtpIntegrationsPublicRouter = {
         ownerId: context.workspace.ownerId,
         name: input.username,
         fromAddress: input.fromAddress,
+        ownerUserId: input.ownerUserId,
         auth: {
           authType: "custom",
           provider: input.provider,
@@ -138,7 +140,7 @@ export const smtpIntegrationsPublicRouter = {
       path: "/v1/smtp-integrations/{id}",
       summary: "Update SMTP integration",
       description:
-        "Changes an existing SMTP integration's settings, including its credentials and whether new customer emails are received into the inbox. Call `smtpIntegrations.get` to inspect current values first.",
+        "Changes an existing SMTP integration's settings, including its credentials, whether new customer emails are received into the inbox, and its personal owner (`ownerUserId`: a member user id, or null for shared). Call `smtpIntegrations.get` to inspect current values first.",
       tags,
     })
     .input(
@@ -156,11 +158,16 @@ export const smtpIntegrationsPublicRouter = {
       const { id, ...rest } = input
       const { host, port } = await prepareSmtpAuth(rest)
 
+      await integrationSmtpService.update({
+        workspaceId: context.workspace.id,
+        id,
+        data: { ...rest, host, port },
+      })
+
       return toPublicResource(
-        await integrationSmtpService.update({
-          workspaceId: context.workspace.id,
+        await integrationSmtpService.findByIdForWorkspace({
           id,
-          data: { ...rest, host, port },
+          workspaceId: context.workspace.id,
         }),
       )
     }),

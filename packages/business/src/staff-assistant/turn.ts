@@ -24,7 +24,11 @@ export const findStaffChatParticipant = async (input: {
     threadIds: [input.threadId],
   })
   const member = members[0]
-  if (members.length !== 1 || !member || chat.thread.directKey !== `agent:${member.userId}:staff`) {
+  if (
+    members.length !== 1 ||
+    !member ||
+    chat.thread.directKey !== `agent:${member.userId}:staff`
+  ) {
     return null
   }
   return member

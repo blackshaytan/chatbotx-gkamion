@@ -63,7 +63,12 @@ vi.mock("@/lib/auth/require-workspace-permission", () => ({
   requireWorkspacePermission: vi.fn(async () => undefined),
 }))
 
-vi.mock("@/lib/auth/utils", () => ({ getCurrentUserId: mockGetCurrentUserId }))
+vi.mock("@/lib/auth/utils", () => ({
+  getCurrentUserAndAllLinkedWorkspaces: vi.fn(async () => ({
+    allWorkspaceMembers: [],
+  })),
+  getCurrentUserId: mockGetCurrentUserId,
+}))
 
 vi.mock("@/features/inboxes/components/inbox-select-card", () => ({
   default: () => null,

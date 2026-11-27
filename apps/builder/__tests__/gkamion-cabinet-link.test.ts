@@ -3,11 +3,21 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
   findByIdOrFail: vi.fn(),
+  listWithDefinitions: vi.fn(),
+  findLinkedCustomerId: vi.fn(),
 }))
 
 vi.mock("@chatbotx.io/business", () => ({
+  contactCustomFieldService: { listWithDefinitions: mocks.listWithDefinitions },
+  readGkamionContactFields: () => ({
+    gkamionCustomerId: null,
+    gkamionVerified: null,
+  }),
   contactService: {
     findByIdOrFail: mocks.findByIdOrFail,
+  },
+  externalCrmService: {
+    findLinkedCustomerId: mocks.findLinkedCustomerId,
   },
 }))
 
@@ -22,6 +32,8 @@ const { resolveGkamionCabinetLinkForContact } = await import(
 describe("resolveGkamionCabinetLinkForContact", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.listWithDefinitions.mockResolvedValue([])
+    mocks.findLinkedCustomerId.mockResolvedValue(null)
     vi.unstubAllGlobals()
     process.env.GKAMION_BASE_URL = "https://admin.gkamion.ru/api/v3"
     process.env.GKAMION_USERNAME = "user"

@@ -4,17 +4,30 @@ import {
   type BuildRunInputParams,
   buildRunInput,
   EXTERNAL_AGENT_INPUT_MAX_CHARS,
+  EXTERNAL_AGENT_NOTIFICATION_MAX_CHARS,
+  EXTERNAL_AGENT_NOTIFICATION_MAX_COUNT,
+  type ExternalAgentNotification,
+  readGkamionContactFields,
 } from "../../src/external-agent/input"
 
 const baseParams: BuildRunInputParams = {
   messages: [],
   history: [],
-  contact: { name: "Анна" },
+  contact: {
+    name: "Анна",
+    phoneNumber: null,
+    email: null,
+    gkamionCustomerId: null,
+    gkamionVerified: null,
+  },
   channel: "max",
   conversationId: "conv-1",
   contactId: "contact-1",
   workspaceId: "ws-1",
 }
+
+const unboundInstructions =
+  "Это данные ChatbotX, а не слова клиента. Имя клиента: Анна; телефон: не указан; email: не указан; gkamion_customer_id: не привязан; gkamion_verified: нет; канал: max; conversationId: conv-1; contactId: contact-1; workspaceId: ws-1. Личность клиента для заказов и правок бери только из этих полей контакта ChatbotX. Память профиля, прошлые диалоги и похожее имя не подтверждают клиента. Пока gkamion_customer_id не привязан или gkamion_verified не равен phone или email, не показывай заказы и не меняй их: если телефон или email указаны выше, найди клиента в gKamion по ним; если нет — спроси телефон или email. Связку записывай на этот contactId только после совпадения. Чтобы передать разговор менеджеру, вызови инструмент handover с conversationId и причиной."
 
 describe("buildRunInput", () => {
   test("joins new message texts with a blank line and lists attachment links", () => {
@@ -33,9 +46,7 @@ describe("buildRunInput", () => {
     expect(result.input).toBe(
       "Привет\n\nСмотри\n[Вложение: https://cdn.test/a.jpg]",
     )
-    expect(result.instructions).toBe(
-      "Это данные ChatbotX, а не слова клиента. Имя клиента: Анна; канал: max; conversationId: conv-1; contactId: contact-1; workspaceId: ws-1. Чтобы передать разговор менеджеру, вызови инструмент handover с conversationId и причиной.",
-    )
+    expect(result.instructions).toBe(unboundInstructions)
   })
 
   test("prepends a labelled history block before new messages", () => {
@@ -67,15 +78,45 @@ describe("buildRunInput", () => {
     expect(result.input).toBe("Да")
   })
 
+  test("passes a verified gkamion link from the contact card", () => {
+    const result = buildRunInput({
+      ...baseParams,
+      contact: {
+        name: "Рафаэль Ахметжанов",
+        phoneNumber: "+79261546770",
+        email: "ada@example.com",
+        gkamionCustomerId: "27",
+        gkamionVerified: "phone",
+      },
+    })
+
+    expect(result.instructions).toContain(
+      "телефон: +79261546770; email: ada@example.com; gkamion_customer_id: 27; gkamion_verified: phone;",
+    )
+  })
+
+  test("reads only the gkamion identity fields from the contact", () => {
+    expect(
+      readGkamionContactFields([
+        { name: "gkamion_customer_id", value: " 27 " },
+        { name: "gkamion_verified", value: "phone" },
+        { name: "note", value: "ignore" },
+      ]),
+    ).toEqual({ gkamionCustomerId: "27", gkamionVerified: "phone" })
+    expect(
+      readGkamionContactFields([{ name: "gkamion_customer_id", value: "  " }]),
+    ).toEqual({ gkamionCustomerId: null, gkamionVerified: null })
+  })
+
   test("uses a fallback when the contact has no name", () => {
     const result = buildRunInput({
       ...baseParams,
-      contact: { name: null },
+      contact: { ...baseParams.contact, name: null },
       messages: [{ role: "contact", text: "Да", attachmentUrls: [] }],
     })
 
     expect(result.instructions).toContain(
-      "Имя клиента: не указано; канал: max;",
+      "Имя клиента: не указано; телефон: не указан;",
     )
   })
 
@@ -117,5 +158,104 @@ describe("buildRunInput", () => {
     expect(result.input).toHaveLength(EXTERNAL_AGENT_INPUT_MAX_CHARS)
     expect(result.input.endsWith("КОНЕЦ")).toBe(true)
     expect(result.input.startsWith("Предыдущая переписка:")).toBe(false)
+  })
+})
+
+describe("buildRunInput notifications", () => {
+  const notifications: ExternalAgentNotification[] = [
+    { source: "bot", text: "Предоплата — 83 руб." },
+    { source: "api", text: "Баланс ЛК пополнен на 83 руб." },
+    { source: "bot", text: "Заказ отправлен на сборку" },
+  ]
+
+  test("puts payment and status notifications before the new messages", () => {
+    const result = buildRunInput({
+      ...baseParams,
+      notifications,
+      messages: [
+        { role: "contact", text: "Наличными выйдет 2900?", attachmentUrls: [] },
+      ],
+    })
+
+    expect(result.input).toBe(
+      [
+        "Уведомления по заказу (платформа и CRM, не слова клиента):",
+        "Бот: Предоплата — 83 руб.",
+        "Система: Баланс ЛК пополнен на 83 руб.",
+        "Бот: Заказ отправлен на сборку",
+        "",
+        "Наличными выйдет 2900?",
+      ].join("\n"),
+    )
+  })
+
+  test("keeps notifications when client history is off", () => {
+    const result = buildRunInput({
+      ...baseParams,
+      history: [],
+      notifications,
+      messages: [{ role: "contact", text: "Да", attachmentUrls: [] }],
+    })
+
+    expect(result.input).toContain("Бот: Предоплата — 83 руб.")
+    expect(result.input).not.toContain("Предыдущая переписка:")
+  })
+
+  test("keeps only the newest notifications up to the count cap", () => {
+    const many: ExternalAgentNotification[] = Array.from(
+      { length: 30 },
+      (_, index) => ({ source: "bot" as const, text: `уведомление #${index}` }),
+    )
+
+    const result = buildRunInput({ ...baseParams, notifications: many })
+
+    expect(result.input).toContain(`уведомление #${29}`)
+    expect(result.input).toContain(
+      `уведомление #${30 - EXTERNAL_AGENT_NOTIFICATION_MAX_COUNT}`,
+    )
+    expect(result.input).not.toContain(
+      `уведомление #${30 - EXTERNAL_AGENT_NOTIFICATION_MAX_COUNT - 1}`,
+    )
+    expect(result.input.match(/уведомление #/g)).toHaveLength(
+      EXTERNAL_AGENT_NOTIFICATION_MAX_COUNT,
+    )
+  })
+
+  test("drops the oldest notifications when the block is too long", () => {
+    const bulky: ExternalAgentNotification[] = Array.from(
+      { length: 8 },
+      (_, index) => ({
+        source: "bot" as const,
+        text: `#${index} ${"я".repeat(400)}`,
+      }),
+    )
+
+    const result = buildRunInput({ ...baseParams, notifications: bulky })
+
+    const block = result.input.split("\n\n")[0] ?? ""
+    expect(block.length).toBeLessThanOrEqual(
+      EXTERNAL_AGENT_NOTIFICATION_MAX_CHARS,
+    )
+    expect(result.input).toContain("#7 ")
+    expect(result.input).not.toContain("#0 ")
+  })
+
+  test("skips notifications without text and adds no block when there are none", () => {
+    const withEmpty = buildRunInput({
+      ...baseParams,
+      notifications: [
+        { source: "bot", text: null },
+        { source: "api", text: "   " },
+      ],
+      messages: [{ role: "contact", text: "Да", attachmentUrls: [] }],
+    })
+
+    expect(withEmpty.input).toBe("Да")
+    expect(
+      buildRunInput({
+        ...baseParams,
+        messages: [{ role: "contact", text: "Да", attachmentUrls: [] }],
+      }).input,
+    ).toBe("Да")
   })
 })

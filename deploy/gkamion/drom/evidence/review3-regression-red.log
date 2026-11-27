@@ -1,0 +1,18 @@
+test_conflicting_address_object_fields_fail_closed (test_review_regressions.Review.test_conflicting_address_object_fields_fail_closed) ... FAIL
+
+======================================================================
+FAIL: test_conflicting_address_object_fields_fail_closed (test_review_regressions.Review.test_conflicting_address_object_fields_fail_closed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/hermes-data/cache/scratch/drom-finish2/tests/test_review_regressions.py", line 118, in test_conflicting_address_object_fields_fail_closed
+    self.assertEqual(self.f.checkout_create(self.c['context_ref'],True)['status'],'readback_mismatch')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'created_verified' != 'readback_mismatch'
+- created_verified
++ readback_mismatch
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.036s
+
+FAILED (failures=1)

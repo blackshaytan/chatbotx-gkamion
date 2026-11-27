@@ -163,6 +163,21 @@ describe("receiving", () => {
   test("rejects a malformed event", async () => {
     await expect(receive({ kind: "message" })).rejects.toThrow("malformed")
   })
+
+  test("a silent event asks the platform to store it without automation", async () => {
+    const silent = await receive(
+      event({
+        isDealSystem: true,
+        silent: true,
+        text: "Покупатель выбрал Клапан ТНВД за 3 534₽",
+      }),
+    )
+    expect(silent.suppressAutomation).toBe(true)
+    expect(silent.message?.text).toContain("Покупатель выбрал")
+
+    const normal = await receive(event())
+    expect(normal.suppressAutomation).toBe(false)
+  })
 })
 
 describe("sending", () => {

@@ -28,7 +28,9 @@ export function BroadcastInboxMultiSelect({
         .filter(
           (inbox) =>
             inbox.channel === channel &&
-            inbox.status === inboxStatuses.enum.connected,
+            inbox.status === inboxStatuses.enum.connected &&
+            // Personal SMTP mailboxes are never broadcast targets (server also rejects).
+            !inbox.ownerUserId,
         )
         .map((inbox) => ({ label: inbox.name, value: inbox.id })),
     [inboxes, channel],

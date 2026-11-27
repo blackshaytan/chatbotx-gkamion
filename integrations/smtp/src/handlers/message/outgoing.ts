@@ -12,6 +12,7 @@ import { extractEmailAddress, type SmtpAuthValue } from "../../schema"
 import {
   emailReplyFromAttributes,
   fallbackSubjectFromText,
+  parseSmtpAtSubject,
   readEmailReply,
   replySubject,
   type SmtpEmailReply,
@@ -59,12 +60,24 @@ const deliver = async (props: {
       ChannelErrorCategory.INVALID_RECIPIENT,
     )
   }
-  const chunks = renderTextOutgoing({ text: props.text }, EMAIL_BODY_LIMIT)
+  const parsed = parseSmtpAtSubject(props.text)
+  const chunks = renderTextOutgoing({ text: parsed.body }, EMAIL_BODY_LIMIT)
   const body = chunks.join("\n\n") || "(empty)"
-  const subject = replySubject(
-    props.reply?.subject,
-    fallbackSubjectFromText(body),
-  )
+  // `@subject …` starts a new mailbox topic: keep the subject as typed (no
+  // Re:) and drop In-Reply-To / References so the client sees a fresh thread.
+  // ChatbotX still keeps the same conversation window.
+  const forcedSubject = parsed.subject?.replace(/\s+/g, " ").trim()
+  const subject = forcedSubject
+    ? forcedSubject
+    : replySubject(props.reply?.subject, fallbackSubjectFromText(body))
+  const replyHeaders = forcedSubject
+    ? {}
+    : {
+        ...(props.reply?.inReplyTo ? { inReplyTo: props.reply.inReplyTo } : {}),
+        ...(props.reply?.references
+          ? { references: props.reply.references }
+          : {}),
+      }
   try {
     const sent = await sendMail({
       ctx: props.ctx,
@@ -73,10 +86,7 @@ const deliver = async (props: {
       subject,
       text: body,
       html: textToHtml(body),
-      ...(props.reply?.inReplyTo ? { inReplyTo: props.reply.inReplyTo } : {}),
-      ...(props.reply?.references
-        ? { references: props.reply.references }
-        : {}),
+      ...replyHeaders,
     })
     return { messageIds: [sent.messageId], sentCount: 1 }
   } catch (error) {

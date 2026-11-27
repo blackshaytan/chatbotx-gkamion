@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 const {
   mockFindFirstWorkspace,
   mockFindFirstContact,
+  mockFindManyIntegrationSmtp,
   mockUpdate,
   mockSet,
   mockWhere,
@@ -10,6 +11,7 @@ const {
 } = vi.hoisted(() => ({
   mockFindFirstWorkspace: vi.fn(),
   mockFindFirstContact: vi.fn(),
+  mockFindManyIntegrationSmtp: vi.fn(),
   mockUpdate: vi.fn(),
   mockSet: vi.fn(),
   mockWhere: vi.fn(),
@@ -22,6 +24,7 @@ vi.mock("@chatbotx.io/database/client", () => ({
     query: {
       workspaceModel: { findFirst: mockFindFirstWorkspace },
       contactModel: { findFirst: mockFindFirstContact },
+      integrationSmtpModel: { findMany: mockFindManyIntegrationSmtp },
     },
   },
   and: vi.fn((...args: unknown[]) => ({ __and: args })),
@@ -47,6 +50,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   mockFindFirstWorkspace.mockResolvedValue({ targetCountry: "VN" })
   mockFindFirstContact.mockResolvedValue({ phoneNumber: null, email: null })
+  mockFindManyIntegrationSmtp.mockResolvedValue([])
   mockSet.mockReturnValue({ where: mockWhere })
   mockWhere.mockResolvedValue(undefined)
   mockUpdate.mockReturnValue({ set: mockSet })
@@ -202,5 +206,76 @@ describe("updateContactFromMessage", () => {
     }
     await updateContactFromMessage(props)
     expect(mockSet).toHaveBeenCalledWith({ phoneNumber: "+84912345678" })
+  })
+
+  test("reproduces production incident: SMTP reply quoting Russian part number does not update contact", async () => {
+    mockFindFirstWorkspace.mockResolvedValue({ targetCountry: "RU" })
+    const text =
+      "Subject: Re: возврат детали такой-то\n\nВсе получил, спасибо!\n\nвт, 24 нояб. 2026 г. в 16:34, Баринов Станислав <s.barinov@gkamion.ru>:\n\n> Здравствуйте отказ клиента арт. 602002394AA 5 штук"
+    const result = await updateContactFromMessage({
+      contactId: "c1",
+      workspaceId: "w1",
+      text,
+      channel: "smtp",
+    })
+    expect(result).toEqual({})
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  test("channel: 'smtp' with valid Russian phone and email in body updates ONLY phoneNumber", async () => {
+    mockFindFirstWorkspace.mockResolvedValue({ targetCountry: "RU" })
+    const text =
+      "Добрый день, звоните на +7 967 197-60-80, моя почта client@example.com\n\nOn Tue, Nov 24, 2026 at 4:34 PM Jane <jane@acme.com> wrote:\n> цитата"
+    const result = await updateContactFromMessage({
+      contactId: "c1",
+      workspaceId: "w1",
+      text,
+      channel: "smtp",
+    })
+    expect(result).toEqual({ phoneNumber: "+79671976080" })
+    expect(mockSet).toHaveBeenCalledWith({ phoneNumber: "+79671976080" })
+  })
+
+  test("non-SMTP channel skips workspace own SMTP mailbox address", async () => {
+    mockFindManyIntegrationSmtp.mockResolvedValue([
+      { fromAddress: "sales@gkamion.ru", name: "GK Sales", auth: null },
+    ])
+    const resultOnlyOwn = await updateContactFromMessage({
+      contactId: "c1",
+      workspaceId: "w1",
+      text: "please write to sales@gkamion.ru for info",
+      channel: "telegram",
+    })
+    expect(resultOnlyOwn).toEqual({})
+    expect(mockUpdate).not.toHaveBeenCalled()
+
+    const resultBoth = await updateContactFromMessage({
+      contactId: "c1",
+      workspaceId: "w1",
+      text: "forwarded from sales@gkamion.ru, my address is client@example.com",
+      channel: "telegram",
+    })
+    expect(resultBoth).toEqual({ email: "client@example.com" })
+    expect(mockSet).toHaveBeenCalledWith({ email: "client@example.com" })
+  })
+
+  test("graceful degradation when integrationSmtpModel.findMany throws — phone extraction still succeeds", async () => {
+    mockFindManyIntegrationSmtp.mockRejectedValue(
+      new Error("database connection timeout"),
+    )
+    const result = await updateContactFromMessage({
+      contactId: "c1",
+      workspaceId: "w1",
+      text: "call me at 0912345678 or email client@example.com",
+      channel: "telegram",
+    })
+    expect(result).toEqual({
+      phoneNumber: "+84912345678",
+      email: "client@example.com",
+    })
+    expect(mockSet).toHaveBeenCalledWith({
+      phoneNumber: "+84912345678",
+      email: "client@example.com",
+    })
   })
 })

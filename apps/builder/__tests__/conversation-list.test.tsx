@@ -31,6 +31,22 @@ vi.mock("@/features/conversations/conversation-item", () => ({
   ),
 }))
 
+const botCategorySelectProps: {
+  current: { options?: { label: string; value: string }[] } | null
+} = { current: null }
+
+vi.mock("@chatbotx.io/ui/components/form/select-field", () => ({
+  SelectField: (props: {
+    name?: string
+    options?: { label: string; value: string }[]
+  }) => {
+    if (props.name === "botCategory") {
+      botCategorySelectProps.current = props
+    }
+    return <div />
+  },
+}))
+
 vi.mock("@/features/conversations/conversation-filter", () => ({
   ConversationFilter: () => <div />,
 }))
@@ -79,6 +95,7 @@ describe("ConversationList", () => {
     vi.clearAllMocks()
     storeState.isFirstLoadConversation = true
     capturedProps.current = null
+    botCategorySelectProps.current = null
     container = document.createElement("div")
     document.body.appendChild(container)
     root = createRoot(container)
@@ -87,6 +104,28 @@ describe("ConversationList", () => {
   afterEach(() => {
     act(() => root.unmount())
     container.remove()
+  })
+
+  test("shows only Human in the bot-category menu for a regular member", () => {
+    act(() => {
+      root.render(
+        <ConversationList canFilterBotCategory={false} workspaceId="ws-1" />,
+      )
+    })
+
+    expect(botCategorySelectProps.current?.options).toEqual([
+      { label: "analytics.human", value: "human" },
+    ])
+  })
+
+  test("shows All, Human and Bot to a workspace admin", () => {
+    act(() => {
+      root.render(<ConversationList workspaceId="ws-1" />)
+    })
+
+    expect(
+      botCategorySelectProps.current?.options?.map((option) => option.value),
+    ).toEqual(["all", "human", "bot"])
   })
 
   test("passes a stable computeItemKey keyed by conversation id to Virtuoso", () => {

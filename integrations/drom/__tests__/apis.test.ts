@@ -12,6 +12,9 @@ import { brief, dialogView } from "./views"
 const VIEW_URL = `${DROM_BASE}/personal/messaging/view`
 const UPLOAD_URL = `${DROM_BASE}/upload-image-jquery`
 const photo = { name: "a.jpg", mime: "image/jpeg", bytes: new Uint8Array([1]) }
+const CARD_HTML = `
+<div class="row" data-field="manufacturer"><div class="label">Производитель</div><div class="value">BMW</div></div>
+<div class="row" data-field="autoPartsOemNumber"><div class="label">Номер запчасти</div><div class="value"><a href="/x">51477326465</a></div></div>`
 
 describe("inbox", () => {
   test("getInboxConfig reads the unread counter", async () => {
@@ -144,6 +147,28 @@ describe("media", () => {
     ).rejects.toThrow("not allowed")
   })
 
+  test("downloadDromImage names an extensionless WebP from its bytes", async () => {
+    const webp = new Uint8Array([
+      0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50,
+    ])
+    server.use(
+      http.get(
+        "https://baza.drom.ru/p-img/drom/1_default",
+        () =>
+          new HttpResponse(webp, {
+            headers: { "Content-Type": "application/octet-stream" },
+          }),
+      ),
+    )
+    await expect(
+      downloadDromImage(dromAuth, "https://baza.drom.ru/p-img/drom/1_default"),
+    ).resolves.toEqual({
+      bytes: webp,
+      mime: "image/webp",
+      filename: "1_default.webp",
+    })
+  })
+
   test("downloadDromImage names the file after the path", async () => {
     server.use(
       http.get(
@@ -162,7 +187,7 @@ describe("media", () => {
     ).resolves.toEqual({
       bytes: new Uint8Array([1, 2]),
       mime: "image/jpeg",
-      filename: "1_default",
+      filename: "1_default.jpg",
     })
   })
 })
@@ -181,11 +206,44 @@ describe("deal", () => {
             headers: { "Content-Type": "text/html; charset=utf-8" },
           }),
       ),
+      http.get(
+        `${DROM_BASE}/dealview/10000001/good/20000001`,
+        () =>
+          new HttpResponse(CARD_HTML, {
+            headers: { "Content-Type": "text/html; charset=utf-8" },
+          }),
+      ),
     )
-    await expect(fetchDeal(dromAuth, "10000001")).resolves.toMatchObject({
+    const deal = await fetchDeal(dromAuth, "10000001")
+    expect(deal).toMatchObject({
       dealId: "10000001",
       buyerName: "Иван Тестов",
     })
+    expect(deal.items[0]).toMatchObject({
+      article: "51477326465",
+      brand: "BMW",
+    })
+  })
+
+  test("fetchDeal keeps the position when its card is unreachable", async () => {
+    const html = readFileSync(
+      new URL("./fixtures/deal-cdek.html", import.meta.url),
+      "utf8",
+    )
+    server.use(
+      http.get(
+        `${DROM_BASE}/deal/10000001`,
+        () =>
+          new HttpResponse(html, {
+            headers: { "Content-Type": "text/html; charset=utf-8" },
+          }),
+      ),
+      http.get(`${DROM_BASE}/dealview/10000001/good/20000001`, () =>
+        HttpResponse.text("blocked", { status: 403 }),
+      ),
+    )
+    const deal = await fetchDeal(dromAuth, "10000001")
+    expect(deal.items[0]).toMatchObject({ article: "", brand: "" })
   })
 
   test("fetchDeal rejects an empty page", async () => {

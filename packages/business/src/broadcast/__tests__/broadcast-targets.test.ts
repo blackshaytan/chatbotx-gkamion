@@ -61,6 +61,7 @@ vi.mock("@chatbotx.io/database/schema", () => ({
   contactsOnBroadcastsModel: {},
   conversationModel: {},
   inboxModel: {},
+  taskModel: {},
   integrationMessengerModel: {
     id: "IntegrationMessenger.id",
     name: "IntegrationMessenger.name",
@@ -334,7 +335,7 @@ describe("broadcastService.assertBroadcastTargetsOwned", () => {
         workspaceId: "ws-1",
         channel: "whatsapp",
       },
-      columns: { id: true, name: true },
+      columns: { id: true, name: true, ownerUserId: true },
     })
   })
 
@@ -369,6 +370,25 @@ describe("broadcastService.assertBroadcastTargetsOwned", () => {
         data: { channel: "messenger", integrationMessengerId: "foreign" },
       }),
     ).rejects.toThrow("Integration not found")
+  })
+
+  test("rejects a personal mailbox target", async () => {
+    mocks.inboxFindMany.mockResolvedValue([
+      { id: "inbox-a", name: "Personal", ownerUserId: "u1" },
+    ])
+
+    await expect(
+      broadcastService.assertBroadcastTargetsOwned({
+        workspaceId: "ws-1",
+        data: {
+          channel: "smtp",
+          targets: [{ inboxId: "inbox-a" }],
+        },
+      }),
+    ).rejects.toMatchObject({
+      message: "Personal mailbox cannot be used for broadcasts",
+      field: "targets",
+    })
   })
 })
 

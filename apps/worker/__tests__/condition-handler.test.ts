@@ -19,6 +19,9 @@ const {
 
 vi.mock("@chatbotx.io/business", () => ({
   contactService: { matchesContactFilter },
+  isOrderNotificationField: (field: string) =>
+    field === "deliveryMethod" || field === "hasDebt" || field === "amount",
+  orderConditionGroupMatches: () => false,
 }))
 
 vi.mock("@chatbotx.io/events/context", () => ({

@@ -14,6 +14,7 @@ import {
   sharedColumns,
   timestampConfig,
 } from "../partials/shared"
+import { conversationUnreadRankSql } from "../queries/conversation-unread"
 import { userModel } from "./auth-user"
 import { contactModel } from "./contact"
 import { inboxTeamModel } from "./inbox-team"
@@ -89,5 +90,20 @@ export const conversationModel = pgTable(
       table.inboxActivityAt.desc().nullsLast(),
       table.id.desc(),
     ),
+    // Unread conversations first, then the same activity order as the inbox list.
+    index("Conversation_workspaceId_inboxUnread_inboxActivityAt_id_idx").using(
+      "btree",
+      table.workspaceId.asc().nullsLast(),
+      sql`${conversationUnreadRankSql(table)} DESC`,
+      table.inboxActivityAt.desc().nullsLast(),
+      table.id.desc(),
+    ),
+    // Rows whose pause has a deadline. The resume claim scans `botResumeAt`
+    // and flips `botEnabled` once that deadline has passed.
+    index("Conversation_botResumeDue_idx")
+      .on(table.botResumeAt)
+      .where(
+        sql`${table.botEnabled} = false AND ${table.botResumeAt} IS NOT NULL`,
+      ),
   ],
 )

@@ -43,6 +43,10 @@ export type ParsedInboundSource = {
   attachments?: ParsedAttachment[]
 }
 
+/** Local part used by MTAs for delivery-status reports, never a person. */
+const isMailDeliveryAgent = (address: string): boolean =>
+  address.split("@")[0] === "mailer-daemon"
+
 const stripHtml = (html: string): string =>
   html
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -109,8 +113,9 @@ const collectAttachments = (
 }
 
 /**
- * `null` when the message is our own copy or has no sender — the caller still
- * advances the UID so one skipped message cannot stall the mailbox.
+ * `null` when the message is our own copy, a mailer-daemon delivery report,
+ * or has no sender — the caller still advances the UID so one skipped
+ * message cannot stall the mailbox.
  */
 export const toSmtpInboundPayload = (
   mail: ParsedInboundSource,
@@ -119,7 +124,11 @@ export const toSmtpInboundPayload = (
 ): SmtpInboundPayload | null => {
   const from = mail.from?.value?.find((item) => item.address)
   const fromAddress = from?.address ? extractEmailAddress(from.address) : null
-  if (!fromAddress || ownAddresses.has(fromAddress)) {
+  if (
+    !fromAddress ||
+    ownAddresses.has(fromAddress) ||
+    isMailDeliveryAgent(fromAddress)
+  ) {
     return null
   }
   const subject = mail.subject?.replace(/\s+/g, " ").trim() || undefined

@@ -5,6 +5,7 @@ import {
 } from "@chatbotx.io/business"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import z from "zod"
+import { resolveMemberHiddenInboxIds } from "@/features/conversations/lib/member-inbox-access"
 import { assertWorkspaceNotBlocked } from "@/lib/workspace-quota"
 import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"
 import { authorizedAPI } from "@/orpc"
@@ -43,7 +44,14 @@ export const messagesAuthenticatedAPI = {
     .input(listMessagesRequest)
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(listMessagesResponse)
-    .handler(async ({ input }) => await listMessages(input)),
+    .handler(async ({ input, context }) => {
+      const hiddenInboxIds = await resolveMemberHiddenInboxIds({
+        workspaceId: input.workspaceId,
+        userId: context.user.id,
+        permissions: context.workspaceMember.permissions,
+      })
+      return await listMessages({ ...input, hiddenInboxIds })
+    }),
 
   findMessageAuthenticatedAPI: authorizedAPI
     .route({
@@ -55,7 +63,14 @@ export const messagesAuthenticatedAPI = {
     .input(findMessageRequest)
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(messageResourceWithRelations)
-    .handler(async ({ input }) => await findMessage(input)),
+    .handler(async ({ input, context }) => {
+      const hiddenInboxIds = await resolveMemberHiddenInboxIds({
+        workspaceId: input.workspaceId,
+        userId: context.user.id,
+        permissions: context.workspaceMember.permissions,
+      })
+      return await findMessage({ ...input, hiddenInboxIds })
+    }),
 
   getWhatsappFlowResponseAuthenticatedAPI: authorizedAPI
     .route({
@@ -72,15 +87,20 @@ export const messagesAuthenticatedAPI = {
     )
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .output(whatsappFlowResponseSchema)
-    .handler(
-      async ({ input }) =>
-        await getWhatsappFlowResponseView({
-          workspaceId: input.workspaceId,
-          conversationId: input.conversationId,
-          messageId: input.messageId,
-          createdAt: input.createdAt,
-        }),
-    ),
+    .handler(async ({ input, context }) => {
+      const hiddenInboxIds = await resolveMemberHiddenInboxIds({
+        workspaceId: input.workspaceId,
+        userId: context.user.id,
+        permissions: context.workspaceMember.permissions,
+      })
+      return await getWhatsappFlowResponseView({
+        workspaceId: input.workspaceId,
+        conversationId: input.conversationId,
+        messageId: input.messageId,
+        createdAt: input.createdAt,
+        hiddenInboxIds,
+      })
+    }),
 
   createMessageAuthenticatedAPI: authorizedAPI
     .route({
@@ -101,11 +121,17 @@ export const messagesAuthenticatedAPI = {
 
       const inboxId =
         "inboxId" in input && input.inboxId ? input.inboxId : undefined
+      const hiddenInboxIds = await resolveMemberHiddenInboxIds({
+        workspaceId: input.workspaceId,
+        userId: context.user.id,
+        permissions: context.workspaceMember.permissions,
+      })
       const contactInbox =
         await conversationService.resolveContactInboxForConversation({
           conversation,
           workspaceId: input.workspaceId,
           inboxId,
+          hiddenInboxIds,
         })
 
       // createMessage expects a full UserModel (needs tenantId); the oRPC
@@ -132,10 +158,16 @@ export const messagesAuthenticatedAPI = {
     .handler(async ({ input, context }) => {
       await assertWorkspaceNotBlocked(context.workspace.ownerId)
 
+      const hiddenInboxIds = await resolveMemberHiddenInboxIds({
+        workspaceId: input.workspaceId,
+        userId: context.user.id,
+        permissions: context.workspaceMember.permissions,
+      })
       return editMessage({
         workspaceId: input.workspaceId,
         conversationId: input.conversationId,
         parsedInput: input,
+        hiddenInboxIds,
       })
     }),
 
@@ -151,10 +183,16 @@ export const messagesAuthenticatedAPI = {
     .handler(async ({ input, context }) => {
       await assertWorkspaceNotBlocked(context.workspace.ownerId)
 
+      const hiddenInboxIds = await resolveMemberHiddenInboxIds({
+        workspaceId: input.workspaceId,
+        userId: context.user.id,
+        permissions: context.workspaceMember.permissions,
+      })
       return deleteMessage({
         workspaceId: input.workspaceId,
         conversationId: input.conversationId,
         parsedInput: input,
+        hiddenInboxIds,
       })
     }),
 

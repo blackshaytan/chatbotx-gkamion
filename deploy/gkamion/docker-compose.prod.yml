@@ -24,7 +24,7 @@ x-app: &app
 services:
   builder:
     <<: *app
-    image: ghcr.io/blackshaytan/chatbotx-gkamion-builder:latest
+    image: ghcr.io/blackshaytan/chatbotx-gkamion-builder:1ac5668ccc306c20f3f1033ff4fc83dc79e8c5ec
     build:
       context: ../..
       dockerfile: apps/builder/docker/Dockerfile
@@ -35,11 +35,13 @@ services:
 
   worker:
     <<: *app
-    image: ghcr.io/blackshaytan/chatbotx-gkamion-worker:latest
+    image: ghcr.io/blackshaytan/chatbotx-gkamion-worker:098f5c887fa4c46358dbd344e1a626e617f100dc
     build:
       context: ../..
       dockerfile: apps/worker/docker/Dockerfile
-    mem_limit: 3g
+    # 3g мало: при 600-секундном сторожа ход с подбором по VIN держит пик дольше,
+    # а на 3 ГиБ воркер жил на 96-99% и рисковал exit 137. 5 ГиБ проверено.
+    mem_limit: 5g
 
   # partykit binds every interface regardless of HOSTNAME, so realtime runs on
   # a bridge network and is published on loopback only. It needs no infra —

@@ -96,6 +96,8 @@ export const contactRepository = {
         fullName: true,
         avatar: true,
         createdAt: true,
+        email: true,
+        phoneNumber: true,
       },
       with: {
         contactInboxes: {
@@ -112,6 +114,10 @@ export const contactRepository = {
               columns: { name: true, email: true },
             },
           },
+        },
+        tags: {
+          columns: { id: true, name: true },
+          where: { deletedAt: { isNull: true } },
         },
       },
     })

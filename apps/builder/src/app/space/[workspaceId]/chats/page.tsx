@@ -8,11 +8,22 @@ export default async function ChatsRoutePage(props: {
   params: Promise<{ workspaceId: string }>
 }) {
   const workspaceId = getIdFromParams(await props.params, "workspaceId")
-  if (!workspaceId) return notFound()
+  if (!workspaceId) {
+    return notFound()
+  }
   const access = await getCurrentUserAndTargetWorkspace(workspaceId)
-  if (!access) return notFound()
+  if (!access) {
+    return notFound()
+  }
   const { blocked } = await getWorkspaceBlockStateForRender(
     access.targetWorkspace.ownerId,
   )
-  return <ChatsPage currentUserId={access.user.id} isBlocked={blocked} isSupportSession={access.isSupportSession} workspaceId={workspaceId} />
+  return (
+    <ChatsPage
+      currentUserId={access.user.id}
+      isBlocked={blocked}
+      isSupportSession={access.isSupportSession}
+      workspaceId={workspaceId}
+    />
+  )
 }

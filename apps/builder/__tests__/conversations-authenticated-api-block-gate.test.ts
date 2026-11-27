@@ -7,13 +7,20 @@ type RouteConfig = {
   tags: string[]
 }
 
-type ArchiveInput = { workspaceId: string; ids: string[] }
+type HandlerInput = {
+  workspaceId: string
+  ids?: string[]
+  botCategory?: "all" | "human" | "bot"
+}
 type HandlerContext = {
-  input: ArchiveInput
+  input: HandlerInput
   context: {
     user: { id: string }
     workspace: { ownerId: string }
-    workspaceMember?: { permissions: unknown }
+    workspaceMember?: {
+      role?: "owner" | "agent"
+      permissions: unknown
+    }
   }
 }
 type ProcedureHandler = (args: HandlerContext) => Promise<unknown>
@@ -84,6 +91,10 @@ const {
 }))
 
 vi.mock("@chatbotx.io/business", () => ({
+  smtpOwnershipService: {
+    listHiddenInboxIdsForMember: vi.fn(async () => []),
+  },
+
   conversationService: {
     updateReadStatus: vi.fn(),
     archiveByIds,
@@ -127,6 +138,10 @@ vi.mock("@/lib/auth/utils", () => ({
 }))
 
 await import("@/features/conversations/api/private")
+
+const { CONVERSATIONS_LIST_POST_PATH } = await import(
+  "@/features/conversations/lib/api-paths"
+)
 
 const ARCHIVE_PATH = "/workspaces/{workspaceId}/conversations/archive"
 const LIST_PATH = "/workspaces/{workspaceId}/conversations"
@@ -201,13 +216,13 @@ describe("conversationsAuthenticatedAPI — PII permission gate", () => {
       context: {
         user: { id: "user-1" },
         workspace: { ownerId: "owner-1" },
-        workspaceMember: { permissions: { contacts: true } },
+        workspaceMember: { role: "owner", permissions: { contacts: true } },
       },
     })
 
     expect(listConversations).toHaveBeenCalledWith(
       { workspaceId: "workspace-1", ids: [] },
-      { includeEmailAndPhone: true },
+      { includeEmailAndPhone: true, hiddenInboxIds: [] },
     )
   })
 
@@ -221,13 +236,71 @@ describe("conversationsAuthenticatedAPI — PII permission gate", () => {
       context: {
         user: { id: "user-1" },
         workspace: { ownerId: "owner-1" },
-        workspaceMember: { permissions: { contacts: false } },
+        workspaceMember: {
+          role: "owner",
+          permissions: { contacts: false },
+        },
       },
     })
 
     expect(listConversations).toHaveBeenCalledWith(
       { workspaceId: "workspace-1", ids: [] },
-      { includeEmailAndPhone: false },
+      { includeEmailAndPhone: false, hiddenInboxIds: [] },
+    )
+  })
+})
+
+describe("conversationsAuthenticatedAPI — inbox bot category", () => {
+  test("pins a regular member to Human on both list endpoints", async () => {
+    canViewContactEmailAndPhone.mockReturnValue(false)
+    listConversations.mockResolvedValue({ data: [], nextCursor: null })
+
+    const member = {
+      role: "agent" as const,
+      permissions: { superAdmin: false },
+    }
+    const input = {
+      workspaceId: "workspace-1",
+      botCategory: "all" as const,
+    }
+
+    for (const path of [LIST_PATH, CONVERSATIONS_LIST_POST_PATH]) {
+      listConversations.mockClear()
+      await handlersByPath[path]?.({
+        input,
+        context: {
+          user: { id: "user-1" },
+          workspace: { ownerId: "owner-1" },
+          workspaceMember: member,
+        },
+      })
+
+      expect(listConversations).toHaveBeenCalledWith(
+        { workspaceId: "workspace-1", botCategory: "human" },
+        { includeEmailAndPhone: false, hiddenInboxIds: [] },
+      )
+    }
+  })
+
+  test("keeps an admin member's requested category", async () => {
+    canViewContactEmailAndPhone.mockReturnValue(true)
+    listConversations.mockResolvedValue({ data: [], nextCursor: null })
+
+    await handlersByPath[CONVERSATIONS_LIST_POST_PATH]?.({
+      input: { workspaceId: "workspace-1", botCategory: "bot" },
+      context: {
+        user: { id: "user-1" },
+        workspace: { ownerId: "owner-1" },
+        workspaceMember: {
+          role: "agent",
+          permissions: { superAdmin: true },
+        },
+      },
+    })
+
+    expect(listConversations).toHaveBeenCalledWith(
+      { workspaceId: "workspace-1", botCategory: "bot" },
+      { includeEmailAndPhone: true, hiddenInboxIds: [] },
     )
   })
 })

@@ -84,7 +84,11 @@ const parseHeader = (
   let orderUrl = ORDER_LINK.exec(header)?.[1] ?? null
   const link = HEADER_LINK.exec(header)
   if (link?.[1] && !link[1].includes("/deal/")) {
-    const title = stripTags(link[2] ?? "")
+    const linkTitle = stripTags(link[2] ?? "")
+    // The price often sits beside the anchor: «3 018 р. • <a>Диск…</a>».
+    const subtitle = stripTags(SUB_TITLE.exec(header)?.[1] ?? "")
+    const title =
+      linkTitle && subtitle.includes(linkTitle) ? subtitle : linkTitle
     return {
       listing: { title, url: link[1], price: parsePriceFromTitle(title) },
       orderUrl,

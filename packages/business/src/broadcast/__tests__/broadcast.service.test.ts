@@ -98,6 +98,7 @@ vi.mock("@chatbotx.io/database/schema", () => ({
     id: "Inbox.id",
     name: "Inbox.name",
   },
+  taskModel: {},
   messengerMessageTemplateModel: {
     id: "MessengerMessageTemplate.id",
     name: "MessengerMessageTemplate.name",

@@ -23,7 +23,7 @@ export const conversationResource = createSelectSchema(conversationModel, {
     .date()
     .nullable()
     .describe(
-      "Last client message or manager reply (bot sends do not move it). The conversation list is sorted by it, newest first, and a conversation is unread when it is later than `agentLastReadAt`.",
+      "Last client message or manager reply (bot sends do not move it). The inbox lists a conversation as unread when this time or `handedOverAt` is later than `agentLastReadAt`, or when `unreadCount` is positive. Unread conversations come first; within unread and within read, the list is sorted by this time, newest first.",
     ),
   handoverCategory: conversationHandoverCategories
     .nullable()

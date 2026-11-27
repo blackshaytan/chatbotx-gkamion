@@ -7,6 +7,8 @@ const {
   mockDispatchAuditRecord,
   mockFindOrFail,
   mockInboxCreate,
+  mockInboxFindById,
+  mockSetOwner,
   mockTransaction,
   mockUpdate,
   mockUpdateReturning,
@@ -32,6 +34,11 @@ const {
       inbox: { id: "smtp-1" },
       wasCreated: true,
     })),
+    mockInboxFindById: vi.fn(async () => ({
+      id: "inbox-1",
+      ownerUserId: null,
+    })),
+    mockSetOwner: vi.fn(async () => undefined),
     mockTransaction: vi.fn(async (callback: (tx: unknown) => unknown) =>
       callback({ delete: mockDelete, update: mockUpdate }),
     ),
@@ -77,6 +84,14 @@ vi.mock("../src/connection", () => ({
 
 vi.mock("../src/inbox/service", () => ({
   inboxService: { create: mockInboxCreate, disconnect: mockDisconnect },
+}))
+
+vi.mock("@chatbotx.io/database/repositories", () => ({
+  inboxRepository: { findById: mockInboxFindById },
+}))
+
+vi.mock("../src/inbox/smtp-ownership", () => ({
+  smtpOwnershipService: { setOwner: mockSetOwner },
 }))
 
 vi.mock("../src/connection/state-service", () => ({
@@ -158,6 +173,24 @@ describe("integrationSmtpService.connect", () => {
     expect(mockDispatchAuditRecord).toHaveBeenCalledWith({
       action: "connect",
       detail: "connected a new SMTP channel (#inbox-1)",
+    })
+  })
+
+  test("sets the personal owner inside the connect transaction", async () => {
+    await integrationSmtpService.connect({
+      workspaceId: "ws-1",
+      ownerId: "owner-1",
+      name: "user1",
+      fromAddress: "from@example.com",
+      auth,
+      ownerUserId: "u1",
+    })
+
+    expect(mockSetOwner).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      inboxId: "smtp-1",
+      ownerUserId: "u1",
+      tx: expect.anything(),
     })
   })
 
@@ -260,6 +293,39 @@ describe("integrationSmtpService.update", () => {
       action: "update",
       detail: "updated the SMTP channel configuration",
     })
+  })
+
+  test("sets the inbox owner and audits when only the owner changes", async () => {
+    await integrationSmtpService.update({
+      workspaceId: "ws-1",
+      id: "smtp-1",
+      data: {
+        ownerUserId: "u1",
+        username: existing.name,
+        fromAddress: existing.fromAddress,
+      },
+    })
+
+    expect(mockSetOwner).toHaveBeenCalledWith({
+      workspaceId: "ws-1",
+      inboxId: "inbox-1",
+      ownerUserId: "u1",
+      tx: expect.anything(),
+    })
+    expect(mockDispatchAuditRecord).toHaveBeenCalledWith({
+      action: "update",
+      detail: "updated the SMTP channel configuration",
+    })
+  })
+
+  test("leaves the inbox owner alone when ownerUserId is omitted", async () => {
+    await integrationSmtpService.update({
+      workspaceId: "ws-1",
+      id: "smtp-1",
+      data: { fromAddress: "a@b.com" },
+    })
+
+    expect(mockSetOwner).not.toHaveBeenCalled()
   })
 
   // Re-submitting the form untouched must not spam the audit trail.

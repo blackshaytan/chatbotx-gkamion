@@ -35,6 +35,7 @@ import { emitContactCreated } from "@chatbotx.io/events"
 import { uploadFileFromUrl } from "@chatbotx.io/filesystem"
 import { invalidateCacheByTags, withCache } from "@chatbotx.io/redis"
 import { createId } from "@chatbotx.io/utils"
+import { CONTACT_AVATAR_PACK_PREFIX } from "@chatbotx.io/utils/contact-avatar-pack"
 import { dispatchAuditRecord } from "../audit/dispatcher"
 import { BaseService } from "../base.service"
 import { getContactInboxSinceTime } from "../contact-inbox/service"
@@ -1185,6 +1186,40 @@ class ContactService extends BaseService {
           or(
             isNull(contactModel.avatar),
             sql`${contactModel.avatar} LIKE ${`${NO_AVATAR_SENTINEL_KEY.replace(/_/g, "\\_")}?time=%`} ESCAPE '\\'`,
+          ),
+        ),
+      )
+      .returning({ id: contactModel.id })
+    if (updated) {
+      await this.invalidate({ workspaceId, ids: [contactId] })
+    }
+  }
+
+  /**
+   * Writes a photo only when the contact has none of their own: empty, the
+   * no-avatar sentinel, a pack stand-in, or an expiring provider URL. A
+   * durable storage key is left untouched.
+   */
+  async setAvatarUnlessStored(
+    props: { workspaceId: string; contactId: string; avatar: string },
+    tx: DatabaseClient = db,
+  ): Promise<void> {
+    const { workspaceId, contactId, avatar } = props
+    const sentinelLike = `${NO_AVATAR_SENTINEL_KEY.replace(/_/g, "\\_")}?time=%`
+    const [updated] = await tx
+      .update(contactModel)
+      .set({ avatar, updatedAt: new Date() })
+      .where(
+        and(
+          eq(contactModel.id, contactId),
+          eq(contactModel.workspaceId, workspaceId),
+          or(
+            isNull(contactModel.avatar),
+            sql`${contactModel.avatar} LIKE ${sentinelLike} ESCAPE '\\'`,
+            sql`${contactModel.avatar} LIKE ${`${CONTACT_AVATAR_PACK_PREFIX}%`}`,
+            sql`${contactModel.avatar} LIKE 'http://%'`,
+            sql`${contactModel.avatar} LIKE 'https://%'`,
+            sql`${contactModel.avatar} LIKE 'wa-media:%'`,
           ),
         ),
       )

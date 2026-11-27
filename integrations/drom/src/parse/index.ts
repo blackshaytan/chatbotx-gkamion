@@ -3,6 +3,7 @@ export {
   type DromDeal,
   type DromDealItem,
   normalizeOrderUrl,
+  parseBulletinFacts,
   parseDeal,
 } from "./deal"
 export { decodeEntities, spanInnersByClass, stripTags } from "./html"

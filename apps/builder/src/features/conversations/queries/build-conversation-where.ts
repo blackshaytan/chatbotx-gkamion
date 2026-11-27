@@ -11,12 +11,16 @@ import {
 import type { ListConversationsRequest } from "@/features/conversations/schema/query"
 
 export type ConversationCursor = {
+  /** True while this row is still in the unread group. Old cursors omit it and are discarded. */
+  unread: boolean
   inboxActivityAt: Date | null
   id: string
 }
 
 type BuildConversationWhereOptions = {
   includeEmailAndPhone?: boolean
+  /** Inbox ids whose conversations the viewer must not see (personal SMTP ACL). */
+  hiddenInboxIds?: string[]
 }
 
 type QueryWhere = Record<string, unknown>
@@ -105,23 +109,32 @@ export function buildConversationWhere(
     where.contact = { blockedAt: { isNull: true } }
   }
 
-  // ── Cursor condition (inboxActivityAt DESC NULLS LAST, id DESC) ──────────
+  // ── Cursor (unread DESC, inboxActivityAt DESC NULLS LAST, id DESC) ──────
+  // Unread rows come first. A cursor still inside that group also reaches
+  // every read row, which sorts after the unread group even when its
+  // activity is newer. A cursor already in the read group never walks back.
   if (cursor) {
-    where.OR = cursor.inboxActivityAt
+    const olderActivity: QueryWhere = cursor.inboxActivityAt
+      ? {
+          OR: [
+            { inboxActivityAt: { lt: cursor.inboxActivityAt } },
+            { inboxActivityAt: { isNull: true } },
+            {
+              inboxActivityAt: cursor.inboxActivityAt,
+              id: { lt: cursor.id },
+            },
+          ],
+        }
+      : {
+          inboxActivityAt: { isNull: true },
+          id: { lt: cursor.id },
+        }
+    where.OR = cursor.unread
       ? [
-          { inboxActivityAt: { lt: cursor.inboxActivityAt } },
-          { inboxActivityAt: { isNull: true } },
-          {
-            inboxActivityAt: cursor.inboxActivityAt,
-            id: { lt: cursor.id },
-          },
+          { AND: [conversationUnreadWhere, olderActivity] },
+          { NOT: conversationUnreadWhere },
         ]
-      : [
-          {
-            inboxActivityAt: { isNull: true },
-            id: { lt: cursor.id },
-          },
-        ]
+      : [{ AND: [{ NOT: conversationUnreadWhere }, olderActivity] }]
   }
 
   // ── handoverCategory ─────────────────────────────────────────────────────
@@ -164,6 +177,19 @@ export function buildConversationWhere(
   // it is never a real value stored on contactInboxes.channel.
   if (input.channel && input.channel !== channelTypes.enum.omnichannel) {
     where.contactInboxes = { channel: input.channel }
+  }
+
+  // ── hidden inboxes (personal SMTP ACL) ───────────────────────────────────
+  // Merged after the channel block so both predicates apply to the same
+  // contactInboxes row.
+  if (options.hiddenInboxIds?.length) {
+    const current = isQueryWhere(where.contactInboxes)
+      ? where.contactInboxes
+      : {}
+    where.contactInboxes = {
+      ...current,
+      inboxId: { notIn: options.hiddenInboxIds },
+    }
   }
 
   // ── keyword (smart contact search, including sourceId) ───────────────────

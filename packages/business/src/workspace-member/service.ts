@@ -7,6 +7,7 @@ import {
 } from "@chatbotx.io/database/client"
 import { workspaceMemberRoles } from "@chatbotx.io/database/partials"
 import {
+  inboxRepository,
   notificationRepository,
   type WorkspaceMemberPermissionsRow,
   workspaceMemberRepository,
@@ -130,6 +131,13 @@ export class WorkspaceMemberService extends BaseService {
           userId: found.userId,
           tx,
         })
+        // Direct repository call: going through smtpOwnershipService would
+        // import this module back (smtp-ownership → workspace-member/service).
+        await inboxRepository.clearOwnerForUser({
+          workspaceId,
+          userId: found.userId,
+          tx,
+        })
       }
       return found
     }
@@ -147,7 +155,14 @@ export class WorkspaceMemberService extends BaseService {
         )
       })
 
+    // Bust the roster cache after commit. resolveAudienceUserIds (personal SMTP
+    // push/realtime) reads listByWorkspaceId; without this a removed member or
+    // demoted admin can stay in that audience for the cache TTL.
     if (!props.tx && member) {
+      await this.invalidateCacheTags([
+        `workspaces:${workspaceId}:workspace-members`,
+        workspaceMemberCacheTag(member.userId),
+      ])
       await this.audit(
         "delete",
         `removed ${member.user.name ?? member.user.email} from workspace`,
@@ -420,7 +435,12 @@ export class WorkspaceMemberService extends BaseService {
 
     // The member's permissions/nav are served from the cached
     // `listByUserId` result; bust it so the change takes effect immediately.
-    await this.invalidateCacheTags(workspaceMemberCacheTag(row.userId))
+    // With a caller-owned `tx` the bust waits for that caller's commit: a Redis
+    // failure here must not abort the transaction, and the caller invalidates
+    // after commit (see `workspaceService.transferOwnership`).
+    if (!input.tx) {
+      await this.invalidateCacheTags(workspaceMemberCacheTag(row.userId))
+    }
 
     return { id: row.id }
   }

@@ -429,6 +429,7 @@ describe("ShardedMessageRepository direct message/attachment lookup helpers", ()
       sourceId: attachmentModel.sourceId,
       originPath: attachmentModel.originPath,
       mimeType: attachmentModel.mimeType,
+      name: attachmentModel.name,
       createdAt: attachmentModel.createdAt,
     })
     expect(shardManager.getShardForWrite).toHaveBeenCalledWith("ws-1")
@@ -2445,5 +2446,172 @@ describe("ShardedMessageRepository.countUnreadIncomingByConversations", () => {
     })
 
     expect(counts.get("conv-1")).toBe(4)
+  })
+})
+
+describe("ShardedMessageRepository excludeContactInboxIds (personal SMTP ACL)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  test("listByConversation adds notInArray when excludeContactInboxIds is non-empty", async () => {
+    const whereCalls: unknown[] = []
+    const makeMessageSelectChain = () => {
+      const chain: {
+        from: ReturnType<typeof vi.fn>
+        where: ReturnType<typeof vi.fn>
+        limit: ReturnType<typeof vi.fn>
+        orderBy: ReturnType<typeof vi.fn>
+      } = {
+        from: vi.fn(),
+        where: vi.fn((clause: unknown) => {
+          whereCalls.push(clause)
+          return chain
+        }),
+        limit: vi.fn(),
+        orderBy: vi.fn().mockResolvedValue([]),
+      }
+      chain.from.mockReturnValue(chain)
+      chain.limit.mockReturnValue(chain)
+      return chain
+    }
+    let selectCall = 0
+    const shardClient = {
+      select: vi.fn(() => {
+        selectCall++
+        return selectCall === 1
+          ? makeMessageSelectChain()
+          : {
+              from: vi.fn().mockReturnValue({
+                where: vi.fn().mockResolvedValue([]),
+              }),
+            }
+      }),
+    }
+    const writeShard = makeShardInfo("write:s1", "s1")
+    const shardManager = {
+      getShardsForTimeRange: vi.fn().mockResolvedValue([]),
+      getWriteShardInfo: vi.fn().mockResolvedValue(writeShard),
+      withShardClientForRead: vi.fn(
+        (_shard: unknown, fn: (client: unknown) => Promise<unknown>) =>
+          fn(shardClient),
+      ),
+    }
+    const localRepo = new ShardedMessageRepository(shardManager as never)
+
+    await localRepo.listByConversation({
+      workspaceId: "ws-1",
+      conversationId: "conv-1",
+      excludeContactInboxIds: ["ci-hidden"],
+      sinceTime: new Date("2026-06-01T00:00:00Z"),
+      pagination: {
+        limit: 20,
+        cursor: { createdAt: new Date("2026-06-05T01:00:00Z"), id: "" },
+      },
+    })
+
+    expect(whereCalls.length).toBeGreaterThan(0)
+    expect(objectContainsValue(whereCalls[0], "ci-hidden")).toBe(true)
+  })
+
+  test("listByConversation omits exclusion when excludeContactInboxIds is empty", async () => {
+    const whereCalls: unknown[] = []
+    const makeMessageSelectChain = () => {
+      const chain: {
+        from: ReturnType<typeof vi.fn>
+        where: ReturnType<typeof vi.fn>
+        limit: ReturnType<typeof vi.fn>
+        orderBy: ReturnType<typeof vi.fn>
+      } = {
+        from: vi.fn(),
+        where: vi.fn((clause: unknown) => {
+          whereCalls.push(clause)
+          return chain
+        }),
+        limit: vi.fn(),
+        orderBy: vi.fn().mockResolvedValue([]),
+      }
+      chain.from.mockReturnValue(chain)
+      chain.limit.mockReturnValue(chain)
+      return chain
+    }
+    let selectCall = 0
+    const shardClient = {
+      select: vi.fn(() => {
+        selectCall++
+        return selectCall === 1
+          ? makeMessageSelectChain()
+          : {
+              from: vi.fn().mockReturnValue({
+                where: vi.fn().mockResolvedValue([]),
+              }),
+            }
+      }),
+    }
+    const writeShard = makeShardInfo("write:s1", "s1")
+    const shardManager = {
+      getShardsForTimeRange: vi.fn().mockResolvedValue([]),
+      getWriteShardInfo: vi.fn().mockResolvedValue(writeShard),
+      withShardClientForRead: vi.fn(
+        (_shard: unknown, fn: (client: unknown) => Promise<unknown>) =>
+          fn(shardClient),
+      ),
+    }
+    const localRepo = new ShardedMessageRepository(shardManager as never)
+
+    await localRepo.listByConversation({
+      workspaceId: "ws-1",
+      conversationId: "conv-1",
+      excludeContactInboxIds: [],
+      sinceTime: new Date("2026-06-01T00:00:00Z"),
+      pagination: {
+        limit: 20,
+        cursor: { createdAt: new Date("2026-06-05T01:00:00Z"), id: "" },
+      },
+    })
+
+    expect(whereCalls.length).toBeGreaterThan(0)
+    expect(objectContainsValue(whereCalls[0], "ci-hidden")).toBe(false)
+  })
+
+  test("countUnreadIncomingByConversations adds <> ALL only when excludeContactInboxIds is non-empty", async () => {
+    const rangeShard = makeShardInfo("tr:range", "range")
+    const writeShard = makeShardInfo("tr:write", "write")
+    const client = { execute: vi.fn().mockResolvedValue({ rows: [] }) }
+    const shardManager = {
+      getShardsForTimeRange: vi.fn().mockResolvedValue([rangeShard]),
+      getWriteShardInfo: vi.fn().mockResolvedValue(writeShard),
+      withShardClientForRead: vi.fn(
+        (_shard: unknown, fn: (value: unknown) => Promise<unknown>) =>
+          fn(client),
+      ),
+    }
+    const localRepo = new ShardedMessageRepository(shardManager as never)
+
+    await localRepo.countUnreadIncomingByConversations({
+      workspaceId: "ws-1",
+      conversations: [{ id: "conv-1", agentLastReadAt: null }],
+      excludeContactInboxIds: ["ci-hidden"],
+      limit: 100,
+    })
+
+    const withExclusion = new PgDialect().sqlToQuery(
+      client.execute.mock.calls[0][0],
+    )
+    expect(withExclusion.sql).toContain("<> ALL")
+    expect(withExclusion.params).toEqual(expect.arrayContaining(["ci-hidden"]))
+
+    client.execute.mockClear()
+    await localRepo.countUnreadIncomingByConversations({
+      workspaceId: "ws-1",
+      conversations: [{ id: "conv-1", agentLastReadAt: null }],
+      excludeContactInboxIds: [],
+      limit: 100,
+    })
+
+    const withoutExclusion = new PgDialect().sqlToQuery(
+      client.execute.mock.calls[0][0],
+    )
+    expect(withoutExclusion.sql).not.toContain("<> ALL")
   })
 })

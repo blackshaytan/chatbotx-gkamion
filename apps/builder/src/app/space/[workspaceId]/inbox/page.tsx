@@ -1,3 +1,4 @@
+import { isWorkspaceAdminMember } from "@chatbotx.io/business/workspace-member/predicates"
 import { getIdFromParams } from "@chatbotx.io/utils"
 import { Loader2Icon } from "lucide-react"
 import { cookies } from "next/headers"
@@ -11,6 +12,7 @@ import {
   buildContactPermissionScope,
   type ContactPermissionScope,
 } from "@/features/contacts/permissions"
+import { resolveMemberHiddenInboxIds } from "@/features/conversations/lib/member-inbox-access"
 import { requireContactsAccess } from "@/lib/auth/require-workspace-permission"
 import { getCurrentUserAndTargetWorkspace } from "@/lib/auth/utils"
 
@@ -41,10 +43,16 @@ export default async function InboxPage({
     permissions: targetWorkspaceMember.permissions,
     userId: user.id,
   })
+  const canFilterBotCategory = isWorkspaceAdminMember(targetWorkspaceMember)
   if (!contactPermissionScope) {
     return notFound()
   }
 
+  const hiddenInboxIds = await resolveMemberHiddenInboxIds({
+    workspaceId,
+    userId: user.id,
+    permissions: targetWorkspaceMember.permissions,
+  })
   const conversationId = (await searchParams)?.conversationId
 
   return (
@@ -57,9 +65,11 @@ export default async function InboxPage({
         }
       >
         <InboxContent
+          canFilterBotCategory={canFilterBotCategory}
           canViewEmailAndPhone={contactPermissionScope.canViewEmailAndPhone}
           contactPermissionScope={contactPermissionScope}
           conversationId={conversationId}
+          hiddenInboxIds={hiddenInboxIds}
           layout={savedLayout}
           workspaceId={workspaceId}
         />
@@ -69,15 +79,19 @@ export default async function InboxPage({
 }
 
 async function InboxContent({
+  canFilterBotCategory,
   canViewEmailAndPhone,
   contactPermissionScope,
   conversationId,
+  hiddenInboxIds,
   layout,
   workspaceId,
 }: {
+  canFilterBotCategory: boolean
   canViewEmailAndPhone: boolean
   contactPermissionScope: ContactPermissionScope
   conversationId?: string
+  hiddenInboxIds: string[]
   layout: [number, number, number]
   workspaceId: string
 }) {
@@ -85,11 +99,14 @@ async function InboxContent({
     workspaceId,
     conversationId,
     contactPermissionScope,
+    canFilterBotCategory,
+    hiddenInboxIds,
   })
 
   return (
     <ChatStoreProvider initialState={initialState ?? undefined}>
       <ChatLayout
+        canFilterBotCategory={canFilterBotCategory}
         canViewEmailAndPhone={canViewEmailAndPhone}
         layout={layout}
         workspaceId={workspaceId}

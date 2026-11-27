@@ -84,6 +84,7 @@ const stepExecutionKinds = {
   splitTraffic: "worker",
   make: "worker",
   triggerN8n: "worker",
+  sendOrderNotification: "worker",
   startAnotherNode: "worker",
   startExternalFlow: "worker",
   startExternalNode: "worker",

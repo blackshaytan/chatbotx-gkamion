@@ -1,4 +1,5 @@
 import { smtpProviders } from "@chatbotx.io/integration-smtp/schema"
+import { zodBigintAsString } from "@chatbotx.io/utils"
 import { z } from "zod"
 
 const emptyToUndefined = (value: unknown) =>
@@ -33,7 +34,7 @@ const receiveEnabledField = z
   .boolean()
   .optional()
   .describe(
-    "When true, new mail in this mailbox is delivered to the ChatbotX inbox. Defaults to true for Gmail, Outlook, Yahoo, Zoho, and a custom server. Ignored for send-only providers (SendGrid, Mailgun, Amazon SES, Postmark, Brevo). Mail already in the mailbox is not imported. Gmail and Outlook need an app password.",
+    "When true, new mail in this mailbox is delivered to the workspace inbox. Defaults to true for Gmail, Outlook, Yahoo, Zoho, and a custom server. Ignored for send-only providers (SendGrid, Mailgun, Amazon SES, Postmark, Brevo). Mail already in the mailbox is not imported. Gmail and Outlook need an app password.",
   )
 
 const fromAddressRegex = /<([^>]+)>$/
@@ -78,6 +79,12 @@ export const createSmtpRequest = z
     receiveEnabled: receiveEnabledField,
     imapHost: optionalImapHost,
     imapPort: optionalImapPort,
+    ownerUserId: zodBigintAsString()
+      .nullable()
+      .optional()
+      .describe(
+        "Personal mailbox owner: a workspace member user id from `workspaceMembers.list`, or null for a shared mailbox. Omit to keep the current owner. Only personal mailboxes are hidden from other members.",
+      ),
   })
   .superRefine((data, ctx) => {
     if (data.provider === "other") {
@@ -125,6 +132,12 @@ export const updateSmtpRequest = z
     receiveEnabled: receiveEnabledField,
     imapHost: optionalImapHost,
     imapPort: optionalImapPort,
+    ownerUserId: zodBigintAsString()
+      .nullable()
+      .optional()
+      .describe(
+        "Personal mailbox owner: a workspace member user id from `workspaceMembers.list`, or null for a shared mailbox. Omit to keep the current owner. Only personal mailboxes are hidden from other members.",
+      ),
   })
   .superRefine((data, ctx) => {
     if (data.provider === "other") {

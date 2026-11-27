@@ -78,6 +78,15 @@ vi.mock("../src/platform/realtime-broadcast", () => ({
   publishToWorkspaceParty: mockBroadcastToWorkspaceParty,
 }))
 
+vi.mock("../src/platform/publish-message-event", () => ({
+  publishMessageEvent: vi.fn(
+    ({ workspaceId, event }: { workspaceId: string; event: unknown }) => {
+      mockBroadcastToWorkspaceParty(workspaceId, event)
+      return Promise.resolve()
+    },
+  ),
+}))
+
 vi.mock("../src/utils", () => ({
   getPublicFileUrl: (path: string, base: string) => `${base}/${path}`,
 }))

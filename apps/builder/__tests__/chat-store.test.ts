@@ -353,15 +353,22 @@ describe("chat store conversation updates", () => {
 
   test("loadMoreConversations appends only conversations not already present", async () => {
     const store = createChatStore()
-    const existing = makeConversation(
-      "conv-1",
-      new Date("2026-01-01T00:00:00Z"),
-    )
+    const existing = {
+      ...makeConversation("conv-1", new Date("2026-01-02T00:00:00Z")),
+      inboxActivityAt: new Date("2026-01-02T00:00:00Z"),
+      agentLastReadAt: new Date("2026-01-02T00:00:00Z"),
+      unreadCount: 0,
+    }
     const duplicate = {
       ...existing,
       messages: [{ id: "fresh-message" }],
     }
-    const next = makeConversation("conv-2", new Date("2026-01-01T01:00:00Z"))
+    const next = {
+      ...makeConversation("conv-2", new Date("2026-01-01T01:00:00Z")),
+      inboxActivityAt: new Date("2026-01-01T01:00:00Z"),
+      agentLastReadAt: new Date("2026-01-01T01:00:00Z"),
+      unreadCount: 0,
+    }
     store.setState({
       conversations: [existing] as never,
       nextCursorConversation: "cursor-1",
@@ -517,14 +524,18 @@ describe("chat store conversation updates", () => {
 
   test("loadMoreConversations keeps a conversation prepended while the page request was in flight", async () => {
     const store = createChatStore()
-    const deepLinked = makeConversation(
-      "conv-deep-link",
-      new Date("2026-01-02T00:00:00Z"),
-    )
-    const firstPageItem = makeConversation(
-      "conv-page-1",
-      new Date("2026-01-01T00:00:00Z"),
-    )
+    const deepLinked = {
+      ...makeConversation("conv-deep-link", new Date("2026-01-02T00:00:00Z")),
+      inboxActivityAt: new Date("2026-01-02T00:00:00Z"),
+      agentLastReadAt: new Date("2026-01-02T00:00:00Z"),
+      unreadCount: 0,
+    }
+    const firstPageItem = {
+      ...makeConversation("conv-page-1", new Date("2026-01-01T00:00:00Z")),
+      inboxActivityAt: new Date("2026-01-01T00:00:00Z"),
+      agentLastReadAt: new Date("2026-01-01T00:00:00Z"),
+      unreadCount: 0,
+    }
     type PageResponse = {
       data: TestConversation[]
       nextCursor: string | null
@@ -727,18 +738,17 @@ describe("chat store conversation updates", () => {
 
   test("moves a background conversation with a new message above the active row", async () => {
     const store = createChatStore()
-    const active = makeConversation(
-      "conv-active",
-      new Date("2026-01-01T02:00:00Z"),
-    )
-    const background = makeConversation(
+    const readAt = (id: string, at: Date) => ({
+      ...makeConversation(id, at),
+      inboxActivityAt: at,
+      agentLastReadAt: at,
+    })
+    const active = readAt("conv-active", new Date("2026-01-01T02:00:00Z"))
+    const background = readAt(
       "conv-background",
       new Date("2026-01-01T00:00:00Z"),
     )
-    const other = makeConversation(
-      "conv-other",
-      new Date("2026-01-01T01:00:00Z"),
-    )
+    const other = readAt("conv-other", new Date("2026-01-01T01:00:00Z"))
     store.setState({
       activeConversationId: active.id,
       conversations: [active, other, background] as never,

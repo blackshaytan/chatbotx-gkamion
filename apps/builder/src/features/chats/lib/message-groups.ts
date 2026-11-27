@@ -7,7 +7,9 @@ type GroupableChatMessage = {
 
 const GROUP_WINDOW_MS = 5 * 60 * 1000
 
-export const groupChatMessages = <T extends GroupableChatMessage>(messages: T[]) =>
+export const groupChatMessages = <T extends GroupableChatMessage>(
+  messages: T[],
+) =>
   messages.reduce<T[][]>((groups, message) => {
     const previousGroup = groups.at(-1)
     const previous = previousGroup?.at(-1)

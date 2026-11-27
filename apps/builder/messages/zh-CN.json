@@ -1300,7 +1300,10 @@
       "unread": "未读",
       "unreplied": "未回复",
       "verifiedAccountOnInstagram": "Instagram 已验证帐号",
-      "votedOnPoll": "已投票"
+      "votedOnPoll": "已投票",
+      "deliveryMethod": "Delivery method",
+      "hasDebt": "Has debt",
+      "amount": "Order amount"
     },
     "languages": {
       "ar": "阿拉伯语",
@@ -3445,6 +3448,32 @@
     },
     "igStory": {
       "label": "Instagram 快拍自动化"
+    },
+    "orderNotification": {
+      "description": "n8n sends the order event. This step chooses the statuses and the text. A Condition step in this flow can check deliveryMethod (pickup or delivery), hasDebt (true or false) and amount.",
+      "subject": {
+        "label": "What starts this flow",
+        "order": "Order status",
+        "item": "Item status"
+      },
+      "statusIds": {
+        "label": "Status numbers",
+        "placeholder": "21, 22, 23",
+        "description": "Numeric status ids from GKamion. The published flow starts when an order event carries one of these numbers.",
+        "invalid": "Enter one to fifty whole numbers, separated by commas."
+      },
+      "messengerText": {
+        "label": "Messenger text",
+        "description": "Sent to MAX, Telegram, ZZAP and DROM. Placeholders: '{{orderNumber}}', '{{itemSummary}}', '{{amount}}', '{{billUrl}}'. Leave empty to skip those channels."
+      },
+      "emailText": {
+        "label": "Email text",
+        "description": "Same placeholders as messenger text. Leave empty to skip email."
+      },
+      "emailSubject": {
+        "label": "Email subject",
+        "description": "Same placeholders. Empty uses the order number."
+      }
     }
   },
   "flowAnalytics": {
@@ -3584,7 +3613,8 @@
       "sendGoogleAdsConversion": "发送 Google Ads 转化",
       "changeGamificationScore": "更改积分",
       "sendViewCatalog": "查看商品目录",
-      "sendProducts": "发送商品"
+      "sendProducts": "发送商品",
+      "sendOrderNotification": "Order notification"
     },
     "additionalSteps": "附加步骤",
     "aiAnalyzeImage": {
@@ -4981,8 +5011,20 @@
       "note": "备注",
       "unresolvedProduct": "未在您的目录中找到"
     },
+    "dromContext": {
+      "dealLine": "买家选择了 <product>{title}</product>，价格 <amount>{price}</amount>",
+      "dealLineNoPrice": "买家选择了 <product>{title}</product>",
+      "listingLine": "<amount>{price}</amount> • <product>{title}</product>",
+      "openListing": "打开发布",
+      "openDeal": "打开订单",
+      "itemsCount": "商品数：{count}"
+    },
     "referredProduct": {
       "askedAbout": "询问了此商品"
+    },
+    "dromListing": {
+      "onDrom": "在 Drom 上",
+      "productCard": "商品卡片"
     },
     "input": {
       "form": "Message input form",
@@ -6033,6 +6075,11 @@
     "title": "设置"
   },
   "smtp": {
+    "owner": {
+      "label": "Mailbox owner",
+      "description": "Personal mailbox: only the owner and admins see its emails. Shared: everyone with inbox access.",
+      "shared": "Shared mailbox"
+    },
     "errors": {
       "connectionFailed": "无法连接到SMTP 服务器。请检查您的凭证并重试。",
       "imapFailed": "Cannot read this mailbox. Check the password, and for Gmail or Outlook use an app password with IMAP enabled."

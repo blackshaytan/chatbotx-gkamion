@@ -22,6 +22,8 @@ export const maxUserSchema = z
     name: z.string().optional(),
     username: z.string().nullish(),
     is_bot: z.boolean().optional(),
+    avatar_url: z.string().optional(),
+    full_avatar_url: z.string().optional(),
   })
   .passthrough()
 export type MaxUser = z.infer<typeof maxUserSchema>

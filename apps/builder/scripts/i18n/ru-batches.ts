@@ -35,6 +35,7 @@ export const ruBatches = {
     "inboxes",
     "inboxTeams",
     "contacts",
+    "contactAiCalls",
     "contactScan",
     "customFields",
     "accountFields",

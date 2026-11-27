@@ -10,6 +10,8 @@ const mocks = vi.hoisted(() => ({
   invalidateCacheByTags: vi.fn(),
   emitConversationTransferredToBot: vi.fn(),
   loggerError: vi.fn(),
+  claimDueBotResumes: vi.fn(),
+  findConversations: vi.fn(),
 }))
 
 vi.mock("@chatbotx.io/database/client", () => ({
@@ -26,6 +28,11 @@ vi.mock("@chatbotx.io/database/client", () => ({
       },
     }),
     transaction: mocks.transaction,
+    query: {
+      conversationModel: {
+        findMany: (...args: unknown[]) => mocks.findConversations(...args),
+      },
+    },
   },
   and: (...args: unknown[]) => ({ and: args }),
   eq: (a: unknown, b: unknown) => ({ eq: [a, b] }),
@@ -57,6 +64,7 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
   createMessageRepository: vi.fn(),
   getSafeSinceTime: vi.fn(),
   assignUserIfUnassigned: vi.fn(),
+  claimDueBotResumes: mocks.claimDueBotResumes,
   externalAgentRepository: {
     findResumePolicyForConversations: mocks.findResumePolicyForConversations,
   },
@@ -131,6 +139,7 @@ vi.mock("../../src/logger", () => ({
 }))
 
 const { db } = await import("@chatbotx.io/database/client")
+const { emit } = await import("@chatbotx.io/event-bus")
 const { BOT_DISABLE_DURATION_MS, conversationService } = await import(
   "../../src/conversation/service"
 )
@@ -168,6 +177,8 @@ beforeEach(() => {
   mocks.transaction.mockImplementation(
     async (fn: (client: unknown) => Promise<unknown>) => await fn(db),
   )
+  mocks.claimDueBotResumes.mockResolvedValue([])
+  mocks.findConversations.mockResolvedValue([])
 })
 
 afterEach(() => {
@@ -417,5 +428,173 @@ describe("conversationService.enableBotState external agent reset", () => {
       { workspaceId: WORKSPACE_ID, conversationIds: ["a"], at: NOW },
       savepoint,
     )
+  })
+})
+
+describe("conversationService.resumeDueBots", () => {
+  test("writes nothing and emits nothing when no pause is due", async () => {
+    await expect(
+      conversationService.resumeDueBots({ limit: 10, now: NOW }),
+    ).resolves.toBe(0)
+
+    expect(mocks.claimDueBotResumes).toHaveBeenCalledWith(
+      { now: NOW, limit: 10 },
+      undefined,
+    )
+    expect(mocks.emitConversationTransferredToBot).not.toHaveBeenCalled()
+    expect(mocks.invalidateCacheByTags).not.toHaveBeenCalled()
+  })
+
+  test("resumes each claimed workspace and emits the transfer once", async () => {
+    mocks.claimDueBotResumes.mockResolvedValue([
+      { id: "a", workspaceId: "ws-1", contactId: "contact-a" },
+      { id: "b", workspaceId: "ws-2", contactId: "contact-b" },
+    ])
+
+    await expect(
+      conversationService.resumeDueBots({ limit: 10, now: NOW }),
+    ).resolves.toBe(2)
+
+    expect(mocks.emitConversationTransferredToBot).toHaveBeenCalledTimes(2)
+    expect(mocks.emitConversationTransferredToBot).toHaveBeenCalledWith(
+      "ws-1",
+      "contact-a",
+      "a",
+      undefined,
+    )
+    expect(mocks.emitConversationTransferredToBot).toHaveBeenCalledWith(
+      "ws-2",
+      "contact-b",
+      "b",
+      undefined,
+    )
+    expect(emit).toHaveBeenCalledWith(
+      "analytics:dashboard",
+      expect.objectContaining({
+        eventType: "conversation:transferred_to_bot",
+        workspaceId: "ws-1",
+        conversationId: "a",
+        metadata: {
+          triggerContext: {
+            triggerSource: "system",
+            triggerHandler: "resumeDueBots",
+            triggerType: "bot_auto_resume",
+          },
+        },
+      }),
+    )
+    expect(mocks.invalidateCacheByTags).toHaveBeenCalledTimes(2)
+    expect(mocks.findResumePolicyForConversations).toHaveBeenCalledTimes(2)
+  })
+
+  test("keeps the written flag when a workspace's side effects fail", async () => {
+    mocks.claimDueBotResumes.mockResolvedValue([
+      { id: "a", workspaceId: "ws-1", contactId: "contact-a" },
+      { id: "b", workspaceId: "ws-2", contactId: "contact-b" },
+    ])
+    mocks.emitConversationTransferredToBot.mockRejectedValueOnce(
+      new Error("bus down"),
+    )
+
+    await expect(
+      conversationService.resumeDueBots({ limit: 10, now: NOW }),
+    ).resolves.toBe(2)
+
+    expect(mocks.loggerError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        err: expect.any(Error),
+        workspaceId: "ws-1",
+      }),
+      "bot auto-resume side effects failed after the flag was written",
+    )
+    expect(mocks.emitConversationTransferredToBot).toHaveBeenCalledWith(
+      "ws-2",
+      "contact-b",
+      "b",
+      undefined,
+    )
+  })
+})
+
+describe("conversationService.ensureActive", () => {
+  const paused = {
+    id: "a",
+    workspaceId: WORKSPACE_ID,
+    contactId: "contact-a",
+    botEnabled: false,
+    botResumeAt: new Date(NOW.getTime() - HOUR_MS),
+  }
+
+  test("does not claim a bot that is already on", async () => {
+    await expect(
+      conversationService.ensureActive({ ...paused, botEnabled: true }),
+    ).resolves.toBe(true)
+
+    expect(mocks.claimDueBotResumes).not.toHaveBeenCalled()
+  })
+
+  test("does not claim a pause that is still in the future", async () => {
+    await expect(
+      conversationService.ensureActive({
+        ...paused,
+        botResumeAt: new Date(NOW.getTime() + HOUR_MS),
+      }),
+    ).resolves.toBe(false)
+
+    expect(mocks.claimDueBotResumes).not.toHaveBeenCalled()
+  })
+
+  test("claims an expired pause and emits the transfer", async () => {
+    mocks.claimDueBotResumes.mockResolvedValue([
+      { id: "a", workspaceId: WORKSPACE_ID, contactId: "contact-a" },
+    ])
+
+    await expect(conversationService.ensureActive(paused)).resolves.toBe(true)
+
+    expect(mocks.claimDueBotResumes).toHaveBeenCalledWith(
+      {
+        now: NOW,
+        limit: 1,
+        conversationId: "a",
+        workspaceId: WORKSPACE_ID,
+      },
+      undefined,
+    )
+    expect(mocks.emitConversationTransferredToBot).toHaveBeenCalledWith(
+      WORKSPACE_ID,
+      "contact-a",
+      "a",
+      undefined,
+    )
+    expect(mocks.updateSet).not.toHaveBeenCalled()
+  })
+
+  test("treats a lost claim as already resumed when the row is enabled", async () => {
+    mocks.findConversations.mockResolvedValue([
+      { ...paused, botEnabled: true, botResumeAt: null },
+    ])
+
+    await expect(conversationService.ensureActive(paused)).resolves.toBe(true)
+
+    expect(mocks.emitConversationTransferredToBot).not.toHaveBeenCalled()
+  })
+
+  test("stays off when the pause was extended before the claim", async () => {
+    mocks.findConversations.mockResolvedValue([
+      {
+        ...paused,
+        botResumeAt: new Date(NOW.getTime() + HOUR_MS),
+      },
+    ])
+
+    await expect(conversationService.ensureActive(paused)).resolves.toBe(false)
+  })
+
+  test("stays active when another writer still holds the due row", async () => {
+    mocks.findConversations.mockResolvedValue([paused])
+
+    await expect(conversationService.ensureActive(paused)).resolves.toBe(true)
+
+    expect(mocks.emitConversationTransferredToBot).not.toHaveBeenCalled()
   })
 })

@@ -53,10 +53,15 @@ import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 import type { AttachmentResource } from "@/features/attachments/schema/resource"
-import { useAttachmentSource } from "@/features/attachments/utils"
+import {
+  attachmentClickTarget,
+  attachmentDownloadName,
+  useAttachmentSource,
+} from "@/features/attachments/utils"
 import { ExternalAgentActivityDivider } from "@/features/external-agent/components/external-agent-activity"
 import { getExternalAgentActivity } from "@/features/external-agent/lib/activity"
 import { canCreateTaskFromMessage } from "@/features/tasks/lib/message-quote"
+import type { DromContextCardData } from "../lib/drom-context-card"
 import { formatMessageTime } from "../lib/format-message-time"
 import {
   getThreadControlActivity,
@@ -64,6 +69,7 @@ import {
   isThreadControlEcho,
 } from "../lib/thread-control-content"
 import type { MessageResourceWithRelations } from "../schema/resource"
+import { DromContextCard } from "./drom-context-card"
 import { InboundOrderBubble } from "./inbound-order-bubble"
 import { MessageActions, MessageActionsEditor } from "./message-actions"
 import { MessageBubble } from "./message-bubble"
@@ -77,6 +83,12 @@ import { WhatsappFlowResponseButton } from "./whatsapp-flow-response-dialog"
 
 type MessageItemProps = {
   message: MessageResourceWithRelations
+  /**
+   * The DROM ad or order this message anchors in the thread (see
+   * `dromCardsByMessageId`). Passed by the inbox thread only: the guest
+   * widget never holds a DROM channel.
+   */
+  dromCard?: DromContextCardData | null
   guestDisplay?: boolean
   canCreateTask?: boolean
   /**
@@ -115,6 +127,7 @@ type MessageItemProps = {
 export const MessageItem = (props: MessageItemProps) => {
   const {
     message,
+    dromCard,
     guestDisplay = false,
     canCreateTask = false,
     avatarUrl,
@@ -181,13 +194,19 @@ export const MessageItem = (props: MessageItemProps) => {
   // An inbound cart renders as its own bubble; the stored text is only its
   // plain-text summary for keywords and previews.
   const inboundOrder = getInboundOrder(message.contentAttributes)
+  // DROM stores «Покупатель выбрал …» as the message text and again as
+  // `dromContext.deal`. The styled bubble replaces that line.
+  const isDromDealLine =
+    dromCard?.kind === "deal" &&
+    (message.text ?? "").toLowerCase().includes("выбрал")
   const suppressRawText = Boolean(
     inboundOrder ||
       whatsappCall ||
       callPermissionReply ||
       threadControlActivity ||
       threadControlContext ||
-      externalAgentActivity,
+      externalAgentActivity ||
+      isDromDealLine,
   )
 
   // A call card defaults to the centered `full` variant, but a call still has
@@ -213,9 +232,16 @@ export const MessageItem = (props: MessageItemProps) => {
     hasTextBubble &&
     !hasAttachments &&
     !message.contentAttributes
+  // The DROM bar carries the clock on its own row, the way the marketplace
+  // does, when nothing else in this message needs a time underneath.
+  const timeOnDromCard =
+    Boolean(dromCard) && !hasTextBubble && !hasAttachments && variant !== "full"
 
   return (
-    <MessageBubble className="group" variant={variant}>
+    <MessageBubble
+      className={cn("group", dromCard && "w-full")}
+      variant={variant}
+    >
       {variant === "left" && avatarUrl && !whatsappCall && (
         <Avatar className="mt-2 size-7 self-start">
           <AvatarImage alt="" src={avatarUrl} />
@@ -226,7 +252,8 @@ export const MessageItem = (props: MessageItemProps) => {
       )}
       <div
         className={cn(
-          "flex min-h-11 max-w-[70%] flex-col gap-1",
+          "flex min-h-11 flex-col gap-1",
+          dromCard ? "w-full min-w-0 flex-1" : "max-w-[70%]",
           variant === "full" && "mx-auto",
         )}
       >
@@ -236,6 +263,12 @@ export const MessageItem = (props: MessageItemProps) => {
             <BotIcon aria-hidden className="size-3" />
             {tRouting("echo.partner")}
           </span>
+        )}
+        {dromCard && (
+          <DromContextCard
+            card={dromCard}
+            time={timeOnDromCard ? <MessageTime createdAt={createdAt} /> : null}
+          />
         )}
         {isComment ? (
           <div
@@ -282,6 +315,8 @@ export const MessageItem = (props: MessageItemProps) => {
                   className={cn(
                     "text-sm",
                     isTimeInTextBubble && "flex flex-col gap-1",
+                    dromCard && variant === "right" && "max-w-[70%] self-end",
+                    dromCard && variant === "left" && "max-w-[70%] self-start",
                     isPartnerEcho ? variants.left : variants[variant],
                     isDeleted && "opacity-50",
                   )}
@@ -304,7 +339,7 @@ export const MessageItem = (props: MessageItemProps) => {
           </>
         )}
         {RenderContentAttributes(props)}
-        {variant !== "full" && !isTimeInTextBubble && (
+        {variant !== "full" && !isTimeInTextBubble && !timeOnDromCard && (
           <MessageTime createdAt={createdAt} />
         )}
       </div>
@@ -509,11 +544,36 @@ const RenderAttachments = (props: {
   )
 }
 
+const ImageAttachmentLink = (props: {
+  attachmentLabel: string
+  attachmentUrl: string
+  children: React.ReactNode
+}) => {
+  const { attachmentLabel, attachmentUrl, children } = props
+  const click = attachmentClickTarget(attachmentUrl)
+  if (click.download) {
+    return (
+      <Link download={attachmentLabel} href={click.href} prefetch={false}>
+        {children}
+      </Link>
+    )
+  }
+  return (
+    <Link
+      href={click.href}
+      prefetch={false}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      {children}
+    </Link>
+  )
+}
+
 const RenderImageGridItem = (props: { attachment: AttachmentResource }) => {
   const { attachment } = props
   const { url: attachmentUrl, onError } = useAttachmentSource(attachment)
-  const attachmentLabel =
-    attachment.name || attachment.originPath || "Attachment"
+  const attachmentLabel = attachmentDownloadName(attachment)
 
   if (!attachmentUrl) {
     // A chat bubble sizes to its own content, so with nothing else to size
@@ -527,7 +587,10 @@ const RenderImageGridItem = (props: { attachment: AttachmentResource }) => {
   }
 
   return (
-    <Link href={attachmentUrl} prefetch={false} target="_blank">
+    <ImageAttachmentLink
+      attachmentLabel={attachmentLabel}
+      attachmentUrl={attachmentUrl}
+    >
       <div className="relative aspect-square overflow-hidden rounded-lg">
         <Image
           alt={attachmentLabel}
@@ -539,7 +602,7 @@ const RenderImageGridItem = (props: { attachment: AttachmentResource }) => {
           width={120}
         />
       </div>
-    </Link>
+    </ImageAttachmentLink>
   )
 }
 
@@ -557,7 +620,10 @@ const RenderImageAttachment = (props: {
     // content, so the frame needs an explicit width — max-width plus an aspect
     // ratio alone collapses to 0×0 and the message looks missing.
     return (
-      <Link href={attachmentUrl} prefetch={false} target="_blank">
+      <ImageAttachmentLink
+        attachmentLabel={attachmentLabel}
+        attachmentUrl={attachmentUrl}
+      >
         <div
           className="relative w-80 max-w-full overflow-hidden rounded-xl"
           style={{ aspectRatio: "4/3" }}
@@ -571,11 +637,14 @@ const RenderImageAttachment = (props: {
             unoptimized
           />
         </div>
-      </Link>
+      </ImageAttachmentLink>
     )
   }
   return (
-    <Link href={attachmentUrl} prefetch={false} target="_blank">
+    <ImageAttachmentLink
+      attachmentLabel={attachmentLabel}
+      attachmentUrl={attachmentUrl}
+    >
       <Image
         alt={attachmentLabel}
         className="max-w-full rounded-xl sm:max-w-80"
@@ -585,7 +654,7 @@ const RenderImageAttachment = (props: {
         unoptimized
         width={attachment.width}
       />
-    </Link>
+    </ImageAttachmentLink>
   )
 }
 
@@ -599,8 +668,7 @@ const RenderAttachmentItem = (props: { attachment: AttachmentResource }) => {
     fallbackUrl,
     retryUrl,
   } = useAttachmentSource(attachment)
-  const attachmentLabel =
-    attachment.name || attachment.originPath || "Attachment"
+  const attachmentLabel = attachmentDownloadName(attachment)
 
   if (!attachmentUrl) {
     return (

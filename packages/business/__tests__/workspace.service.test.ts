@@ -56,7 +56,7 @@ vi.mock("@chatbotx.io/database/partials", async (importOriginal) => {
     await importOriginal<typeof import("@chatbotx.io/database/partials")>()
   return {
     ...actual,
-    workspaceMemberRoles: { enum: { owner: "owner" } },
+    workspaceMemberRoles: { enum: { owner: "owner", agent: "agent" } },
   }
 })
 const invalidateCacheByTags = vi.fn(async () => undefined)
@@ -69,8 +69,6 @@ vi.mock("@chatbotx.io/redis", () => ({
   distributedLock: { runExclusive },
   createRedisConnection: vi.fn(() => ({ on: vi.fn() })),
 }))
-const isCommunity = vi.fn(() => false)
-vi.mock("../src/keys", () => ({ isCommunity }))
 vi.mock("@chatbotx.io/utils", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@chatbotx.io/utils")>()
   return {
@@ -81,6 +79,10 @@ vi.mock("@chatbotx.io/utils", async (importOriginal) => {
 
 const userQuotaService = {
   getForUser: vi.fn(async () => null as unknown),
+  reconcileUserSelfUsage: vi.fn(
+    async (_userId: string) => undefined as unknown,
+  ),
+  invalidate: vi.fn(async (_userId: string) => undefined),
 }
 vi.mock("../src/user-quota/service", () => ({ userQuotaService }))
 
@@ -91,7 +93,11 @@ const quotaEnforcementService = {
 vi.mock("../src/quota-enforcement/service", () => ({ quotaEnforcementService }))
 
 const workspaceMemberService = {
-  create: vi.fn(async () => undefined),
+  create: vi.fn(async (_props: unknown) => undefined),
+  update: vi.fn(async (_props: unknown) => ({ id: "m-1" }) as unknown),
+  findByWorkspaceIdAndUserId: vi.fn(
+    async (_props: unknown) => undefined as unknown,
+  ),
   listUserIdsByWorkspaceId: vi.fn(async () => [] as string[]),
 }
 const workspaceUsageService = {
@@ -118,7 +124,13 @@ const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 vi.mock("../src/logger", () => ({ logger }))
 
 const dispatchAuditRecord = vi.fn()
-vi.mock("../src/audit/dispatcher", () => ({ dispatchAuditRecord }))
+const dispatchAuditRecordSafely = vi.fn(
+  async (_input: unknown, _msg: string) => undefined,
+)
+vi.mock("../src/audit/dispatcher", () => ({
+  dispatchAuditRecord,
+  dispatchAuditRecordSafely,
+}))
 
 const { workspaceService } = await import("../src/workspace/service")
 const { compensateWorkspaceQuotaConsumption } = await import(
@@ -162,7 +174,6 @@ beforeEach(() => {
   setUpdate.mockClear()
   update.mockClear()
   invalidateCacheByTags.mockClear()
-  isCommunity.mockReset().mockReturnValue(false)
   countWorkspaces.mockReset().mockResolvedValue(0)
   runExclusive
     .mockReset()
@@ -504,51 +515,17 @@ describe("WorkspaceService.create — workspace seat compensation", () => {
   })
 })
 
-describe("WorkspaceService.create — community workspace limit", () => {
-  test("creates the first workspace under the distributed lock", async () => {
-    isCommunity.mockReturnValue(true)
-    countWorkspaces.mockResolvedValue(0)
+describe("WorkspaceService.create — no one-workspace cap", () => {
+  test("lets an owner create a second workspace through the quota gate alone", async () => {
+    const first = await workspaceService.create(createInput())
+    const second = await workspaceService.create(createInput())
 
-    const result = await workspaceService.create(createInput())
-
-    expect(result).toEqual({ id: "ws-1", organizationId: "org-1" })
-    expect(runExclusive).toHaveBeenCalledTimes(1)
-    expect(runExclusive.mock.calls[0][0].key).toBe("workspace-limit:user-1")
-    expect(countWorkspaces).toHaveBeenCalledTimes(1)
-  })
-
-  test("throws workspaceLimitReached for the second workspace", async () => {
-    isCommunity.mockReturnValue(true)
-    countWorkspaces.mockResolvedValue(1)
-
-    await expect(workspaceService.create(createInput())).rejects.toMatchObject({
-      code: "workspaceLimitReached",
-    })
-    expect(insert).not.toHaveBeenCalled()
-    expect(quotaEnforcementService.tryConsume).not.toHaveBeenCalled()
-  })
-
-  test("keys the lock on data.ownerId when it differs from createdBy", async () => {
-    isCommunity.mockReturnValue(true)
-    countWorkspaces.mockResolvedValue(0)
-
-    await workspaceService.create({
-      data: { name: "WS", ownerId: "owner-9" } as never,
-      createdBy: "user-1",
-    })
-
-    expect(runExclusive.mock.calls[0][0].key).toBe("workspace-limit:owner-9")
-  })
-
-  test("skips the limit entirely off community", async () => {
-    isCommunity.mockReturnValue(false)
-
-    await workspaceService.create(createInput())
-    await workspaceService.create(createInput())
-
+    expect(first).toEqual({ id: "ws-1", organizationId: "org-1" })
+    expect(second).toEqual({ id: "ws-1", organizationId: "org-1" })
+    expect(insert).toHaveBeenCalledTimes(2)
+    expect(quotaEnforcementService.tryConsume).toHaveBeenCalledTimes(2)
     expect(runExclusive).not.toHaveBeenCalled()
     expect(countWorkspaces).not.toHaveBeenCalled()
-    expect(quotaEnforcementService.tryConsume).toHaveBeenCalledTimes(2)
   })
 })
 
@@ -754,5 +731,241 @@ describe("WorkspaceService.setLogoIfEmpty", () => {
 
     expect(invalidateCacheByTags).toHaveBeenCalled()
     expect(dispatchAuditRecord).not.toHaveBeenCalled()
+  })
+})
+
+describe("WorkspaceService.transferOwnership", () => {
+  const workspaceRow = (overrides: Record<string, unknown> = {}) => ({
+    id: "ws-1",
+    ownerId: "user-1",
+    tenantId: "1",
+    name: "WS",
+    scheduledDeletionAt: null,
+    ...overrides,
+  })
+
+  const transfer = () =>
+    workspaceService.transferOwnership({
+      workspaceId: "ws-1",
+      newOwnerId: "user-2",
+    })
+
+  beforeEach(() => {
+    findFirstWorkspace.mockReset().mockResolvedValue(workspaceRow())
+    findFirstUser.mockReset().mockResolvedValue({ id: "user-2", tenantId: "1" })
+    returningUpdatedWorkspace
+      .mockReset()
+      .mockResolvedValue([workspaceRow({ ownerId: "user-2" })])
+    workspaceMemberService.findByWorkspaceIdAndUserId
+      .mockReset()
+      .mockResolvedValue(undefined)
+    workspaceMemberService.update.mockReset().mockResolvedValue({ id: "m-1" })
+    workspaceMemberService.create.mockReset().mockResolvedValue(undefined)
+    workspaceMemberService.listUserIdsByWorkspaceId
+      .mockReset()
+      .mockResolvedValue(["user-1", "user-2"])
+    userQuotaService.reconcileUserSelfUsage
+      .mockReset()
+      .mockResolvedValue(undefined)
+    userQuotaService.invalidate.mockReset().mockResolvedValue(undefined)
+    dispatchAuditRecordSafely.mockClear()
+    logger.warn.mockClear()
+    update.mockClear()
+  })
+
+  test("moves ownership, demotes the previous owner and creates the new owner membership", async () => {
+    workspaceMemberService.findByWorkspaceIdAndUserId.mockImplementation(
+      async (props: unknown) =>
+        (props as { userId: string }).userId === "user-1"
+          ? {
+              id: "m-1",
+              userId: "user-1",
+              role: "owner",
+              permissions: { superAdmin: true, analytics: true, flows: true },
+            }
+          : undefined,
+    )
+
+    const result = await transfer()
+
+    expect(result).toEqual({
+      workspace: workspaceRow({ ownerId: "user-2" }),
+      previousOwnerId: "user-1",
+    })
+    expect(setUpdate).toHaveBeenCalledWith({ ownerId: "user-2" })
+    expect(workspaceMemberService.update).toHaveBeenCalledWith({
+      tx: db,
+      id: "m-1",
+      workspaceId: "ws-1",
+      data: {
+        role: "agent",
+        permissions: { superAdmin: false, analytics: true, flows: true },
+      },
+    })
+    expect(workspaceMemberService.create).toHaveBeenCalledWith({
+      tx: db,
+      data: expect.objectContaining({
+        userId: "user-2",
+        workspaceId: "ws-1",
+        role: "owner",
+      }),
+    })
+    expect(invalidateCacheByTags).toHaveBeenCalledWith([
+      "workspaces:ws-1",
+      "users:user-1:workspace-members",
+      "users:user-2:workspace-members",
+    ])
+    expect(userQuotaService.reconcileUserSelfUsage).toHaveBeenCalledWith(
+      "user-1",
+    )
+    expect(userQuotaService.reconcileUserSelfUsage).toHaveBeenCalledWith(
+      "user-2",
+    )
+    expect(userQuotaService.invalidate).toHaveBeenCalledWith("user-1")
+    expect(userQuotaService.invalidate).toHaveBeenCalledWith("user-2")
+    expect(dispatchAuditRecordSafely).toHaveBeenCalledWith(
+      {
+        userId: "user-2",
+        workspaceId: "ws-1",
+        action: "update",
+        detail: "transferred workspace ownership",
+      },
+      "workspace owner transfer audit failed",
+    )
+  })
+
+  test("updates an existing membership of the new owner instead of creating one", async () => {
+    workspaceMemberService.findByWorkspaceIdAndUserId.mockImplementation(
+      (props: unknown) => {
+        const { userId } = props as { userId: string }
+        if (userId === "user-1") {
+          return Promise.resolve({
+            id: "m-1",
+            userId,
+            role: "owner",
+            permissions: {},
+          })
+        }
+        return Promise.resolve({
+          id: "m-2",
+          userId,
+          role: "agent",
+          permissions: { analytics: true },
+        })
+      },
+    )
+
+    await transfer()
+
+    expect(workspaceMemberService.create).not.toHaveBeenCalled()
+    expect(workspaceMemberService.update).toHaveBeenCalledWith({
+      tx: db,
+      id: "m-2",
+      workspaceId: "ws-1",
+      data: {
+        role: "owner",
+        permissions: {
+          superAdmin: true,
+          analytics: true,
+          flows: true,
+          contacts: true,
+          onlyAssignedContacts: true,
+          emailAndPhone: true,
+          broadcast: true,
+          ecommerce: true,
+        },
+      },
+    })
+  })
+
+  test("does nothing when the new owner is already the owner", async () => {
+    findFirstWorkspace.mockResolvedValueOnce(
+      workspaceRow({ ownerId: "user-2" }),
+    )
+
+    const result = await transfer()
+
+    expect(result).toEqual({
+      workspace: workspaceRow({ ownerId: "user-2" }),
+      previousOwnerId: "user-2",
+    })
+    expect(update).not.toHaveBeenCalled()
+    expect(workspaceMemberService.create).not.toHaveBeenCalled()
+    expect(workspaceMemberService.update).not.toHaveBeenCalled()
+    expect(userQuotaService.reconcileUserSelfUsage).not.toHaveBeenCalled()
+    expect(invalidateCacheByTags).not.toHaveBeenCalled()
+    expect(dispatchAuditRecordSafely).not.toHaveBeenCalled()
+  })
+
+  // `findFirstUser` is read twice (the transaction's existence check and
+  // `resolveTenantForOwner`), so this uses a persistent mock.
+  test("rejects a new owner from another tenant and writes nothing", async () => {
+    findFirstUser.mockResolvedValue({ id: "user-2", tenantId: "9" })
+
+    await expect(transfer()).rejects.toMatchObject({ code: "tenantMismatch" })
+    expect(update).not.toHaveBeenCalled()
+    expect(workspaceMemberService.create).not.toHaveBeenCalled()
+  })
+
+  test("accepts a root-tenant user who owns the workspace's reseller tenant", async () => {
+    findFirstWorkspace.mockResolvedValueOnce(workspaceRow({ tenantId: "9" }))
+    findFirstUser.mockResolvedValue({ id: "user-2", tenantId: "1" })
+    tenantService.findByOwner.mockResolvedValueOnce({ id: "9" })
+
+    await expect(transfer()).resolves.toMatchObject({
+      previousOwnerId: "user-1",
+    })
+    expect(setUpdate).toHaveBeenCalledWith({ ownerId: "user-2" })
+  })
+
+  test("refuses to gift a root-tenant workspace to a user who owns a reseller tenant", async () => {
+    findFirstUser.mockResolvedValue({ id: "user-2", tenantId: "1" })
+    tenantService.findByOwner.mockResolvedValueOnce({ id: "9" })
+
+    await expect(transfer()).rejects.toMatchObject({ code: "tenantMismatch" })
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  test("rejects a workspace that is scheduled for deletion and writes nothing", async () => {
+    findFirstWorkspace.mockResolvedValueOnce(
+      workspaceRow({ scheduledDeletionAt: new Date("2026-12-01T00:00:00Z") }),
+    )
+
+    await expect(transfer()).rejects.toMatchObject({
+      code: "workspaceDeletionStarted",
+    })
+    expect(update).not.toHaveBeenCalled()
+    expect(workspaceMemberService.create).not.toHaveBeenCalled()
+  })
+
+  test("rejects with ownerConflict when the conditional owner update matches no row", async () => {
+    returningUpdatedWorkspace.mockResolvedValueOnce([])
+
+    await expect(transfer()).rejects.toMatchObject({ code: "ownerConflict" })
+    expect(workspaceMemberService.update).not.toHaveBeenCalled()
+    expect(workspaceMemberService.create).not.toHaveBeenCalled()
+    expect(invalidateCacheByTags).not.toHaveBeenCalled()
+    expect(userQuotaService.reconcileUserSelfUsage).not.toHaveBeenCalled()
+  })
+
+  test("still resolves when quota reconcile fails, and logs a warning", async () => {
+    userQuotaService.reconcileUserSelfUsage.mockRejectedValueOnce(
+      new Error("redis down"),
+    )
+
+    const result = await transfer()
+
+    expect(result).toEqual({
+      workspace: workspaceRow({ ownerId: "user-2" }),
+      previousOwnerId: "user-1",
+    })
+    expect(logger.warn).toHaveBeenCalledWith(
+      { err: expect.any(Error), userId: "user-1" },
+      "workspace owner transfer quota reconcile failed",
+    )
+    expect(userQuotaService.reconcileUserSelfUsage).toHaveBeenCalledWith(
+      "user-2",
+    )
+    expect(dispatchAuditRecordSafely).toHaveBeenCalledTimes(1)
   })
 })

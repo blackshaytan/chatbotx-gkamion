@@ -1,6 +1,18 @@
+import { filenameWithMimeExtension } from "@chatbotx.io/utils/file-name"
 import { useState } from "react"
 import { useTenantSettings } from "@/features/tenant"
 import type { AttachmentResource } from "./schema/resource"
+
+/** Name used by the download attribute. Adds an extension the stored name lacks. */
+export const attachmentDownloadName = (attachment: {
+  name?: string | null
+  originPath?: string | null
+  mimeType?: string | null
+}): string =>
+  filenameWithMimeExtension(
+    attachment.name?.trim() || attachment.originPath?.trim() || "Attachment",
+    attachment.mimeType ?? "",
+  )
 
 export function useAttachmentUrl(
   attachment?: AttachmentResource | null,
@@ -26,6 +38,27 @@ export function useAttachmentUrl(
     console.error("Error getting attachment URL", error)
     return
   }
+}
+
+const MEDIA_PROXY_PREFIX = "/media/attachment/"
+
+/**
+ * Preview stays on `url`. A stored file served by this app downloads on click;
+ * a public storage URL still opens, because a cross-origin download is ignored.
+ */
+export const attachmentClickTarget = (
+  url: string,
+): { href: string; download: boolean } => {
+  try {
+    const next = new URL(url)
+    if (next.pathname.startsWith(MEDIA_PROXY_PREFIX)) {
+      next.searchParams.set("download", "1")
+      return { href: next.toString(), download: true }
+    }
+  } catch {
+    // Keep a relative or malformed URL as a plain open link.
+  }
+  return { href: url, download: false }
 }
 
 // Mirrors the media proxy's retry flag (`app/media/attachment/[token]/route.ts`).

@@ -1,4 +1,3 @@
-import { externalCrmService } from "@chatbotx.io/business"
 import { notFoundException } from "@chatbotx.io/business/errors"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import z from "zod"
@@ -6,6 +5,7 @@ import { withWorkspaceIdSchema } from "@/features/workspaces/schema/resource"
 import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"
 import { authorizedAPI } from "@/orpc"
 import { resolveGkamionCabinetLinkForContact } from "../lib/gkamion-cabinet"
+import { listContactOrdersWithGkamion } from "../lib/pull-gkamion-contact"
 import {
   buildContactPermissionScope,
   requireContactAccessForMember,
@@ -182,17 +182,23 @@ export const contactsAuthenticatedAPI = {
     .output(listContactOrdersResponse)
     .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
     .handler(async ({ input, context }) => {
+      const accessScope = buildContactPermissionScope({
+        permissions: context.workspaceMember.permissions,
+        userId: context.user.id,
+      })
+      if (!accessScope) {
+        throw notFoundException("Contact not found")
+      }
       await requireContactAccessForMember({
         permissions: context.workspaceMember.permissions,
         userId: context.user.id,
         workspaceId: input.workspaceId,
         contactId: input.contactId,
       })
-      return {
-        data: await externalCrmService.listOrdersForContact({
-          workspaceId: input.workspaceId,
-          contactId: input.contactId,
-        }),
-      }
+      return await listContactOrdersWithGkamion({
+        workspaceId: input.workspaceId,
+        contactId: input.contactId,
+        accessScope,
+      })
     }),
 }

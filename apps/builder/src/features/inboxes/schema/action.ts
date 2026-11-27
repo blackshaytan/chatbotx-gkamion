@@ -21,6 +21,7 @@ export const publicInboxResource = inboxResource.pick({
   status: true,
   sourceId: true,
   markReadOnOutbound: true,
+  ownerUserId: true,
 })
 
 export const updateInboxPublicRequest = z.object({

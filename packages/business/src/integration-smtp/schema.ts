@@ -25,4 +25,6 @@ export type SmtpEditableSettings = IntegrationSmtpResource & {
   receiveEnabled: boolean
   imapHost: string
   imapPort: number | null
+  /** Personal mailbox owner (`Inbox.ownerUserId`), or null for a shared mailbox. */
+  ownerUserId: string | null
 }

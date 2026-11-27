@@ -4,10 +4,21 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 import type { ContactFilterCriteria } from "@/features/contact-filter/schema"
 
 vi.mock("@chatbotx.io/business", () => ({
-  conversationService: { findManyQuery: vi.fn() },
+  conversationService: {
+    findManyQuery: vi.fn(),
+    findWithFullRelations: vi.fn(),
+  },
+  // Mirrors packages/business/src/inbox/smtp-ownership.ts (pure helper).
+  hiddenContactInboxIds: (
+    contactInboxes: { id: string; inboxId: string }[],
+    hiddenInboxIds?: string[],
+  ) =>
+    contactInboxes
+      .filter((contactInbox) => hiddenInboxIds?.includes(contactInbox.inboxId))
+      .map((contactInbox) => contactInbox.id),
 }))
 vi.mock("@chatbotx.io/business/errors", () => ({
-  notFoundException: vi.fn(),
+  notFoundException: vi.fn((message: string) => new Error(message)),
 }))
 vi.mock("@chatbotx.io/database/client", () => ({
   sql: vi.fn(() => "agentLastReadAtSql"),
@@ -63,7 +74,9 @@ vi.mock("@chatbotx.io/database/queries", () => ({
   UNASSIGNED_ASSIGNEE_VALUE: "unassigned",
 }))
 vi.mock("@chatbotx.io/database/repositories", () => ({
+  contactInboxOperationalColumns: {},
   createMessageRepository: vi.fn(),
+  getSafeSinceTime: vi.fn((date: Date) => date),
 }))
 vi.mock("@/lib/auth/utils", () => ({
   assertCurrentUserCanAccessChatbot: vi.fn(),
@@ -75,6 +88,13 @@ vi.mock("@/lib/pagination", () => ({
 
 const { appendUnreadWhere, buildConversationWhere } = await import(
   "../build-conversation-where"
+)
+const { findConversation, listConversations } = await import(
+  "../list-conversations.query"
+)
+const { conversationService } = await import("@chatbotx.io/business")
+const { createMessageRepository } = await import(
+  "@chatbotx.io/database/repositories"
 )
 const { applyContactFilter, buildSmartKeywordWhere } = await import(
   "@chatbotx.io/database/queries"
@@ -294,6 +314,38 @@ describe("buildConversationWhere channel filter", () => {
   })
 })
 
+describe("buildConversationWhere hidden inboxes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  test("hiddenInboxIds adds visible-contact-inbox existence", () => {
+    const where = buildConversationWhere("w1", {}, null, {
+      hiddenInboxIds: ["i1"],
+    })
+
+    expect(where.contactInboxes).toEqual({ inboxId: { notIn: ["i1"] } })
+  })
+
+  test("merges with channel filter", () => {
+    const where = buildConversationWhere("w1", { channel: "whatsapp" }, null, {
+      hiddenInboxIds: ["i1"],
+    })
+
+    expect(where.contactInboxes).toEqual({
+      channel: "whatsapp",
+      inboxId: { notIn: ["i1"] },
+    })
+  })
+
+  test("no hidden ids → unchanged", () => {
+    expect(
+      buildConversationWhere("w1", {}, null, { hiddenInboxIds: [] })
+        .contactInboxes,
+    ).toBeUndefined()
+  })
+})
+
 describe("buildConversationWhere unread filter", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -320,6 +372,7 @@ describe("buildConversationWhere unread filter", () => {
 
   test("keeps cursor OR separate from the unread predicate", () => {
     const cursor = {
+      unread: true,
       id: "100",
       inboxActivityAt: new Date("2026-09-23T10:00:00Z"),
     }
@@ -330,10 +383,140 @@ describe("buildConversationWhere unread filter", () => {
     )
 
     expect(where.OR).toEqual([
-      { inboxActivityAt: { lt: cursor.inboxActivityAt } },
-      { inboxActivityAt: { isNull: true } },
-      { inboxActivityAt: cursor.inboxActivityAt, id: { lt: cursor.id } },
+      {
+        AND: [
+          conversationUnreadWhere,
+          {
+            OR: [
+              { inboxActivityAt: { lt: cursor.inboxActivityAt } },
+              { inboxActivityAt: { isNull: true } },
+              {
+                inboxActivityAt: cursor.inboxActivityAt,
+                id: { lt: cursor.id },
+              },
+            ],
+          },
+        ],
+      },
+      { NOT: conversationUnreadWhere },
     ])
     expect(where.AND).toEqual([conversationUnreadWhere])
+  })
+})
+
+const makeContactInbox = (id: string, inboxId: string) =>
+  ({
+    id,
+    contactId: "contact-1",
+    inboxId,
+    channel: "smtp",
+    source: null,
+    sourceId: null,
+    sourceUserId: null,
+    sourceUsername: null,
+    language: null,
+    lastMessageAt: null,
+    lastIncomingMessageAt: null,
+    contactLastReadAt: null,
+    inbox: { id: inboxId },
+    referral: null,
+  }) as never
+
+const makeConversation = (id: string, contactInboxes: unknown[]) =>
+  ({
+    id,
+    contact: null,
+    contactInboxes,
+    assignedUser: null,
+    assignedInboxTeam: null,
+    lastActivityAt: null,
+    inboxActivityAt: null,
+    agentLastReadAt: null,
+    handedOverAt: null,
+  }) as never
+
+const makeMessageRepository = () => ({
+  findLastByConversation: vi.fn().mockResolvedValue([]),
+  countUnreadIncomingByConversations: vi.fn().mockResolvedValue(new Map()),
+})
+
+describe("listConversations and findConversation member inbox access", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  test("listConversations drops hidden contact inboxes and excludes them from message lookups", async () => {
+    const conversation = makeConversation("conv-1", [
+      makeContactInbox("ci1", "i1"),
+      makeContactInbox("ci2", "i2"),
+    ])
+    const messageRepository = makeMessageRepository()
+    vi.mocked(conversationService.findManyQuery).mockResolvedValue([
+      conversation,
+    ] as never)
+    vi.mocked(createMessageRepository).mockResolvedValue(
+      messageRepository as never,
+    )
+
+    const result = await listConversations(
+      { ...baseInput, workspaceId: "1" } as never,
+      { includeEmailAndPhone: true, hiddenInboxIds: ["i1"] },
+    )
+
+    expect(result.data[0]?.contactInboxes.map((ci) => ci.id)).toEqual(["ci2"])
+    expect(vi.mocked(conversationService.findManyQuery)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          contactInboxes: { inboxId: { notIn: ["i1"] } },
+        }),
+      }),
+    )
+    expect(messageRepository.findLastByConversation).toHaveBeenCalledWith(
+      "conv-1",
+      expect.objectContaining({ excludeContactInboxIds: ["ci1"] }),
+    )
+    expect(
+      messageRepository.countUnreadIncomingByConversations,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ excludeContactInboxIds: ["ci1"] }),
+    )
+  })
+
+  test("findConversation reports not found when every contact inbox is hidden", async () => {
+    vi.mocked(conversationService.findWithFullRelations).mockResolvedValue(
+      makeConversation("conv-1", [makeContactInbox("ci1", "i1")]) as never,
+    )
+
+    await expect(
+      findConversation(
+        { workspaceId: "1", id: "conv-1" },
+        { hiddenInboxIds: ["i1"] },
+      ),
+    ).rejects.toThrow("Conversation not found")
+    expect(createMessageRepository).not.toHaveBeenCalled()
+  })
+
+  test("findConversation keeps visible contact inboxes and excludes hidden ones from message lookups", async () => {
+    const messageRepository = makeMessageRepository()
+    vi.mocked(conversationService.findWithFullRelations).mockResolvedValue(
+      makeConversation("conv-1", [
+        makeContactInbox("ci1", "i1"),
+        makeContactInbox("ci2", "i2"),
+      ]) as never,
+    )
+    vi.mocked(createMessageRepository).mockResolvedValue(
+      messageRepository as never,
+    )
+
+    const result = await findConversation(
+      { workspaceId: "1", id: "conv-1" },
+      { hiddenInboxIds: ["i1"] },
+    )
+
+    expect(result.data.contactInboxes.map((ci) => ci.id)).toEqual(["ci2"])
+    expect(messageRepository.findLastByConversation).toHaveBeenCalledWith(
+      "conv-1",
+      expect.objectContaining({ excludeContactInboxIds: ["ci1"] }),
+    )
   })
 })

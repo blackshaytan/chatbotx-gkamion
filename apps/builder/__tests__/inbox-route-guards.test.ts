@@ -15,6 +15,10 @@ vi.mock("@/lib/auth/utils", () => ({
   getCurrentUserAndTargetWorkspace: mockGetCurrentUserAndTargetWorkspace,
 }))
 
+vi.mock("@/features/conversations/lib/member-inbox-access", () => ({
+  resolveMemberHiddenInboxIds: vi.fn(async () => []),
+}))
+
 vi.mock("next/navigation", () => ({
   notFound: mockNotFound,
 }))

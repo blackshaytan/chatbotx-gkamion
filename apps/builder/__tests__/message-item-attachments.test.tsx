@@ -462,6 +462,45 @@ describe("MessageItem attachment rendering — fallback on load failure", () => 
     expect(reload?.getAttribute("data-prefetch")).toBe("false")
   })
 
+  test("a photo served by the app previews in the bubble and downloads on click", () => {
+    const attachment = makeProxyAttachment("photo", "image", "image/jpeg")
+    const el = renderComponent(
+      <MessageItem message={makeMessage({ attachments: [attachment] })} />,
+    )
+
+    expect(el.querySelector("img")?.getAttribute("src")).toBe(attachment.url)
+    const link = el.querySelector("img")?.closest("a")
+    expect(link?.getAttribute("href")).toBe(`${attachment.url}?download=1`)
+    expect(link?.getAttribute("download")).toBe(attachment.name)
+    expect(link?.getAttribute("target")).toBeNull()
+  })
+
+  test("a photo stored without an extension downloads with one", () => {
+    const attachment = {
+      ...makeProxyAttachment("photo", "image", "image/webp"),
+      name: "1794487538263_default",
+    }
+    const el = renderComponent(
+      <MessageItem message={makeMessage({ attachments: [attachment] })} />,
+    )
+
+    expect(
+      el.querySelector("img")?.closest("a")?.getAttribute("download"),
+    ).toBe("1794487538263_default.webp")
+  })
+
+  test("a public image still opens in a new tab", () => {
+    const attachment = makeImageAttachment("img-1")
+    const el = renderComponent(
+      <MessageItem message={makeMessage({ attachments: [attachment] })} />,
+    )
+
+    const link = el.querySelector("img")?.closest("a")
+    expect(link?.getAttribute("href")).toBe(attachment.url)
+    expect(link?.getAttribute("target")).toBe("_blank")
+    expect(link?.hasAttribute("download")).toBe(false)
+  })
+
   test("image links never prefetch, since they can point at the media proxy", () => {
     const single = { ...makeImageAttachment("img-1"), fallbackUrl }
     const unsized = {

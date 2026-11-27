@@ -30,6 +30,7 @@ import { ChatRealtime } from "./chat-realtime"
 import { useChatStore } from "./store/chat-store-provider"
 
 type ChatLayoutProps = {
+  canFilterBotCategory?: boolean
   canViewEmailAndPhone?: boolean
   workspaceId: string
   layout?: [number, number, number]
@@ -38,6 +39,7 @@ type ChatLayoutProps = {
 export const ChatLayout = (props: ChatLayoutProps) => {
   const t = useTranslations()
   const {
+    canFilterBotCategory = true,
     canViewEmailAndPhone = true,
     workspaceId,
     layout = [25, 50, 25],
@@ -161,6 +163,7 @@ export const ChatLayout = (props: ChatLayoutProps) => {
           ) : (
             <div className="min-h-0 flex-1 overflow-y-auto p-3">
               <ConversationListPane
+                canFilterBotCategory={canFilterBotCategory}
                 canViewEmailAndPhone={canViewEmailAndPhone}
                 workspaceId={workspaceId}
               />
@@ -205,6 +208,7 @@ export const ChatLayout = (props: ChatLayoutProps) => {
             minSize={"20%"}
           >
             <ConversationListPane
+              canFilterBotCategory={canFilterBotCategory}
               canViewEmailAndPhone={canViewEmailAndPhone}
               workspaceId={workspaceId}
             />

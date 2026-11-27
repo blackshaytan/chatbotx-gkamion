@@ -12,12 +12,12 @@ describe("canMutateChat", () => {
   })
 
   test("keeps support, blocked, and removed-peer sessions read-only", () => {
-    expect(
-      canMutateChat({ isBlocked: false, isSupportSession: true }),
-    ).toBe(false)
-    expect(
-      canMutateChat({ isBlocked: true, isSupportSession: false }),
-    ).toBe(false)
+    expect(canMutateChat({ isBlocked: false, isSupportSession: true })).toBe(
+      false,
+    )
+    expect(canMutateChat({ isBlocked: true, isSupportSession: false })).toBe(
+      false,
+    )
     expect(
       canMutateChat({
         hasRemovedPeer: true,

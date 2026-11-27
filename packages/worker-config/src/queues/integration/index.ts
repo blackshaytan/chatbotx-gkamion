@@ -93,6 +93,7 @@ export const IntegrationJobAction = {
   // Follow/unfollow, group join/leave, group messages and the bot's own group
   // membership — audience events that are not 1:1 messages (leaderboard scoring).
   channelAudienceEvent: "channelAudienceEvent",
+  deliverClientNotification: "deliverClientNotification",
 } as const
 
 type IntegrationJobActionValue =
@@ -227,6 +228,22 @@ export type IntegrationJobMessageReaction = {
 export type IntegrationJobChannelAudienceEvent = {
   type: typeof IntegrationJobAction.channelAudienceEvent
   data: ChannelAudienceEventJobData
+}
+
+export type IntegrationJobDeliverClientNotification = {
+  type: typeof IntegrationJobAction.deliverClientNotification
+  data: {
+    workspaceId: string
+    contactId: string
+    conversationId: string
+    eventId: string
+    messengerText: string
+    emailText: string
+    emailSubject: string
+    email?: string
+    externalOrderId?: string
+    statusId?: number
+  }
 }
 
 export type IntegrationJobMessageStatus = {
@@ -1178,6 +1195,7 @@ export type IntegrationJobData =
   | IntegrationJobAiHandoverTakeBack
   | IntegrationJobAiHandoverBulkToggle
   | IntegrationJobChannelAudienceEvent
+  | IntegrationJobDeliverClientNotification
 
 export const integrationQueue = isNoRedisEnv()
   ? fakeQueue

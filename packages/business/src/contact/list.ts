@@ -209,10 +209,11 @@ async function getTotalContactsFromStats(
 }
 
 /**
- * "table" is the contacts page's column-level projection (no email/phone
- * column is selected, so there is nothing to mask). Otherwise
- * `listWithInboxesAndConversation` is the "full" relation set minus
- * tags/customFields — used when `include` omits both.
+ * "table" is the contacts page's column-level projection (name, source,
+ * assignee, last-read, created-at, plus email/phone/tags for the list UI).
+ * Email/phone are masked below when the member scope forbids them.
+ * Otherwise `listWithInboxesAndConversation` is the "full" relation set
+ * minus tags/customFields — used when `include` omits both.
  */
 function listRows(
   query: Parameters<typeof contactRepository.listWithRelations>[0],
@@ -271,8 +272,14 @@ export async function list(
   const { data, pageCount, scope, include, countResult } = await runList(input)
 
   if (input.projection === "table") {
+    const tableData = data as ContactTableListRow[]
+    // Unscoped (token) callers see PII; scoped members only when permitted.
+    const maskedTableData =
+      scope && !scope.canViewEmailAndPhone
+        ? tableData.map(maskContactEmailAndPhone)
+        : tableData
     return {
-      data: data as ContactTableListRow[],
+      data: maskedTableData,
       pageCount,
       totalCount: countResult.total,
       totalCountCapped: countResult.capped,

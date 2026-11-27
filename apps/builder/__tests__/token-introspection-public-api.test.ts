@@ -96,6 +96,7 @@ describe("GET /v1/token", () => {
     })
 
     expect(result).toEqual({
+      id: "token-1",
       workspaceId: "workspace-1",
       permission: "full",
       scopes: ["contacts", "automation"],

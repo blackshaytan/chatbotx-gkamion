@@ -101,10 +101,17 @@ export function AppSidebar({
       enabled: !scheduledForDeletion,
     }),
   )
+  const canSeeInbox = hasContactsAccess(permissions)
   const { data: unreadChats } = useQuery(
     orpc.chatsAPI.unreadTotal.queryOptions({
       input: { workspaceId },
       enabled: !scheduledForDeletion,
+    }),
+  )
+  const { data: unreadInbox } = useQuery(
+    orpc.conversationsAPI.unreadTotal.queryOptions({
+      input: { workspaceId },
+      enabled: !scheduledForDeletion && canSeeInbox,
     }),
   )
 
@@ -126,6 +133,15 @@ export function AppSidebar({
         url: `/space/${workspaceId}/inbox`,
         icon: MessageCircleMoreIcon,
         permission: PERMISSION_NAV.contacts,
+        badge:
+          unreadInbox?.total && unreadInbox.total > 99
+            ? "99+"
+            : unreadInbox?.total,
+        badgeLabel: unreadInbox?.total
+          ? t("inboxAttention.unreadCount", {
+              count: unreadInbox.total,
+            })
+          : undefined,
       },
       {
         title: t("fields.flows.label"),

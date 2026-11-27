@@ -22,13 +22,13 @@ import {
   GlobeIcon,
   type LucideIcon,
   MailIcon,
-  MessageCircleIcon,
   ShoppingCartIcon,
   WebhookIcon,
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import type { ComponentType, SVGProps } from "react"
 import { memo } from "react"
+import { MaxIcon } from "./max-icon"
 
 type IconSize = "small" | "medium" | "large" | "xlarge"
 type InboxLabelKey = `fields.${ChannelType}.label`
@@ -93,8 +93,7 @@ export const INBOX_ICON_CONFIG: Record<ChannelType, InboxIconConfig> = {
     defaultLabelKey: "fields.telegram.label",
   },
   max: {
-    Icon: MessageCircleIcon,
-    iconClassName: "stroke-[#0077FF]",
+    Icon: MaxIcon,
     defaultLabelKey: "fields.max.label",
   },
   zzap: {

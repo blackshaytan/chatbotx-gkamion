@@ -1,17 +1,25 @@
 // @vitest-environment node
+import { BROADCAST_PAYLOAD_TYPE } from "@chatbotx.io/flow-config"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
 // ── analytics mock (the key subject of this test) ──────────────────────────
 const createRecipient = vi.fn().mockResolvedValue({ token: "test-token-xyz" })
 const markDelivered = vi.fn().mockResolvedValue(undefined)
 const markFailed = vi.fn().mockResolvedValue(undefined)
+const broadcastOnDelivered = vi.fn().mockResolvedValue(undefined)
+const broadcastOnFailed = vi.fn().mockResolvedValue(undefined)
 
 vi.mock("@chatbotx.io/analytics", () => ({
   emailTopicAnalyticsService: { createRecipient, markDelivered, markFailed },
+  broadcastAnalyticsService: {
+    onDelivered: broadcastOnDelivered,
+    onFailed: broadcastOnFailed,
+  },
 }))
 
 // ── business services ───────────────────────────────────────────────────────
 const runAction = vi.fn().mockResolvedValue(undefined)
+const mockContactFindBy = vi.fn().mockResolvedValue({ emailOptIn: true })
 
 vi.mock("@chatbotx.io/business", () => ({
   buildContext: vi.fn().mockResolvedValue({ ctx: true }),
@@ -19,7 +27,7 @@ vi.mock("@chatbotx.io/business", () => ({
     .fn()
     .mockResolvedValue("https://app.test/unsubscribe?token=unsub"),
   contactService: {
-    findBy: vi.fn().mockResolvedValue({ emailOptIn: true }),
+    findBy: mockContactFindBy,
   },
   inboxService: { find: vi.fn().mockResolvedValue(undefined) },
   integrationSmtpService: {
@@ -68,7 +76,7 @@ vi.mock("../../src/lib/convert-button", () => ({
 }))
 
 vi.mock("../../src/lib/logger", () => ({
-  logger: { warn: vi.fn(), error: vi.fn() },
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
 const { sendEmail } = await import("../../src/integration/handlers/send-email")
@@ -81,7 +89,12 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       workspaceId: "ws-1",
       contactId: "contact-1",
     },
-    contactInbox: { id: "ci-1", inboxId: "inbox-1" },
+    contactInbox: {
+      id: "ci-1",
+      inboxId: "inbox-1",
+      channel: "smtp",
+      sourceId: "user@example.com",
+    },
     flowVersion: { flowId: "flow-1" },
     step: {
       integrationSmtpId: "smtp-1",
@@ -98,9 +111,17 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
+  vi.clearAllMocks()
   createRecipient.mockResolvedValue({ token: "test-token-xyz" })
+  markDelivered.mockResolvedValue(undefined)
+  markFailed.mockResolvedValue(undefined)
+  broadcastOnDelivered.mockResolvedValue(undefined)
+  broadcastOnFailed.mockResolvedValue(undefined)
   runAction.mockResolvedValue(undefined)
   renderDynamicEmailHtmlMock.mockReturnValue("<html/>")
+  mockContactFindBy.mockResolvedValue({
+    emailOptIn: true,
+  })
 })
 
 describe("with topicId", () => {
@@ -156,5 +177,169 @@ describe("without topicId", () => {
   test("still sends the email", async () => {
     await sendEmail(makeProps({ topicId: undefined }) as never)
     expect(runAction).toHaveBeenCalledOnce()
+  })
+})
+
+describe("broadcast analytics and recipient edge cases", () => {
+  test("calls broadcastAnalyticsService.onDelivered on SMTP success with broadcast metadata", async () => {
+    const props = makeProps({ topicId: undefined })
+    props.metadata = {
+      type: BROADCAST_PAYLOAD_TYPE,
+      broadcastId: "b-1",
+      contactInboxId: "ci-1",
+    }
+    await sendEmail(props as never)
+
+    expect(broadcastOnDelivered).toHaveBeenCalledOnce()
+    expect(broadcastOnDelivered).toHaveBeenCalledWith([
+      expect.objectContaining({
+        context: {
+          workspaceId: "ws-1",
+          contactId: "contact-1",
+          conversationId: "conv-1",
+          contactInboxId: "ci-1",
+          channel: "smtp",
+        },
+        metadata: {
+          type: BROADCAST_PAYLOAD_TYPE,
+          broadcastId: "b-1",
+          contactInboxId: "ci-1",
+        },
+      }),
+    ])
+  })
+
+  test("calls emailTopicAnalyticsService.markFailed AND broadcastAnalyticsService.onFailed on runAction throw with broadcast metadata", async () => {
+    runAction.mockRejectedValue(new Error("SMTP down"))
+    const props = makeProps({ topicId: "topic-1" })
+    props.metadata = {
+      type: BROADCAST_PAYLOAD_TYPE,
+      broadcastId: "b-1",
+      contactInboxId: "ci-1",
+    }
+    await sendEmail(props as never)
+
+    expect(markFailed).toHaveBeenCalledOnce()
+    expect(markFailed).toHaveBeenCalledWith("test-token-xyz")
+    expect(broadcastOnFailed).toHaveBeenCalledOnce()
+    expect(broadcastOnFailed).toHaveBeenCalledWith([
+      expect.objectContaining({
+        context: expect.objectContaining({
+          workspaceId: "ws-1",
+          contactId: "contact-1",
+          conversationId: "conv-1",
+          contactInboxId: "ci-1",
+        }),
+        errorData: { message: "SMTP down" },
+        metadata: {
+          type: BROADCAST_PAYLOAD_TYPE,
+          broadcastId: "b-1",
+          contactInboxId: "ci-1",
+        },
+      }),
+    ])
+  })
+
+  test("post-send DB error (markDelivered or onDelivered rejects) does not call markFailed/onFailed and does not rethrow", async () => {
+    markDelivered.mockRejectedValue(new Error("DB error markDelivered"))
+    broadcastOnDelivered.mockRejectedValue(new Error("DB error onDelivered"))
+
+    const props = makeProps({ topicId: "topic-1" })
+    props.metadata = {
+      type: BROADCAST_PAYLOAD_TYPE,
+      broadcastId: "b-1",
+    }
+
+    await expect(sendEmail(props as never)).resolves.not.toThrow()
+
+    expect(runAction).toHaveBeenCalledOnce()
+    expect(markDelivered).toHaveBeenCalledOnce()
+    expect(broadcastOnDelivered).toHaveBeenCalledOnce()
+    expect(markFailed).not.toHaveBeenCalled()
+    expect(broadcastOnFailed).not.toHaveBeenCalled()
+  })
+
+  test("failure-recording DB error (markFailed rejects) still calls onFailed and does not rethrow", async () => {
+    runAction.mockRejectedValue(new Error("SMTP down"))
+    markFailed.mockRejectedValue(new Error("DB error markFailed"))
+
+    const props = makeProps({ topicId: "topic-1" })
+    props.metadata = {
+      type: BROADCAST_PAYLOAD_TYPE,
+      broadcastId: "b-1",
+    }
+
+    await expect(sendEmail(props as never)).resolves.not.toThrow()
+
+    expect(markFailed).toHaveBeenCalledOnce()
+    expect(broadcastOnFailed).toHaveBeenCalledOnce()
+  })
+
+  test("empty step.to on SMTP contactInbox falls back to sourceId and sends", async () => {
+    const props = makeProps({ to: "" })
+    props.contactInbox = {
+      id: "ci-1",
+      inboxId: "inbox-1",
+      channel: "smtp",
+      sourceId: "client@example.com",
+    } as never
+
+    await sendEmail(props as never)
+
+    expect(runAction).toHaveBeenCalledOnce()
+    expect(runAction).toHaveBeenCalledWith(
+      "sendMail",
+      expect.objectContaining({
+        to: "client@example.com",
+      }),
+    )
+  })
+
+  test("invalid or empty recipient skips sending and calls onFailed for broadcast", async () => {
+    const props = makeProps({ to: "notanemail", topicId: "topic-1" })
+    props.metadata = {
+      type: BROADCAST_PAYLOAD_TYPE,
+      broadcastId: "b-1",
+    }
+    props.contactInbox = {
+      id: "ci-1",
+      inboxId: "inbox-1",
+      channel: "telegram",
+      sourceId: "12345",
+    } as never
+
+    await sendEmail(props as never)
+
+    expect(createRecipient).not.toHaveBeenCalled()
+    expect(runAction).not.toHaveBeenCalled()
+    expect(broadcastOnFailed).toHaveBeenCalledOnce()
+    expect(broadcastOnFailed).toHaveBeenCalledWith([
+      expect.objectContaining({
+        errorData: { message: "Recipient email address is invalid or empty" },
+      }),
+    ])
+  })
+
+  test("contact opted out of email calls onFailed for broadcast and does not send", async () => {
+    mockContactFindBy.mockResolvedValueOnce({
+      emailOptIn: false,
+    })
+
+    const props = makeProps({ topicId: "topic-1" })
+    props.metadata = {
+      type: BROADCAST_PAYLOAD_TYPE,
+      broadcastId: "b-1",
+    }
+
+    await sendEmail(props as never)
+
+    expect(runAction).not.toHaveBeenCalled()
+    expect(createRecipient).not.toHaveBeenCalled()
+    expect(broadcastOnFailed).toHaveBeenCalledOnce()
+    expect(broadcastOnFailed).toHaveBeenCalledWith([
+      expect.objectContaining({
+        errorData: { message: "Contact opted out of email" },
+      }),
+    ])
   })
 })

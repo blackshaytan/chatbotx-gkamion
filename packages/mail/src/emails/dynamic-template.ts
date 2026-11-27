@@ -45,80 +45,77 @@ export type DynamicEmailProps = {
   elements: MailElementSchema[]
 }
 
+/**
+ * Escape text and keep Enter/newlines as hard breaks for email clients.
+ * Also joins a lone `-` / `•` / `*` line with the next line so TipTap bullet
+ * drafts like `-\nСклад и скорость: …` render as one bullet line.
+ */
+const textWithBreaks = (text: string): string =>
+  esc(text)
+    .replace(/(^|\n)([-•*])\n(?=\S)/g, "$1$2 ")
+    .replace(/\n/g, "<br />")
+
+/** Shared left-aligned section wrapper — full-width so Gmail does not park a 600px column in the middle of a wide pane. */
+const section = (inner: string, padding = "0 0 12px 0"): string => `
+        <mj-section padding="${padding}" full-width="full-width">
+          <mj-column width="100%" padding="0">
+            ${inner}
+          </mj-column>
+        </mj-section>`
+
 export function elementToMjml(element: MailElementSchema): string {
   switch (element.type) {
-    // mj-raw passes content through as raw HTML — intentionally unescaped so that
-    // HTML anchors (e.g. the unsubscribe link placeholder) render correctly.
-    // Email clients strip dangerous tags (<script>, on* handlers) natively.
+    // TipTap stores Enter as `\n` (getText blockSeparator). HTML collapses
+    // those newlines, so every text-like block must emit `<br />` — otherwise
+    // a multi-paragraph email body renders as one continuous run in Gmail/etc.
     case "heading":
-      return `
-        <mj-section>
-          <mj-column>
+      return section(`
             <mj-raw>
-              <div style="font-size:20px;font-weight:700;color:#1d1c1d;line-height:28px;padding:0;">
-                ${element.text}
+              <div style="font-size:20px;font-weight:700;color:#1d1c1d;line-height:28px;text-align:left;padding:0;">
+                ${textWithBreaks(element.text)}
               </div>
-            </mj-raw>
-          </mj-column>
-        </mj-section>`
+            </mj-raw>`)
 
     case "text":
-      return `
-        <mj-section>
-          <mj-column>
+      return section(`
             <mj-raw>
-              <div style="font-size:16px;color:#3c3f44;line-height:24px;padding:0;">
-                ${element.text}
+              <div style="font-size:15px;color:#222222;line-height:22px;text-align:left;padding:0;font-family:Arial,Helvetica,sans-serif;">
+                ${textWithBreaks(element.text)}
               </div>
-            </mj-raw>
-          </mj-column>
-        </mj-section>`
+            </mj-raw>`)
 
     case "code":
-      return `
-        <mj-section>
-          <mj-column>
+      return section(`
             <mj-raw>
-              <div style="font-family:monospace,'Courier New';font-size:14px;color:#3c3f44;line-height:22px;background-color:#f4f4f5;padding:12px;">
-                ${esc(element.text).replace(/\n/g, "<br />")}
+              <div style="font-family:monospace,'Courier New';font-size:14px;color:#3c3f44;line-height:22px;background-color:#f4f4f5;padding:12px;text-align:left;">
+                ${textWithBreaks(element.text)}
               </div>
-            </mj-raw>
-          </mj-column>
-        </mj-section>`
+            </mj-raw>`)
 
     case "image":
       return element.url
-        ? `
-        <mj-section>
-          <mj-column>
-            <mj-image src="${esc(element.url)}" alt="" />
-          </mj-column>
-        </mj-section>`
+        ? section(
+            `<mj-image src="${esc(element.url)}" alt="" align="left" padding="0" />`,
+          )
         : ""
 
     case "button":
       return element.url
-        ? `
-        <mj-section>
-          <mj-column>
-            <mj-button background-color="#111111" color="#ffffff" font-size="14px"
+        ? section(`
+            <mj-button align="left" background-color="#111111" color="#ffffff" font-size="14px"
               font-weight="700" border-radius="4px" href="${esc(element.url)}">
               ${esc(element.label ?? "Click here")}
-            </mj-button>
-          </mj-column>
-        </mj-section>`
+            </mj-button>`)
         : ""
 
     case "line":
-      return `
-        <mj-section>
-          <mj-column>
-            <mj-divider border-color="#e8e8e8" border-width="1px" />
-          </mj-column>
-        </mj-section>`
+      return section(
+        `<mj-divider border-color="#e8e8e8" border-width="1px" padding="8px 0" />`,
+        "0",
+      )
 
     case "spacing":
-      return `<mj-section padding="12px 0" />`
+      return section(`<mj-spacer height="12px" />`, "0")
 
     default:
       return ""
@@ -129,21 +126,29 @@ export function buildMjmlTemplate(props: DynamicEmailProps): string {
   const { elements: els } = props
   const bodyElements = els.map(elementToMjml).join("\n")
 
+  // mj-body only accepts px widths (not %). Use a wide px body, then CSS
+  // forces left alignment and stretches to the client pane so Gmail does not
+  // park a centered 600px marketing column in the middle of a wide window.
   return `
     <mjml>
       <mj-head>
         <mj-preview>
           ${esc(props.preheader)}
         </mj-preview>
+        <mj-attributes>
+          <mj-all font-family="Arial, Helvetica, sans-serif" />
+          <mj-text align="left" />
+          <mj-section padding="0" />
+          <mj-column padding="0" />
+        </mj-attributes>
+        <mj-style>
+          body { margin: 0 !important; padding: 0 !important; }
+          .mj-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; }
+          div[style*="margin:0px auto"] { margin: 0 !important; max-width: 100% !important; width: 100% !important; }
+        </mj-style>
       </mj-head>
-      <mj-body background-color="#ffffff">
+      <mj-body width="960px" background-color="#ffffff">
         ${bodyElements}
-
-        <mj-section>
-          <mj-column>
-            <mj-text font-size="12px" color="#888" padding="16px 0 0 0">⚡ Built with chatbotx.io</mj-text>
-          </mj-column>
-        </mj-section>
       </mj-body>
     </mjml>
   `

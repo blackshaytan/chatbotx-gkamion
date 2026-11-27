@@ -206,6 +206,80 @@ describe("updateSmtpAction", () => {
   })
 })
 
+describe("mailbox owner gate", () => {
+  const baseInput = {
+    provider: "google",
+    host: "ignored.example.com",
+    port: 25,
+    username: "user1",
+    password: "pass1",
+    fromAddress: "from@example.com",
+  }
+  const agentCtx = { workspaceMemberPermissions: { superAdmin: false } }
+  const adminCtx = { workspaceMemberPermissions: { superAdmin: true } }
+
+  const runCreate = (props: Record<string, unknown>) =>
+    (createSmtpAction as (props: unknown) => Promise<unknown>)({
+      bindArgsParsedInputs: ["ws-1"],
+      parsedInput: props,
+      ctx: props.ctx,
+    })
+
+  const runUpdate = (props: Record<string, unknown>) =>
+    (updateSmtpAction as (props: unknown) => Promise<unknown>)({
+      bindArgsParsedInputs: ["ws-1", "smtp-1"],
+      parsedInput: props,
+      ctx: props.ctx,
+    })
+
+  test("create: a non-admin cannot set a personal owner", async () => {
+    await expect(
+      runCreate({ ...baseInput, ownerUserId: "u1", ctx: agentCtx }),
+    ).rejects.toMatchObject({ code: "smtpOwnerSuperAdminRequired" })
+    expect(mocks.connect).not.toHaveBeenCalled()
+  })
+
+  test("create: a super admin forwards the personal owner to connect", async () => {
+    await runCreate({ ...baseInput, ownerUserId: "u1", ctx: adminCtx })
+
+    expect(mocks.connect).toHaveBeenCalledWith(
+      expect.objectContaining({ ownerUserId: "u1" }),
+    )
+  })
+
+  test("create: a non-admin may create a shared mailbox without ownerUserId", async () => {
+    await runCreate({ ...baseInput, ctx: agentCtx })
+
+    expect(mocks.connect).toHaveBeenCalledTimes(1)
+  })
+
+  test("update: a non-admin cannot change the owner", async () => {
+    await expect(
+      runUpdate({ ...baseInput, ownerUserId: null, ctx: agentCtx }),
+    ).rejects.toMatchObject({ code: "smtpOwnerSuperAdminRequired" })
+    expect(mocks.update).not.toHaveBeenCalled()
+  })
+
+  test("update: a super admin forwards ownerUserId to the service", async () => {
+    await runUpdate({ ...baseInput, ownerUserId: "u1", ctx: adminCtx })
+
+    expect(mocks.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ ownerUserId: "u1" }),
+      }),
+    )
+  })
+
+  test("update: a non-admin editing credentials without ownerUserId is allowed", async () => {
+    await runUpdate({ ...baseInput, ctx: agentCtx })
+
+    expect(mocks.update).toHaveBeenCalledTimes(1)
+    expect(mocks.update.mock.calls[0]?.[0].data).not.toHaveProperty(
+      "ownerUserId",
+    )
+  })
+})
+
 describe("deleteSmtpAction", () => {
   test("resolves the row and owner, then delegates without auditing", async () => {
     await (deleteSmtpAction as (props: unknown) => Promise<unknown>)({

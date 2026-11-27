@@ -49,6 +49,27 @@ vi.mock("@/features/messages/components/whatsapp-call-info-sheet", () => ({
   WhatsappCallInfoSheet: () => <div data-testid="call-info-sheet" />,
 }))
 
+vi.mock("@/features/tasks/components/tasks-realtime-sync", () => ({
+  TasksRealtimeSync: () => null,
+}))
+
+vi.mock("@/features/chats/components/chats-realtime-sync", () => ({
+  ChatsRealtimeSync: () => null,
+}))
+
+vi.mock(
+  "@/features/conversations/components/inbox-unread-realtime-sync",
+  () => ({
+    InboxUnreadRealtimeSync: () => null,
+  }),
+)
+
+vi.mock(
+  "@/features/notifications/components/notifications-realtime-sync",
+  () => ({
+    NotificationsRealtimeSync: () => null,
+  }),
+)
 const { WorkspaceRealtimeShell } = await import(
   "@/components/workspace-realtime-shell"
 )

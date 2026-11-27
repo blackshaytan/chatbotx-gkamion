@@ -1,6 +1,7 @@
 import {
   type BuildRunInputParams,
   buildRunInput,
+  contactCustomFieldService,
   contactService,
   conversationService,
   type ExternalAgentRunInput,
@@ -9,6 +10,7 @@ import {
   HermesAuthError,
   HermesRequestError,
   HermesUnavailableError,
+  readGkamionContactFields,
   withBlockedOwnerGuard,
 } from "@chatbotx.io/business"
 import type { MessageWithAttachments } from "@chatbotx.io/database/repositories"
@@ -28,8 +30,10 @@ import {
   loadConversationContext,
   selectHistory,
   selectNewMessages,
+  selectNotifications,
   stopRunQuietly,
   toInputMessages,
+  toNotificationInputs,
   withExternalAgentLock,
 } from "./external-agent-shared"
 
@@ -61,6 +65,7 @@ const isRunInput = (value: unknown): value is ExternalAgentRunInput =>
 const buildTurnInput = async (
   turn: ReplyTurn,
   history: MessageWithAttachments[],
+  notifications: MessageWithAttachments[],
 ): Promise<ExternalAgentRunInput> => {
   const { workspaceId, conversationId } = turn.data
   const { conversation, contactInbox } = turn.context
@@ -68,10 +73,23 @@ const buildTurnInput = async (
     workspaceId,
     id: conversation.contactId,
   })
+  const customFields = contact
+    ? await contactCustomFieldService.listWithDefinitions({
+        contactId: contact.id,
+      })
+    : []
+  const gkamion = readGkamionContactFields(customFields)
   const params: BuildRunInputParams = {
     messages: await toInputMessages(workspaceId, turn.newMessages),
     history: await toInputMessages(workspaceId, history),
-    contact: { name: contact?.fullName ?? null },
+    notifications: toNotificationInputs(notifications),
+    contact: {
+      name: contact?.fullName?.trim() || null,
+      phoneNumber: contact?.phoneNumber?.trim() || null,
+      email: contact?.email?.trim() || null,
+      gkamionCustomerId: gkamion.gkamionCustomerId,
+      gkamionVerified: gkamion.gkamionVerified,
+    },
     channel: contactInbox.channel,
     conversationId,
     contactId: conversation.contactId,
@@ -98,6 +116,7 @@ const resolveRunInput = async (
   const runInput = await buildTurnInput(
     turn,
     includeHistory ? selectHistory(turn.messages, turn.newMessages) : [],
+    selectNotifications({ messages: turn.messages }),
   )
   await distributedStore.put(cacheKey, runInput, RUN_INPUT_CACHE_TTL_SECONDS)
   return runInput
@@ -133,7 +152,10 @@ const steerActiveRun = async (
     return false
   }
 
-  const { input } = await buildTurnInput(turn, [])
+  // The running turn already carries the notification block from its start;
+  // steering appends only the client's new text.
+  const { input } = await buildTurnInput(turn, [], [])
+
   let steer: { accepted: boolean }
   try {
     steer = await turn.runtime.client.steer(runId, input)

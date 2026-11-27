@@ -93,6 +93,7 @@ vi.mock("@chatbotx.io/database/schema", () => ({
   contactsOnBroadcastsModel: {},
   contactsToTagsModel: {},
   contactInboxModel: {},
+  taskModel: {},
   contactsOnSequenceModel: {
     id: { __column: "id" },
     workspaceId: { __column: "workspaceId" },

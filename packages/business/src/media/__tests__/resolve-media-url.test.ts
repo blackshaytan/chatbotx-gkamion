@@ -100,6 +100,32 @@ describe("resolveMediaUrl", () => {
     expect(mocks.signMediaToken).not.toHaveBeenCalled()
   })
 
+  test("serves a loopback storage URL through the app so a browser can open it", async () => {
+    const finalize = vi.fn(
+      async (key: string) => `http://127.0.0.1:9010/chatbotx/${key}`,
+    )
+
+    const result = await resolveMediaUrl(
+      {
+        kind: "attachment",
+        workspaceId: "workspace-1",
+        attachmentId: "attachment-1",
+        originPath: "public/zzap/photo.jpg",
+        channel: "zzap",
+      },
+      finalize,
+    )
+
+    expect(result).toBe(
+      "https://builder.example.com/media/attachment/signed-media-token",
+    )
+    expect(mocks.signMediaToken).toHaveBeenCalledWith({
+      workspaceId: "workspace-1",
+      kind: "attachment",
+      refId: "attachment-1",
+    })
+  })
+
   test("returns a signed proxy URL for a pending hydration-channel attachment", async () => {
     const finalize = vi.fn(async (key: string) => key)
 
@@ -676,6 +702,22 @@ describe("resolveContactAvatarUrl", () => {
       kind: "avatar",
       refId: "telegram-contact-inbox",
     })
+    expect(finalize).not.toHaveBeenCalled()
+  })
+
+  test("serves a pack picture from the app instead of storage", async () => {
+    const finalize = vi.fn(async (key: string) => `final:${key}`)
+
+    const result = await resolveContactAvatarUrl(
+      {
+        workspaceId: "workspace-1",
+        contact: { avatar: "contact-avatars/07.svg" },
+        contactInboxes: [],
+      },
+      finalize,
+    )
+
+    expect(result).toBe("https://builder.example.com/contact-avatars/07.svg")
     expect(finalize).not.toHaveBeenCalled()
   })
 })

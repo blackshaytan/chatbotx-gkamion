@@ -6,13 +6,13 @@ import type { ButtonStepProps } from "./steps/button"
 
 export const extractMetadata = (
   key: string,
-  metadata?: { [key: string]: string },
+  metadata?: { [key: string]: unknown },
 ): string | undefined => {
   if (!metadata) {
     return
   }
-
-  return metadata[key] || undefined
+  const value = metadata[key]
+  return typeof value === "string" && value.length > 0 ? value : undefined
 }
 
 // Numeric snowflake ID (createId in @chatbotx.io/utils): every ID generated

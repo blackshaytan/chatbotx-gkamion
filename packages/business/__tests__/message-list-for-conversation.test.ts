@@ -1,5 +1,8 @@
 // @vitest-environment node
+import { endOfHour } from "date-fns"
 import { beforeEach, describe, expect, test, vi } from "vitest"
+
+const NOT_FOUND_RE = /not found/i
 
 const mocks = vi.hoisted(() => {
   const repo = {
@@ -15,9 +18,11 @@ const mocks = vi.hoisted(() => {
       .fn()
       .mockResolvedValue({ storageUrl: "https://storage.example.com" }),
     contactInboxService: {
+      findBy: vi.fn().mockResolvedValue(null),
       findByUncached: vi.fn().mockResolvedValue(null),
       findManyByIds: vi.fn().mockResolvedValue([]),
       findRecentByContactId: vi.fn().mockResolvedValue(null),
+      listByContactId: vi.fn().mockResolvedValue([]),
     },
     conversationService: {
       findBy: vi.fn().mockResolvedValue(undefined),
@@ -98,6 +103,30 @@ describe("message list-for-conversation", () => {
         createdAt,
         workspaceId: "ws-1",
       })
+    })
+
+    test("throws not found when the message contact inbox is hidden", async () => {
+      const createdAt = new Date("2026-06-01T00:00:00Z")
+      mocks.repo.findById.mockResolvedValue({
+        id: "msg-1",
+        workspaceId: "ws-1",
+        conversationId: "conv-1",
+        contactInboxId: "ci1",
+        attachments: [],
+      })
+      mocks.contactInboxService.findBy.mockResolvedValue({
+        id: "ci1",
+        inboxId: "i1",
+      })
+
+      await expect(
+        findByIdWithUrls({
+          id: "msg-1",
+          workspaceId: "ws-1",
+          createdAt,
+          hiddenInboxIds: ["i1"],
+        }),
+      ).rejects.toThrow(NOT_FOUND_RE)
     })
 
     test("throws when no message is found", async () => {
@@ -188,8 +217,31 @@ describe("message list-for-conversation", () => {
 
       const call = mocks.repo.listByConversation.mock.calls[0]?.[0]
       expect(call.pagination.cursor.id).toBe("")
-      // endOfHour: minutes/seconds pinned to the hour boundary (:59:59.999).
-      expect(call.pagination.cursor.createdAt.getMinutes()).toBe(59)
+      expect(call.pagination.cursor.createdAt).toEqual(endOfHour(lastMessageAt))
+    })
+
+    test("a rewound contact-inbox bookmark does not hide a newer conversation message", async () => {
+      mocks.conversationService.findBy.mockResolvedValue({
+        id: "conv-1",
+        workspaceId: "ws-1",
+        contactId: "contact-1",
+        createdAt: new Date("2026-01-01T00:00:00Z"),
+        lastActivityAt: new Date("2026-11-18T17:41:43.689Z"),
+      })
+      mocks.contactInboxService.findRecentByContactId.mockResolvedValue({
+        lastMessageAt: new Date("2026-11-18T07:03:11.000Z"),
+      })
+
+      await listForConversation({
+        workspaceId: "ws-1",
+        conversationId: "conv-1",
+        limit: 20,
+      })
+
+      const call = mocks.repo.listByConversation.mock.calls[0]?.[0]
+      expect(call.pagination.cursor.createdAt).toEqual(
+        endOfHour(new Date("2026-11-18T17:41:43.689Z")),
+      )
     })
 
     test("a contactInboxId narrows the repository query and is looked up within the conversation's contact", async () => {
@@ -463,6 +515,67 @@ describe("message list-for-conversation", () => {
       })
 
       expect(result.data[0].attachments[0].url).toBeNull()
+    })
+
+    test("passes excludeContactInboxIds for personal SMTP ACL", async () => {
+      mocks.conversationService.findBy.mockResolvedValue({
+        id: "conv-1",
+        workspaceId: "ws-1",
+        contactId: "contact-1",
+        createdAt: new Date("2026-01-01T00:00:00Z"),
+      })
+      mocks.contactInboxService.listByContactId.mockResolvedValue([
+        {
+          id: "ci1",
+          inboxId: "i1",
+          lastMessageAt: new Date("2026-06-01T00:00:00Z"),
+        },
+        {
+          id: "ci2",
+          inboxId: "i2",
+          lastMessageAt: new Date("2026-06-02T00:00:00Z"),
+        },
+      ])
+
+      await listForConversation({
+        workspaceId: "ws-1",
+        conversationId: "conv-1",
+        hiddenInboxIds: ["i1"],
+        limit: 20,
+      })
+
+      expect(mocks.repo.listByConversation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          excludeContactInboxIds: ["ci1"],
+        }),
+      )
+      expect(
+        mocks.contactInboxService.findRecentByContactId,
+      ).not.toHaveBeenCalled()
+    })
+
+    test("rejects an explicit contactInboxId that belongs to a hidden inbox", async () => {
+      mocks.conversationService.findBy.mockResolvedValue({
+        id: "conv-1",
+        workspaceId: "ws-1",
+        contactId: "contact-1",
+        createdAt: new Date("2026-01-01T00:00:00Z"),
+      })
+      mocks.contactInboxService.listByContactId.mockResolvedValue([
+        { id: "ci1", inboxId: "i1", lastMessageAt: null },
+        { id: "ci2", inboxId: "i2", lastMessageAt: null },
+      ])
+
+      await expect(
+        listForConversation({
+          workspaceId: "ws-1",
+          conversationId: "conv-1",
+          contactInboxId: "ci1",
+          hiddenInboxIds: ["i1"],
+          limit: 20,
+        }),
+      ).rejects.toThrow(NOT_FOUND_RE)
+      expect(mocks.repo.listByConversation).not.toHaveBeenCalled()
     })
   })
 })

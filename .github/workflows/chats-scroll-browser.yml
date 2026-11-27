@@ -1,0 +1,46 @@
+name: Chats scroll browser
+
+# Real-browser check that a long staff-chat thread scrolls inside the dialog
+# and leaves the chat column in place. Runs on a GitHub-hosted runner. It does
+# not boot the app and does not call production.
+on:
+  pull_request:
+    paths:
+      - apps/builder/src/features/chats/components/chats-page.tsx
+      - apps/builder/src/features/chats/components/chat-composer.tsx
+      - apps/builder/src/app/space/*/layout.tsx
+      - apps/builder/src/components/full-bleed.tsx
+      - .github/scripts/chats-scroll-browser.mjs
+      - .github/workflows/chats-scroll-browser.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    name: Dialog scroll
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install Playwright
+        run: |
+          mkdir -p /tmp/chats-scroll-browser
+          cd /tmp/chats-scroll-browser
+          npm init -y
+          npm install @playwright/test
+          npx playwright install --with-deps chromium
+
+      - name: Check the dialog scrolls inside the viewport
+        working-directory: /tmp/chats-scroll-browser
+        run: |
+          cp "$GITHUB_WORKSPACE/.github/scripts/chats-scroll-browser.mjs" check.mjs
+          node check.mjs "$GITHUB_WORKSPACE"

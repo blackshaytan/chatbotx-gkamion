@@ -106,10 +106,7 @@ export const NotificationSettingsDialog = ({
     }),
   )
 
-  const handleToggle = (
-    type: NotificationPreferenceType,
-    checked: boolean,
-  ) => {
+  const handleToggle = (type: NotificationPreferenceType, checked: boolean) => {
     updateMutation.mutate({
       workspaceId,
       patch: { [type]: checked },

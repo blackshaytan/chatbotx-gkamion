@@ -7,6 +7,10 @@ export type DromDealItem = {
   qty: number
   url: string
   annotation: string
+  /** «Номер запчасти» from the item card; filled after the deal page is parsed. */
+  article: string
+  /** «Производитель» from the item card; filled after the deal page is parsed. */
+  brand: string
 }
 
 export type DromDeal = {
@@ -77,6 +81,8 @@ const parseItem = (html: string): DromDealItem => {
     qty,
     url: href ? absolute(href) : "",
     annotation: textOf(ANNOTATION, html),
+    article: "",
+    brand: "",
   }
 }
 
@@ -98,6 +104,29 @@ const parseDelivery = (
   }
   pickupAddress = pickupAddress || textOf(PICKUP_BUTTON, html)
   return { deliveryMethod, pickupAddress }
+}
+
+const OEM_FIELD =
+  /data-field="autoPartsOemNumber"[^>]*>\s*(?:<a[^>]*>)?\s*([A-Za-z0-9][A-Za-z0-9\-_/]*)/i
+const MANUFACTURER_FIELD = /data-field="manufacturer"[^>]*>\s*([^<]+)/i
+const OEM_LABEL =
+  /<div class="label">\s*Номер запчасти\s*<\/div>\s*<div class="value">\s*(?:<span[^>]*>\s*)?(?:<a[^>]*>)?\s*([A-Za-z0-9][A-Za-z0-9\-_/]*)/is
+const BRAND_LABEL =
+  /<div class="label">\s*Производитель\s*<\/div>\s*<div class="value">\s*(?:<span[^>]*>)?\s*([^<]+)/is
+
+/**
+ * «Номер запчасти» + «Производитель» from a bulletin (`/dealview/...`) page.
+ * The deal page itself carries neither, so the position card is read separately.
+ */
+export const parseBulletinFacts = (
+  html: string,
+): { article: string; brand: string } => {
+  const body = html ?? ""
+  const article = OEM_FIELD.exec(body)?.[1] ?? OEM_LABEL.exec(body)?.[1] ?? ""
+  const brand = stripTags(
+    MANUFACTURER_FIELD.exec(body)?.[1] ?? BRAND_LABEL.exec(body)?.[1] ?? "",
+  )
+  return { article: article.trim(), brand: brand.trim() }
 }
 
 /** Parses the seller's order page `baza.drom.ru/deal/<id>`. */

@@ -1,13 +1,13 @@
 "use client"
 
-import { plainTextStarterKit } from "@/components/tiptap/plain-text-tiptap-editor"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
+import { useMutation } from "@tanstack/react-query"
 import Placeholder from "@tiptap/extension-placeholder"
 import { EditorContent, useEditor } from "@tiptap/react"
-import { useMutation } from "@tanstack/react-query"
 import { PaperclipIcon, SendIcon, XIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
+import { plainTextStarterKit } from "@/components/tiptap/plain-text-tiptap-editor"
 import { orpc } from "@/lib/orpc/query"
 import { useInvalidateChats } from "../hooks/use-invalidate-chats"
 
@@ -31,9 +31,7 @@ export const ChatComposer = ({
   const [text, setText] = useState("")
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [isUploading, setIsUploading] = useState(false)
-  const upload = useMutation(
-    orpc.chatsAPI.attachments.upload.mutationOptions(),
-  )
+  const upload = useMutation(orpc.chatsAPI.attachments.upload.mutationOptions())
   const send = useMutation(
     orpc.chatsAPI.messages.create.mutationOptions({
       onSuccess: async () => {
@@ -45,7 +43,12 @@ export const ChatComposer = ({
   )
   const submit = () => {
     const message = text.trim()
-    if (disabled || isUploading || send.isPending || (!message && !attachments.length)) {
+    if (
+      disabled ||
+      isUploading ||
+      send.isPending ||
+      !(message || attachments.length)
+    ) {
       return
     }
     send.mutate({
@@ -96,7 +99,9 @@ export const ChatComposer = ({
     setIsUploading(true)
     try {
       const uploaded = await Promise.all(
-        files.map((file) => upload.mutateAsync({ file, id: chatId, workspaceId })),
+        files.map((file) =>
+          upload.mutateAsync({ file, id: chatId, workspaceId }),
+        ),
       )
       setAttachments((current) => [
         ...current,
@@ -107,14 +112,28 @@ export const ChatComposer = ({
     }
   }
   return (
-    <div className="space-y-2 border-t p-3">
+    <div className="shrink-0 space-y-2 border-t p-3">
       <EditorContent editor={editor} />
       {attachments.length ? (
         <div className="flex flex-wrap gap-2 text-sm">
           {attachments.map((attachment) => (
-            <span className="flex items-center gap-1 rounded border px-2 py-1" key={attachment.key}>
+            <span
+              className="flex items-center gap-1 rounded border px-2 py-1"
+              key={attachment.key}
+            >
               {attachment.name}
-              <Button aria-label={t("actions.delete")} className="size-5" onClick={() => setAttachments((current) => current.filter((item) => item.key !== attachment.key))} size="icon" type="button" variant="ghost">
+              <Button
+                aria-label={t("actions.delete")}
+                className="size-5"
+                onClick={() =>
+                  setAttachments((current) =>
+                    current.filter((item) => item.key !== attachment.key),
+                  )
+                }
+                size="icon"
+                type="button"
+                variant="ghost"
+              >
                 <XIcon aria-hidden="true" />
               </Button>
             </span>
@@ -122,11 +141,33 @@ export const ChatComposer = ({
         </div>
       ) : null}
       <div className="flex items-center gap-2">
-        <input className="sr-only" multiple onChange={uploadFiles} ref={fileInputRef} type="file" />
-        <Button aria-label={t("actions.uploadFile")} disabled={disabled || isUploading || send.isPending} onClick={() => fileInputRef.current?.click()} size="icon" type="button" variant="outline">
+        <input
+          className="sr-only"
+          multiple
+          onChange={uploadFiles}
+          ref={fileInputRef}
+          type="file"
+        />
+        <Button
+          aria-label={t("actions.uploadFile")}
+          disabled={disabled || isUploading || send.isPending}
+          onClick={() => fileInputRef.current?.click()}
+          size="icon"
+          type="button"
+          variant="outline"
+        >
           <PaperclipIcon aria-hidden="true" />
         </Button>
-        <Button disabled={disabled || isUploading || send.isPending || (!text.trim() && !attachments.length)} onClick={submit} type="button">
+        <Button
+          disabled={
+            disabled ||
+            isUploading ||
+            send.isPending ||
+            !(text.trim() || attachments.length)
+          }
+          onClick={submit}
+          type="button"
+        >
           <SendIcon aria-hidden="true" />
           {t("actions.send")}
         </Button>

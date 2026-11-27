@@ -1,6 +1,7 @@
 import type { DatabaseClient } from "@chatbotx.io/database/client"
 import { and, db, eq, findOrFail } from "@chatbotx.io/database/client"
 import { channelTypes } from "@chatbotx.io/database/partials"
+import { inboxRepository } from "@chatbotx.io/database/repositories"
 import { integrationSmtpModel } from "@chatbotx.io/database/schema"
 import type {
   InboxModel,
@@ -18,7 +19,13 @@ import {
 import { connectionStateService } from "../connection/state-service"
 import { ChatbotXException } from "../errors"
 import { inboxService } from "../inbox/service"
+import { smtpOwnershipService } from "../inbox/smtp-ownership"
 import type { SmtpEditableSettings } from "./schema"
+
+/** An integration row plus the owner of its inbox (`Inbox.ownerUserId`). */
+export type IntegrationSmtpWithOwner = IntegrationSmtpModel & {
+  ownerUserId: string | null
+}
 
 /**
  * Mirrors `SmtpAuthValue` from `@chatbotx.io/integration-smtp` without
@@ -56,10 +63,13 @@ export type UpdateSmtpInput = Partial<{
   receiveEnabled: boolean
   imapHost: string
   imapPort: number
+  /** Personal owner, or null to make the mailbox shared. Omit to keep it. */
+  ownerUserId: string | null
 }>
 
 const toEditableSettings = (
   row: IntegrationSmtpModel,
+  ownerUserId: string | null,
 ): SmtpEditableSettings => {
   const auth = row.auth as Partial<SmtpAuthInput>
   return {
@@ -73,6 +83,7 @@ const toEditableSettings = (
     receiveEnabled: auth.receiveEnabled ?? true,
     imapHost: auth.imapHost || "",
     imapPort: auth.imapPort ?? null,
+    ownerUserId,
   }
 }
 
@@ -87,26 +98,32 @@ class IntegrationSmtpService extends BaseService {
     })
   }
 
-  findByIdForWorkspace(props: {
+  async findByIdForWorkspace(props: {
     id: string
     workspaceId: string
-  }): Promise<IntegrationSmtpModel> {
-    return findOrFail({
+  }): Promise<IntegrationSmtpWithOwner> {
+    const integration = await findOrFail({
       table: integrationSmtpModel,
       where: { id: props.id, workspaceId: props.workspaceId },
       message: "SMTP integration not found",
     })
+    const inbox = await inboxRepository.findById({ id: integration.inboxId })
+
+    return { ...integration, ownerUserId: inbox?.ownerUserId ?? null }
   }
 
   async listByWorkspace(workspaceId: string): Promise<SmtpEditableSettings[]> {
     const data = await db.query.integrationSmtpModel.findMany({
       where: { workspaceId },
+      with: {
+        inbox: { columns: { ownerUserId: true } },
+      },
       orderBy: {
         createdAt: "desc",
       },
     })
 
-    return data.map((row) => toEditableSettings(row))
+    return data.map((row) => toEditableSettings(row, row.inbox.ownerUserId))
   }
 
   async connect(input: {
@@ -115,8 +132,10 @@ class IntegrationSmtpService extends BaseService {
     name: string
     fromAddress: string
     auth: SmtpAuthInput
+    /** Personal owner, or null/omitted for a shared mailbox. */
+    ownerUserId?: string | null
   }): Promise<{ inbox: InboxModel; wasCreated: boolean; smtpId: string }> {
-    const { workspaceId, ownerId, name, fromAddress, auth } = input
+    const { workspaceId, ownerId, name, fromAddress, auth, ownerUserId } = input
 
     const smtpId = createId()
     const quotaConsumption: ConnectionQuotaConsumption = {
@@ -168,6 +187,15 @@ class IntegrationSmtpService extends BaseService {
             inboxId: inbox.id,
           })
 
+          if (ownerUserId !== undefined) {
+            await smtpOwnershipService.setOwner({
+              workspaceId,
+              inboxId: inbox.id,
+              ownerUserId,
+              tx,
+            })
+          }
+
           return { inbox, wasCreated }
         }),
     )
@@ -185,6 +213,9 @@ class IntegrationSmtpService extends BaseService {
    * the diff live here so any future caller (public API, worker) gets them for
    * free — see `.agents/rules/data-access.md` on public and private paths
    * sharing one service method.
+   *
+   * `data.ownerUserId` (when present) is written to the inbox in the same
+   * transaction, so a rejected owner leaves the credentials untouched.
    */
   async update(input: {
     workspaceId: string
@@ -192,7 +223,7 @@ class IntegrationSmtpService extends BaseService {
     data: UpdateSmtpInput
     tx?: DatabaseClient
   }): Promise<IntegrationSmtpModel> {
-    const { workspaceId, id, data, tx = db } = input
+    const { workspaceId, id, data, tx } = input
 
     const integration = await this.findByIdForWorkspace({ id, workspaceId })
     const currentAuth = integration.auth as SmtpAuthInput
@@ -215,23 +246,37 @@ class IntegrationSmtpService extends BaseService {
       ...(imapPort ? { imapPort } : {}),
     }
 
-    // Scoped by workspace as well as id: `findByIdForWorkspace` above already
-    // proves ownership, but this method accepts a `workspaceId` and must
-    // honour it rather than trusting every future caller to guard first.
-    const [updated] = await tx
-      .update(integrationSmtpModel)
-      .set({ auth, name, fromAddress })
-      .where(
-        and(
-          eq(integrationSmtpModel.id, id),
-          eq(integrationSmtpModel.workspaceId, workspaceId),
-        ),
-      )
-      .returning()
+    const run = async (client: DatabaseClient) => {
+      if (data.ownerUserId !== undefined) {
+        await smtpOwnershipService.setOwner({
+          workspaceId,
+          inboxId: integration.inboxId,
+          ownerUserId: data.ownerUserId,
+          tx: client,
+        })
+      }
 
-    if (!updated) {
-      throw new ChatbotXException("SMTP integration not found")
+      // Scoped by workspace as well as id: `findByIdForWorkspace` above already
+      // proves ownership, but this method accepts a `workspaceId` and must
+      // honour it rather than trusting every future caller to guard first.
+      const [updated] = await client
+        .update(integrationSmtpModel)
+        .set({ auth, name, fromAddress })
+        .where(
+          and(
+            eq(integrationSmtpModel.id, id),
+            eq(integrationSmtpModel.workspaceId, workspaceId),
+          ),
+        )
+        .returning()
+
+      if (!updated) {
+        throw new ChatbotXException("SMTP integration not found")
+      }
+      return updated
     }
+
+    const updated = tx ? await run(tx) : await db.transaction(run)
 
     const hasChanged = !isSameJsonValue(
       { auth, name, fromAddress },
@@ -241,8 +286,11 @@ class IntegrationSmtpService extends BaseService {
         fromAddress: integration.fromAddress,
       },
     )
+    const ownerChanged =
+      data.ownerUserId !== undefined &&
+      data.ownerUserId !== integration.ownerUserId
 
-    if (hasChanged) {
+    if (hasChanged || ownerChanged) {
       await this.audit("update", "updated the SMTP channel configuration")
     }
 

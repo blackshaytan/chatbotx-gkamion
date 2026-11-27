@@ -36,6 +36,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
+    // Page-data workers each load the server graph; bound their combined memory.
+    cpus: 1,
+    staticGenerationMaxConcurrency: 1,
     proxyClientMaxBodySize: "26mb",
     serverActions: {
       bodySizeLimit: "20mb",

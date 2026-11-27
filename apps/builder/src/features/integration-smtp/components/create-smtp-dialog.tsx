@@ -15,11 +15,13 @@ import { CreateSmtpForm } from "./create-smtp-form"
 
 type CreateSmtpDialogProps = {
   readonly workspaceId: string
+  readonly canManageOwner: boolean
   readonly children: ReactElement
 }
 
 export const CreateSmtpDialog = ({
   workspaceId,
+  canManageOwner,
   children,
 }: CreateSmtpDialogProps) => {
   const t = useTranslations()
@@ -37,6 +39,7 @@ export const CreateSmtpDialog = ({
           <DialogDescription />
         </DialogHeader>
         <CreateSmtpForm
+          canManageOwner={canManageOwner}
           onCancel={() => onOpenChange(false)}
           onSuccess={() => onOpenChange(false)}
           workspaceId={workspaceId}

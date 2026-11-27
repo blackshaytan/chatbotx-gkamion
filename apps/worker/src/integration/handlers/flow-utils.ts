@@ -183,6 +183,7 @@ export const STEP_PRODUCES_MESSAGE: Record<StepType, boolean> = {
   splitTraffic: false,
   make: false,
   triggerN8n: false,
+  sendOrderNotification: false,
 
   // Flow Operations (F_)
   startAnotherNode: false,

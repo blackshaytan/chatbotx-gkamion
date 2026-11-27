@@ -8,7 +8,7 @@ import type {
 import type { MessageResourceWithRelations } from "../schema/resource"
 
 export const listMessages = async (
-  input: ListMessagesRequest,
+  input: ListMessagesRequest & { hiddenInboxIds?: string[] },
 ): Promise<ListMessagesResponse> => {
   const cursor = decodeCursor(input.cursor)
 
@@ -16,6 +16,7 @@ export const listMessages = async (
     workspaceId: input.workspaceId,
     conversationId: input.conversationId,
     contactInboxId: input.contactInboxId,
+    hiddenInboxIds: input.hiddenInboxIds,
     cursor: cursor
       ? {
           createdAt: cursor.createdAt,
@@ -39,12 +40,13 @@ export const listMessages = async (
 }
 
 export const findMessage = async (
-  input: FindMessageRequest,
+  input: FindMessageRequest & { hiddenInboxIds?: string[] },
 ): Promise<MessageResourceWithRelations> => {
   const message = await messageService.findByIdWithUrls({
     workspaceId: input.workspaceId,
     id: input.id,
     createdAt: input.createdAt,
+    hiddenInboxIds: input.hiddenInboxIds,
   })
 
   return message as MessageResourceWithRelations

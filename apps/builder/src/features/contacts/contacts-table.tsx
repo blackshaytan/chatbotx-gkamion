@@ -5,6 +5,7 @@ import { DataTable } from "@chatbotx.io/ui/components/data-table/data-table"
 import { DataTableColumnHeader } from "@chatbotx.io/ui/components/data-table/data-table-column-header"
 import { DataTableSkeleton } from "@chatbotx.io/ui/components/data-table/data-table-skeleton"
 import { DataTableToolbar } from "@chatbotx.io/ui/components/data-table/data-table-toolbar"
+import { Badge } from "@chatbotx.io/ui/components/ui/badge"
 import { Button } from "@chatbotx.io/ui/components/ui/button"
 import { Checkbox } from "@chatbotx.io/ui/components/ui/checkbox"
 import {
@@ -38,17 +39,19 @@ import { getLatestContactLastReadAt } from "./utils"
 /**
  * One contact rendered as a card, for the narrow-viewport view of the table.
  *
- * Only the fields worth a phone's width survive: identity, who owns the
- * conversation, and when the contact arrived. Source and last-read stay in the
- * table, which takes over from `md` up. Every label is a key the table columns
- * already use, so the card adds no translation surface.
+ * Keeps the same fields as the desktop columns that fit a phone width:
+ * identity, tags, email/phone (when permitted), assignee, and created-at.
+ * Source and last-read stay desktop-only. Every label reuses a table-column
+ * translation key so the card adds no translation surface.
  */
 function ContactCard({
   row,
   workspaceId,
+  canViewEmailAndPhone,
 }: {
   row: Row<ContactTableRow>
   workspaceId: string
+  canViewEmailAndPhone: boolean
 }) {
   const t = useTranslations()
   const contact = row.original
@@ -63,7 +66,30 @@ function ContactCard({
       />
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <ContactNameCell contact={contact} workspaceId={workspaceId} />
+        {contact.tags.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {contact.tags.map((tag) => (
+              <Badge key={tag.id} variant="secondary">
+                {tag.name}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
         <dl className="flex flex-col gap-1 text-muted-foreground text-xs">
+          {canViewEmailAndPhone && contact.email ? (
+            <div className="flex items-baseline justify-between gap-3">
+              <dt>{t("fields.email.label")}</dt>
+              <dd className="truncate text-foreground">{contact.email}</dd>
+            </div>
+          ) : null}
+          {canViewEmailAndPhone && contact.phoneNumber ? (
+            <div className="flex items-baseline justify-between gap-3">
+              <dt>{t("fields.phone.label")}</dt>
+              <dd className="truncate text-foreground">
+                {contact.phoneNumber}
+              </dd>
+            </div>
+          ) : null}
           <div className="flex items-baseline justify-between gap-3">
             <dt>{t("fields.assignee.label")}</dt>
             <dd className="truncate text-foreground">
@@ -159,8 +185,8 @@ export function ContactsTable({
     ? t("contacts.countCapped", { count: totalCountDisplay })
     : t("contacts.countExact", { count: totalCountDisplay })
 
-  const columns = useMemo<ColumnDef<ContactTableRow>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<ContactTableRow>[]>(() => {
+    const baseColumns: ColumnDef<ContactTableRow>[] = [
       {
         id: "select",
         header: ({ table: innerTable }) => (
@@ -196,10 +222,12 @@ export function ContactsTable({
         cell: ({ row }) => (
           <ContactNameCell
             avatarClassName="size-9"
+            // Table rows omit `lastMessageAt`, so the shared
+            // `resolveActiveContactInbox` helper cannot type-check here.
+            // With every inbox at epoch 0 that helper already returns the
+            // first element — same as indexing `[0]`.
             channel={
-              row.original.contactInboxes?.[0]?.channel as
-                | ChannelType
-                | undefined
+              row.original.contactInboxes[0]?.channel as ChannelType | undefined
             }
             contact={row.original}
             conversationId={row.original.conversation?.id}
@@ -219,6 +247,76 @@ export function ContactsTable({
         enableColumnFilter: true,
         enableHiding: false,
       },
+      {
+        id: "tags",
+        accessorKey: "tags",
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            title={t("fields.tags.label")}
+          />
+        ),
+        cell: ({ row }) => (
+          <div className="flex max-w-[220px] flex-wrap gap-1">
+            {row.original.tags.map((tag) => (
+              <Badge key={tag.id} variant="secondary">
+                {tag.name}
+              </Badge>
+            ))}
+          </div>
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        meta: {
+          label: t("fields.tags.label"),
+        },
+      },
+    ]
+
+    if (canViewEmailAndPhone) {
+      baseColumns.push(
+        {
+          id: "email",
+          accessorKey: "email",
+          header: ({ column }) => (
+            <DataTableColumnHeader
+              column={column}
+              title={t("fields.email.label")}
+            />
+          ),
+          cell: ({ row }) => (
+            <div className="max-w-[220px] truncate">{row.original.email}</div>
+          ),
+          enableSorting: false,
+          enableHiding: false,
+          meta: {
+            label: t("fields.email.label"),
+          },
+        },
+        {
+          id: "phoneNumber",
+          accessorKey: "phoneNumber",
+          header: ({ column }) => (
+            <DataTableColumnHeader
+              column={column}
+              title={t("fields.phone.label")}
+            />
+          ),
+          cell: ({ row }) => (
+            <div className="max-w-[160px] truncate">
+              {row.original.phoneNumber}
+            </div>
+          ),
+          enableSorting: false,
+          enableHiding: false,
+          meta: {
+            label: t("fields.phone.label"),
+          },
+        },
+      )
+    }
+
+    baseColumns.push(
       {
         accessorKey: "source",
         header: ({ column }) => (
@@ -327,9 +425,10 @@ export function ContactsTable({
         enableSorting: true,
         enableHiding: false,
       },
-    ],
-    [workspaceId, t],
-  )
+    )
+
+    return baseColumns
+  }, [workspaceId, t, canViewEmailAndPhone])
 
   const { table } = useDataTable({
     data: tableData,
@@ -360,7 +459,13 @@ export function ContactsTable({
   )
 
   if (!contactsResponse && contactsQuery.isPending) {
-    return <DataTableSkeleton columnCount={6} filterCount={1} rowCount={10} />
+    return (
+      <DataTableSkeleton
+        columnCount={canViewEmailAndPhone ? 9 : 7}
+        filterCount={1}
+        rowCount={10}
+      />
+    )
   }
 
   if (!contactsResponse && contactsQuery.isError) {
@@ -378,7 +483,13 @@ export function ContactsTable({
     <DataTable
       aria-busy={contactsQuery.isFetching}
       className="[&_tbody_td]:py-3 [&_tbody_td]:text-[15px] [&_tbody_tr]:h-16"
-      mobileCard={(row) => <ContactCard row={row} workspaceId={workspaceId} />}
+      mobileCard={(row) => (
+        <ContactCard
+          canViewEmailAndPhone={canViewEmailAndPhone}
+          row={row}
+          workspaceId={workspaceId}
+        />
+      )}
       table={table}
     >
       {showContactFilterPanel && (

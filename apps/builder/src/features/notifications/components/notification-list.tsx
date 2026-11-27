@@ -154,7 +154,11 @@ export const NotificationList = ({
                   <MessageSquareIcon className="size-4" />
                 </span>
                 <span className="min-w-0 flex-1 space-y-1">
-                  <span className={item.readAt ? "block" : "block font-medium"}>
+                  <span
+                    className={
+                      item.readAt ? "block font-normal" : "block font-bold"
+                    }
+                  >
                     {t(
                       item.payload.count > 1
                         ? "items.chatMessages"
@@ -202,7 +206,11 @@ export const NotificationList = ({
                 <Icon className="size-4" />
               </span>
               <span className="min-w-0 flex-1 space-y-1">
-                <span className={item.readAt ? "block" : "block font-medium"}>
+                <span
+                  className={
+                    item.readAt ? "block font-normal" : "block font-bold"
+                  }
+                >
                   {t(
                     item.type === "taskDueChanged" && item.payload.to === null
                       ? "items.taskDueRemoved"

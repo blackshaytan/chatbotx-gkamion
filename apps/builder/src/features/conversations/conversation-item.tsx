@@ -54,6 +54,7 @@ import {
   selectGoogleAdsBadge,
 } from "./utils/ad-badge"
 import { isAwaitingManager, isConversationActive } from "./utils/bot-state"
+import { resolveActiveContactInbox } from "./utils/contact-inbox"
 
 // Icon shown next to a call preview snippet. Mirrors whatsapp-call-card.tsx's
 // icon choices so the preview and the card agree per call outcome.
@@ -241,6 +242,7 @@ export default function ConversationItem({
   const assignedInboxTeamOptionName =
     assigneeOptionNameByValue.get(`t_${conversation.assignedInboxTeamId}`) ??
     null
+  const replyChannel = resolveActiveContactInbox(conversation.contactInboxes)
   const { name: brand } = useTenantSettings()
   const previewText = resolveLastMessagePreview(
     conversation.messages?.[0],
@@ -325,13 +327,13 @@ export default function ConversationItem({
             )}
           </div>
           <div className="absolute end-0 bottom-0 transform">
-            {conversation.contactInboxes?.map((contactInbox) => (
-              <Tooltip key={contactInbox.id}>
+            {replyChannel ? (
+              <Tooltip>
                 <TooltipTrigger
                   render={
                     <span>
                       <InboxIcon
-                        channel={contactInbox.channel as ChannelType}
+                        channel={replyChannel.channel as ChannelType}
                         showLabel={false}
                         size="small"
                       />
@@ -339,10 +341,10 @@ export default function ConversationItem({
                   }
                 />
                 <TooltipContent align="center" side="right">
-                  {contactInbox.inbox.name}
+                  {replyChannel.inbox.name}
                 </TooltipContent>
               </Tooltip>
-            ))}
+            ) : null}
           </div>
           {conversation.followed && (
             <div className="absolute end-0 top-0 transform">

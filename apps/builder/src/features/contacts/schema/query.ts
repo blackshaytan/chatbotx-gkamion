@@ -161,8 +161,11 @@ export const contactTableRowResource = contactResource
     fullName: true,
     avatar: true,
     createdAt: true,
+    email: true,
+    phoneNumber: true,
   })
   .extend({
+    tags: z.array(tagResource.pick({ id: true, name: true })),
     contactInboxes: z.array(
       contactInboxResource.pick({
         channel: true,

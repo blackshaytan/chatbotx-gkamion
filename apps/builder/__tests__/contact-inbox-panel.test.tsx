@@ -4,9 +4,33 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
-import { ContactInboxPanel } from "@/features/contacts/contact-inbox-panel"
 import type { UseAutoRefreshContactProfileProps } from "@/features/contacts/hooks/use-auto-refresh-contact-profile"
 import type { ThreadControlView } from "@/features/conversations/utils/thread-control"
+
+vi.mock("@chatbotx.io/database/client", () => ({
+  db: {},
+  sql: vi.fn(),
+}))
+
+vi.mock("@chatbotx.io/filesystem", () => ({
+  uploader: { getObject: vi.fn(), getSignedUrl: vi.fn() },
+  getImageDimensions: vi.fn(),
+}))
+
+vi.mock("@chatbotx.io/mail", () => ({
+  sendEmail: vi.fn(),
+  createSmtpTransporter: vi.fn(),
+}))
+
+vi.mock("@chatbotx.io/auth/server", () => ({
+  auth: { api: { getSession: vi.fn() } },
+  createAuth: vi.fn(),
+}))
+
+vi.mock("@/features/contacts/contact-panel-visibility", () => ({
+  SHOW_CONTACT_CUSTOM_FIELD_ACTIONS: true,
+  SHOW_CONTACT_SIDE_PANEL_MODULES: true,
+}))
 
 vi.mock("next-intl", () => ({
   useFormatter: () => ({
@@ -14,6 +38,10 @@ vi.mock("next-intl", () => ({
   }),
   useTranslations: () => (key: string) => key,
 }))
+
+const { ContactInboxPanel } = await import(
+  "@/features/contacts/contact-inbox-panel"
+)
 
 const getContactMock = vi.fn()
 const notesMock = vi.fn().mockResolvedValue({ data: [] })
@@ -37,6 +65,16 @@ vi.mock("@/lib/orpc/query", () => ({
           queryFn: () => getContactMock(input),
           enabled,
           initialData,
+        }),
+      },
+      listContactOrdersAuthenticatedAPI: {
+        queryOptions: ({
+          input,
+        }: {
+          input: { workspaceId: string; contactId: string }
+        }) => ({
+          queryKey: ["contact-orders", input.workspaceId, input.contactId],
+          queryFn: async () => ({ data: [] }),
         }),
       },
     },
@@ -116,6 +154,18 @@ vi.mock("@/features/contacts/hooks/use-auto-refresh-contact-profile", () => ({
   useAutoRefreshContactProfile: (props: UseAutoRefreshContactProfileProps) => {
     autoRefreshCapture = props
   },
+}))
+
+vi.mock("@/features/contacts/components/contact-orders-section", () => ({
+  ContactOrdersSection: () => null,
+}))
+
+vi.mock("@/features/contacts/components/contact-ai-calls-section", () => ({
+  ContactAiCallsSection: () => null,
+}))
+
+vi.mock("@/features/tasks/components/contact-tasks-section", () => ({
+  ContactTasksSection: () => null,
 }))
 
 vi.mock("@/features/contacts/contact-detail", () => ({

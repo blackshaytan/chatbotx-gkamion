@@ -6,8 +6,9 @@ import { isConversationUnread } from "@/features/conversations/lib/is-conversati
 import { buildConversationWhere } from "@/features/conversations/queries/build-conversation-where"
 
 describe("buildConversationWhere — inboxActivityAt cursor", () => {
-  test("pages past the cursor in inboxActivityAt DESC NULLS LAST, id DESC order", () => {
+  test("pages through older unread rows and then every read row", () => {
     const cursor = {
+      unread: true,
       inboxActivityAt: new Date("2026-10-21T10:00:00Z"),
       id: "100",
     }
@@ -15,9 +16,50 @@ describe("buildConversationWhere — inboxActivityAt cursor", () => {
     const where = buildConversationWhere("ws-1", {}, cursor)
 
     expect(where.OR).toEqual([
-      { inboxActivityAt: { lt: cursor.inboxActivityAt } },
-      { inboxActivityAt: { isNull: true } },
-      { inboxActivityAt: cursor.inboxActivityAt, id: { lt: cursor.id } },
+      {
+        AND: [
+          conversationUnreadWhere,
+          {
+            OR: [
+              { inboxActivityAt: { lt: cursor.inboxActivityAt } },
+              { inboxActivityAt: { isNull: true } },
+              {
+                inboxActivityAt: cursor.inboxActivityAt,
+                id: { lt: cursor.id },
+              },
+            ],
+          },
+        ],
+      },
+      { NOT: conversationUnreadWhere },
+    ])
+  })
+
+  test("stays inside the read group once the cursor has left the unread group", () => {
+    const cursor = {
+      unread: false,
+      inboxActivityAt: new Date("2026-10-21T10:00:00Z"),
+      id: "100",
+    }
+
+    const where = buildConversationWhere("ws-1", {}, cursor)
+
+    expect(where.OR).toEqual([
+      {
+        AND: [
+          { NOT: conversationUnreadWhere },
+          {
+            OR: [
+              { inboxActivityAt: { lt: cursor.inboxActivityAt } },
+              { inboxActivityAt: { isNull: true } },
+              {
+                inboxActivityAt: cursor.inboxActivityAt,
+                id: { lt: cursor.id },
+              },
+            ],
+          },
+        ],
+      },
     ])
   })
 
@@ -25,11 +67,20 @@ describe("buildConversationWhere — inboxActivityAt cursor", () => {
     const where = buildConversationWhere(
       "ws-1",
       {},
-      { inboxActivityAt: null, id: "100" },
+      {
+        unread: false,
+        inboxActivityAt: null,
+        id: "100",
+      },
     )
 
     expect(where.OR).toEqual([
-      { inboxActivityAt: { isNull: true }, id: { lt: "100" } },
+      {
+        AND: [
+          { NOT: conversationUnreadWhere },
+          { inboxActivityAt: { isNull: true }, id: { lt: "100" } },
+        ],
+      },
     ])
   })
 
@@ -37,7 +88,11 @@ describe("buildConversationWhere — inboxActivityAt cursor", () => {
     const where = buildConversationWhere(
       "ws-1",
       {},
-      { inboxActivityAt: new Date("2026-10-21T10:00:00Z"), id: "1" },
+      {
+        unread: true,
+        inboxActivityAt: new Date("2026-10-21T10:00:00Z"),
+        id: "1",
+      },
     )
 
     expect(JSON.stringify(where)).not.toContain("lastActivityAt")

@@ -10,6 +10,10 @@ const mockLockContentionPolicy = vi.hoisted(() => ({
   maxDelayMs: 30_000,
 }))
 
+const mockClaimAssignmentIfUnassigned = vi.hoisted(() =>
+  vi.fn().mockResolvedValue("claimed"),
+)
+
 // ---------------------------------------------------------------------------
 // Hoist mock references
 // ---------------------------------------------------------------------------
@@ -36,6 +40,7 @@ const {
   mockContactUpdate,
   mockAdoptPhoneNumberIfSafe,
   mockSetAvatarIfEmptyOrSentinel,
+  mockSetAvatarUnlessStored,
   mockUpdateTracking,
   mockInvalidateTracking,
   mockRecordInboundActivity,
@@ -130,6 +135,7 @@ const {
     mockContactUpdate: vi.fn().mockResolvedValue({}),
     mockAdoptPhoneNumberIfSafe,
     mockSetAvatarIfEmptyOrSentinel: vi.fn().mockResolvedValue(undefined),
+    mockSetAvatarUnlessStored: vi.fn().mockResolvedValue(undefined),
     mockConversationFindOrCreate: vi.fn(),
     mockAutomatedResponseEnqueueFlowAction: vi
       .fn()
@@ -235,6 +241,18 @@ vi.mock("@chatbotx.io/database/schema", () => ({
     sourceId: "sourceId",
     workspaceId: "workspaceId",
   },
+  magicLinkStatModel: {
+    workspaceId: "workspaceId",
+    linkId: "linkId",
+    contactInboxId: "contactInboxId",
+    occurredAt: "occurredAt",
+  },
+  refLinkStatModel: {
+    workspaceId: "workspaceId",
+    linkId: "linkId",
+    contactInboxId: "contactInboxId",
+    occurredAt: "occurredAt",
+  },
 }))
 
 // Mirror of the real capability table
@@ -274,6 +292,12 @@ const mockEmitShoppingCartSent = vi.hoisted(() => vi.fn())
 const mockEmitUserAskedAboutProduct = vi.hoisted(() => vi.fn())
 
 vi.mock("@chatbotx.io/business", () => ({
+  flushAllPendingWorkspaceBroadcasts: vi.fn(),
+  resolveWorkspaceFreezeReasonById: vi.fn(async () => ({
+    freezeReason: null,
+  })),
+  settleBlockedOrderNotification: vi.fn(async () => undefined),
+  smartDelayService: { findById: vi.fn(async () => null) },
   productMessageService: {
     resolveInboundProducts: mockResolveInboundProducts,
   },
@@ -285,6 +309,12 @@ vi.mock("@chatbotx.io/business", () => ({
   },
   broadcastToWorkspaceParty: mockBroadcast,
   publishToWorkspaceParty: mockBroadcast,
+  publishMessageEvent: vi.fn(
+    ({ workspaceId, event }: { workspaceId: string; event: unknown }) => {
+      mockBroadcast(workspaceId, event)
+      return Promise.resolve()
+    },
+  ),
   buildContext: mockBuildContext,
   resolveTenantSettings: mockresolveTenantSettings,
   updateContactFromMessage: mockUpdateContactFromMessage,
@@ -327,11 +357,13 @@ vi.mock("@chatbotx.io/business", () => ({
     unblockIfBlocked: mockContactUnblockIfBlocked,
     update: mockContactUpdate,
     setAvatarIfEmptyOrSentinel: mockSetAvatarIfEmptyOrSentinel,
+    setAvatarUnlessStored: mockSetAvatarUnlessStored,
   },
   conversationService: {
     findOrCreate: mockConversationFindOrCreate,
     markReadByOutbound: mockMarkReadByOutbound,
     recordInboundActivity: mockRecordInboundActivity,
+    claimAssignmentIfUnassigned: mockClaimAssignmentIfUnassigned,
   },
   workspaceService: {
     find: mockWorkspaceFind,
@@ -520,6 +552,7 @@ vi.mock("@chatbotx.io/worker-config", () => ({
     add: mockIntegrationQueueAdd,
     getJob: vi.fn().mockResolvedValue(undefined),
   },
+  PURGE_WORKSPACES_INTERVAL_MINUTES: 30,
 }))
 
 vi.mock("../src/lib/logger", () => ({
@@ -822,6 +855,212 @@ describe("receiveMessage — message repository branch", () => {
     mockMarkReadByOutbound.mockResolvedValue(true)
   })
 
+  test("stores ZZAP seller history without emitting automation or replies", async () => {
+    vi.mocked(
+      integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+    ).mockResolvedValue({
+      inbox: { ...fakeInbox, channel: "zzap" },
+      integrationRow: fakeIntegrationRow,
+    } as never)
+    const originalDate = new Date("2026-11-07T06:50:20.000Z")
+    mockFindLastByConversation.mockResolvedValue([])
+    mockRunChannelHandler.mockResolvedValue({
+      message: {
+        ...baseIncomingMessage,
+        sourceId: "zzap-out:history",
+        messageType: "outgoing",
+        attachments: [],
+      },
+      contact: { sourceId: "buyer-key", firstName: "Buyer" },
+      postbackAction: null,
+      quickReplyAction: null,
+      ref: null,
+      historyOnly: true,
+      createdAt: originalDate,
+    })
+    mockCreateOrUpdate.mockResolvedValue({
+      message: {
+        ...fakeCreatedMessage,
+        messageType: "outgoing",
+        senderType: "user",
+        createdAt: originalDate,
+      },
+      isNew: true,
+    })
+
+    await receiveMessage(baseProps)
+
+    expect(mockCreateOrUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        createdAt: originalDate,
+        messageType: "outgoing",
+      }),
+    )
+    expect(mockBroadcast).toHaveBeenCalled()
+    expect(mockEmit).not.toHaveBeenCalled()
+    expect(mockChatQueueAdd).not.toHaveBeenCalled()
+    expect(mockIntegrationQueueAdd).not.toHaveBeenCalled()
+    expect(mockAutomatedResponseEnqueueFlowAction).not.toHaveBeenCalled()
+  })
+
+  test("forwards channel and text to updateContactFromMessage on inbound text message", async () => {
+    vi.mocked(
+      integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+    ).mockResolvedValue({
+      inbox: { ...fakeInbox, channel: "smtp" },
+      integrationRow: fakeIntegrationRow,
+    } as never)
+    mockRunChannelHandler.mockResolvedValue({
+      message: {
+        ...baseIncomingMessage,
+        messageType: "incoming",
+        text: "hello from email",
+      },
+      contact: { sourceId: "client@example.com" },
+      postbackAction: null,
+      quickReplyAction: null,
+      ref: null,
+    })
+
+    await receiveMessage(baseProps)
+
+    expect(mockUpdateContactFromMessage).toHaveBeenCalledWith({
+      contactId: fakeContactInbox.contactId,
+      workspaceId: fakeInbox.workspaceId,
+      text: "hello from email",
+      channel: "smtp",
+    })
+  })
+
+  test("does not store a ZZAP echo of a message ChatbotX already sent", async () => {
+    vi.mocked(
+      integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+    ).mockResolvedValue({
+      inbox: { ...fakeInbox, channel: "zzap" },
+      integrationRow: fakeIntegrationRow,
+    } as never)
+    mockFindLastByConversation.mockResolvedValueOnce([
+      {
+        ...fakeCreatedMessage,
+        id: "sent-by-bot",
+        senderType: "bot",
+        senderId: null,
+        messageType: "outgoing",
+        text: "Цена 7 855 ₽.\n\nНапишите, какой вариант выбрать.",
+        attachments: [],
+      },
+    ])
+    mockRunChannelHandler.mockResolvedValue({
+      message: {
+        ...baseIncomingMessage,
+        sourceId: "zzap-out:echo",
+        messageType: "outgoing",
+        text: "Цена 7 855 ?.\nНапишите, какой вариант выбрать.",
+        attachments: [],
+      },
+      contact: { sourceId: "buyer-key", firstName: "Buyer" },
+      postbackAction: null,
+      quickReplyAction: null,
+      ref: null,
+      historyOnly: true,
+      createdAt: new Date("2026-11-07T12:32:51.000Z"),
+    })
+
+    await receiveMessage(baseProps)
+
+    expect(mockCreateOrUpdate).not.toHaveBeenCalled()
+    expect(mockBroadcast).not.toHaveBeenCalled()
+    expect(mockEmit).not.toHaveBeenCalled()
+  })
+
+  test("does not store a ZZAP echo that only adds the sender signature", async () => {
+    vi.mocked(
+      integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+    ).mockResolvedValue({
+      inbox: { ...fakeInbox, channel: "zzap" },
+      integrationRow: fakeIntegrationRow,
+    } as never)
+    mockFindLastByConversation.mockResolvedValueOnce([
+      {
+        ...fakeCreatedMessage,
+        id: "sent-by-bot",
+        senderType: "bot",
+        senderId: null,
+        messageType: "outgoing",
+        text: "Здравствуйте, Антон Алексеевич! Да, подбор идёт.",
+        attachments: [],
+      },
+    ])
+    mockRunChannelHandler.mockResolvedValue({
+      message: {
+        ...baseIncomingMessage,
+        sourceId: "zzap-out:signed-echo",
+        messageType: "outgoing",
+        text: "?? Гека: Здравствуйте, Антон Алексеевич! Да, подбор идёт.",
+        attachments: [],
+      },
+      contact: { sourceId: "buyer-key", firstName: "Buyer" },
+      postbackAction: null,
+      quickReplyAction: null,
+      ref: null,
+      historyOnly: true,
+      createdAt: new Date("2026-11-07T12:32:51.000Z"),
+    })
+
+    await receiveMessage(baseProps)
+
+    expect(mockCreateOrUpdate).not.toHaveBeenCalled()
+    expect(mockBroadcast).not.toHaveBeenCalled()
+  })
+
+  test("does not store a ZZAP echo whose emoji ZZAP replaced with question marks", async () => {
+    vi.mocked(
+      integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+    ).mockResolvedValue({
+      inbox: { ...fakeInbox, channel: "zzap" },
+      integrationRow: fakeIntegrationRow,
+    } as never)
+    mockFindLastByConversation.mockResolvedValueOnce([
+      {
+        ...fakeCreatedMessage,
+        id: "sent-by-bot",
+        senderType: "bot",
+        senderId: null,
+        messageType: "outgoing",
+        text: [
+          "✅ Ваш заказ отправлен на сборку.",
+          "‼️Остаток оплаты *НАЛИЧНЫМИ*. Оплаты по картам и переводы с карты на карту не принимаем!!!",
+          "⏰Ожидайте сообщение о готовности заказа к выдаче!",
+        ].join("\n"),
+        attachments: [],
+      },
+    ])
+    mockRunChannelHandler.mockResolvedValue({
+      message: {
+        ...baseIncomingMessage,
+        sourceId: "zzap-out:emoji-echo",
+        messageType: "outgoing",
+        text: [
+          "? Ваш заказ отправлен на сборку.",
+          "!?Остаток оплаты *НАЛИЧНЫМИ*. Оплаты по картам и переводы с карты на карту не принимаем!!!",
+          "?Ожидайте сообщение о готовности заказа к выдаче!",
+        ].join("\n"),
+        attachments: [],
+      },
+      contact: { sourceId: "buyer-key", firstName: "Buyer" },
+      postbackAction: null,
+      quickReplyAction: null,
+      ref: null,
+      historyOnly: true,
+      createdAt: new Date("2026-11-07T12:32:51.000Z"),
+    })
+
+    await receiveMessage(baseProps)
+
+    expect(mockCreateOrUpdate).not.toHaveBeenCalled()
+    expect(mockBroadcast).not.toHaveBeenCalled()
+  })
+
   test("calls repository.createOrUpdate() when message has no attachments", async () => {
     mockRunChannelHandler.mockResolvedValue({
       message: { ...baseIncomingMessage, attachments: [] },
@@ -941,6 +1180,91 @@ describe("receiveMessage — message repository branch", () => {
       await receiveMessage(baseProps)
 
       expect(incomingPushJobs()).toHaveLength(1)
+    })
+
+    test("includes inboxId on the incoming push job payload", async () => {
+      await receiveMessage(baseProps)
+
+      expect(incomingPushJobs()[0]?.[1]).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({ inboxId: fakeInbox.id }),
+        }),
+      )
+    })
+  })
+
+  describe("personal SMTP auto-assign", () => {
+    beforeEach(() => {
+      mockClaimAssignmentIfUnassigned.mockResolvedValue("claimed")
+      mockRunChannelHandler.mockResolvedValue({
+        message: { ...baseIncomingMessage, attachments: [] },
+        contact: { sourceId: "client@example.com" },
+        postbackAction: null,
+        quickReplyAction: null,
+        ref: null,
+      })
+    })
+
+    test("claims the owner when a personal SMTP inbox receives inbound mail", async () => {
+      vi.mocked(
+        integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+      ).mockResolvedValue({
+        inbox: {
+          ...fakeInbox,
+          channel: "smtp",
+          ownerUserId: "u1",
+        },
+        integrationRow: fakeIntegrationRow,
+      } as never)
+
+      await receiveMessage(baseProps)
+
+      expect(mockClaimAssignmentIfUnassigned).toHaveBeenCalledWith(
+        expect.objectContaining({
+          assignedId: "u_u1",
+          conversation: { id: "conv-1" },
+          workspaceId: "ws-1",
+          triggerContext: expect.objectContaining({
+            triggerType: "personal_smtp_owner",
+          }),
+        }),
+      )
+    })
+
+    test("does not throw when the conversation is already assigned", async () => {
+      mockClaimAssignmentIfUnassigned.mockResolvedValue("alreadyAssigned")
+      vi.mocked(
+        integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+      ).mockResolvedValue({
+        inbox: {
+          ...fakeInbox,
+          channel: "smtp",
+          ownerUserId: "u1",
+        },
+        integrationRow: fakeIntegrationRow,
+      } as never)
+
+      await expect(receiveMessage(baseProps)).resolves.toBeDefined()
+      expect(mockClaimAssignmentIfUnassigned).toHaveBeenCalledWith(
+        expect.objectContaining({ assignedId: "u_u1" }),
+      )
+    })
+
+    test("skips auto-assign for a shared SMTP inbox", async () => {
+      vi.mocked(
+        integrationService.identifyInboxAndIntegrationAuthFromIdentifier,
+      ).mockResolvedValue({
+        inbox: {
+          ...fakeInbox,
+          channel: "smtp",
+          ownerUserId: null,
+        },
+        integrationRow: fakeIntegrationRow,
+      } as never)
+
+      await receiveMessage(baseProps)
+
+      expect(mockClaimAssignmentIfUnassigned).not.toHaveBeenCalled()
     })
   })
 

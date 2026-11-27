@@ -4,6 +4,7 @@ import {
   conversationService,
   type ExternalAgentInputMessage,
   type ExternalAgentInputRole,
+  type ExternalAgentNotification,
   externalAgentService,
   isFailedOriginPath,
   messageService,
@@ -23,9 +24,13 @@ const MESSAGE_FETCH_LIMIT = 30
 const MESSAGE_LOOKBACK_MS = 30 * 24 * 60 * 60 * 1000
 const FIRST_TURN_MESSAGE_LIMIT = 10
 const HISTORY_MESSAGE_LIMIT = 10
+const NOTIFICATION_LOOKBACK_MS = 24 * 60 * 60 * 1000
+const NOTIFICATION_MESSAGE_LIMIT = 10
 const ATTACHMENT_LINK_TTL_MS = 24 * 60 * 60 * 1000
 const RESUME_TRIGGER_GRACE_MS = 60_000
 const JOB_ID_SEPARATOR = /:/g
+const AGENT_PHOTO_MARKDOWN = /!\[[^\]\n]*]\((https?:\/\/[^)\s]+)\)/
+const AGENT_PHOTO_BARE_URL = /https?:\/\/img-server[\w.-]*\/[^\s)\]]+/
 
 export type ExternalAgentJobRef = {
   workspaceId: string
@@ -144,6 +149,47 @@ export const selectHistory = (
   )
 }
 
+/**
+ * Outgoing platform (`bot`) and CRM (`api`) messages — payment received,
+ * balance topped up, order sent to assembly. The client has already been told,
+ * so the agent must see these facts instead of answering from its own rules.
+ */
+const isNotificationMessage = (message: MessageWithAttachments): boolean =>
+  message.messageType === "outgoing" &&
+  (message.senderType === "bot" || message.senderType === "api")
+
+/**
+ * The newest payment/status notifications of the conversation, oldest first:
+ * last 24 h, at most `NOTIFICATION_MESSAGE_LIMIT`.
+ *
+ * These never start a run by themselves — `selectNewMessages` still takes
+ * contact messages only, so a notification cannot trigger an unsolicited
+ * reply. They only ride along in the input of a turn the client started.
+ */
+export const selectNotifications = (input: {
+  messages: MessageWithAttachments[]
+  now?: Date
+}): MessageWithAttachments[] => {
+  const sinceTime =
+    (input.now ?? new Date()).getTime() - NOTIFICATION_LOOKBACK_MS
+  return input.messages
+    .filter(
+      (message) =>
+        isNotificationMessage(message) &&
+        message.createdAt.getTime() >= sinceTime,
+    )
+    .slice(-NOTIFICATION_MESSAGE_LIMIT)
+}
+
+/** Input rows for the notification block; `api` is the CRM, not a manager. */
+export const toNotificationInputs = (
+  messages: MessageWithAttachments[],
+): ExternalAgentNotification[] =>
+  messages.map((message) => ({
+    source: message.senderType === "api" ? "api" : "bot",
+    text: message.text,
+  }))
+
 const toInputRole = (
   senderType: MessageWithAttachments["senderType"],
 ): ExternalAgentInputRole => {
@@ -163,7 +209,13 @@ export const toInputMessages = async (
   await Promise.all(
     messages.map(async (message) => ({
       role: toInputRole(message.senderType),
+      id: message.id,
+      createdAt: message.createdAt.toISOString(),
       text: message.text,
+      contentAttributes:
+        message.senderType === "contact" && message.messageType === "incoming"
+          ? message.contentAttributes
+          : undefined,
       attachmentUrls: await Promise.all(
         message.attachments
           .filter((attachment) => !isFailedOriginPath(attachment.originPath))
@@ -189,12 +241,14 @@ export const toInputMessages = async (
  * job's `url` (`sendChatMessage` re-hosts the file) and dropped from the text.
  * If the download fails, `sendChatMessage` falls back to text with the URL.
  * Photo-in-bubble request by the owner, 03.11. */
-export const resolveAgentPhotoReply = (output: string): { text: string; url?: string } => {
-  const md = output.match(/!\[[^\]\n]*]\((https?:\/\/[^)\s]+)\)/)
+export const resolveAgentPhotoReply = (
+  output: string,
+): { text: string; url?: string } => {
+  const md = output.match(AGENT_PHOTO_MARKDOWN)
   if (md) {
     return { text: output.replace(md[0], "").trim(), url: md[1] }
   }
-  const bare = output.match(/https?:\/\/img-server[\w.-]*\/[^\s)\]]+/)
+  const bare = output.match(AGENT_PHOTO_BARE_URL)
   if (bare) {
     return { text: output.replace(bare[0], "").trim(), url: bare[0] }
   }

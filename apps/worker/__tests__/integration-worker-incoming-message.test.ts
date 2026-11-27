@@ -177,6 +177,12 @@ vi.mock("../src/integration/utils/message", () => ({
 // Every OTHER handler module worker.ts wires into its switch — none of them
 // are exercised by the `incomingMessage` case, stubbed only so the module
 // graph resolves.
+vi.mock(
+  "../src/integration/handlers/deliver-client-notification-handler",
+  () => ({
+    handleDeliverClientNotification: vi.fn(),
+  }),
+)
 vi.mock("../src/integration/handlers/ads-automatic-event", () => ({
   handleAdsAutomaticEvent: vi.fn(),
 }))
@@ -339,6 +345,18 @@ vi.mock("@chatbotx.io/database/schema", () => ({
     sourceId: "sourceId",
     workspaceId: "workspaceId",
   },
+  magicLinkStatModel: {
+    workspaceId: "workspaceId",
+    linkId: "linkId",
+    contactInboxId: "contactInboxId",
+    occurredAt: "occurredAt",
+  },
+  refLinkStatModel: {
+    workspaceId: "workspaceId",
+    linkId: "linkId",
+    contactInboxId: "contactInboxId",
+    occurredAt: "occurredAt",
+  },
 }))
 
 // Mirror of the real capability table
@@ -362,7 +380,20 @@ const CONTACT_PROFILE_NAME_CAPABILITIES: Record<
 
 vi.mock("@chatbotx.io/business", () => ({
   appointmentService: { cancelAppointmentByToken: vi.fn() },
+  detectOptOutRequest: () => ({ matched: false }),
+  flushAllPendingWorkspaceBroadcasts: vi.fn(),
+  resolveWorkspaceFreezeReasonById: vi.fn(async () => ({
+    freezeReason: null,
+  })),
+  settleBlockedOrderNotification: vi.fn(async () => undefined),
+  smartDelayService: { findById: vi.fn(async () => null) },
   publishToWorkspaceParty: mockPublishToWorkspaceParty,
+  publishMessageEvent: vi.fn(
+    ({ workspaceId, event }: { workspaceId: string; event: unknown }) => {
+      mockPublishToWorkspaceParty(workspaceId, event)
+      return Promise.resolve()
+    },
+  ),
   buildContext: mockBuildContext,
   resolveTenantSettings: mockresolveTenantSettings,
   updateContactFromMessage: mockUpdateContactFromMessage,
@@ -544,11 +575,13 @@ vi.mock("@chatbotx.io/worker-config", () => ({
     runRef: "runRef",
     threadControlEvent: "threadControlEvent",
     threadControlAction: "threadControlAction",
+    deliverClientNotification: "deliverClientNotification",
   },
   integrationQueue: {
     add: vi.fn().mockResolvedValue(undefined),
     getJob: vi.fn().mockResolvedValue(undefined),
   },
+  PURGE_WORKSPACES_INTERVAL_MINUTES: 30,
 }))
 
 vi.mock("../src/lib/logger", () => ({

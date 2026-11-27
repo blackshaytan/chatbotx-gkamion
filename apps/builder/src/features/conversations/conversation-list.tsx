@@ -3,7 +3,6 @@
 import {
   assignerFilterTypes,
   channelTypes,
-  conversationBotCategories,
 } from "@chatbotx.io/database/partials"
 import { InputField } from "@chatbotx.io/ui/components/form/input-field"
 import { SelectField } from "@chatbotx.io/ui/components/form/select-field"
@@ -27,11 +26,14 @@ import { useContactAssigneeOptions } from "../users/provider/user-hook"
 import { ConversationFilter } from "./conversation-filter"
 import ConversationItem from "./conversation-item"
 import { useConversationIdParam } from "./hooks/use-conversation-id-param"
+import { inboxBotCategoryOptionValues } from "./lib/inbox-bot-category"
 
 export default function ConversationList({
+  canFilterBotCategory = true,
   canViewEmailAndPhone = true,
   workspaceId,
 }: {
+  canFilterBotCategory?: boolean
   canViewEmailAndPhone?: boolean
   workspaceId: string
 }) {
@@ -99,10 +101,21 @@ export default function ConversationList({
     })
   }, 300)
 
+  const botCategoryOptions = inboxBotCategoryOptionValues(
+    canFilterBotCategory,
+  ).map((value) => ({
+    label: {
+      all: t("broadcasts.filters.all"),
+      human: t("analytics.human"),
+      bot: t("analytics.bot"),
+    }[value],
+    value,
+  }))
+
   const form = useForm<ConversationFilters>({
     defaultValues: {
       keyword: "",
-      botCategory: conversationBotCategories.enum.all,
+      botCategory: botCategoryOptions[0].value,
       channel: channelTypes.enum.omnichannel,
       assignedId: assignerFilterTypes.enum.all,
       tags: [],
@@ -126,23 +139,7 @@ export default function ConversationList({
     <Form {...form}>
       <form className="flex h-full min-h-0 flex-col">
         <div className="mb-2 flex shrink-0 items-center gap-1">
-          <SelectField
-            name="botCategory"
-            options={[
-              {
-                label: t("broadcasts.filters.all"),
-                value: conversationBotCategories.enum.all,
-              },
-              {
-                label: t("analytics.human"),
-                value: conversationBotCategories.enum.human,
-              },
-              {
-                label: t("analytics.bot"),
-                value: conversationBotCategories.enum.bot,
-              },
-            ]}
-          />
+          <SelectField name="botCategory" options={botCategoryOptions} />
 
           <Button
             className="px-2"

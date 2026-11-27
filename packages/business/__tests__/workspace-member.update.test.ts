@@ -94,6 +94,24 @@ describe("workspaceMemberService.update", () => {
     ])
   })
 
+  test("with a caller tx, returns the id and leaves cache invalidation to the caller", async () => {
+    mocks.updateReturning.mockResolvedValue([
+      { id: "member-1", userId: "user-1" },
+    ])
+    const tx = { update: mocks.update }
+
+    const result = await workspaceMemberService.update({
+      tx: tx as never,
+      id: "member-1",
+      workspaceId: "ws-1",
+      data: { permissions: { superAdmin: false } },
+    })
+
+    expect(result).toEqual({ id: "member-1" })
+    expect(mocks.update).toHaveBeenCalledTimes(1)
+    expect(mocks.invalidateCacheByTags).not.toHaveBeenCalled()
+  })
+
   // Defense-in-depth: today's only caller pre-validates via
   // `findByIdOrFail({ id, workspaceId })`, so this is not a live
   // cross-workspace bug, but the method's own signature advertises workspace

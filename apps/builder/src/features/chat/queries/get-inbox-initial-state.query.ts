@@ -11,6 +11,8 @@ import {
 } from "@/features/chat/store/chat-store"
 import type { ContactPermissionScope } from "@/features/contacts/permissions"
 import { getContact } from "@/features/contacts/queries/get-contact.query"
+import { sortInboxConversations } from "@/features/conversations/lib/compare-inbox-conversations"
+import { resolveInboxListBotCategory } from "@/features/conversations/lib/inbox-bot-category"
 import {
   findConversation,
   listConversations,
@@ -130,14 +132,16 @@ const shapeInitialState = ({
   messagesResult: PromiseSettledResult<ChatStoreInitialState>
   contactResult: PromiseSettledResult<ChatStoreInitialState>
 }): ChatStoreInitialState => {
-  const conversations = activeConversation
-    ? [
-        activeConversation,
-        ...listedConversations.filter(
-          (conversation) => conversation.id !== activeConversation.id,
-        ),
-      ]
-    : listedConversations
+  const conversations = sortInboxConversations(
+    activeConversation
+      ? [
+          activeConversation,
+          ...listedConversations.filter(
+            (conversation) => conversation.id !== activeConversation.id,
+          ),
+        ]
+      : listedConversations,
+  )
 
   return {
     conversations,
@@ -155,25 +159,34 @@ const loadInitialState = async ({
   workspaceId,
   urlConversation,
   contactPermissionScope,
+  canFilterBotCategory,
+  hiddenInboxIds,
 }: {
   workspaceId: string
   urlConversation: UrlConversation
   contactPermissionScope: ContactPermissionScope
+  canFilterBotCategory: boolean
+  hiddenInboxIds?: string[]
 }): Promise<ChatStoreInitialState | null> => {
   const conversationId =
     urlConversation.kind === "valid" ? urlConversation.id : undefined
+  const conversationAccess = {
+    includeEmailAndPhone: contactPermissionScope.canViewEmailAndPhone,
+    hiddenInboxIds,
+  }
   const conversationsPromise = listConversations(
-    {
-      workspaceId,
-      perPage: INBOX_CONVERSATIONS_PER_PAGE,
-      cursor: "",
-    },
-    {
-      includeEmailAndPhone: contactPermissionScope.canViewEmailAndPhone,
-    },
+    resolveInboxListBotCategory(
+      {
+        workspaceId,
+        perPage: INBOX_CONVERSATIONS_PER_PAGE,
+        cursor: "",
+      },
+      canFilterBotCategory,
+    ),
+    conversationAccess,
   )
   const findConversationPromise = conversationId
-    ? findConversation({ workspaceId, id: conversationId })
+    ? findConversation({ workspaceId, id: conversationId }, { hiddenInboxIds })
     : null
 
   const activeConversationPromise: Promise<ListConversationItemResource | null> =
@@ -283,10 +296,15 @@ export const getInboxInitialState = async ({
   workspaceId,
   conversationId,
   contactPermissionScope,
+  canFilterBotCategory = true,
+  hiddenInboxIds,
 }: {
   workspaceId: string
   conversationId?: string
   contactPermissionScope: ContactPermissionScope
+  canFilterBotCategory?: boolean
+  /** Personal SMTP inbox ids the viewer must not see (see resolveMemberHiddenInboxIds). */
+  hiddenInboxIds?: string[]
 }): Promise<ChatStoreInitialState | null> => {
   try {
     const signal = AbortSignal.timeout(INBOX_SEED_TIMEOUT_MS)
@@ -295,6 +313,8 @@ export const getInboxInitialState = async ({
         workspaceId,
         urlConversation: parseUrlConversation(conversationId),
         contactPermissionScope,
+        canFilterBotCategory,
+        hiddenInboxIds,
       }),
       signal,
       "Inbox initial state seed timed out",

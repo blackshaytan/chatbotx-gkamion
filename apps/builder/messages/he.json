@@ -476,7 +476,8 @@
       "sendGoogleAdsConversion": "שליחת המרה של Google Ads",
       "changeGamificationScore": "שינוי נקודות משחוק",
       "sendViewCatalog": "הצגת קטלוג",
-      "sendProducts": "שליחת מוצרים"
+      "sendProducts": "שליחת מוצרים",
+      "sendOrderNotification": "Order notification"
     },
     "splitTraffic": {
       "balanceHint": "הסכום הכולל חייב להיות 100%.",
@@ -1690,8 +1691,20 @@
       "note": "הערה",
       "unresolvedProduct": "לא נמצא בקטלוג שלך"
     },
+    "dromContext": {
+      "dealLine": "הקונה בחר <product>{title}</product> ב־<amount>{price}</amount>",
+      "dealLineNoPrice": "הקונה בחר <product>{title}</product>",
+      "listingLine": "<amount>{price}</amount> • <product>{title}</product>",
+      "openListing": "פתיחת המודעה",
+      "openDeal": "פתיחת ההזמנה",
+      "itemsCount": "פריטים: {count}"
+    },
     "referredProduct": {
       "askedAbout": "שאל על מוצר זה"
+    },
+    "dromListing": {
+      "onDrom": "ב-Drom",
+      "productCard": "כרטיס מוצר"
     },
     "input": {
       "form": "Message input form",
@@ -3396,6 +3409,11 @@
     "openaiCompatible": "תואם OpenAI"
   },
   "smtp": {
+    "owner": {
+      "label": "Mailbox owner",
+      "description": "Personal mailbox: only the owner and admins see its emails. Shared: everyone with inbox access.",
+      "shared": "Shared mailbox"
+    },
     "setting": {
       "description": "שליחת הודעות דוא\"ל באמצעות שרת SMTP שלכם.",
       "label": "SMTP (דוא\"ל)"
@@ -6369,6 +6387,32 @@
     },
     "igStory": {
       "label": "אוטומציית סטוריז באינסטגרם"
+    },
+    "orderNotification": {
+      "description": "n8n sends the order event. This step chooses the statuses and the text. A Condition step in this flow can check deliveryMethod (pickup or delivery), hasDebt (true or false) and amount.",
+      "subject": {
+        "label": "What starts this flow",
+        "order": "Order status",
+        "item": "Item status"
+      },
+      "statusIds": {
+        "label": "Status numbers",
+        "placeholder": "21, 22, 23",
+        "description": "Numeric status ids from GKamion. The published flow starts when an order event carries one of these numbers.",
+        "invalid": "Enter one to fifty whole numbers, separated by commas."
+      },
+      "messengerText": {
+        "label": "Messenger text",
+        "description": "Sent to MAX, Telegram, ZZAP and DROM. Placeholders: '{{orderNumber}}', '{{itemSummary}}', '{{amount}}', '{{billUrl}}'. Leave empty to skip those channels."
+      },
+      "emailText": {
+        "label": "Email text",
+        "description": "Same placeholders as messenger text. Leave empty to skip email."
+      },
+      "emailSubject": {
+        "label": "Email subject",
+        "description": "Same placeholders. Empty uses the order number."
+      }
     }
   },
   "billing": {
@@ -6854,7 +6898,10 @@
       "ctwaConversionTypes": {
         "lead": "ליד",
         "purchase": "רכישה"
-      }
+      },
+      "deliveryMethod": "Delivery method",
+      "hasDebt": "Has debt",
+      "amount": "Order amount"
     },
     "fieldGroups": {
       "opportunity": "הזדמנות",

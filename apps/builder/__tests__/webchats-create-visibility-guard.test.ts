@@ -26,6 +26,10 @@ vi.mock("next/navigation", () => ({
   }),
 }))
 
+vi.mock("next-intl/server", () => ({
+  getTranslations: vi.fn(async () => (key: string) => key),
+}))
+
 vi.mock("@chatbotx.io/business", () => ({
   inboxService: {
     distinctConnectedChannels: vi.fn(async () => []),

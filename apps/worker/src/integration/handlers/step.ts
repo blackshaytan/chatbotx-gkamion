@@ -75,9 +75,9 @@ import { handleSendMetaCapiEventStep } from "./meta-conversions/send-meta-capi-e
 import { addOrUpdateMoosendContact } from "./moosend-handler"
 import { questionnaires } from "./questionnaires"
 import { sendEmail } from "./send-email"
+import { handleSendOrderNotification } from "./send-order-notification-handler"
 import { addSendGridContact } from "./sendgrid-handler"
 import { scheduleSmartDelayResume } from "./smart-delay"
-
 import {
   clearSpreadsheetRow,
   getSpreadsheetRandomRow,
@@ -85,7 +85,6 @@ import {
   sendSpreadsheetData,
   updateSpreadsheetRow,
 } from "./spreadsheet-handler"
-
 import {
   stepArchiveConversation,
   stepAssignConversation,
@@ -450,6 +449,7 @@ export const flowStepHandlers: Record<
   [stepTypes.enum.createTask]: handleCreateTask,
   [stepTypes.enum.make]: handleMakeStep,
   [stepTypes.enum.triggerN8n]: handleTriggerN8nStep,
+  [stepTypes.enum.sendOrderNotification]: handleSendOrderNotification,
   [stepTypes.enum.executeJavascript]: handleExecuteJavascript,
   [stepTypes.enum.cancelContactInput]: undefined,
   [stepTypes.enum.clearCustomField]: clearContactCustomField,

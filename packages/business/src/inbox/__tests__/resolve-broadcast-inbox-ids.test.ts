@@ -78,6 +78,7 @@ describe("InboxService.resolveBroadcastInboxIds", () => {
       where: {
         workspaceId: "ws-1",
         id: { in: ["inbox-1", "inbox-2", "inbox-foreign"] },
+        ownerUserId: { isNull: true },
         channel: "whatsapp",
       },
       columns: { id: true },
@@ -96,7 +97,11 @@ describe("InboxService.resolveBroadcastInboxIds", () => {
 
     expect(result).toEqual(["inbox-1"])
     expect(mocks.inboxFindMany).toHaveBeenCalledWith({
-      where: { workspaceId: "ws-1", id: { in: ["inbox-1"] } },
+      where: {
+        workspaceId: "ws-1",
+        id: { in: ["inbox-1"] },
+        ownerUserId: { isNull: true },
+      },
       columns: { id: true },
     })
   })
@@ -112,7 +117,11 @@ describe("InboxService.resolveBroadcastInboxIds", () => {
 
     expect(result).toEqual(["inbox-1"])
     expect(mocks.inboxFindMany).toHaveBeenCalledWith({
-      where: { workspaceId: "ws-1", id: { in: ["inbox-1"] } },
+      where: {
+        workspaceId: "ws-1",
+        id: { in: ["inbox-1"] },
+        ownerUserId: { isNull: true },
+      },
       columns: { id: true },
     })
   })
@@ -244,7 +253,7 @@ describe("InboxService.resolveBroadcastInboxIds", () => {
 
     expect(result).toEqual(["inbox-1", "inbox-2"])
     expect(mocks.inboxFindMany).toHaveBeenCalledWith({
-      where: { workspaceId: "ws-1" },
+      where: { workspaceId: "ws-1", ownerUserId: { isNull: true } },
       columns: { id: true },
     })
   })
@@ -269,7 +278,11 @@ describe("InboxService.resolveBroadcastInboxIds", () => {
 
     expect(result).toEqual(["inbox-1"])
     expect(mocks.inboxFindMany).toHaveBeenCalledWith({
-      where: { workspaceId: "ws-1", channel: "messenger" },
+      where: {
+        workspaceId: "ws-1",
+        ownerUserId: { isNull: true },
+        channel: "messenger",
+      },
       columns: { id: true },
     })
   })
@@ -284,7 +297,11 @@ describe("InboxService.resolveBroadcastInboxIds", () => {
 
     expect(result).toEqual(["inbox-instagram"])
     expect(mocks.inboxFindMany).toHaveBeenCalledWith({
-      where: { workspaceId: "ws-1", channel: "instagram" },
+      where: {
+        workspaceId: "ws-1",
+        ownerUserId: { isNull: true },
+        channel: "instagram",
+      },
       columns: { id: true },
     })
   })
@@ -299,7 +316,11 @@ describe("InboxService.resolveBroadcastInboxIds", () => {
 
     expect(result).toEqual(["inbox-telegram"])
     expect(mocks.inboxFindMany).toHaveBeenCalledWith({
-      where: { workspaceId: "ws-1", channel: "telegram" },
+      where: {
+        workspaceId: "ws-1",
+        ownerUserId: { isNull: true },
+        channel: "telegram",
+      },
       columns: { id: true },
     })
   })
@@ -314,7 +335,11 @@ describe("InboxService.resolveBroadcastInboxIds", () => {
 
     expect(result).toEqual(["inbox-tiktok"])
     expect(mocks.inboxFindMany).toHaveBeenCalledWith({
-      where: { workspaceId: "ws-1", channel: "tiktok" },
+      where: {
+        workspaceId: "ws-1",
+        ownerUserId: { isNull: true },
+        channel: "tiktok",
+      },
       columns: { id: true },
     })
   })
@@ -334,6 +359,7 @@ describe("InboxService.resolveBroadcastInboxIds", () => {
     expect(mocks.inboxFindMany).toHaveBeenCalledWith({
       where: {
         workspaceId: "ws-1",
+        ownerUserId: { isNull: true },
         channel: { in: ["messenger", "whatsapp"] },
       },
       columns: { id: true },
@@ -350,7 +376,42 @@ describe("InboxService.resolveBroadcastInboxIds", () => {
 
     expect(result).toEqual(["inbox-1"])
     expect(mocks.inboxFindMany).toHaveBeenCalledWith({
-      where: { workspaceId: "ws-1" },
+      where: { workspaceId: "ws-1", ownerUserId: { isNull: true } },
+      columns: { id: true },
+    })
+  })
+
+  test("broadcast inbox resolution excludes personal mailboxes via ownerUserId isNull", async () => {
+    mocks.inboxFindMany.mockResolvedValue([{ id: "inbox-shared" }])
+
+    await inboxService.resolveBroadcastInboxIds({
+      workspaceId: "ws-1",
+      channels: ["smtp"],
+    })
+
+    expect(mocks.inboxFindMany).toHaveBeenCalledWith({
+      where: {
+        workspaceId: "ws-1",
+        ownerUserId: { isNull: true },
+        channel: "smtp",
+      },
+      columns: { id: true },
+    })
+
+    mocks.inboxFindMany.mockClear()
+    mocks.inboxFindMany.mockResolvedValue([{ id: "inbox-shared" }])
+    await inboxService.resolveBroadcastInboxIds({
+      workspaceId: "ws-1",
+      channels: ["smtp"],
+      inboxIds: ["inbox-shared", "inbox-personal"],
+    })
+    expect(mocks.inboxFindMany).toHaveBeenCalledWith({
+      where: {
+        workspaceId: "ws-1",
+        id: { in: ["inbox-shared", "inbox-personal"] },
+        ownerUserId: { isNull: true },
+        channel: "smtp",
+      },
       columns: { id: true },
     })
   })

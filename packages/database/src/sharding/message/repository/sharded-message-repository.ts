@@ -13,6 +13,7 @@ import {
   isNotNull,
   isNull,
   lt,
+  notInArray,
   or,
   type SQL,
   sql,
@@ -1711,16 +1712,24 @@ export class ShardedMessageRepository implements IMessageRepository {
       .reverse()
   }
 
-  findTriggerMessage(
+  async findTriggerMessage(
     options: FindTriggerMessageOptions,
   ): Promise<MessageWithAttachments | null> {
-    return this.findByIdInConversation(
+    const found = await this.findByIdInConversation(
       options.id,
       options.conversationId,
       options.sinceTime,
       options.requireCompleteResults,
       options.workspaceId,
     )
+    if (
+      found &&
+      options.excludeContactInboxIds?.length &&
+      options.excludeContactInboxIds.includes(found.contactInboxId)
+    ) {
+      return null
+    }
+    return found
   }
 
   async findRichResponseByButton({
@@ -2110,6 +2119,7 @@ export class ShardedMessageRepository implements IMessageRepository {
         sourceId: attachmentModel.sourceId,
         originPath: attachmentModel.originPath,
         mimeType: attachmentModel.mimeType,
+        name: attachmentModel.name,
         createdAt: attachmentModel.createdAt,
       })
       .from(attachmentModel)
@@ -2319,6 +2329,15 @@ export class ShardedMessageRepository implements IMessageRepository {
                 )
               }
 
+              if (options?.excludeContactInboxIds?.length) {
+                whereConditions.push(
+                  notInArray(
+                    messageModel.contactInboxId,
+                    options.excludeContactInboxIds,
+                  ),
+                )
+              }
+
               const messages = await shardClient
                 .select()
                 .from(messageModel)
@@ -2375,6 +2394,7 @@ export class ShardedMessageRepository implements IMessageRepository {
 
   async countUnreadIncomingByConversations({
     conversations,
+    excludeContactInboxIds,
     limit,
     workspaceId,
   }: CountUnreadIncomingByConversationsParams): Promise<Map<string, number>> {
@@ -2418,6 +2438,13 @@ export class ShardedMessageRepository implements IMessageRepository {
           return await this.shardManager.withShardClientForRead(
             shardInfo.shard,
             async (shardClient) => {
+              const excludeHiddenContactInboxes = excludeContactInboxIds?.length
+                ? sql`AND ${messageModel.contactInboxId} <> ALL(ARRAY[${sql.join(
+                    excludeContactInboxIds.map((id) => sql`${id}::bigint`),
+                    sql`, `,
+                  )}]::bigint[])`
+                : sql``
+
               const result = await shardClient.execute<{
                 conversationId: string
                 count: number
@@ -2432,6 +2459,7 @@ export class ShardedMessageRepository implements IMessageRepository {
                       AND ${messageModel.deletedAt} IS NULL
                       AND ${messageModel.createdAt} >= ${sinceTime}
                       AND (c."agentLastReadAt" IS NULL OR ${messageModel.createdAt} > c."agentLastReadAt")
+                      ${excludeHiddenContactInboxes}
                     LIMIT ${limit}
                   ) AS unread
                 ) AS "count"
@@ -2734,7 +2762,12 @@ export class ShardedMessageRepository implements IMessageRepository {
     limit: number,
     cursor?: PaginationCursor,
   ): Promise<PaginatedMessages> {
-    const { workspaceId, conversationId, contactInboxId } = query
+    const {
+      workspaceId,
+      conversationId,
+      contactInboxId,
+      excludeContactInboxIds,
+    } = query
     return this.shardManager.withShardClientForRead(
       shardInfo.shard,
       async (shardClient) => {
@@ -2746,6 +2779,12 @@ export class ShardedMessageRepository implements IMessageRepository {
 
         if (contactInboxId) {
           whereConditions.push(eq(messageModel.contactInboxId, contactInboxId))
+        }
+
+        if (excludeContactInboxIds?.length) {
+          whereConditions.push(
+            notInArray(messageModel.contactInboxId, excludeContactInboxIds),
+          )
         }
 
         if (cursor) {

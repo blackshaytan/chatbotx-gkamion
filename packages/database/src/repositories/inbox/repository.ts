@@ -41,6 +41,69 @@ export const inboxRepository = {
   },
 
   /**
+   * Personal SMTP mailboxes (`ownerUserId` set) of a workspace. Used to build
+   * the per-member hidden-inbox set; shared inboxes are never returned.
+   */
+  async listPersonalSmtpInboxes(input: {
+    workspaceId: string
+    tx?: DatabaseClient
+  }): Promise<Pick<InboxModel, "id" | "ownerUserId">[]> {
+    const { tx = db } = input
+    return await tx.query.inboxModel.findMany({
+      columns: { id: true, ownerUserId: true },
+      where: {
+        workspaceId: input.workspaceId,
+        channel: "smtp",
+        ownerUserId: { isNotNull: true },
+      },
+    })
+  },
+
+  /**
+   * Sets or clears the personal-mailbox owner of one inbox. Scoped by
+   * `workspaceId` so a caller can never retarget another workspace's row.
+   */
+  async updateOwner(input: {
+    workspaceId: string
+    inboxId: string
+    ownerUserId: string | null
+    tx?: DatabaseClient
+  }): Promise<void> {
+    const { tx = db } = input
+    await tx
+      .update(inboxModel)
+      .set({ ownerUserId: input.ownerUserId })
+      .where(
+        and(
+          eq(inboxModel.id, input.inboxId),
+          eq(inboxModel.workspaceId, input.workspaceId),
+        ),
+      )
+  },
+
+  /**
+   * Clears the owner of every personal mailbox a removed member owned, so
+   * those inboxes become shared again. Runs in the caller's
+   * membership-removal transaction.
+   */
+  async clearOwnerForUser(input: {
+    workspaceId: string
+    userId: string
+    tx?: DatabaseClient
+  }): Promise<void> {
+    const { tx = db } = input
+    await tx
+      .update(inboxModel)
+      .set({ ownerUserId: null })
+      .where(
+        and(
+          eq(inboxModel.workspaceId, input.workspaceId),
+          eq(inboxModel.ownerUserId, input.userId),
+        ),
+      )
+  },
+
+  /**
    * Marks the inbox as having seen conversation-routing traffic. Throttled in
    * SQL (idempotent): a write happens only when the stored value is missing or
    * older than `THREAD_CONTROL_SEEN_REFRESH_MS`, bounding this to about one

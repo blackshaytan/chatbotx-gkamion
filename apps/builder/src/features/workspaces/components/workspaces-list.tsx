@@ -15,7 +15,7 @@ import { CrownIcon, PlusCircleIcon } from "lucide-react"
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { UpgradePlanButton } from "@/enterprise/features/billing/upgrade-plan-dialog"
-import { isCloud, isCommunity } from "@/env"
+import { isCloud } from "@/env"
 import { formatScheduleTime } from "../helpers"
 import type { WorkspaceResource } from "../schema/resource"
 import { WorkspaceStatusSwitch } from "./workspace-status-switch"
@@ -199,16 +199,13 @@ const WorkspacesList = async ({
   const createLabel = t("actions.createFeature", {
     feature: t("fields.workspace.label"),
   })
-  // Community hides the card once a workspace exists (self-hosted installs
-  // are meant to stay single-workspace), but a user with ZERO workspaces has
-  // no other path to `/channels/create` anywhere on this page — hiding it
-  // here leaves them stuck on a static "no workspaces" message forever.
-  // An invited member (role agent) already belongs to someone else's
-  // workspace and must not mint their own from this card.
+  // A user with ZERO workspaces has no other path to `/channels/create`
+  // anywhere on this page — hiding it here leaves them stuck on a static
+  // "no workspaces" message forever. An invited member (role agent) already
+  // belongs to someone else's workspace and must not mint their own from
+  // this card.
   const canCreateWorkspace =
     workspaces.length === 0 || ownerWorkspaceIds.length > 0
-  const showCreateCard =
-    canCreateWorkspace && (!isCommunity() || workspaces.length === 0)
   const ownerIds = new Set(ownerWorkspaceIds)
   const superAdminIds = new Set(superAdminWorkspaceIds)
   const ownerLabel = t("home.owner")
@@ -256,9 +253,9 @@ const WorkspacesList = async ({
         the document once the grid bottoms out.
       */}
       <div className="mt-5 min-h-0 flex-1 overflow-y-auto overscroll-contain pt-2">
-        {hasWorkspaces || showCreateCard ? (
+        {hasWorkspaces || canCreateWorkspace ? (
           <ul className="flex list-none flex-wrap gap-5 p-0 pb-1">
-            {showCreateCard && (
+            {canCreateWorkspace && (
               <li className="list-none">
                 <CreateWorkspaceCard
                   disabled={isAtLimit || blocked}

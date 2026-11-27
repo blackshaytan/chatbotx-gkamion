@@ -97,7 +97,7 @@ export const DromConnect = ({
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger render={children} />
-      <DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isUpdate
@@ -118,7 +118,7 @@ export const DromConnect = ({
         </DialogHeader>
         <Form {...form}>
           <form
-            className="flex flex-col gap-4"
+            className="flex min-w-0 flex-col gap-4"
             onSubmit={handleSubmitWithAction}
           >
             <InputField
@@ -130,7 +130,7 @@ export const DromConnect = ({
             />
             <TextareaField
               autoComplete="off"
-              className="font-mono text-xs"
+              className="![field-sizing:fixed] max-h-40 min-w-0 overflow-auto font-mono text-xs"
               description={t("fields.drom.cookiesHint")}
               label={t("fields.drom.cookies")}
               name="secretText"

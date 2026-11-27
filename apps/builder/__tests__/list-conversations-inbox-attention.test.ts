@@ -20,6 +20,14 @@ const mocks = vi.hoisted(() => {
 })
 
 vi.mock("@chatbotx.io/business", () => ({
+  hiddenContactInboxIds: (
+    contactInboxes: { id: string; inboxId: string }[],
+    hiddenInboxIds?: string[],
+  ) =>
+    contactInboxes
+      .filter((contactInbox) => hiddenInboxIds?.includes(contactInbox.inboxId))
+      .map((contactInbox) => contactInbox.id),
+
   conversationService: {
     findManyQuery: mocks.findManyQuery,
     findWithFullRelations: mocks.findWithFullRelations,
@@ -74,15 +82,17 @@ const decode = (cursor: string | null) =>
 type OrderByFn = (
   table: Record<string, string>,
   helpers: {
-    sql: (strings: TemplateStringsArray, ...values: unknown[]) => unknown
-    desc: (column: string) => unknown
+    sql: (strings: TemplateStringsArray, ...values: unknown[]) => string
+    desc: (column: string) => string
   },
-) => unknown[]
+) => string[]
 
 const renderOrderBy = (orderBy: OrderByFn) =>
   orderBy(
     {
       inboxActivityAt: "inboxActivityAt",
+      agentLastReadAt: "agentLastReadAt",
+      handedOverAt: "handedOverAt",
       lastActivityAt: "lastActivityAt",
       id: "id",
     },
@@ -90,7 +100,7 @@ const renderOrderBy = (orderBy: OrderByFn) =>
       sql: (strings, ...values) =>
         strings.reduce(
           (text, part, index) =>
-            `${text}${part}${index < values.length ? String(values[index]) : ""}`,
+            `${text}${part}${index < values.length ? JSON.stringify(values[index]) : ""}`,
           "",
         ),
       desc: (column) => `${column} DESC`,
@@ -108,17 +118,21 @@ beforeEach(() => {
 })
 
 describe("listConversations sort and cursor", () => {
-  test("orders by inboxActivityAt DESC NULLS LAST, then id DESC — never by lastActivityAt", async () => {
+  test("orders unread conversations first, then inboxActivityAt DESC NULLS LAST, then id DESC", async () => {
     await listConversations(
       { workspaceId: "ws-1" },
       { includeEmailAndPhone: true },
     )
 
     const { orderBy } = mocks.findManyQuery.mock.calls[0][0]
-    expect(renderOrderBy(orderBy)).toEqual([
-      "inboxActivityAt DESC NULLS LAST",
-      "id DESC",
-    ])
+    const [unreadFirst, activity, id] = renderOrderBy(orderBy)
+    expect(unreadFirst).toContain("inboxActivityAt")
+    expect(unreadFirst).toContain("agentLastReadAt")
+    expect(unreadFirst).toContain("handedOverAt")
+    expect(unreadFirst.endsWith("DESC")).toBe(true)
+    expect(activity).toBe('"inboxActivityAt" DESC NULLS LAST')
+    expect(id).toBe("id DESC")
+    expect(renderOrderBy(orderBy).join(" ")).not.toContain("lastActivityAt")
   })
 
   test("encodes the next cursor from the last row's inboxActivityAt and id", async () => {
@@ -135,6 +149,7 @@ describe("listConversations sort and cursor", () => {
     )
 
     expect(decode(result.nextCursor)).toEqual({
+      unread: true,
       inboxActivityAt: "2026-10-20T08:00:00.000Z",
       id: "1",
     })
@@ -152,12 +167,37 @@ describe("listConversations sort and cursor", () => {
     )
 
     expect(decode(result.nextCursor)).toEqual({
+      unread: false,
       inboxActivityAt: null,
       id: "5",
     })
   })
 
   test("decodes an inboxActivityAt cursor and hands it to the where builder", async () => {
+    const cursor = encodeCursor({
+      unread: true,
+      inboxActivityAt: "2026-10-20T08:00:00.000Z",
+      id: "1",
+    })
+
+    await listConversations(
+      { workspaceId: "ws-1", cursor },
+      { includeEmailAndPhone: true },
+    )
+
+    expect(mocks.buildConversationWhere).toHaveBeenCalledWith(
+      "ws-1",
+      expect.anything(),
+      {
+        unread: true,
+        inboxActivityAt: new Date("2026-10-20T08:00:00.000Z"),
+        id: "1",
+      },
+      { includeEmailAndPhone: true },
+    )
+  })
+
+  test("treats a legacy inboxActivityAt cursor without unread as no cursor", async () => {
     const cursor = encodeCursor({
       inboxActivityAt: "2026-10-20T08:00:00.000Z",
       id: "1",
@@ -171,7 +211,7 @@ describe("listConversations sort and cursor", () => {
     expect(mocks.buildConversationWhere).toHaveBeenCalledWith(
       "ws-1",
       expect.anything(),
-      { inboxActivityAt: new Date("2026-10-20T08:00:00.000Z"), id: "1" },
+      null,
       { includeEmailAndPhone: true },
     )
   })
@@ -235,6 +275,7 @@ describe("unreadCount", () => {
         { id: "1", agentLastReadAt: readAt },
         { id: "2", agentLastReadAt: null },
       ],
+      excludeContactInboxIds: [],
       limit: UNREAD_COUNT_CAP,
     })
     expect(result.data.map((item) => item.unreadCount)).toEqual([3, 0])
@@ -299,6 +340,7 @@ describe("unreadCount", () => {
     expect(mocks.repo.countUnreadIncomingByConversations).toHaveBeenCalledWith({
       workspaceId: "ws-1",
       conversations: [{ id: "7", agentLastReadAt: null }],
+      excludeContactInboxIds: [],
       limit: UNREAD_COUNT_CAP,
     })
     expect(result.data).toMatchObject({

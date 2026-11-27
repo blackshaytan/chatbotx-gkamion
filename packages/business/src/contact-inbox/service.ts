@@ -14,6 +14,7 @@ import {
   sql,
 } from "@chatbotx.io/database/client"
 import {
+  contactSources,
   type ProfileSnapshotState,
   profileSnapshotChannels,
 } from "@chatbotx.io/database/partials"
@@ -55,6 +56,7 @@ import { GOOGLE_CLICK_REFERRAL_KEYS } from "@chatbotx.io/utils/google-click"
 import { BaseService } from "../base.service"
 import { PROFILE_NAME_BLANK_CHARACTERS } from "../contact/profile-refresh/rules"
 import { logger } from "../logger"
+import { cancelMessageCleanupByInboxSource } from "../message-cleanup/cancel-by-inbox-source"
 import {
   type ContactInboxBackfillField,
   type ContactInboxIdentityField,
@@ -661,6 +663,149 @@ class ContactInboxService extends BaseService {
     })
   }
 
+  /**
+   * Opens a channel dialog for a contact that already exists. Used when an
+   * order notification has an email and exactly one SMTP inbox, and this
+   * contact has no mail dialog yet. A source id that already belongs to
+   * someone else is left untouched.
+   */
+  async connectExistingContact(props: {
+    workspaceId: string
+    contactId: string
+    inboxId: string
+    channel: string
+    sourceId: string
+  }): Promise<ContactInboxModel | null> {
+    const existing = await this.findLatestBySource({
+      inboxId: props.inboxId,
+      sourceId: props.sourceId,
+      workspaceId: props.workspaceId,
+    })
+    if (existing) {
+      return existing.contactId === props.contactId ? existing : null
+    }
+
+    try {
+      const [created] = await db.transaction(async (tx) => {
+        await cancelMessageCleanupByInboxSource({
+          inboxId: props.inboxId,
+          sourceIds: [props.sourceId],
+          tx,
+        })
+        return await tx
+          .insert(contactInboxModel)
+          .values({
+            originalContactId: props.contactId,
+            contactId: props.contactId,
+            inboxId: props.inboxId,
+            channel: props.channel,
+            source: contactSources.enum.api,
+            sourceId: props.sourceId,
+          })
+          .returning()
+      })
+      if (!created) {
+        return null
+      }
+      await this.invalidateCacheTags([
+        `contacts:${props.workspaceId}:${props.contactId}:contact-inboxes`,
+        ...this.getTrackingCacheTags(props.contactId),
+      ])
+      return created
+    } catch (error) {
+      if (!isUniqueViolationError(error)) {
+        throw error
+      }
+      const raced = await this.findLatestBySource({
+        inboxId: props.inboxId,
+        sourceId: props.sourceId,
+        workspaceId: props.workspaceId,
+      })
+      return raced?.contactId === props.contactId ? raced : null
+    }
+  }
+
+  /**
+   * Opens a channel on a contact that already exists because the incoming
+   * phone or email is that client. A source id that already belongs to
+   * someone else is left untouched and reported as null.
+   */
+  async openIncomingChannel(props: {
+    workspaceId: string
+    contactId: string
+    inboxId: string
+    channel: string
+    source: string
+    sourceId: string
+    sourceUserId?: string | null
+    sourceParentUserId?: string | null
+    sourceUsername?: string | null
+    language?: string | null
+    followsBusiness?: boolean | null
+    businessFollowsContact?: boolean | null
+    accountVerified?: boolean | null
+    followerCount?: number | null
+  }): Promise<ContactInboxModel | null> {
+    const existing = await this.findLatestBySource({
+      inboxId: props.inboxId,
+      sourceId: props.sourceId,
+      workspaceId: props.workspaceId,
+    })
+    if (existing) {
+      return existing.contactId === props.contactId ? existing : null
+    }
+
+    try {
+      const [created] = await db.transaction(async (tx) => {
+        await cancelMessageCleanupByInboxSource({
+          inboxId: props.inboxId,
+          sourceIds: [props.sourceId],
+          tx,
+        })
+        return await tx
+          .insert(contactInboxModel)
+          .values({
+            originalContactId: props.contactId,
+            contactId: props.contactId,
+            inboxId: props.inboxId,
+            channel: props.channel,
+            source: props.source,
+            sourceId: props.sourceId,
+            sourceUserId: props.sourceUserId ?? null,
+            sourceParentUserId: props.sourceParentUserId ?? null,
+            sourceUsername: props.sourceUsername ?? null,
+            language: props.language ?? null,
+            followsBusiness: props.followsBusiness ?? null,
+            businessFollowsContact: props.businessFollowsContact ?? null,
+            accountVerified: props.accountVerified ?? null,
+            followerCount: props.followerCount ?? null,
+          })
+          .returning()
+      })
+      if (!created) {
+        return null
+      }
+      await this.invalidateCacheTags([
+        `contacts:${props.workspaceId}:${props.contactId}:contact-inboxes`,
+        ...this.getTrackingCacheTags(props.contactId),
+      ])
+      return created
+    } catch (error) {
+      if (!isUniqueViolationError(error, CONTACT_INBOX_SOURCE_ID_KEY)) {
+        throw error
+      }
+      const raced = await this.findLatestBySource({
+        inboxId: props.inboxId,
+        sourceId: props.sourceId,
+        workspaceId: props.workspaceId,
+      })
+      if (raced?.contactId === props.contactId) {
+        return raced
+      }
+      throw error
+    }
+  }
+
   /** One of the contact's own connections, by id (workspace-scoped), if it still has it. */
   async findByIdForContact(props: {
     id: string
@@ -1070,6 +1215,7 @@ class ContactInboxService extends BaseService {
     const {
       firstInteractionAt: explicitFirstInteractionAt,
       lastIncomingMessageAt: explicitLastIncomingMessageAt,
+      lastMessageAt: explicitLastMessageAt,
       lastUserInput,
       lastUserInputType,
       referral,
@@ -1077,6 +1223,13 @@ class ContactInboxService extends BaseService {
     } = data
 
     const updateData = { ...nextData }
+    if (explicitLastMessageAt) {
+      // A delayed channel echo carries the original send time. Assigning it
+      // directly would rewind the bookmark and hide every newer message.
+      Object.assign(updateData, {
+        lastMessageAt: sql`GREATEST(${contactInboxModel.lastMessageAt}, ${explicitLastMessageAt})`,
+      })
+    }
     if (explicitFirstInteractionAt) {
       Object.assign(updateData, {
         firstInteractionAt: sql`CASE WHEN ${contactInboxModel.firstInteractionAt} IS NULL OR ${contactInboxModel.firstInteractionAt} > ${explicitFirstInteractionAt} THEN ${explicitFirstInteractionAt} ELSE ${contactInboxModel.firstInteractionAt} END`,

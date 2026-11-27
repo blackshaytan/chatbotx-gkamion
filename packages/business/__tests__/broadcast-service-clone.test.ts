@@ -67,6 +67,7 @@ vi.mock("@chatbotx.io/database/schema", () => ({
   broadcastModel: {},
   broadcastTargetModel: {},
   inboxModel: {},
+  taskModel: {},
   flowModel: {},
   contactsOnBroadcastsModel: {},
   contactInboxModel: {},

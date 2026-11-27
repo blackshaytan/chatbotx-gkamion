@@ -2,14 +2,13 @@ import { type DatabaseClient, db } from "@chatbotx.io/database/client"
 import type {
   ChatNotificationPayload,
   ChatNotificationType,
-  NotificationPayload,
   TaskNotificationType,
   WorkspaceMemberNotificationTypes,
 } from "@chatbotx.io/database/partials"
 import type { TaskDueNotificationRow } from "@chatbotx.io/database/repositories"
 import {
-  notificationRepository,
   chatRepository,
+  notificationRepository,
   taskRepository,
   workspaceMemberRepository,
 } from "@chatbotx.io/database/repositories"
@@ -23,10 +22,9 @@ import { listAssigneeUserIds } from "../task/notifications"
 import { emitNotificationsCreated } from "./listeners"
 import {
   isTaskNotificationEnabled,
+  type NotificationPreferences,
   readChatNotificationPreferences,
   readTaskNotificationPreferences,
-  type TaskNotificationPreferences,
-  type NotificationPreferences,
 } from "./preferences"
 import {
   pickHighestPriorityType,
@@ -177,7 +175,8 @@ class NotificationService extends BaseService {
           .filter(
             (member) =>
               member.isWorkspaceMember &&
-              (member.lastReadAt === null || member.lastReadAt < props.messageAt),
+              (member.lastReadAt === null ||
+                member.lastReadAt < props.messageAt),
           )
           .map((member) => member.userId)
           .filter((userId) => userId !== props.actorUserId),
@@ -186,11 +185,12 @@ class NotificationService extends BaseService {
     if (recipientIds.length === 0) {
       return
     }
-    const preferences = await workspaceMemberRepository.listNotificationTypesByUserIds({
-      workspaceId: props.workspaceId,
-      userIds: recipientIds,
-      tx,
-    })
+    const preferences =
+      await workspaceMemberRepository.listNotificationTypesByUserIds({
+        workspaceId: props.workspaceId,
+        userIds: recipientIds,
+        tx,
+      })
     const preferencesByUser = new Map(
       preferences.map((row) => [row.userId, row.notificationTypes]),
     )
@@ -219,7 +219,10 @@ class NotificationService extends BaseService {
     const inserted = await notificationRepository.upsertChatUnread({ rows, tx })
     emitNotificationsCreated({
       workspaceId: props.workspaceId,
-      notifications: inserted.map((row) => ({ id: row.id, userId: row.userId })),
+      notifications: inserted.map((row) => ({
+        id: row.id,
+        userId: row.userId,
+      })),
     })
   }
 
@@ -228,9 +231,7 @@ class NotificationService extends BaseService {
     userId: string
     limit: number
     unreadOnly?: boolean
-  }): Promise<
-    NotificationModel[]
-  > {
+  }): Promise<NotificationModel[]> {
     const rows = await notificationRepository.listForUser({
       ...input,
     })
@@ -268,9 +269,10 @@ class NotificationService extends BaseService {
     await notificationRepository.markReadByEntity(input)
   }
 
-  async getPreferences(
-    input: { workspaceId: string; userId: string },
-  ): Promise<NotificationPreferences> {
+  async getPreferences(input: {
+    workspaceId: string
+    userId: string
+  }): Promise<NotificationPreferences> {
     const notificationTypes =
       (await workspaceMemberRepository.findNotificationTypes(input)) ?? {}
     return {
