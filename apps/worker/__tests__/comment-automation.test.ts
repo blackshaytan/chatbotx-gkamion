@@ -1727,6 +1727,12 @@ describe("processCommentAutomation flow private reply DM conversation", () => {
       buildAutomation({ privateReply: { type: "flow", value: "flow-1" } }),
     ])
     mockConversationFindDMByContact.mockResolvedValue(undefined)
+    mockFindContactInboxBy.mockResolvedValue({
+      id: "contact-inbox-1",
+      contactId: "contact-1",
+      inboxId: "inbox-1",
+      channel: "messenger",
+    })
 
     await processCommentAutomation(buildJobData() as any)
 
@@ -1734,6 +1740,7 @@ describe("processCommentAutomation flow private reply DM conversation", () => {
       workspaceId: "workspace-1",
       contactId: "contact-1",
       sourceId: null,
+      inboxId: "inbox-1",
     })
     expect(mockIntegrationQueueAdd).toHaveBeenCalledWith(
       "sendFlow",

@@ -18,6 +18,7 @@ import {
 } from "@chatbotx.io/database/schema"
 import { createId } from "@chatbotx.io/utils"
 import { BaseService } from "../base.service"
+import { conversationService } from "../conversation/service"
 import { messageCleanupService } from "../message-cleanup/service"
 
 /**
@@ -180,6 +181,14 @@ class CoexistImportService extends BaseService {
     let importedContacts = 0
     const contactInboxIds = new Map<string, ContactImportLink>()
 
+    // Resolved once per batch: every conversation this transaction inserts
+    // belongs to the same inbox.
+    const initialBotEnabled =
+      await conversationService.resolveInitialBotEnabled({
+        workspaceId,
+        inboxId,
+      })
+
     await db.transaction(async (tx) => {
       // 1. Find existing ContactInbox rows — by sourceId or scoped user id.
       const existingRows = await tx
@@ -253,6 +262,7 @@ class CoexistImportService extends BaseService {
                 id: createId(),
                 workspaceId,
                 contactId: cid,
+                botEnabled: initialBotEnabled,
               })),
             )
             .onConflictDoNothing()
@@ -320,6 +330,7 @@ class CoexistImportService extends BaseService {
           id: createId(),
           workspaceId,
           contactId: contactRows[i]?.id,
+          botEnabled: initialBotEnabled,
         }))
 
         // Targetless DO NOTHING: a concurrent import can win EITHER identity

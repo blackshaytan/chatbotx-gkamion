@@ -2287,6 +2287,7 @@ export const processMessageReaction = async (
     workspaceId: inbox.workspaceId,
     contactId: existingContactInbox.contactId,
     sourceId: null,
+    inboxId: inbox.id,
   })
 
   // Deliberately bypasses saveAndBroadcastMessage: reactions do not advance
@@ -2403,6 +2404,7 @@ const buildExistingContactMatch = async (props: {
     contactId: syncedContactInbox.contactId,
     sourceId: conversationSourceId,
     channelConversationId: incomingContact.channelConversationId,
+    inboxId: inbox.id,
   })
 
   return {
@@ -2550,6 +2552,7 @@ const retargetMergedContact = async (props: {
     contactId: unified.survivorContactId,
     sourceId: props.conversationSourceId,
     channelConversationId: props.incomingContact.channelConversationId,
+    inboxId: props.inbox.id,
   })
   logger.info(
     {
@@ -2756,6 +2759,7 @@ const createNewContactAndContactInbox = async (props: {
       contactId: existingContactId,
       sourceId: conversationSourceId,
       channelConversationId: incomingContact.channelConversationId,
+      inboxId: inbox.id,
     })
     logger.info(
       {
@@ -2850,6 +2854,7 @@ const createNewContactAndContactInbox = async (props: {
         contactId: newContact.id,
         sourceId: conversationSourceId,
         channelConversationId: incomingContact.channelConversationId,
+        inboxId: inbox.id,
         tx,
       })
 

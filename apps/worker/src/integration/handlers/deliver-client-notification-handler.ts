@@ -90,14 +90,15 @@ export const handleDeliverClientNotification = async (
     return
   }
 
+  const inboxes = await contactInboxService.listByContactId({
+    workspaceId: data.workspaceId,
+    contactId: data.contactId,
+  })
   const conversation = await conversationService.findOrCreate({
     workspaceId: data.workspaceId,
     contactId: data.contactId,
     sourceId: null,
-  })
-  const inboxes = await contactInboxService.listByContactId({
-    workspaceId: data.workspaceId,
-    contactId: data.contactId,
+    inboxId: inboxes[0]?.inboxId,
   })
   const smtpInboxIds = await listSmtpInboxIds(data.workspaceId)
   const candidates = planCascadeCandidates({

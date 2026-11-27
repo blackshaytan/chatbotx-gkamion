@@ -19,6 +19,7 @@ import { publishToWorkspaceParty } from "../platform/realtime-broadcast"
 async function findOrCreateDirectMessageConversationId(props: {
   workspaceId: string
   contactId: string
+  inboxId: string
 }): Promise<string> {
   const existing = await conversationService.findDMByContact(props)
   if (existing) {
@@ -167,6 +168,7 @@ export const recordDeliveredPrivateReply = async (props: {
     const conversationId = await findOrCreateDirectMessageConversationId({
       workspaceId,
       contactId: contactInbox.contactId,
+      inboxId: contactInbox.inboxId,
     })
     return await recordDeliveredDirectMessage({
       ...props,

@@ -1,8 +1,6 @@
 import { sql } from "@chatbotx.io/database/client"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
-const NOT_FOUND_RE = /not found/i
-
 const mocks = vi.hoisted(() => ({
   conversationFindMany: vi.fn(),
   conversationFindFirst: vi.fn(),
@@ -28,9 +26,11 @@ const mocks = vi.hoisted(() => ({
     values,
   })),
   cancelQuickReplyFollowUps: vi.fn(),
-  contactInboxFindBy: vi.fn(),
-  contactInboxFindRecentByContactId: vi.fn(),
-  contactInboxListByContactId: vi.fn(),
+  findDefaultAiAgent: vi.fn(),
+  findActiveForInbox: vi.fn(),
+  findExternalAgentByWorkspace: vi.fn(),
+  isDefaultReplyPublishedActive: vi.fn(),
+  existsAnsweringInboundRule: vi.fn(),
 }))
 
 vi.mock("@chatbotx.io/database/client", () => ({
@@ -98,10 +98,22 @@ vi.mock("@chatbotx.io/database/repositories", () => ({
   assignUserIfUnassigned: mocks.assignUserIfUnassigned,
   externalAgentRepository: {
     findResumePolicyForConversations: vi.fn(async () => []),
+    findActiveForInbox: mocks.findActiveForInbox,
+    findByWorkspace: mocks.findExternalAgentByWorkspace,
   },
   externalAgentStateRepository: {
     resetForResume: vi.fn(async () => undefined),
   },
+  flowRepository: {
+    isDefaultReplyPublishedActive: mocks.isDefaultReplyPublishedActive,
+  },
+  automatedResponseRepository: {
+    existsAnsweringInboundRule: mocks.existsAnsweringInboundRule,
+  },
+}))
+
+vi.mock("../../ai-agent/service", () => ({
+  aiAgentService: { findDefault: mocks.findDefaultAiAgent },
 }))
 
 vi.mock("@chatbotx.io/worker-config", async (importOriginal) => {
@@ -155,11 +167,7 @@ vi.mock("../../thread-control/service", () => ({
 }))
 
 vi.mock("../../contact-inbox/service", () => ({
-  contactInboxService: {
-    findBy: mocks.contactInboxFindBy,
-    findRecentByContactId: mocks.contactInboxFindRecentByContactId,
-    listByContactId: mocks.contactInboxListByContactId,
-  },
+  contactInboxService: {},
 }))
 
 vi.mock("../../workspace-member/service", () => ({
@@ -185,7 +193,7 @@ const { conversationService } = await import("../service")
 const { emit } = await import("@chatbotx.io/event-bus")
 const { emitConversationAssigned, emitConversationTransferredToHuman } =
   await import("@chatbotx.io/events")
-const { invalidateCacheByTags } = await import("@chatbotx.io/redis")
+const { invalidateCacheByTags, withCache } = await import("@chatbotx.io/redis")
 const { notificationQueue } = await import("@chatbotx.io/worker-config")
 
 const WORKSPACE_ID = "ws-1"
@@ -218,6 +226,17 @@ beforeEach(() => {
   mocks.releaseOwnedThreadsForContacts.mockResolvedValue(undefined)
   mocks.cancelQuickReplyFollowUps.mockReset()
   mocks.cancelQuickReplyFollowUps.mockResolvedValue(undefined)
+  // No bot signal by default; each test opts into the one it exercises.
+  mocks.findDefaultAiAgent.mockReset()
+  mocks.findDefaultAiAgent.mockResolvedValue(undefined)
+  mocks.findActiveForInbox.mockReset()
+  mocks.findActiveForInbox.mockResolvedValue(null)
+  mocks.findExternalAgentByWorkspace.mockReset()
+  mocks.findExternalAgentByWorkspace.mockResolvedValue(null)
+  mocks.isDefaultReplyPublishedActive.mockReset()
+  mocks.isDefaultReplyPublishedActive.mockResolvedValue(false)
+  mocks.existsAnsweringInboundRule.mockReset()
+  mocks.existsAnsweringInboundRule.mockResolvedValue(false)
   vi.mocked(emitConversationTransferredToHuman).mockReset()
   mocks.sql.mockClear()
 })
@@ -490,6 +509,227 @@ describe("ConversationService.findOrCreate concurrent insert", () => {
 
     expect(result).toEqual(existing)
     expect(returning).not.toHaveBeenCalled()
+  })
+})
+
+describe("ConversationService.resolveInitialBotEnabled", () => {
+  const input = { workspaceId: WORKSPACE_ID, inboxId: "inbox-1" }
+
+  test("is true when an enabled Hermes client agent is on the inbox", async () => {
+    mocks.findActiveForInbox.mockResolvedValue({ id: "agent-1" })
+
+    await expect(
+      conversationService.resolveInitialBotEnabled(input),
+    ).resolves.toBe(true)
+    expect(mocks.findActiveForInbox).toHaveBeenCalledWith(input)
+    // Inbox hit short-circuits before the workspace-wide Hermes lookup.
+    expect(mocks.findExternalAgentByWorkspace).not.toHaveBeenCalled()
+  })
+
+  test("is true when Hermes is on another inbox of the same workspace", async () => {
+    mocks.findActiveForInbox.mockResolvedValue(null)
+    mocks.findExternalAgentByWorkspace.mockResolvedValue({
+      id: "agent-1",
+      enabled: true,
+    })
+
+    await expect(
+      conversationService.resolveInitialBotEnabled(input),
+    ).resolves.toBe(true)
+    expect(mocks.findExternalAgentByWorkspace).toHaveBeenCalledWith(
+      WORKSPACE_ID,
+      "client",
+    )
+  })
+
+  test("is true when the workspace has a default AI agent", async () => {
+    mocks.findDefaultAiAgent.mockResolvedValue({ id: "ai-agent-1" })
+
+    await expect(
+      conversationService.resolveInitialBotEnabled(input),
+    ).resolves.toBe(true)
+    expect(mocks.findDefaultAiAgent).toHaveBeenCalledWith(WORKSPACE_ID)
+  })
+
+  test("is true when the Default Reply points at a published flow", async () => {
+    mocks.isDefaultReplyPublishedActive.mockResolvedValue(true)
+
+    await expect(
+      conversationService.resolveInitialBotEnabled(input),
+    ).resolves.toBe(true)
+    expect(mocks.isDefaultReplyPublishedActive).toHaveBeenCalledWith({
+      workspaceId: WORKSPACE_ID,
+    })
+  })
+
+  test("is true when an inbound keyword rule answers", async () => {
+    mocks.existsAnsweringInboundRule.mockResolvedValue(true)
+
+    await expect(
+      conversationService.resolveInitialBotEnabled(input),
+    ).resolves.toBe(true)
+    expect(mocks.existsAnsweringInboundRule).toHaveBeenCalledWith({
+      workspaceId: WORKSPACE_ID,
+    })
+  })
+
+  test("is false when only an unrouted published flow exists (broadcast-style)", async () => {
+    // The flow is published and active, but nothing points at it: no AI agent,
+    // no Hermes on the inbox, not the Default Reply, no keyword rule.
+    await expect(
+      conversationService.resolveInitialBotEnabled(input),
+    ).resolves.toBe(false)
+  })
+
+  test("without an inbox, is true when any enabled client Hermes agent exists on the workspace", async () => {
+    mocks.findExternalAgentByWorkspace.mockResolvedValue({
+      id: "agent-1",
+      enabled: true,
+    })
+
+    await expect(
+      conversationService.resolveInitialBotEnabled({
+        workspaceId: WORKSPACE_ID,
+      }),
+    ).resolves.toBe(true)
+    expect(mocks.findActiveForInbox).not.toHaveBeenCalled()
+    expect(mocks.findExternalAgentByWorkspace).toHaveBeenCalledWith(
+      WORKSPACE_ID,
+      "client",
+    )
+  })
+
+  test("without an inbox, still checks keyword rules when Hermes is absent", async () => {
+    mocks.existsAnsweringInboundRule.mockResolvedValue(true)
+
+    await expect(
+      conversationService.resolveInitialBotEnabled({
+        workspaceId: WORKSPACE_ID,
+      }),
+    ).resolves.toBe(true)
+    expect(mocks.findActiveForInbox).not.toHaveBeenCalled()
+    expect(mocks.findExternalAgentByWorkspace).toHaveBeenCalled()
+  })
+
+  test("caches the answer for 60 seconds per workspace and inbox", async () => {
+    vi.mocked(withCache).mockClear()
+
+    await conversationService.resolveInitialBotEnabled(input)
+
+    expect(withCache).toHaveBeenCalledWith(
+      "conversations:initial-bot-enabled:ws-1:inbox-1",
+      expect.any(Function),
+      { ttl: 60 },
+    )
+  })
+
+  test("falls back to true when a lookup fails, so a DB blip cannot mute a bot", async () => {
+    mocks.findDefaultAiAgent.mockRejectedValue(new Error("db unavailable"))
+
+    await expect(
+      conversationService.resolveInitialBotEnabled(input),
+    ).resolves.toBe(true)
+  })
+})
+
+describe("ConversationService.findOrCreate botEnabled", () => {
+  function buildInsertTx(props: {
+    findFirst: ReturnType<typeof vi.fn>
+    inserted: unknown[]
+  }) {
+    const returning = vi.fn().mockResolvedValue(props.inserted)
+    const onConflictDoNothing = vi.fn(() => ({ returning }))
+    const values = vi.fn(() => ({ onConflictDoNothing }))
+    const insert = vi.fn(() => ({ values }))
+    return {
+      tx: {
+        query: { conversationModel: { findFirst: props.findFirst } },
+        insert,
+      } as unknown as Parameters<
+        typeof conversationService.findOrCreate
+      >[0]["tx"],
+      values,
+    }
+  }
+
+  test("writes botEnabled true on a new insert when the inbox has a Hermes agent", async () => {
+    mocks.findActiveForInbox.mockResolvedValue({ id: "agent-1" })
+    const { tx, values } = buildInsertTx({
+      findFirst: vi.fn().mockResolvedValue(undefined),
+      inserted: [{ id: "conv-new" }],
+    })
+
+    await conversationService.findOrCreate({
+      workspaceId: WORKSPACE_ID,
+      contactId: "contact-1",
+      sourceId: "source-1",
+      inboxId: "inbox-1",
+      tx,
+    })
+
+    expect(values).toHaveBeenCalledWith(
+      expect.objectContaining({ contactId: "contact-1", botEnabled: true }),
+    )
+  })
+
+  test("writes botEnabled false on a new insert when nothing answers", async () => {
+    const { tx, values } = buildInsertTx({
+      findFirst: vi.fn().mockResolvedValue(undefined),
+      inserted: [{ id: "conv-new" }],
+    })
+
+    await conversationService.findOrCreate({
+      workspaceId: WORKSPACE_ID,
+      contactId: "contact-1",
+      sourceId: "source-1",
+      inboxId: "inbox-1",
+      tx,
+    })
+
+    expect(values).toHaveBeenCalledWith(
+      expect.objectContaining({ botEnabled: false }),
+    )
+  })
+
+  test("neither resolves nor writes botEnabled for an existing conversation", async () => {
+    mocks.findActiveForInbox.mockResolvedValue({ id: "agent-1" })
+    const { tx, values } = buildInsertTx({
+      findFirst: vi.fn().mockResolvedValue({ id: "conv-existing" }),
+      inserted: [],
+    })
+
+    await conversationService.findOrCreate({
+      workspaceId: WORKSPACE_ID,
+      contactId: "contact-1",
+      sourceId: "source-1",
+      inboxId: "inbox-1",
+      tx,
+    })
+
+    expect(values).not.toHaveBeenCalled()
+    expect(mocks.findActiveForInbox).not.toHaveBeenCalled()
+  })
+
+  test("keeps the concurrent winner's row without rewriting botEnabled", async () => {
+    const { tx } = buildInsertTx({
+      findFirst: vi
+        .fn()
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce({ id: "conv-winner" }),
+      // ON CONFLICT DO NOTHING swallowed the insert.
+      inserted: [],
+    })
+
+    const result = await conversationService.findOrCreate({
+      workspaceId: WORKSPACE_ID,
+      contactId: "contact-1",
+      sourceId: "source-1",
+      inboxId: "inbox-1",
+      tx,
+    })
+
+    expect(result).toEqual({ id: "conv-winner" })
+    expect(mocks.updateSet).not.toHaveBeenCalled()
   })
 })
 
@@ -1283,64 +1523,5 @@ describe("ConversationService.updateBotEnabled quick-reply follow-up cancel", ()
       expect.objectContaining({ tx: savepoint }),
     )
     expect(invalidateCacheByTags).toHaveBeenCalled()
-  })
-})
-
-describe("ConversationService.resolveContactInboxForConversation personal SMTP ACL", () => {
-  beforeEach(() => {
-    mocks.contactInboxFindBy.mockReset()
-    mocks.contactInboxFindRecentByContactId.mockReset()
-    mocks.contactInboxListByContactId.mockReset()
-  })
-
-  test("rejects an explicit inboxId that is hidden", async () => {
-    await expect(
-      conversationService.resolveContactInboxForConversation({
-        conversation: { contactId: "c1" },
-        workspaceId: WORKSPACE_ID,
-        inboxId: "i1",
-        hiddenInboxIds: ["i1"],
-      }),
-    ).rejects.toThrow(NOT_FOUND_RE)
-    expect(mocks.contactInboxFindBy).not.toHaveBeenCalled()
-  })
-
-  test("falls back to the newest visible contact inbox when recent is hidden", async () => {
-    mocks.contactInboxListByContactId.mockResolvedValue([
-      {
-        id: "ci1",
-        inboxId: "i1",
-        lastMessageAt: new Date("2026-06-02T00:00:00Z"),
-      },
-      {
-        id: "ci2",
-        inboxId: "i2",
-        lastMessageAt: new Date("2026-06-01T00:00:00Z"),
-      },
-    ])
-
-    const contactInbox =
-      await conversationService.resolveContactInboxForConversation({
-        conversation: { contactId: "c1" },
-        workspaceId: WORKSPACE_ID,
-        hiddenInboxIds: ["i1"],
-      })
-
-    expect(contactInbox.id).toBe("ci2")
-    expect(mocks.contactInboxFindRecentByContactId).not.toHaveBeenCalled()
-  })
-
-  test("throws not found when every contact inbox is hidden", async () => {
-    mocks.contactInboxListByContactId.mockResolvedValue([
-      { id: "ci1", inboxId: "i1", lastMessageAt: null },
-    ])
-
-    await expect(
-      conversationService.resolveContactInboxForConversation({
-        conversation: { contactId: "c1" },
-        workspaceId: WORKSPACE_ID,
-        hiddenInboxIds: ["i1"],
-      }),
-    ).rejects.toThrow(NOT_FOUND_RE)
   })
 })

@@ -11,6 +11,10 @@ const mockEmitContactCreated = vi.fn()
 const mockRecordAuditLog = vi.fn()
 const mockCancelByInboxSource = vi.fn()
 
+vi.mock("../src/conversation/service", () => ({
+  conversationService: { resolveInitialBotEnabled: vi.fn(async () => true) },
+}))
+
 vi.mock("../src/audit/dispatcher", () => ({
   dispatchAuditRecord: (...args: unknown[]) => mockRecordAuditLog(...args),
 }))

@@ -114,6 +114,7 @@ const resolveHandoverThread = async (
       workspaceId: inbox.workspaceId,
       contactId: existing.row.contactId,
       sourceId: null,
+      inboxId: inbox.id,
     })
     return { contactInbox: existing.row, conversation }
   }

@@ -90,6 +90,10 @@ const {
   }
 })
 
+vi.mock("../src/conversation/service", () => ({
+  conversationService: { resolveInitialBotEnabled: vi.fn(async () => true) },
+}))
+
 vi.mock("@chatbotx.io/database/client", () => ({
   db: {
     transaction: (fn: (tx: unknown) => unknown) => fn(tx),

@@ -306,6 +306,7 @@ export const startOrderNotificationFlows = async (input: {
         workspaceId: input.workspaceId,
         contactId: input.contactId,
         sourceId: null,
+        inboxId: anchor.inboxId,
       })
     : null
 

@@ -16,6 +16,7 @@ import { emitContactCreated } from "@chatbotx.io/events"
 import { createId } from "@chatbotx.io/utils"
 import { dispatchAuditRecord } from "../audit/dispatcher"
 import { contactInboxService } from "../contact-inbox/service"
+import { conversationService } from "../conversation/service"
 import { ChatbotXException, validationException } from "../errors"
 import { messageCleanupService } from "../message-cleanup/service"
 import { quotaEnforcementService } from "../quota-enforcement/service"
@@ -175,10 +176,15 @@ export const createContactWithInbox = async ({
           tx,
         })
 
+        const botEnabled = await conversationService.resolveInitialBotEnabled({
+          workspaceId,
+          inboxId: inbox.id,
+        })
         await tx.insert(conversationModel).values({
           workspaceId,
           contactId: contact.id,
           id: createId(),
+          botEnabled,
         })
 
         return { contact, contactInbox }

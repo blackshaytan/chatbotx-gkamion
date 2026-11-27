@@ -99,6 +99,9 @@ export const queueClientNotification = async (
     workspaceId: input.workspaceId,
     contactId,
     sourceId: null,
+    // Prefer a contact inbox so Hermes-on-that-inbox resolves; without it
+    // the helper falls back to any enabled client agent on the workspace.
+    inboxId: inboxes[0]?.inboxId,
   })
   const jobId = clientNotificationJobId(input.workspaceId, input.eventId)
   const existing = await integrationQueue.getJob(jobId)

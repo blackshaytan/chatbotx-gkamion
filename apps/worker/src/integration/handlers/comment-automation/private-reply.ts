@@ -264,6 +264,7 @@ async function resolveDirectMessageConversationId(ctx: {
       workspaceId: ctx.workspaceId,
       contactId: ctx.contactInbox.contactId,
       sourceId: null,
+      inboxId: ctx.contactInbox.inboxId,
     })
     return created.id
   } catch (err) {

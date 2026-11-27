@@ -138,6 +138,7 @@ vi.mock("@chatbotx.io/business", () => ({
   conversationService: {
     ensureActive: mockConversationEnsureActive,
     findBy: mockConversationFindBy,
+    resolveInitialBotEnabled: vi.fn(async () => true),
   },
   quotaEnforcementService: {
     increment: mockQuotaIncrement,
@@ -391,7 +392,6 @@ describe("handleCreateWebchatMessage", () => {
     expect(updateBuilder.set).toHaveBeenNthCalledWith(1, {
       contactLastReadAt: messageInput.createdAt,
       lastActivityAt: messageInput.createdAt,
-      inboxActivityAt: messageInput.createdAt,
       contactRepliedAt: messageInput.createdAt,
     })
   })

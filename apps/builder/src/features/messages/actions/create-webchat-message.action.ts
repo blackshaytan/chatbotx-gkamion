@@ -520,12 +520,17 @@ async function getConversationFromInput(
         tx,
       })
 
+      const botEnabled = await conversationService.resolveInitialBotEnabled({
+        workspaceId: parsedInput.workspaceId,
+        inboxId: integrationWebchat.inboxId,
+      })
       const conversation = await tx
         .insert(conversationModel)
         .values({
           id: createId(),
           workspaceId: parsedInput.workspaceId,
           contactId: contact.id,
+          botEnabled,
         })
         .returning()
         .then((rows) => rows[0])

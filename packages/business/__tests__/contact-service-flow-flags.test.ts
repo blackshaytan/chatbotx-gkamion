@@ -30,6 +30,10 @@ const { mockDbUpdate } = vi.hoisted(() => ({
   mockDbUpdate: vi.fn(),
 }))
 
+vi.mock("../src/conversation/service", () => ({
+  conversationService: { resolveInitialBotEnabled: vi.fn(async () => true) },
+}))
+
 vi.mock("@chatbotx.io/database/client", () => ({
   and: vi.fn((...args: unknown[]) => ({ __and: args })),
   db: { update: mockDbUpdate },
@@ -55,7 +59,6 @@ vi.mock("@chatbotx.io/database/schema", () => ({
   },
   conversationModel: { id: "conv.id", contactId: "conv.contactId" },
   inboxModel: { id: "inbox.id" },
-  taskModel: {},
 }))
 
 vi.mock("@chatbotx.io/database/queries", () => ({

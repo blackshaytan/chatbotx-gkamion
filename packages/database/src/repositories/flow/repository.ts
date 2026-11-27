@@ -1,6 +1,14 @@
-import { type DatabaseClient, db, relationsFilterToSQL } from "../../client"
+import {
+  and,
+  type DatabaseClient,
+  db,
+  eq,
+  isNotNull,
+  relationsFilterToSQL,
+  sql,
+} from "../../client"
 import { rootFolderId } from "../../partials"
-import { flowModel } from "../../schema"
+import { flowModel, workspaceModel } from "../../schema"
 import {
   likeContains,
   parseOrderByAsObject,
@@ -39,6 +47,34 @@ export const flowRepository = {
       where: { id: input.id, workspaceId: input.workspaceId },
       columns: { id: true },
     })
+    return Boolean(row)
+  },
+
+  /**
+   * Whether the workspace's Default Reply points at a published, active flow.
+   * `Workspace.defaultReply` is text, so the join compares as text to stay
+   * safe for an empty or non-numeric value.
+   */
+  async isDefaultReplyPublishedActive(
+    input: { workspaceId: string },
+    tx: DatabaseClient = db,
+  ): Promise<boolean> {
+    const [row] = await tx
+      .select({ id: flowModel.id })
+      .from(workspaceModel)
+      .innerJoin(
+        flowModel,
+        sql`${flowModel.id}::text = ${workspaceModel.defaultReply}`,
+      )
+      .where(
+        and(
+          eq(workspaceModel.id, input.workspaceId),
+          eq(flowModel.workspaceId, input.workspaceId),
+          eq(flowModel.active, true),
+          isNotNull(flowModel.currentVersionId),
+        ),
+      )
+      .limit(1)
     return Boolean(row)
   },
 

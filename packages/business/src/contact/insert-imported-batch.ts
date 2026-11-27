@@ -12,6 +12,7 @@ import { createId } from "@chatbotx.io/utils"
 // via this module. TypeScript/bundler tolerate the cycle since neither side
 // reads the other's exports at module-init time — known and accepted.
 import { contactCustomFieldService } from "../contact-custom-field/service"
+import { conversationService } from "../conversation/service"
 import { messageCleanupService } from "../message-cleanup/service"
 
 export type InsertImportedContactBatchInput = {
@@ -131,11 +132,17 @@ export async function insertImportedContactBatch(
       return { inserted: 0, orphanCount }
     }
 
+    // One inbox for the whole batch, so the initial flag is resolved once.
+    const botEnabled = await conversationService.resolveInitialBotEnabled({
+      workspaceId,
+      inboxId: inbox.id,
+    })
     await tx.insert(conversationModel).values(
       survivors.map(({ contactId }) => ({
         id: createId(),
         workspaceId,
         contactId,
+        botEnabled,
       })),
     )
 

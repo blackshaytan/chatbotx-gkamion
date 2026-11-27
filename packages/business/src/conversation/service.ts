@@ -19,6 +19,7 @@ import type {
 import {
   assignTargetIfUnassigned,
   assignUserIfUnassigned,
+  automatedResponseRepository,
   claimDueBotResumes,
   claimManagerJoinedAt,
   contactInboxOperationalColumns,
@@ -26,6 +27,7 @@ import {
   createMessageRepository,
   externalAgentRepository,
   externalAgentStateRepository,
+  flowRepository,
   getSafeSinceTime,
 } from "@chatbotx.io/database/repositories"
 import { conversationModel, inboxModel } from "@chatbotx.io/database/schema"
@@ -63,6 +65,7 @@ import {
   notificationQueue,
 } from "@chatbotx.io/worker-config"
 import type { PgUpdateSetSource } from "drizzle-orm/pg-core"
+import { aiAgentService } from "../ai-agent/service"
 import { BaseService } from "../base.service"
 import { contactService } from "../contact"
 import type {
@@ -82,6 +85,10 @@ import { userService } from "../user/service"
 import { workspaceMemberService } from "../workspace-member/service"
 
 export const BOT_DISABLE_DURATION_MS = 24 * 60 * 60 * 1000
+
+// Short on purpose: a newly connected bot must reach new conversations within
+// a minute, while a burst of new contacts still skips repeating the lookups.
+const INITIAL_BOT_ENABLED_TTL_SECONDS = 60
 
 export type TriggerContext = {
   triggerSource: string
@@ -808,6 +815,77 @@ class ConversationService extends BaseService {
     return updated
   }
 
+  /**
+   * Initial `botEnabled` for a NEW conversation: true only when something will
+   * answer an inbound message on this inbox — an enabled Hermes client agent on
+   * the inbox, the default AI agent, a Default Reply pointing at a published
+   * flow, or an enabled inbound keyword rule that answers. A published flow
+   * that nothing routes to (e.g. a broadcast flow) is not a bot.
+   *
+   * Cached for a minute per (workspace, inbox). A failed lookup falls back to
+   * `true`, the column default, so a transient DB error cannot silently mute
+   * an existing bot.
+   */
+  async resolveInitialBotEnabled(props: {
+    workspaceId: string
+    inboxId?: string
+  }): Promise<boolean> {
+    const { workspaceId, inboxId } = props
+    try {
+      return await withCache(
+        `${this.cachePrefix}:initial-bot-enabled:${workspaceId}:${inboxId ?? ""}`,
+        async () => await this.hasAnsweringBot({ workspaceId, inboxId }),
+        { ttl: INITIAL_BOT_ENABLED_TTL_SECONDS },
+      )
+    } catch (err) {
+      logger.warn(
+        { err, workspaceId, inboxId },
+        "Unable to resolve the initial botEnabled, defaulting to true",
+      )
+      return true
+    }
+  }
+
+  private async hasAnsweringBot(props: {
+    workspaceId: string
+    inboxId?: string
+  }): Promise<boolean> {
+    const { workspaceId, inboxId } = props
+    // DM conversations are shared across a contact's channels. Hermes on the
+    // given inbox is enough; if the caller passed a non-Hermes inbox (SMTP
+    // CRM anchor) or no inbox at all, any enabled client agent on the
+    // workspace still means the bot should own the new row.
+    if (inboxId) {
+      const hermesOnInbox = await externalAgentRepository.findActiveForInbox({
+        workspaceId,
+        inboxId,
+      })
+      if (hermesOnInbox) {
+        return true
+      }
+    }
+    const hermesOnWorkspace = await externalAgentRepository.findByWorkspace(
+      workspaceId,
+      "client",
+    )
+    if (hermesOnWorkspace?.enabled) {
+      return true
+    }
+
+    const defaultAiAgent = await aiAgentService.findDefault(workspaceId)
+    if (defaultAiAgent) {
+      return true
+    }
+
+    if (await flowRepository.isDefaultReplyPublishedActive({ workspaceId })) {
+      return true
+    }
+
+    return await automatedResponseRepository.existsAnsweringInboundRule({
+      workspaceId,
+    })
+  }
+
   async findOrCreate(props: {
     workspaceId: string
     contactId: string
@@ -818,6 +896,11 @@ class ConversationService extends BaseService {
      * `IncomingContact.channelConversationId`.
      */
     channelConversationId?: string | null
+    /**
+     * The inbox the conversation belongs to. Read only when a NEW row is
+     * inserted, to set its initial `botEnabled`.
+     */
+    inboxId?: string
     tx?: DatabaseClient
   }): Promise<ConversationModel> {
     const {
@@ -825,6 +908,7 @@ class ConversationService extends BaseService {
       contactId,
       sourceId,
       channelConversationId,
+      inboxId,
       tx = db,
     } = props
 
@@ -848,6 +932,10 @@ class ConversationService extends BaseService {
         : existing
     }
 
+    const botEnabled = await this.resolveInitialBotEnabled({
+      workspaceId,
+      inboxId,
+    })
     const created = await tx
       .insert(conversationModel)
       .values({
@@ -855,6 +943,7 @@ class ConversationService extends BaseService {
         workspaceId,
         contactId,
         sourceId,
+        botEnabled,
         additionalAttributes: channelConversationId
           ? { channelConversationId }
           : undefined,

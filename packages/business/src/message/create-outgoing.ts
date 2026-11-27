@@ -212,6 +212,7 @@ export const createOutgoing = async (props: {
         workspaceId: conversation.workspaceId,
         contactId: contactInbox.contactId,
         sourceId: null,
+        inboxId: contactInbox.inboxId,
       })
     : conversation
 

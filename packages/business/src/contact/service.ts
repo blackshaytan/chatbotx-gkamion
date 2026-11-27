@@ -40,6 +40,7 @@ import { dispatchAuditRecord } from "../audit/dispatcher"
 import { BaseService } from "../base.service"
 import { getContactInboxSinceTime } from "../contact-inbox/service"
 import { contactInboxPostService } from "../contact-inbox-post/service"
+import { conversationService } from "../conversation/service"
 import { ChatbotXException, notFoundException } from "../errors"
 import { logger } from "../logger"
 import { NO_AVATAR_SENTINEL_KEY } from "../media/no-avatar-sentinel"
@@ -946,10 +947,17 @@ class ContactService extends BaseService {
 
           // No cancelByInboxSource here: this path mints a fresh random sourceId,
           // so it can never collide with a MessageCleanup tombstone.
+          const botEnabled = await conversationService.resolveInitialBotEnabled(
+            {
+              workspaceId,
+              inboxId: inbox.id,
+            },
+          )
           await tx.insert(conversationModel).values({
             workspaceId,
             contactId: newContact.id,
             id: createId(),
+            botEnabled,
           })
 
           return { contact: newContact, contactInbox: newContactInbox }

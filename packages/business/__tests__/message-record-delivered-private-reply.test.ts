@@ -120,6 +120,7 @@ describe("recordDeliveredPrivateReply", () => {
       workspaceId: "ws-1",
       contactId: "contact-1",
       sourceId: null,
+      inboxId: "inbox-1",
     })
     expect(mockRepositoryCreate).toHaveBeenCalledWith(
       expect.objectContaining({ conversationId: "dm-created" }),

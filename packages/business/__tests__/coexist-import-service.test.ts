@@ -32,6 +32,10 @@ const { mockTransaction, mockCancelByInboxSource } = vi.hoisted(() => ({
   mockCancelByInboxSource: vi.fn(),
 }))
 
+vi.mock("../src/conversation/service", () => ({
+  conversationService: { resolveInitialBotEnabled: vi.fn(async () => true) },
+}))
+
 vi.mock("@chatbotx.io/database/client", () => ({
   and: vi.fn((...args: unknown[]) => ({ __and: args })),
   db: { transaction: mockTransaction },
