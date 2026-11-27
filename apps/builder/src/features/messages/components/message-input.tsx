@@ -7,6 +7,7 @@ import { Textarea } from "@chatbotx.io/ui/components/ui/textarea"
 import { createId } from "@chatbotx.io/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   HandIcon,
   ImageIcon,
@@ -40,6 +41,8 @@ import { MediaLibraryTrigger } from "@/features/media-library/components/media-l
 import type { ListFilesResponse } from "@/features/media-library/schema"
 import { QuickRepliesPopover } from "@/features/saved-replies/quick-replies-popover"
 import { authClient } from "@/lib/auth/auth-client"
+import { client } from "@/lib/orpc/orpc"
+import { orpc } from "@/lib/orpc/query"
 import { useChatStore } from "../../chat/store/chat-store-provider"
 import { createMessageAction } from "../actions/create-message.action"
 import { createMessageWithRoutingBypassRequest } from "../schema/mutation"
@@ -47,6 +50,10 @@ import type { MessageResource } from "../schema/resource"
 import { FileUploadPreview } from "./file-upload"
 import { InputMenu } from "./input-menu"
 import { MediaFilePreview } from "./media-file-preview"
+import {
+  ReplyChannelSelect,
+  useReplyChannelsQuery,
+} from "./reply-channel-select"
 import { ThreadControlLockedComposer } from "./thread-control-locked-composer"
 
 const CHANNEL_WINDOW_SECONDS: Record<ChannelType, number> = {
@@ -148,7 +155,7 @@ export const MessageInput = () => {
     activeContactInbox?.inboxId ??
     null
   const selectedReplyOption = replyChannels?.options.find(
-    (option) => option.inboxId === selectedInboxId,
+    (option: { inboxId: string }) => option.inboxId === selectedInboxId,
   )
   const contactInbox =
     conversation?.contactInboxes?.find(

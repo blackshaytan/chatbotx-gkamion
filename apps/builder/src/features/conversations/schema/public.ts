@@ -1,4 +1,5 @@
 import {
+  channelTypes,
   threadControlActions,
   threadControlEvents,
   threadControlStates,
